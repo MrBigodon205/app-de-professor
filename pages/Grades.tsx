@@ -88,6 +88,44 @@ export const Grades: React.FC = () => {
         }
     };
 
+    // --- REALTIME SUBSCRIPTION FOR GRADES ---
+    useEffect(() => {
+        if (!currentUser || !selectedSeriesId || !selectedSection) return;
+
+        console.log("Setting up Realtime for Grades...");
+
+        const channel = supabase.channel(`grades_sync_${selectedSeriesId}_${selectedSection}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'students',
+                    filter: `series_id=eq.${selectedSeriesId}` // Optimisation: only listen for THIS class
+                    // note: cannot filter by multiple columns easily in one string standardly without separate config, 
+                    // but series_id is a good enough partial filter.
+                },
+                (payload) => {
+                    const newRecord = payload.new as any;
+                    // Double check if the update belongs to us and this section
+                    if (newRecord && newRecord.section === selectedSection && newRecord.user_id === currentUser.id) {
+                        console.log("Realtime Grades Update Received!", payload);
+                        fetchStudents();
+                    } else if (payload.eventType === 'DELETE') {
+                        // On delete we just refetch to be safe
+                        fetchStudents();
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            console.log("Cleaning up Grades Realtime...");
+            supabase.removeChannel(channel);
+        };
+    }, [selectedSeriesId, selectedSection, currentUser]);
+    // ----------------------------------------
+
     const calculateAverage = (student: Student, unit: string) => {
         const grades = student.units[unit];
         if (!grades) return 0;

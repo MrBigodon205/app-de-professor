@@ -214,6 +214,39 @@ export const Attendance: React.FC = () => {
         }
     };
 
+    // --- REALTIME SUBSCRIPTION ---
+    useEffect(() => {
+        if (!currentUser || !selectedSeriesId || !selectedSection) return;
+
+        console.log("Setting up Realtime for Attendance...");
+
+        const channel = supabase.channel(`attendance_sync_${selectedSeriesId}_${selectedSection}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*', // Listen to INSERT, UPDATE, DELETE
+                    schema: 'public',
+                    table: 'attendance',
+                    filter: `date=eq.${date}` // Only listen for changes on CURRENT date to avoid noise
+                },
+                (payload) => {
+                    console.log("Realtime Change Received!", payload);
+                    // Filter by user_id to ensure we only get our own updates (or shared if intended)
+                    // The 'filter' in subscription handles date.
+                    // We should verify userID if multiple teachers share db but row level security usually handles this.
+                    // Re-fetch data to sync
+                    fetchData();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            console.log("Cleaning up Realtime...");
+            supabase.removeChannel(channel);
+        };
+    }, [date, selectedSeriesId, selectedSection, currentUser]);
+    // -----------------------------
+
     const fetchActiveDates = async (studentIds: string[]) => {
         if (!currentUser || studentIds.length === 0) return;
         try {
