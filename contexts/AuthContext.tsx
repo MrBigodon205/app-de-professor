@@ -58,21 +58,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const fetchProfile = async (uid: string, retryCount = 0) => {
+        // Raw Fetch Helper for Profile
+        const rawProfileFetch = async () => {
+            console.log("Tentando buscar perfil via Raw Fetch...");
+            const supabaseUrl = (supabase as any).supabaseUrl;
+            const supabaseKey = (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+            const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${uid}&select=*`, {
+                method: 'GET',
+                headers: {
+                    'apikey': supabaseKey,
+                    'Authorization': `Bearer ${supabaseKey}`,
+                }
+            });
+
+            if (!response.ok) throw new Error('Falha no Raw Fetch Profile');
+            const data = await response.json();
+            return data && data.length > 0 ? data[0] : null;
+        };
+
         try {
-            // 1. Try Fetch from Supabase
-            const { data: sbData, error: sbError } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', uid)
-                .single();
+            let sbData = null;
+            let usedFallback = false;
 
-            // 2. Try Fetch from Local
-            const localUser = await getLocalUser(uid);
+            // 1. Try Standard Fetch (with timeout)
+            try {
+                const { data, error } = await withTimeout(
+                    supabase.from('profiles').select('*').eq('id', uid).single(),
+                    10000,
+                    "Profile Fetch"
+                );
+                if (error) throw error;
+                sbData = data;
+            } catch (err: any) {
+                console.warn("Falha no Profile Fetch padrão:", err.message);
+                // 2. Fallback to Raw Fetch
+                try {
+                    sbData = await rawProfileFetch();
+                    usedFallback = true;
+                } catch (rawErr) {
+                    console.error("Falha total no Profile Fetch:", rawErr);
+                }
+            }
 
+            // 3. Construct User Object (Fail-Open)
             let finalUser: User | null = null;
 
             if (sbData) {
-                // Case A: Supabase has data (Primary Source)
                 finalUser = {
                     id: sbData.id,
                     name: sbData.name,
@@ -81,38 +113,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     subject: sbData.subject || '',
                     subjects: sbData.subjects || []
                 };
-
-                // Sync Supabase -> Local (Backup)
-                saveLocalUser(finalUser);
-
-            } else if (localUser) {
-                // Case B: Supabase Missing/Error, but Local exists (Restore/Sync Up)
-                console.log("User missing in Supabase, restoring from Local...");
-                finalUser = localUser;
-
-                // Push to Supabase
-                const { error: upsertError } = await supabase.from('profiles').upsert({
-                    id: localUser.id,
-                    name: localUser.name,
-                    email: localUser.email,
-                    subject: localUser.subject,
-                    subjects: localUser.subjects,
-                    photo_url: localUser.photoUrl
-                });
-
-                if (upsertError) console.error("Failed to restore user to Supabase:", upsertError);
+                if (usedFallback) console.log("Perfil carregado via Fallback HTTP!");
+                saveLocalUser(finalUser); // Sync backup
+            } else {
+                // EMERGENCY FALLBACK: Create Minimal User from Session Logic if available
+                // We can't easily get session email here without passing it, but let's check local storage next
+                const localUser = await getLocalUser(uid);
+                if (localUser) {
+                    console.log("Restaurando usuário do backup local...");
+                    finalUser = localUser;
+                } else {
+                    // Last Resort: If we can't find profile, we might be stuck. 
+                    // But usually, if login succeeded, we should at least let them in?
+                    // Without a profile, the app might crash if it expects 'subjects'. 
+                    // We will retry once more then give up.
+                    if (retryCount < 2) {
+                        setTimeout(() => fetchProfile(uid, retryCount + 1), 1000);
+                        return;
+                    }
+                }
             }
 
             if (finalUser) {
                 setCurrentUser(finalUser);
                 setUserId(finalUser.id);
-            } else if (sbError && retryCount < 2) {
-                // Retry only if absolutely nothing found
-                setTimeout(() => fetchProfile(uid, retryCount + 1), 1000);
             }
-
         } catch (err: any) {
-            console.error(`Fetch profile error (attempt ${retryCount + 1}):`, err.message);
+            console.error(`Critico: Erro no fetchProfile:`, err.message);
         }
     };
 
