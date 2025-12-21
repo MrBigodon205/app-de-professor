@@ -14,7 +14,12 @@ export const Dashboard: React.FC = () => {
   const { selectedSeriesId, selectedSection, classes } = useClass();
   const theme = useTheme();
   const { currentUser } = useAuth();
-  const [loading, setLoading] = useState(true);
+  // Granular loading states
+  const [loadingCounts, setLoadingCounts] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [loadingOccurrences, setLoadingOccurrences] = useState(true);
+  const [loadingPlans, setLoadingPlans] = useState(true);
+  const [loadingActivities, setLoadingActivities] = useState(true);
 
   // Separate states for clarity
   const [globalCount, setGlobalCount] = useState(0);
@@ -31,26 +36,18 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     if (currentUser) {
-      fetchAllData();
+      // Trigger fetches independently to avoid blocking UI
+      fetchCounts();
+      fetchStats();
+      fetchOccurrences();
+      fetchPlans();
+      fetchActivities();
     }
   }, [currentUser, selectedSeriesId, selectedSection]);
 
-  const fetchAllData = () => {
-    setLoading(true);
-    // Trigger all fetches in parallel
-    Promise.all([
-      fetchCounts(),
-      fetchStats(),
-      fetchOccurrences(),
-      fetchPlans(),
-      fetchActivities()
-    ]).finally(() => {
-      setLoading(false);
-    });
-  };
-
   const fetchCounts = async () => {
     if (!currentUser) return;
+    setLoadingCounts(true);
     try {
       const { count: gCount } = await supabase
         .from('students')
@@ -62,11 +59,7 @@ export const Dashboard: React.FC = () => {
         let query = supabase.from('students').select('*', { count: 'exact', head: true })
           .eq('user_id', currentUser.id)
           .eq('series_id', selectedSeriesId);
-
-        if (selectedSection) {
-          query = query.eq('section', selectedSection);
-        }
-
+        if (selectedSection) query = query.eq('section', selectedSection);
         const { count: sCount } = await query;
         setClassCount(sCount || 0);
       } else {
@@ -74,11 +67,14 @@ export const Dashboard: React.FC = () => {
       }
     } catch (e) {
       console.error("Error fetching counts:", e);
+    } finally {
+      setLoadingCounts(false);
     }
   };
 
   const fetchStats = async () => {
     if (!currentUser) return;
+    setLoadingStats(true);
     try {
       let studentsQuery = supabase.from('students').select('units, id').eq('user_id', currentUser.id);
       if (selectedSeriesId) studentsQuery = studentsQuery.eq('series_id', selectedSeriesId);
@@ -87,7 +83,7 @@ export const Dashboard: React.FC = () => {
       const { data: studentsData } = await studentsQuery;
       const relevantIds = (studentsData || []).map(s => s.id);
 
-      // Average calculation
+      // Average calculation (Keep logic but efficient if possible)
       let totalSum = 0;
       let totalCount = 0;
       (studentsData || []).forEach(s => {
@@ -97,7 +93,7 @@ export const Dashboard: React.FC = () => {
             Object.values(unit).forEach((val: any) => {
               if (typeof val === 'number') uSum += val;
             });
-            const uAvg = uSum / 2;
+            const uAvg = uSum / 2; // Assuming 2 assessments? Logic preserved.
             if (uAvg > 0) {
               totalSum += uAvg;
               totalCount++;
@@ -108,13 +104,12 @@ export const Dashboard: React.FC = () => {
 
       // Attendance Today
       const today = new Date().toISOString().split('T')[0];
-      let attQuery = supabase.from('attendance')
-        .select('status, student_id')
+      const { data: attData } = await supabase.from('attendance')
+        .select('student_id')
         .eq('user_id', currentUser.id)
         .eq('date', today)
         .eq('status', 'P');
 
-      const { data: attData } = await attQuery;
       const presentToday = (attData || []).filter(a => relevantIds.includes(a.student_id)).length;
 
       setStats(prev => ({
@@ -124,11 +119,14 @@ export const Dashboard: React.FC = () => {
       }));
     } catch (e) {
       console.error("Error fetching stats:", e);
+    } finally {
+      setLoadingStats(false);
     }
   };
 
   const fetchOccurrences = async () => {
     if (!currentUser) return;
+    setLoadingOccurrences(true);
     try {
       let query = supabase.from('occurrences')
         .select('*')
@@ -136,10 +134,19 @@ export const Dashboard: React.FC = () => {
         .order('date', { ascending: false });
 
       if (selectedSeriesId) {
-        // We really need a join or to fetch students first, but for simplicity:
+        // Optimization: If we can filter by student_id better, great.
+        // For now preserving logic but handling missing data gracefully
         const { data: sData } = await supabase.from('students').select('id').eq('series_id', selectedSeriesId).eq('user_id', currentUser.id);
         const sIds = (sData || []).map(s => s.id);
-        query = query.in('student_id', sIds);
+        if (sIds.length > 0) {
+          query = query.in('student_id', sIds);
+        } else {
+          // If no students in series, no occurrences to show for this filter
+          setRecentOccurrences([]);
+          setStats(prev => ({ ...prev, newObservations: 0 }));
+          setLoadingOccurrences(false);
+          return;
+        }
       }
 
       const { data, error } = await query.limit(5);
@@ -157,11 +164,14 @@ export const Dashboard: React.FC = () => {
       setStats(prev => ({ ...prev, newObservations: data?.length || 0 }));
     } catch (e) {
       console.error("Error fetching occurrences:", e);
+    } finally {
+      setLoadingOccurrences(false);
     }
   };
 
   const fetchPlans = async () => {
     if (!currentUser) return;
+    setLoadingPlans(true);
     try {
       const today = new Date().toISOString().split('T')[0];
       let query = supabase.from('plans')
@@ -196,11 +206,14 @@ export const Dashboard: React.FC = () => {
       setTodaysPlan(activePlan || null);
     } catch (e) {
       console.error("Error fetching plans:", e);
+    } finally {
+      setLoadingPlans(false);
     }
   };
 
   const fetchActivities = async () => {
     if (!currentUser) return;
+    setLoadingActivities(true);
     try {
       let query = supabase.from('activities')
         .select('*')
@@ -232,6 +245,8 @@ export const Dashboard: React.FC = () => {
       })).slice(0, 3));
     } catch (e) {
       console.error("Error fetching activities:", e);
+    } finally {
+      setLoadingActivities(false);
     }
   };
 
@@ -244,7 +259,7 @@ export const Dashboard: React.FC = () => {
       <DashboardHeader
         currentUser={currentUser}
         theme={theme}
-        loading={loading}
+        loading={loadingCounts} // Use counts loading for header spinner if needed, or false
         isContextSelected={isContextSelected}
         contextName={contextName}
       />
@@ -253,8 +268,11 @@ export const Dashboard: React.FC = () => {
 
       {/* PLAN OF THE DAY BANNER */}
       {
-        todaysPlan && (
+        loadingPlans ? (
+          <div className="h-40 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse"></div>
+        ) : todaysPlan && (
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
+            {/* ... Plan content ... */}
             <div className="absolute right-0 top-0 p-4 opacity-10">
               <span className="material-symbols-outlined text-[150px]">calendar_month</span>
             </div>
@@ -296,7 +314,11 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
           <div className="text-left sm:text-right w-full sm:w-auto flex sm:flex-col items-end sm:items-end justify-between">
-            <span className="block text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter">{globalCount}</span>
+            {loadingCounts ? (
+              <div className="h-12 w-24 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse"></div>
+            ) : (
+              <span className="block text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter">{displayCount}</span>
+            )}
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-[10px] font-bold uppercase tracking-wide mt-2">
               <span className="size-1.5 bg-green-500 rounded-full animate-pulse"></span>
               Ativos
@@ -319,10 +341,14 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="relative">
             <h3 className="text-slate-400 font-bold uppercase tracking-wider text-xs mb-1">Média Geral</h3>
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-slate-900 dark:text-white">{stats.gradeAverage.toFixed(1)}</span>
-              <span className="text-sm font-bold text-slate-300">/ 10</span>
-            </div>
+            {loadingStats ? (
+              <div className="h-10 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+            ) : (
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-slate-900 dark:text-white">{stats.gradeAverage.toFixed(1)}</span>
+                <span className="text-sm font-bold text-slate-300">/ 10</span>
+              </div>
+            )}
           </div>
         </Link>
 
@@ -337,10 +363,14 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="relative">
             <h3 className="text-slate-400 font-bold uppercase tracking-wider text-xs mb-1">Presença</h3>
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-slate-900 dark:text-white">{stats.presentToday}</span>
-              <span className="text-sm font-bold text-slate-300">/ {displayCount}</span>
-            </div>
+            {loadingStats ? ( // Dependent on same stats logic for now
+              <div className="h-10 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+            ) : (
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-slate-900 dark:text-white">{stats.presentToday}</span>
+                <span className="text-sm font-bold text-slate-300">/ {displayCount}</span>
+              </div>
+            )}
           </div>
         </Link>
 
@@ -355,10 +385,14 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="relative">
             <h3 className="text-slate-400 font-bold uppercase tracking-wider text-xs mb-1">Ocorrências</h3>
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-slate-900 dark:text-white">{stats.newObservations}</span>
-              <span className="text-sm font-bold text-slate-300">novas</span>
-            </div>
+            {loadingOccurrences ? (
+              <div className="h-10 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+            ) : (
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-slate-900 dark:text-white">{stats.newObservations}</span>
+                <span className="text-sm font-bold text-slate-300">novas</span>
+              </div>
+            )}
           </div>
         </Link>
 
@@ -378,7 +412,9 @@ export const Dashboard: React.FC = () => {
             <div>
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Atividades Avaliativas</h4>
               <div className="space-y-2">
-                {upcomingActivities.length === 0 ? (
+                {loadingActivities ? (
+                  [1, 2].map(i => <div key={i} className="h-12 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>)
+                ) : upcomingActivities.length === 0 ? (
                   <p className="text-sm text-slate-400 italic">Nenhuma atividade recente.</p>
                 ) : (
                   upcomingActivities.map(act => (
@@ -397,7 +433,9 @@ export const Dashboard: React.FC = () => {
             <div>
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Últimos Planejamentos</h4>
               <div className="space-y-2">
-                {classPlans.length === 0 ? (
+                {loadingPlans ? (
+                  [1, 2].map(i => <div key={i} className="h-12 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>)
+                ) : classPlans.length === 0 ? (
                   <p className="text-sm text-slate-400 italic">Nenhum planejamento recente.</p>
                 ) : (
                   classPlans.map(plan => (
@@ -426,7 +464,9 @@ export const Dashboard: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {recentOccurrences.length === 0 ? (
+            {loadingOccurrences ? (
+              [1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-100 dark:bg-slate-800 rounded-2xl animate-pulse"></div>)
+            ) : recentOccurrences.length === 0 ? (
               <div className="p-8 text-center bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
                 <p className="text-slate-400 font-medium">Nenhuma ocorrência registrada.</p>
               </div>

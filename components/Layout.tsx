@@ -26,6 +26,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const { logout, currentUser } = useAuth();
   const theme = useTheme();
 
@@ -126,6 +127,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         onClose={() => setIsProfileModalOpen(false)}
       />
 
+      {/* Mobile Notifications Modal */}
+      <NotificationCenter
+        isMobile
+        isOpen={isNotificationModalOpen}
+        onClose={() => setIsNotificationModalOpen(false)}
+      />
+
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full justify-between">
@@ -141,8 +149,48 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
             </div>
 
+            {/* Mobile Profile & Notification Actions (Visible only on mobile sidebar) */}
+            <div className="md:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
+              <div
+                className="flex items-center gap-3 cursor-pointer"
+                onClick={() => {
+                  setIsProfileModalOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                <div className="size-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0 border border-white dark:border-slate-600">
+                  {currentUser?.photoUrl ? (
+                    <img src={currentUser.photoUrl} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white text-xs`}>
+                      {(currentUser?.name || '??').substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">{currentUser?.name?.split(' ')[0]}</span>
+                  <span className="text-[9px] uppercase tracking-widest text-slate-400">Meu Perfil</span>
+                </div>
+                <span className="material-symbols-outlined text-slate-400 ml-auto">settings</span>
+              </div>
+
+              {/* Mobile Notification Link */}
+              <div
+                className="flex items-center gap-3 mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 cursor-pointer"
+                onClick={() => {
+                  setIsNotificationModalOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                <span className="flex items-center justify-center size-8 rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 shadow-sm">
+                  <span className="material-symbols-outlined text-sm text-slate-600 dark:text-slate-300">notifications</span>
+                </span>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Notificações</span>
+              </div>
+            </div>
+
             {/* Nav */}
-            <nav className="flex flex-col gap-1.5 mt-2 overflow-y-auto max-h-[calc(100vh-200px)] custom-scrollbar pr-2">
+            <nav className="flex flex-col gap-1.5 mt-2 overflow-y-auto max-h-[calc(100vh-320px)] custom-scrollbar pr-2">
               {navItems.map((item) => (
                 <Link
                   key={item.path}
