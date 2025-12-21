@@ -257,9 +257,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const logout = async () => {
-        await supabase.auth.signOut();
-        setCurrentUser(null);
-        setUserId(null);
+        try {
+            console.log("Executando Logout Seguro...");
+            // 1. Tenta logout no Supabase
+            await supabase.auth.signOut();
+        } catch (error) {
+            console.error("Erro no signOut (ignorado):", error);
+        } finally {
+            // 2. LIMPEZA TOTAL (Nuclear Option)
+            // Garante que não sobra lixo de sessão antiga causando loop
+            setCurrentUser(null);
+            setUserId(null);
+
+            localStorage.clear(); // Limpa tokens antigos
+            sessionStorage.clear();
+
+            // 3. Força recarregamento para estado limpo
+            window.location.href = '/';
+        }
     };
 
     const updateProfile = async (data: Partial<User>) => {
