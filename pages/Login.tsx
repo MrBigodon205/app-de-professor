@@ -268,28 +268,55 @@ export const Login: React.FC = () => {
 
                     if (btn) btn.innerText = 'Testando...';
 
-                    // 1. Check for empty URL (Common Vercel Config Error)
+                    // 1. Check for empty URL
                     if (!url || url === "undefined" || url.length < 5) {
                       throw new Error(`URL Vazia/Inválida: "${url}". Verifique Vercel Env Vars.`);
                     }
 
-                    if (output) output.innerText = `Conectando a: ${url}...`;
+                    if (output) output.innerHTML = `Conectando a: ${url}...<br/><span class="text-[9px] text-slate-400">1. Testando Raw Fetch...</span>`;
 
-                    const timeoutPromise = new Promise((_, reject) =>
-                      setTimeout(() => reject(new Error("Timeout (5s). Bloqueio de rede ou Firewall.")), 5000)
+                    // 2. RAW FETCH TEST (Bypass Supabase Client)
+                    const rawStart = Date.now();
+                    const anonKey = (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                    try {
+                      const res = await fetch(`${url}/rest/v1/profiles?select=*&limit=1&head=true`, {
+                        method: 'GET',
+                        headers: {
+                          'apikey': anonKey,
+                          'Authorization': `Bearer ${anonKey}`
+                        },
+                        signal: controller.signal
+                      });
+                      clearTimeout(timeoutId);
+
+                      if (!res.ok) throw new Error(`Fetch Error: ${res.status} ${res.statusText}`);
+
+                      if (output) output.innerHTML += `<br/><span class="text-emerald-500">✓ Fetch OK (${Date.now() - rawStart}ms)</span>`;
+                    } catch (fetchErr: any) {
+                      throw new Error(`Falha no Fetch Puro: ${fetchErr.message}`);
+                    }
+
+                    // 3. CLIENT TEST
+                    if (output) output.innerHTML += `<br/><span class="text-[9px] text-slate-400">2. Testando Cliente JS...</span>`;
+
+                    const clientTimeout = new Promise((_, reject) =>
+                      setTimeout(() => reject(new Error("Timeout (5s) no Cliente JS.")), 5000)
                     );
 
                     const { error } = await Promise.race([
                       supabase.from('profiles').select('*', { count: 'exact', head: true }).limit(1),
-                      timeoutPromise
+                      clientTimeout
                     ]) as any;
-
-                    const end = Date.now();
 
                     if (error) throw error;
 
+                    const end = Date.now();
                     if (output) {
-                      output.innerHTML = `<span class="text-emerald-500 font-bold">✓ Online!</span> ${end - start}ms<br/><span class="text-[9px] text-slate-400">Conectado: ${url}</span>`;
+                      output.innerHTML += `<br/><span class="text-emerald-500 font-bold">✓ Cliente OK! Total: ${end - start}ms</span>`;
                     }
                   } catch (e: any) {
                     // Get URL again for error display
@@ -297,7 +324,7 @@ export const Login: React.FC = () => {
                     const url = (supabase as any).supabaseUrl;
 
                     if (output) {
-                      output.innerHTML = `<span class="text-rose-500 font-bold">✕ Erro:</span> ${e.message}<br/><span class="text-[9px] text-slate-400">Tentou: ${url || 'N/A'}</span>`;
+                      output.innerHTML = `<span class="text-rose-500 font-bold">✕ Erro:</span> ${e.message}<br/><span class="text-[9px] text-slate-400">URL: ${url || 'N/A'}</span>`;
                     }
                   } finally {
                     if (btn) btn.innerText = 'Testar Conexão à Nuvem';
