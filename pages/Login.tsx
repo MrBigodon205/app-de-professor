@@ -279,6 +279,10 @@ export const Login: React.FC = () => {
                     const rawStart = Date.now();
                     const anonKey = (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+                    // Debug: Show key prefix to verify Env Var loading
+                    const keyPrefix = anonKey ? anonKey.substring(0, 10) + '...' : 'UNDEFINED';
+                    if (output) output.innerHTML += `<br/><span class="text-[9px] text-slate-400">Chave: ${keyPrefix}</span>`;
+
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
