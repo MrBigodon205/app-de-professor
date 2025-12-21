@@ -1,8 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  overscroll-behavior-y: contain;
+  /* Disable pull-to-refresh */
+  height: 100%;
+}
+
 @media print {
   .no-print {
     display: none !important;
   }
-  
+
   body {
     background: white !important;
     padding: 0;
@@ -25,16 +36,20 @@
     gap: 0 !important;
   }
 
-  .shadow-sm, .shadow-md, .shadow-lg {
+  .shadow-sm,
+  .shadow-md,
+  .shadow-lg {
     box-shadow: none !important;
     border: 1px solid #e2e8f0 !important;
   }
 
-  .rounded-2xl, .rounded-3xl {
+  .rounded-2xl,
+  .rounded-3xl {
     border-radius: 0 !important;
   }
-  
-  .bg-slate-50, .dark\:bg-slate-900\/50 {
+
+  .bg-slate-50,
+  .dark\:bg-slate-900\/50 {
     background-color: transparent !important;
   }
 

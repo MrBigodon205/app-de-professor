@@ -315,38 +315,41 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="h-10 w-px bg-gradient-to-b from-transparent via-slate-200 dark:via-slate-700 to-transparent mx-2 hidden md:block"></div>
 
             {/* 2. Section Selector (Active Tabs) */}
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mask-linear-fade py-1">
-              {activeSeries?.sections.map(sec => (
-                <div key={sec} className="relative group/tab">
-                  <button
-                    onClick={() => handleSwitchSection(sec)}
-                    className={`relative min-w-[3rem] h-10 px-4 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center border ${selectedSection === sec
-                      ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-900 shadow-lg shadow-slate-200 dark:shadow-slate-900/50 border-transparent transform -translate-y-0.5'
-                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
-                  >
-                    {sec}
-                  </button>
-                  {/* Remove Interaction */}
-                  <button
-                    onClick={(e) => handleRemoveSectionOneClick(e, sec)}
-                    className="absolute -top-1.5 -right-1.5 size-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover/tab:opacity-100 transition-all transform scale-0 group-hover/tab:scale-100 cursor-pointer z-20 hover:bg-red-600 border-2 border-white dark:border-surface-dark"
-                    title="Remover Turma"
-                  >
-                    <span className="material-symbols-outlined text-[10px]">close</span>
-                  </button>
-                </div>
-              ))}
+            <div className="flex-1 min-w-0 mx-2 md:mx-0 overflow-hidden">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mask-linear-fade py-1 pr-4">
+                {/* Mobile Label if needed or just buttons */}
+                {activeSeries?.sections.map(sec => (
+                  <div key={sec} className="relative group/tab shrink-0">
+                    <button
+                      onClick={() => handleSwitchSection(sec)}
+                      className={`relative min-w-[3rem] h-10 px-4 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center border ${selectedSection === sec
+                        ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-900 shadow-lg shadow-slate-200 dark:shadow-slate-900/50 border-transparent transform -translate-y-0.5'
+                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                    >
+                      {sec}
+                    </button>
+                    {/* Remove Interaction */}
+                    <button
+                      onClick={(e) => handleRemoveSectionOneClick(e, sec)}
+                      className="absolute -top-1.5 -right-1.5 size-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover/tab:opacity-100 transition-all transform scale-0 group-hover/tab:scale-100 cursor-pointer z-20 hover:bg-red-600 border-2 border-white dark:border-surface-dark"
+                      title="Remover Turma"
+                    >
+                      <span className="material-symbols-outlined text-[10px]">close</span>
+                    </button>
+                  </div>
+                ))}
 
-              {/* Add Section Button */}
-              {activeSeries && (
-                <button
-                  onClick={handleAddSectionOneClick}
-                  className="size-10 min-w-[2.5rem] rounded-xl border border-dashed border-slate-300 dark:border-slate-600 hover:border-primary hover:text-primary text-slate-400 flex items-center justify-center transition-all hover:bg-primary/5 active:scale-95 group"
-                  title="Adicionar Próxima Turma"
-                >
-                  <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">add</span>
-                </button>
-              )}
+                {/* Add Section Button */}
+                {activeSeries && (
+                  <button
+                    onClick={handleAddSectionOneClick}
+                    className="size-10 min-w-[2.5rem] rounded-xl border border-dashed border-slate-300 dark:border-slate-600 hover:border-primary hover:text-primary text-slate-400 flex items-center justify-center transition-all hover:bg-primary/5 active:scale-95 group shrink-0"
+                    title="Adicionar Próxima Turma"
+                  >
+                    <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">add</span>
+                  </button>
+                )}
+              </div>
             </div>
 
           </div>
