@@ -68,19 +68,6 @@ export const Login: React.FC = () => {
     }
   };
 
-  // Debug logs state
-  const [logs, setLogs] = useState<string[]>([]);
-
-  useEffect(() => {
-    // Hook into global logger
-    window.addDebugLog = (msg) => {
-      setLogs(prev => [...prev, msg]);
-    };
-    return () => {
-      window.addDebugLog = undefined;
-    };
-  }, []);
-
   return (
     <div className="flex w-full h-screen font-display bg-background-light dark:bg-background-dark overflow-hidden">
       {/* Left Side - Form */}
@@ -263,15 +250,10 @@ export const Login: React.FC = () => {
             </form>
           </div>
 
-          {/* DEBUG LOGS */}
-          <div className="mt-8 text-center w-full">
-            <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-2">
+          <div className="mt-8 text-center">
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider">
               © 2024 Prof. Acerta+. Todos os direitos reservados.
             </p>
-            <div className="bg-black text-[9px] font-mono text-green-400 p-2 rounded h-24 overflow-y-auto text-left opacity-80 pointer-events-none">
-              <div>DEBUG CONSOLE (Vercel)</div>
-              {logs.map((l, i) => <div key={i}>{l}</div>)}
-            </div>
           </div>
         </div>
       </div>

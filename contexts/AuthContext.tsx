@@ -15,17 +15,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Ultra-simple global logger for production debugging
-declare global {
-    interface Window {
-        addDebugLog?: (msg: string) => void;
-    }
-}
-const debugLog = (msg: string) => {
-    console.log(`[AUTH-DEBUG] ${msg}`);
-    if (window.addDebugLog) window.addDebugLog(`${new Date().toISOString().split('T')[1].slice(0, 8)} - ${msg}`);
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
@@ -183,9 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const login = async (email: string, password: string) => {
-        debugLog(`Login attempt for: ${email}`);
         try {
-            debugLog("Starting signInWithPassword (20s timeout)...");
             // 1. Sign in (with 20s timeout)
             const { data, error } = await withTimeout(
                 supabase.auth.signInWithPassword({ email, password }),
@@ -194,7 +181,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             );
 
             if (error) {
-                debugLog(`Supabase auth error: ${error.message}`);
                 if (error.message === 'Email not confirmed') {
                     return { success: false, error: 'Por favor, confirme seu e-mail para entrar.' };
                 }
@@ -208,13 +194,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // SUCCESS! We return immediately.
             // The profile fetch will happen automatically via onAuthStateChange listener in useEffect
             if (data.user) {
-                debugLog("Login successful! User ID: " + data.user.id);
                 return { success: true };
             }
-            debugLog("No user data returned from Supabase?");
             return { success: false, error: 'Erro desconhecido ao entrar.' };
         } catch (e: any) {
-            debugLog(`Login crash/catch: ${e.message}`);
             console.error("Login crash:", e);
             if (e.message.includes("timed out")) {
                 return { success: false, error: 'O servidor demorou para responder. Verifique sua conexão.' };
