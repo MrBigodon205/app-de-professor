@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Subject } from '../types';
@@ -68,11 +68,26 @@ export const Login: React.FC = () => {
     }
   };
 
+  // Debug logs state
+  const [logs, setLogs] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Hook into global logger
+    window.addDebugLog = (msg) => {
+      setLogs(prev => [...prev, msg]);
+    };
+    return () => {
+      window.addDebugLog = undefined;
+    };
+  }, []);
+
   return (
     <div className="flex w-full h-screen font-display bg-background-light dark:bg-background-dark overflow-hidden">
       {/* Left Side - Form */}
       <div className="flex w-full flex-col bg-white dark:bg-slate-900 lg:w-1/2 overflow-y-auto relative z-10 shadow-xl h-full">
+        {/* ... Header ... */}
         <div className="relative bg-header-dark w-full pt-16 pb-12 flex flex-col items-center justify-center shrink-0 rounded-b-[2rem] shadow-2xl overflow-hidden z-20">
+          {/* ... header content ... */}
           <div className="absolute inset-0 opacity-50 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
           <div className="relative z-10 bg-primary p-4 rounded-2xl mb-5 shadow-lg shadow-green-900/30 transform transition-transform hover:scale-105 duration-300">
             <span className="material-symbols-outlined text-white text-[40px]">school</span>
@@ -87,6 +102,7 @@ export const Login: React.FC = () => {
 
         <div className="flex flex-1 flex-col px-6 lg:px-20 xl:px-28 pt-10 pb-6">
           <div className="mx-auto w-full max-w-md">
+            {/* ... Form Content ... */}
             <div className="mb-8 text-center md:text-left">
               <h2 className="text-slate-900 dark:text-white text-2xl font-bold uppercase tracking-tight mb-2">
                 Painel de Acesso
@@ -97,6 +113,7 @@ export const Login: React.FC = () => {
             </div>
 
             <div className="mb-6">
+              {/* Tabs */}
               <nav aria-label="Tabs" className="flex gap-6 border-b border-slate-100 dark:border-slate-800">
                 <button
                   onClick={() => setActiveTab('login')}
@@ -239,18 +256,22 @@ export const Login: React.FC = () => {
                   disabled={isSubmitting}
                   className="flex w-full justify-center items-center gap-2 rounded-xl bg-primary px-3 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-green-500/30 hover:bg-primary-hover hover:shadow-green-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all duration-200 ease-in-out transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Processando...' : (activeTab === 'login' ? 'Sincronizar' : 'Cadastrar')}
+                  {isSubmitting ? 'Processando...' : (activeTab === 'login' ? 'Entrar Agora' : 'Cadastrar')}
                   {!isSubmitting && <span className="material-symbols-outlined text-lg">arrow_forward</span>}
                 </button>
               </div>
-
-
             </form>
           </div>
-          <div className="mt-8 text-center">
-            <p className="text-[10px] text-slate-400 uppercase tracking-wider">
+
+          {/* DEBUG LOGS */}
+          <div className="mt-8 text-center w-full">
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-2">
               © 2024 Prof. Acerta+. Todos os direitos reservados.
             </p>
+            <div className="bg-black text-[9px] font-mono text-green-400 p-2 rounded h-24 overflow-y-auto text-left opacity-80 pointer-events-none">
+              <div>DEBUG CONSOLE (Vercel)</div>
+              {logs.map((l, i) => <div key={i}>{l}</div>)}
+            </div>
           </div>
         </div>
       </div>
@@ -270,16 +291,6 @@ export const Login: React.FC = () => {
             <p className="mt-6 text-lg leading-8 text-emerald-50 drop-shadow-sm font-light">
               Plataforma completa para gestão escolar. Acompanhe notas, presenças e atividades em um só lugar.
             </p>
-            <div className="mt-10 flex gap-4">
-              <div className="flex items-center gap-x-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm border border-white/20">
-                <span className="material-symbols-outlined text-white text-sm">verified</span>
-                <span className="text-sm font-medium text-white">Seguro</span>
-              </div>
-              <div className="flex items-center gap-x-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm border border-white/20">
-                <span className="material-symbols-outlined text-white text-sm">speed</span>
-                <span className="text-sm font-medium text-white">Rápido</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
