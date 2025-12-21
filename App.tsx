@@ -19,8 +19,15 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const App: React.FC = () => {
+  const isSupabaseConfigured = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
+
   return (
     <ErrorBoundary>
+      {!isSupabaseConfigured && (
+        <div style={{ backgroundColor: '#ef4444', color: 'white', padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>
+          CONFIGURAÇÃO CRÍTICA: Variáveis do Supabase não encontradas! Verifique o painel da Netlify.
+        </div>
+      )}
       <AuthProvider>
         <ClassProvider>
           <Router>
