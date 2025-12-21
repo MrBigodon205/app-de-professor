@@ -122,14 +122,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Safety timeout to prevent infinite loading
         const safetyTimeout = setTimeout(() => {
             if (mounted && loading) {
-                console.warn("Auth check timed out (12s limit).");
-                const shouldRetry = window.confirm("A conexão com o servidor está lenta. Deseja recarregar a página para tentar novamente?");
-                if (shouldRetry) {
-                    window.location.reload();
-                } else {
-                    // Force load app (might show empty state, better than infinite spinner)
-                    setLoading(false);
-                }
+                console.warn("Auth check timed out (12s limit). Forcing app load.");
+                setLoading(false);
             }
         }, 12000); // Increased from 5s to 12s for slow mobile networks
 
