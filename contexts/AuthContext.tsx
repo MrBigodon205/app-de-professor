@@ -21,8 +21,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
 
     const LOCAL_API_URL = 'http://localhost:3002/users';
+    const IS_DEV = import.meta.env.DEV;
 
     const getLocalUser = async (id: string): Promise<User | null> => {
+        if (!IS_DEV) return null;
         try {
             const res = await fetch(`${LOCAL_API_URL}/${id}`);
             if (res.ok) return await res.json();
@@ -33,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const saveLocalUser = async (user: User) => {
+        if (!IS_DEV) return;
         try {
             const existing = await getLocalUser(user.id);
             const method = existing ? 'PUT' : 'POST';
