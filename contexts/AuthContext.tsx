@@ -172,37 +172,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const login = async (email: string, password: string) => {
-        try {
-            // 1. Sign in (with 45s timeout for mobile cold starts)
-            const { data, error } = await withTimeout(
-                supabase.auth.signInWithPassword({ email, password }),
-                45000,
-                "Login request"
-            );
+        // Helper for Raw Fetch Login (Fallback)
+        const rawLogin = async () => {
+            console.log("Tentando login via Raw Fetch...");
+            const supabaseUrl = (supabase as any).supabaseUrl;
+            const supabaseKey = (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-            if (error) {
-                if (error.message === 'Email not confirmed') {
-                    return { success: false, error: 'Por favor, confirme seu e-mail para entrar.' };
-                }
-                if (error.message === 'Invalid login credentials') {
-                    return { success: false, error: 'E-mail ou senha inválidos.' };
-                }
-                console.error("Login error:", error.message);
-                return { success: false, error: error.message };
+            const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+                method: 'POST',
+                headers: {
+                    'apikey': supabaseKey,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error_description || errData.msg || 'Erro no login via HTTP');
             }
 
-            // SUCCESS! We return immediately.
-            // The profile fetch will happen automatically via onAuthStateChange listener in useEffect
-            if (data.user) {
+            const data = await response.json();
+
+            // Manually set session in Supabase client to sync state
+            const { error: sessionError } = await supabase.auth.setSession({
+                access_token: data.access_token,
+                refresh_token: data.refresh_token
+            });
+
+            if (sessionError) throw sessionError;
+            return { user: data.user, session: data };
+        };
+
+        try {
+            // 1. Try Standard Supabase Client Login (Timeout bumped to 30s)
+            console.log("Tentando login padrão...");
+            try {
+                const { data, error } = await withTimeout(
+                    supabase.auth.signInWithPassword({ email, password }),
+                    30000,
+                    "Login Padrão"
+                );
+
+                if (error) throw error;
+                if (data.user) return { success: true };
+
+            } catch (clientError: any) {
+                console.warn("Falha no login padrão, ativando Fallback HTTP:", clientError.message);
+
+                // If it's a CREDENTIAL error, don't retry (it's wrong password)
+                if (clientError.message === 'Email not confirmed' ||
+                    clientError.message === 'Invalid login credentials') {
+                    throw clientError;
+                }
+
+                // 2. FALLBACK: Raw Fetch Login
+                // Only runs if the client crashed vs network or timeout
+                await rawLogin();
                 return { success: true };
             }
-            return { success: false, error: 'Erro desconhecido ao entrar.' };
+
+            return { success: false, error: 'Erro desconhecido.' };
+
         } catch (e: any) {
-            console.error("Login crash:", e);
-            if (e.message.includes("timed out")) {
-                return { success: false, error: 'O servidor demorou para responder (Timeout). Verifique sua conexão e tente novamente.' };
-            }
-            return { success: false, error: e.message || 'Erro ao conectar ao servidor.' };
+            console.error("Login final failed:", e);
+            let msg = e.message;
+            if (msg === 'Email not confirmed') msg = 'Por favor, confirme seu e-mail para entrar.';
+            if (msg === 'Invalid login credentials') msg = 'E-mail ou senha inválidos.';
+            if (msg.includes('timed out')) msg = 'Tempo esgotado. Verifique sua conexão.';
+
+            return { success: false, error: msg };
         }
     };
 
