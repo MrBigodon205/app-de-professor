@@ -7,6 +7,11 @@ interface ProfileModalProps {
     onClose: () => void;
 }
 
+const SUBJECTS: string[] = [
+    'Filosofia', 'Educação Física', 'Matemática', 'Física', 'História', 'Geografia',
+    'Artes', 'Projeto de Vida', 'Literatura', 'Português', 'Redação', 'Química', 'Ciências'
+];
+
 export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
     const { currentUser, updateProfile, logout } = useAuth();
     const theme = useTheme();
@@ -21,12 +26,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [subject, setSubject] = useState('');
 
     useEffect(() => {
         if (currentUser) {
             setName(currentUser.name);
             setEmail(currentUser.email);
-            // Don't pre-fill password for security/UX, only set if they want to change it
+            setSubject(currentUser.subject || 'Matemática');
+            // Don't pre-fill password for security/UX
             setPassword('');
         }
     }, [currentUser, isOpen]);
@@ -64,13 +71,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     };
 
     const handleSaveProfile = async () => {
-        if (!name.trim() || !email.trim()) {
-            alert('Nome e Email são obrigatórios.');
+        if (!name.trim() || !email.trim() || !subject) {
+            alert('Nome, Email e Disciplina são obrigatórios.');
             return;
         }
 
         setLoading(true);
-        const updates: any = { name, email };
+        const updates: any = { name, email, subject };
         if (password.trim()) {
             updates.password = password;
         }
@@ -80,7 +87,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
 
         if (success) {
             setIsEditing(false);
-            alert('Perfil atualizado com sucesso!');
+            alert('Perfil atualizado com sucesso! Algumas alterações exigem recarregar a página.');
+            window.location.reload(); // Force reload to apply theme changes heavily
         } else {
             alert('Erro ao atualizar perfil.');
         }
@@ -99,14 +107,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                 <div className={`h-32 bg-gradient-to-r ${theme.bgGradient} relative shrink-0`}>
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-colors backdrop-blur-md"
+                        className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-colors backdrop-blur-md z-10"
                     >
                         <span className="material-symbols-outlined">close</span>
                     </button>
                 </div>
 
                 {/* Profile Content */}
-                <div className="px-8 pb-8 flex-1 overflow-y-auto custom-scrollbar">
+                <div className="px-6 md:px-8 pb-8 flex-1 overflow-y-auto custom-scrollbar">
                     <div className="relative -mt-16 mb-6 flex flex-col items-center">
                         {/* Avatar */}
                         <div className="relative group">
@@ -184,6 +192,26 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                                         className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-800 outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-white font-medium"
                                     />
                                 </div>
+
+                                {/* Subject Selector */}
+                                <div>
+                                    <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">Disciplina Principal</label>
+                                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar p-1">
+                                        {SUBJECTS.map(subj => (
+                                            <button
+                                                key={subj}
+                                                onClick={() => setSubject(subj)}
+                                                className={`p-2 rounded-lg text-xs font-bold transition-all border ${subject === subj
+                                                        ? `bg-${theme.primaryColor}/10 border-${theme.primaryColor} text-${theme.primaryColor}`
+                                                        : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                                    }`}
+                                            >
+                                                {subj}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 <div>
                                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1 ml-1">Senha (Opcional)</label>
                                     <input
