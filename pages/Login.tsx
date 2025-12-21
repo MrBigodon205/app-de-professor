@@ -254,6 +254,46 @@ export const Login: React.FC = () => {
             <p className="text-[10px] text-slate-400 uppercase tracking-wider">
               © 2024 Prof. Acerta+. Todos os direitos reservados.
             </p>
+            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={async () => {
+                  const start = Date.now();
+                  const btn = document.getElementById('diag-btn');
+                  const output = document.getElementById('diag-out');
+                  if (btn) btn.innerText = 'Testando...';
+                  if (output) output.innerText = 'Pingando servidor...';
+
+                  try {
+                    // Dynamic import to avoid top-level issues if any
+                    const { supabase } = await import('../lib/supabase');
+
+                    const { count, error } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).limit(1);
+                    const end = Date.now();
+
+                    if (error) throw error;
+
+                    if (output) {
+                      // Cast to any to access protected property for debug
+                      const url = (supabase as any).supabaseUrl;
+                      output.innerHTML = `<span class="text-emerald-500 font-bold">✓ Online!</span> ${end - start}ms<br/><span class="text-[9px] text-slate-400">${url}</span>`;
+                    }
+                  } catch (e: any) {
+                    if (output) {
+                      output.innerHTML = `<span class="text-rose-500 font-bold">✕ Erro:</span> ${e.message}`;
+                    }
+                  } finally {
+                    if (btn) btn.innerText = 'Testar Conexão à Nuvem';
+                  }
+                }}
+                id="diag-btn"
+                className="text-[10px] font-bold text-slate-400 hover:text-primary uppercase tracking-widest transition-colors flex items-center justify-center gap-1 mx-auto"
+              >
+                <span className="material-symbols-outlined text-[14px]">wifi_find</span>
+                Testar Conexão à Nuvem
+              </button>
+              <p id="diag-out" className="mt-2 text-xs text-slate-500 font-mono"></p>
+            </div>
           </div>
         </div>
       </div>
