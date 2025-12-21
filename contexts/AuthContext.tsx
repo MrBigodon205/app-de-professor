@@ -117,13 +117,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     useEffect(() => {
+        let mounted = true;
+
+        // Safety timeout to prevent infinite loading
+        const safetyTimeout = setTimeout(() => {
+            if (mounted && loading) {
+                console.warn("Auth check timed out, forcing app load.");
+                setLoading(false);
+            }
+        }, 5000);
+
         // Initial session check
         const initSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                await fetchProfile(session.user.id);
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (error) console.error("Session init error:", error);
+
+                if (session?.user) {
+                    await fetchProfile(session.user.id);
+                }
+            } catch (err) {
+                console.error("Unexpected auth error:", err);
+            } finally {
+                if (mounted) setLoading(false);
+                clearTimeout(safetyTimeout);
             }
-            setLoading(false);
         };
 
         initSession();
@@ -138,7 +156,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            mounted = false;
+            clearTimeout(safetyTimeout);
+            subscription.unsubscribe();
+        };
     }, []);
 
     const login = async (email: string, password: string) => {
