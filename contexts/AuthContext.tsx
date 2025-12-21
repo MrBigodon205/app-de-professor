@@ -87,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     supabase.from('profiles').select('*').eq('id', uid).single(),
                     10000,
                     "Profile Fetch"
-                );
+                ) as any;
                 if (error) throw error;
                 sbData = data;
             } catch (err: any) {
