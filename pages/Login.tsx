@@ -267,10 +267,16 @@ export const Login: React.FC = () => {
                     const url = (supabase as any).supabaseUrl;
 
                     if (btn) btn.innerText = 'Testando...';
+
+                    // 1. Check for empty URL (Common Vercel Config Error)
+                    if (!url || url === "undefined" || url.length < 5) {
+                      throw new Error(`URL Vazia/Inválida: "${url}". Verifique Vercel Env Vars.`);
+                    }
+
                     if (output) output.innerText = `Conectando a: ${url}...`;
 
                     const timeoutPromise = new Promise((_, reject) =>
-                      setTimeout(() => reject(new Error("Timeout (5s): Servidor não respondeu. Bloqueio de rede?")), 5000)
+                      setTimeout(() => reject(new Error("Timeout (5s). Bloqueio de rede ou Firewall.")), 5000)
                     );
 
                     const { error } = await Promise.race([
@@ -283,11 +289,15 @@ export const Login: React.FC = () => {
                     if (error) throw error;
 
                     if (output) {
-                      output.innerHTML = `<span class="text-emerald-500 font-bold">✓ Online!</span> ${end - start}ms<br/><span class="text-[9px] text-slate-400">Ok: supabase.co</span>`;
+                      output.innerHTML = `<span class="text-emerald-500 font-bold">✓ Online!</span> ${end - start}ms<br/><span class="text-[9px] text-slate-400">Conectado: ${url}</span>`;
                     }
                   } catch (e: any) {
+                    // Get URL again for error display
+                    const { supabase } = await import('../lib/supabase');
+                    const url = (supabase as any).supabaseUrl;
+
                     if (output) {
-                      output.innerHTML = `<span class="text-rose-500 font-bold">✕ Erro:</span> ${e.message}`;
+                      output.innerHTML = `<span class="text-rose-500 font-bold">✕ Erro:</span> ${e.message}<br/><span class="text-[9px] text-slate-400">Tentou: ${url || 'N/A'}</span>`;
                     }
                   } finally {
                     if (btn) btn.innerText = 'Testar Conexão à Nuvem';
