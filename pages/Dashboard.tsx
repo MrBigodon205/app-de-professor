@@ -1,0 +1,454 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useClass } from '../contexts/ClassContext';
+import { useTheme } from '../hooks/useTheme';
+import { useAuth } from '../contexts/AuthContext';
+import { Student, AttendanceRecord, Occurrence, Activity } from '../types';
+import { supabase } from '../lib/supabase';
+
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { DashboardHeader } from '../components/DashboardHeader';
+import { DashboardBanner } from '../components/DashboardBanner';
+
+export const Dashboard: React.FC = () => {
+  const { selectedSeriesId, selectedSection, classes } = useClass();
+  const theme = useTheme();
+  const { currentUser } = useAuth();
+  const [loading, setLoading] = useState(true);
+
+  // Separate states for clarity
+  const [globalCount, setGlobalCount] = useState(0);
+  const [classCount, setClassCount] = useState(0);
+  const [stats, setStats] = useState({
+    presentToday: 0,
+    gradeAverage: 0,
+    newObservations: 0
+  });
+  const [recentOccurrences, setRecentOccurrences] = useState<Occurrence[]>([]);
+  const [todaysPlan, setTodaysPlan] = useState<any | null>(null);
+  const [upcomingActivities, setUpcomingActivities] = useState<Activity[]>([]);
+  const [classPlans, setClassPlans] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchAllData();
+    }
+  }, [currentUser, selectedSeriesId, selectedSection]);
+
+  const fetchAllData = () => {
+    setLoading(true);
+    // Trigger all fetches in parallel
+    Promise.all([
+      fetchCounts(),
+      fetchStats(),
+      fetchOccurrences(),
+      fetchPlans(),
+      fetchActivities()
+    ]).finally(() => {
+      setLoading(false);
+    });
+  };
+
+  const fetchCounts = async () => {
+    if (!currentUser) return;
+    try {
+      const { count: gCount } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', currentUser.id);
+      setGlobalCount(gCount || 0);
+
+      if (selectedSeriesId) {
+        let query = supabase.from('students').select('*', { count: 'exact', head: true })
+          .eq('user_id', currentUser.id)
+          .eq('series_id', selectedSeriesId);
+
+        if (selectedSection) {
+          query = query.eq('section', selectedSection);
+        }
+
+        const { count: sCount } = await query;
+        setClassCount(sCount || 0);
+      } else {
+        setClassCount(gCount || 0);
+      }
+    } catch (e) {
+      console.error("Error fetching counts:", e);
+    }
+  };
+
+  const fetchStats = async () => {
+    if (!currentUser) return;
+    try {
+      let studentsQuery = supabase.from('students').select('units, id').eq('user_id', currentUser.id);
+      if (selectedSeriesId) studentsQuery = studentsQuery.eq('series_id', selectedSeriesId);
+      if (selectedSection) studentsQuery = studentsQuery.eq('section', selectedSection);
+
+      const { data: studentsData } = await studentsQuery;
+      const relevantIds = (studentsData || []).map(s => s.id);
+
+      // Average calculation
+      let totalSum = 0;
+      let totalCount = 0;
+      (studentsData || []).forEach(s => {
+        if (s.units) {
+          Object.values(s.units).forEach((unit: any) => {
+            let uSum = 0;
+            Object.values(unit).forEach((val: any) => {
+              if (typeof val === 'number') uSum += val;
+            });
+            const uAvg = uSum / 2;
+            if (uAvg > 0) {
+              totalSum += uAvg;
+              totalCount++;
+            }
+          });
+        }
+      });
+
+      // Attendance Today
+      const today = new Date().toISOString().split('T')[0];
+      let attQuery = supabase.from('attendance')
+        .select('status, student_id')
+        .eq('user_id', currentUser.id)
+        .eq('date', today)
+        .eq('status', 'P');
+
+      const { data: attData } = await attQuery;
+      const presentToday = (attData || []).filter(a => relevantIds.includes(a.student_id)).length;
+
+      setStats(prev => ({
+        ...prev,
+        presentToday,
+        gradeAverage: totalCount > 0 ? (totalSum / totalCount) : 0
+      }));
+    } catch (e) {
+      console.error("Error fetching stats:", e);
+    }
+  };
+
+  const fetchOccurrences = async () => {
+    if (!currentUser) return;
+    try {
+      let query = supabase.from('occurrences')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('date', { ascending: false });
+
+      if (selectedSeriesId) {
+        // We really need a join or to fetch students first, but for simplicity:
+        const { data: sData } = await supabase.from('students').select('id').eq('series_id', selectedSeriesId).eq('user_id', currentUser.id);
+        const sIds = (sData || []).map(s => s.id);
+        query = query.in('student_id', sIds);
+      }
+
+      const { data, error } = await query.limit(5);
+      if (error) throw error;
+
+      setRecentOccurrences((data || []).map(o => ({
+        id: o.id.toString(),
+        studentId: o.student_id.toString(),
+        date: o.date,
+        type: o.type as any,
+        description: o.description,
+        userId: o.user_id
+      })));
+
+      setStats(prev => ({ ...prev, newObservations: data?.length || 0 }));
+    } catch (e) {
+      console.error("Error fetching occurrences:", e);
+    }
+  };
+
+  const fetchPlans = async () => {
+    if (!currentUser) return;
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      let query = supabase.from('plans')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('start_date', { ascending: false });
+
+      if (selectedSeriesId) {
+        query = query.eq('series_id', selectedSeriesId);
+        if (selectedSection) {
+          query = query.or(`section.eq.${selectedSection},section.is.null`);
+        }
+      }
+
+      const { data } = await query.limit(5);
+
+      const formatted = (data || []).map(p => ({
+        id: p.id.toString(),
+        title: p.title,
+        description: p.description,
+        startDate: p.start_date,
+        endDate: p.end_date,
+        seriesId: p.series_id.toString(),
+        section: p.section,
+        files: p.files || [],
+        userId: p.user_id
+      }));
+
+      setClassPlans(formatted.slice(0, 3));
+
+      const activePlan = formatted.find(p => today >= p.startDate && today <= p.endDate);
+      setTodaysPlan(activePlan || null);
+    } catch (e) {
+      console.error("Error fetching plans:", e);
+    }
+  };
+
+  const fetchActivities = async () => {
+    if (!currentUser) return;
+    try {
+      let query = supabase.from('activities')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('date', { ascending: false });
+
+      if (selectedSeriesId) {
+        query = query.eq('series_id', selectedSeriesId);
+        if (selectedSection) {
+          query = query.or(`section.eq.${selectedSection},section.is.null`);
+        }
+      }
+
+      const { data } = await query.limit(5);
+
+      setUpcomingActivities((data || []).map(a => ({
+        id: a.id.toString(),
+        title: a.title,
+        type: a.type,
+        seriesId: a.series_id.toString(),
+        section: a.section || '',
+        date: a.date,
+        startDate: a.start_date,
+        endDate: a.end_date,
+        description: a.description,
+        files: a.files || [],
+        completions: a.completions || [],
+        userId: a.user_id
+      })).slice(0, 3));
+    } catch (e) {
+      console.error("Error fetching activities:", e);
+    }
+  };
+
+  const isContextSelected = !!selectedSeriesId;
+  const displayCount = isContextSelected ? classCount : globalCount;
+  const contextName = (classes.find(c => c.id === selectedSeriesId)?.name || `Série ${selectedSeriesId}`) + (selectedSection ? ` - Turma ${selectedSection}` : '');
+
+  return (
+    <div className="max-w-7xl w-full mx-auto flex flex-col gap-8 animate-in fade-in pb-10">
+      <DashboardHeader
+        currentUser={currentUser}
+        theme={theme}
+        loading={loading}
+        isContextSelected={isContextSelected}
+        contextName={contextName}
+      />
+
+      <DashboardBanner theme={theme} currentUser={currentUser} />
+
+      {/* PLAN OF THE DAY BANNER */}
+      {
+        todaysPlan && (
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
+            <div className="absolute right-0 top-0 p-4 opacity-10">
+              <span className="material-symbols-outlined text-[150px]">calendar_month</span>
+            </div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2 text-blue-100 font-bold uppercase text-xs tracking-wider">
+                <span className="bg-white/20 px-2 py-0.5 rounded">Atividade do Dia</span>
+                <span>•</span>
+                <span>{new Date().toLocaleDateString('pt-BR')}</span>
+              </div>
+              <h2 className="text-2xl font-bold mb-2">{todaysPlan.title}</h2>
+              <p className="text-blue-100 max-w-2xl line-clamp-2">{todaysPlan.description}</p>
+
+              <div className="flex items-center gap-4 mt-6">
+                <Link to="/planning" className={`bg-white text-${theme.primaryColor} px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-50 transition-colors`}>
+                  Ver Detalhes
+                </Link>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="material-symbols-outlined">schedule</span>
+                  Termina em {new Date(todaysPlan.endDate).toLocaleDateString('pt-BR')}
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Main KPI Card - Total Students */}
+      <div className="bg-white dark:bg-surface-dark rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 dark:border-slate-800 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+        <div className="absolute top-0 right-0 p-40 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-full blur-3xl -mr-20 -mt-20 transition-all group-hover:scale-110"></div>
+
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4 md:gap-6">
+            <div className={`size-14 md:size-20 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/30 group-hover:scale-110 transition-transform duration-300`}>
+              <span className="material-symbols-outlined text-3xl md:text-4xl">groups</span>
+            </div>
+            <div>
+              <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-1">Total de Alunos</h2>
+              <p className="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest text-[9px] md:text-[10px]">Todas as Séries</p>
+            </div>
+          </div>
+          <div className="text-left sm:text-right w-full sm:w-auto flex sm:flex-col items-end sm:items-end justify-between">
+            <span className="block text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter">{globalCount}</span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-[10px] font-bold uppercase tracking-wide mt-2">
+              <span className="size-1.5 bg-green-500 rounded-full animate-pulse"></span>
+              Ativos
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Secondary Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        {/* Grades */}
+        <Link to="/grades" className="bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+          <div className={`absolute inset-0 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent opacity-0 group-hover:opacity-100 transition-all`}></div>
+          <div className="flex items-start justify-between mb-6 relative">
+            <div className={`size-14 rounded-2xl bg-${theme.primaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20 group-hover:scale-110 transition-transform`}>
+              <span className="material-symbols-outlined text-2xl">grade</span>
+            </div>
+            <span className={`text-[10px] font-black text-${theme.primaryColor} bg-${theme.primaryColor}/10 px-3 py-1.5 rounded-full uppercase tracking-wider`}>{isContextSelected ? 'Turma' : 'Global'}</span>
+          </div>
+          <div className="relative">
+            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-xs mb-1">Média Geral</h3>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold text-slate-900 dark:text-white">{stats.gradeAverage.toFixed(1)}</span>
+              <span className="text-sm font-bold text-slate-300">/ 10</span>
+            </div>
+          </div>
+        </Link>
+
+        {/* Attendance */}
+        <Link to="/attendance" className="bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/5 group-hover:to-transparent transition-all"></div>
+          <div className="flex items-start justify-between mb-6 relative">
+            <div className="size-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-2xl">event_available</span>
+            </div>
+            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full uppercase tracking-wider">Hoje</span>
+          </div>
+          <div className="relative">
+            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-xs mb-1">Presença</h3>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold text-slate-900 dark:text-white">{stats.presentToday}</span>
+              <span className="text-sm font-bold text-slate-300">/ {displayCount}</span>
+            </div>
+          </div>
+        </Link>
+
+        {/* Observations */}
+        <Link to="/observations" className="bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-amber-500/0 group-hover:from-amber-500/5 group-hover:to-transparent transition-all"></div>
+          <div className="flex items-start justify-between mb-6 relative">
+            <div className="size-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-2xl">notification_important</span>
+            </div>
+            <span className="text-[10px] font-black text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-full uppercase tracking-wider">Notificações</span>
+          </div>
+          <div className="relative">
+            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-xs mb-1">Ocorrências</h3>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold text-slate-900 dark:text-white">{stats.newObservations}</span>
+              <span className="text-sm font-bold text-slate-300">novas</span>
+            </div>
+          </div>
+        </Link>
+
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Activities and Plans */}
+        <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
+              <span className={`material-symbols-outlined text-${theme.primaryColor}`}>assignment_turned_in</span>
+              Atividades e Planejamento
+            </h3>
+          </div>
+
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Atividades Avaliativas</h4>
+              <div className="space-y-2">
+                {upcomingActivities.length === 0 ? (
+                  <p className="text-sm text-slate-400 italic">Nenhuma atividade recente.</p>
+                ) : (
+                  upcomingActivities.map(act => (
+                    <div key={act.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-emerald-500">task_alt</span>
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{act.title}</span>
+                      </div>
+                      <span className="text-xs text-slate-400">{new Date(act.date).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Últimos Planejamentos</h4>
+              <div className="space-y-2">
+                {classPlans.length === 0 ? (
+                  <p className="text-sm text-slate-400 italic">Nenhum planejamento recente.</p>
+                ) : (
+                  classPlans.map(plan => (
+                    <div key={plan.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center gap-3">
+                        <span className={`material-symbols-outlined text-${theme.primaryColor}`}>calendar_today</span>
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{plan.title}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 uppercase">{new Date(plan.startDate).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Ocurrences */}
+        <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="material-symbols-outlined text-slate-400">history</span>
+              Ocorrências Recentes
+            </h3>
+            <Link to="/observations" className={`text-${theme.primaryColor} font-bold text-sm hover:underline`}>Ver Todas</Link>
+          </div>
+
+          <div className="space-y-3">
+            {recentOccurrences.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+                <p className="text-slate-400 font-medium">Nenhuma ocorrência registrada.</p>
+              </div>
+            ) : (
+              recentOccurrences.map(occ => (
+                <div key={occ.id} className="flex items-center gap-4 p-4 bg-slate-50 hover:bg-white dark:bg-slate-900/50 dark:hover:bg-slate-800/80 rounded-2xl transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-700 hover:shadow-sm group">
+                  <div className={`size-10 rounded-xl flex items-center justify-center text-white shadow-sm ${occ.type === 'Elogio' ? 'bg-gradient-to-br from-green-400 to-emerald-600' : 'bg-gradient-to-br from-red-400 to-rose-600'}`}>
+                    <span className="material-symbols-outlined text-lg">{occ.type === 'Elogio' ? 'thumb_up' : 'warning'}</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{occ.type}</p>
+                      <span className="text-[10px] font-bold text-slate-400 bg-white dark:bg-slate-900 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-800">{occ.date}</span>
+                    </div>
+                    <p className="text-sm text-slate-500 line-clamp-1">{occ.description}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </div >
+  );
+};

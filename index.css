@@ -1,0 +1,48 @@
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Optimize layout for print */
+  .max-w-\[1400px\] {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .grid {
+    display: block !important;
+  }
+
+  .gap-8 {
+    gap: 0 !important;
+  }
+
+  .shadow-sm, .shadow-md, .shadow-lg {
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  .rounded-2xl, .rounded-3xl {
+    border-radius: 0 !important;
+  }
+  
+  .bg-slate-50, .dark\:bg-slate-900\/50 {
+    background-color: transparent !important;
+  }
+
+  textarea {
+    border: none !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: unset !important;
+    overflow: visible !important;
+  }
+}
