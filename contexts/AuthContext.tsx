@@ -122,10 +122,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Safety timeout to prevent infinite loading
         const safetyTimeout = setTimeout(() => {
             if (mounted && loading) {
-                console.warn("Auth check timed out, forcing app load.");
-                setLoading(false);
+                console.warn("Auth check timed out (12s limit).");
+                const shouldRetry = window.confirm("A conexão com o servidor está lenta. Deseja recarregar a página para tentar novamente?");
+                if (shouldRetry) {
+                    window.location.reload();
+                } else {
+                    // Force load app (might show empty state, better than infinite spinner)
+                    setLoading(false);
+                }
             }
-        }, 5000);
+        }, 12000); // Increased from 5s to 12s for slow mobile networks
 
         // Initial session check
         const initSession = async () => {
@@ -173,10 +179,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = async (email: string, password: string) => {
         try {
-            // 1. Sign in (with 20s timeout)
+            // 1. Sign in (with 45s timeout for mobile cold starts)
             const { data, error } = await withTimeout(
                 supabase.auth.signInWithPassword({ email, password }),
-                20000,
+                45000,
                 "Login request"
             );
 
@@ -200,7 +206,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (e: any) {
             console.error("Login crash:", e);
             if (e.message.includes("timed out")) {
-                return { success: false, error: 'O servidor demorou para responder. Verifique sua conexão.' };
+                return { success: false, error: 'O servidor demorou para responder (Timeout). Verifique sua conexão e tente novamente.' };
             }
             return { success: false, error: e.message || 'Erro ao conectar ao servidor.' };
         }
