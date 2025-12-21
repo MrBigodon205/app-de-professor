@@ -261,22 +261,29 @@ export const Login: React.FC = () => {
                   const start = Date.now();
                   const btn = document.getElementById('diag-btn');
                   const output = document.getElementById('diag-out');
-                  if (btn) btn.innerText = 'Testando...';
-                  if (output) output.innerText = 'Pingando servidor...';
 
                   try {
-                    // Dynamic import to avoid top-level issues if any
                     const { supabase } = await import('../lib/supabase');
+                    const url = (supabase as any).supabaseUrl;
 
-                    const { count, error } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).limit(1);
+                    if (btn) btn.innerText = 'Testando...';
+                    if (output) output.innerText = `Conectando a: ${url}...`;
+
+                    const timeoutPromise = new Promise((_, reject) =>
+                      setTimeout(() => reject(new Error("Timeout (5s): Servidor não respondeu. Bloqueio de rede?")), 5000)
+                    );
+
+                    const { error } = await Promise.race([
+                      supabase.from('profiles').select('*', { count: 'exact', head: true }).limit(1),
+                      timeoutPromise
+                    ]) as any;
+
                     const end = Date.now();
 
                     if (error) throw error;
 
                     if (output) {
-                      // Cast to any to access protected property for debug
-                      const url = (supabase as any).supabaseUrl;
-                      output.innerHTML = `<span class="text-emerald-500 font-bold">✓ Online!</span> ${end - start}ms<br/><span class="text-[9px] text-slate-400">${url}</span>`;
+                      output.innerHTML = `<span class="text-emerald-500 font-bold">✓ Online!</span> ${end - start}ms<br/><span class="text-[9px] text-slate-400">Ok: supabase.co</span>`;
                     }
                   } catch (e: any) {
                     if (output) {
