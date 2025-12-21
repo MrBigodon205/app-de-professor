@@ -173,7 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = async (email: string, password: string) => {
         try {
-            // 1. Try to sign in with a 20s timeout
+            // 1. Sign in (with 20s timeout)
             const { data, error } = await withTimeout(
                 supabase.auth.signInWithPassword({ email, password }),
                 20000,
@@ -191,15 +191,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 return { success: false, error: error.message };
             }
 
+            // SUCCESS! We return immediately.
+            // The profile fetch will happen automatically via onAuthStateChange listener in useEffect
             if (data.user) {
-                // 2. Fetch profile with a 5s timeout per attempt (fetchProfile manages its own retries, but we want to cap the total wait)
-                // We wrap the await to ensure 'Processando' doesn't hang forever if fetching takes too long
-                try {
-                    await withTimeout(fetchProfile(data.user.id), 8000, "Profile fetch");
-                } catch (profileErr) {
-                    console.warn("Profile fetch took too long, proceeding anyway...", profileErr);
-                    // We allow login to succeed even if profile is slow/failed, app will try to fetch later or show partial data
-                }
                 return { success: true };
             }
             return { success: false, error: 'Erro desconhecido ao entrar.' };
