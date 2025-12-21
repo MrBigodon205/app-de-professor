@@ -173,10 +173,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = async (email: string, password: string) => {
         try {
-            // 1. Try to sign in with a 10s timeout
+            // 1. Try to sign in with a 20s timeout
             const { data, error } = await withTimeout(
                 supabase.auth.signInWithPassword({ email, password }),
-                10000,
+                20000,
                 "Login request"
             );
 
