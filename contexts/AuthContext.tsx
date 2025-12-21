@@ -163,12 +163,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, []);
 
+    // Helper to race a promise against a timeout
+    const withTimeout = <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
+        return Promise.race([
+            promise,
+            new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`${label} timed out`)), ms))
+        ]);
+    };
+
     const login = async (email: string, password: string) => {
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+            // 1. Try to sign in with a 10s timeout
+            const { data, error } = await withTimeout(
+                supabase.auth.signInWithPassword({ email, password }),
+                10000,
+                "Login request"
+            );
 
             if (error) {
                 if (error.message === 'Email not confirmed') {
@@ -182,12 +192,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             if (data.user) {
-                await fetchProfile(data.user.id);
+                // 2. Fetch profile with a 5s timeout per attempt (fetchProfile manages its own retries, but we want to cap the total wait)
+                // We wrap the await to ensure 'Processando' doesn't hang forever if fetching takes too long
+                try {
+                    await withTimeout(fetchProfile(data.user.id), 8000, "Profile fetch");
+                } catch (profileErr) {
+                    console.warn("Profile fetch took too long, proceeding anyway...", profileErr);
+                    // We allow login to succeed even if profile is slow/failed, app will try to fetch later or show partial data
+                }
                 return { success: true };
             }
             return { success: false, error: 'Erro desconhecido ao entrar.' };
         } catch (e: any) {
-            console.error("Login error:", e);
+            console.error("Login crash:", e);
+            if (e.message.includes("timed out")) {
+                return { success: false, error: 'O servidor demorou para responder. Verifique sua conexão.' };
+            }
             return { success: false, error: e.message || 'Erro ao conectar ao servidor.' };
         }
     };
