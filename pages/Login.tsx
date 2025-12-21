@@ -251,9 +251,6 @@ export const Login: React.FC = () => {
             <p className="text-[10px] text-slate-400 uppercase tracking-wider">
               © 2024 Prof. Acerta+. Todos os direitos reservados.
             </p>
-            <p className="text-[9px] text-slate-300 mt-2 font-mono">
-              Server: {import.meta.env.VITE_SUPABASE_URL || 'Not Configured'}
-            </p>
           </div>
         </div>
       </div>
