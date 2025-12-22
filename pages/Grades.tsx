@@ -1,489 +1,349 @@
-import React, { useState, useEffect } from 'react';
-import { useClass } from '../contexts/ClassContext';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../hooks/useTheme';
-import { Student } from '../types';
-import { supabase } from '../lib/supabase';
+import { useClass } from '../contexts/ClassContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { supabase } from '../utils/supabaseClient';
+import { Student, Grades as GradesType, UNIT_CONFIGS } from '../types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Save, Download, Calculator, AlertCircle, CheckCircle, Wifi, WifiOff } from 'lucide-react';
 
-const UNIT_CONFIGS: any = {
-    '1': {
-        columns: [
-            { key: 'qualitative', label: 'Qualitativo', max: 2.0 },
-            { key: 'simulado', label: 'Simulado', max: 2.0 },
-            { key: 'test', label: 'Teste', max: 4.0 },
-            { key: 'workshop', label: 'Workshop', max: 2.0 },
-            { key: 'exam', label: 'Prova', max: 10.0 },
-        ],
-    },
-    '2': {
-        columns: [
-            { key: 'qualitative', label: 'Qualitativo', max: 2.0 },
-            { key: 'simulado', label: 'Simulado', max: 2.0 },
-            { key: 'test', label: 'Teste', max: 4.0 },
-            { key: 'scienceFair', label: 'Feira de Ciências', max: 2.0 },
-            { key: 'exam', label: 'Prova', max: 10.0 },
-        ],
-    },
-    '3': {
-        columns: [
-            { key: 'qualitative', label: 'Qualitativo', max: 2.0 },
-            { key: 'simulado', label: 'Simulado', max: 2.0 },
-            { key: 'test', label: 'Teste', max: 4.0 },
-            { key: 'gincana', label: 'Gincana', max: 2.0 },
-            { key: 'talentShow', label: 'Amostra de Talentos', max: 2.0 },
-            { key: 'exam', label: 'Prova', max: 10.0 }, // max becomes 8.0 if talentShow > 0
-        ],
-    },
-};
+interface GradeData {
+    [key: string]: number;
+}
+
+interface GradeRecord {
+    id: string;
+    student_id: number;
+    unit: string;
+    data: GradeData;
+    user_id: string;
+}
 
 export const Grades: React.FC = () => {
-    const { selectedSeriesId, selectedSection, activeSeries } = useClass();
+    const { selectedSeriesId, selectedSection } = useClass();
     const { currentUser } = useAuth();
     const theme = useTheme();
     const [students, setStudents] = useState<Student[]>([]);
     const [selectedUnit, setSelectedUnit] = useState<string>('1');
     const [loading, setLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
 
-    const [isSyncing, setIsSyncing] = useState(false);
-    const saveTimeoutRefs = React.useRef<{ [key: string]: NodeJS.Timeout }>({});
+    // Track pending changes: { studentId: { field: value } }
+    const pendingChangesRef = useRef<{ [studentId: string]: GradeData }>({});
+    const saveTimeoutRefs = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
-    useEffect(() => {
-        if (selectedSeriesId && selectedSection) {
-            fetchStudents();
-            // Polling Fallback: re-fetch every 10 seconds to ensure sync
-            const interval = setInterval(() => {
-                // Only fetch if we are NOT currently typing/saving to avoid overwriting user input
-                if (!isSyncing && Object.keys(saveTimeoutRefs.current).length === 0) {
-                    fetchStudents(true);
-                }
-            }, 10000);
-            return () => clearInterval(interval);
-        } else {
-            setStudents([]);
-            setLoading(false);
-        }
-    }, [selectedSeriesId, selectedSection]);
-
-    const fetchStudents = async (silent = false) => {
+    // Fetch Data
+    const fetchData = async (silent = false) => {
         if (!currentUser || !selectedSeriesId || !selectedSection) return;
         if (!silent) setLoading(true);
         try {
-            const { data, error } = await supabase
+            // 1. Fetch Students
+            const { data: studentsData, error: studentsError } = await supabase
                 .from('students')
                 .select('*')
                 .eq('series_id', selectedSeriesId)
                 .eq('section', selectedSection)
-                .eq('user_id', currentUser.id);
+                .eq('user_id', currentUser.id)
+                .order('number', { ascending: true });
 
-            if (error) throw error;
+            if (studentsError) throw studentsError;
 
-            const formatted: Student[] = data.map(s => ({
-                id: s.id.toString(),
-                name: s.name,
-                number: s.number,
-                initials: s.initials || '',
-                color: s.color || '',
-                classId: s.series_id.toString(),
-                section: s.section,
-                userId: s.user_id,
-                units: s.units || {}
-            }));
-            formatted.sort((a, b) => parseInt(a.number) - parseInt(b.number));
+            // 2. Fetch Grades (from new table)
+            const studentIds = studentsData.map(s => s.id);
+            const { data: gradesData, error: gradesError } = await supabase
+                .from('grades')
+                .select('*')
+                .in('student_id', studentIds)
+                .eq('user_id', currentUser.id); // Security check
+
+            if (gradesError) throw gradesError;
+
+            // 3. Merge
+            const formatted: Student[] = studentsData.map(s => {
+                // Find all grade records for this student
+                const sGrades = gradesData?.filter(g => g.student_id === s.id) || [];
+                const unitsMap: any = {};
+
+                sGrades.forEach(g => {
+                    unitsMap[g.unit] = g.data || {};
+                });
+
+                return {
+                    id: s.id.toString(),
+                    name: s.name,
+                    number: s.number,
+                    initials: s.initials || '',
+                    color: s.color || '',
+                    classId: s.series_id.toString(),
+                    section: s.section,
+                    userId: s.user_id,
+                    units: unitsMap
+                };
+            });
+
             setStudents(formatted);
         } catch (error) {
-            console.error('Erro ao buscar alunos:', error);
+            console.error('Erro ao buscar dados:', error);
         } finally {
             if (!silent) setLoading(false);
         }
     };
 
-    // --- REALTIME SUBSCRIPTION FOR GRADES ---
-    /*
     useEffect(() => {
-        if (!currentUser || !selectedSeriesId || !selectedSection) return;
-
-        console.log("Setting up Realtime for Grades...");
-
-        const channel = supabase.channel(`grades_sync_${selectedSeriesId}_${selectedSection}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'students',
-                    filter: `series_id=eq.${selectedSeriesId}`
-                },
-                (payload) => {
-                    const newRecord = payload.new as any;
-                    // If we receive an update while NOT typing, we accept it.
-                    if (Object.keys(saveTimeoutRefs.current).length === 0) {
-                        if (newRecord && newRecord.section === selectedSection && newRecord.user_id === currentUser.id) {
-                            console.log("Realtime Grades Update Received!", payload);
-                            fetchStudents(true);
-                        } else if (payload.eventType === 'DELETE') {
-                            fetchStudents(true);
-                        }
-                    }
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
+        if (selectedSeriesId && selectedSection) {
+            fetchData();
+        }
     }, [selectedSeriesId, selectedSection, currentUser]);
-    */
-    // ----------------------------------------
 
-    const calculateAverage = (student: Student, unit: string) => {
-        const grades = student.units[unit];
-        if (!grades) return 0;
+    // Save to DB
+    const saveToDB = async (studentId: string) => {
+        const changes = pendingChangesRef.current[studentId];
+        if (!changes || Object.keys(changes).length === 0) return;
 
-        let total = 0;
-        Object.values(grades).forEach(val => {
-            if (typeof val === 'number') total += val;
-        });
+        // Get latest full unit state from React state is risky in timeout?
+        // Actually, we should upsert the MERGED state.
+        // Let's find the student in current state.
+        // We can't access 'students' inside timeout easily without ref.
+        // BUT, since we have 'changes', we can fetch-merge-save OR trust client state?
+        // Trusting client state (optimistic) is standard.
+        // We need the Current Unit Data for this student.
 
-        const average = total / 2;
-        return parseFloat(average.toFixed(1));
+        // Better approach: Pass the "Final Unit Data" to this function.
+        // But debounce makes it hard.
+
+        // Let's rely on pendingChangesRef to accumulate.
+        // And when saving, we need the BASE data.
+
+        // Alternative: The timeout function should read the LATEST students state via a Ref.
     };
+
+    const studentsRef = useRef(students);
+    useEffect(() => { studentsRef.current = students; }, [students]);
 
     const handleGradeChange = (studentId: string, field: string, value: string) => {
         const numericValue = value === '' ? 0 : parseFloat(value);
         if (isNaN(numericValue)) return;
 
-        let finalStudent: Student | undefined;
+        // 1. Optimistic Update
+        setStudents(prev => prev.map(s => {
+            if (s.id === studentId) {
+                const newUnits = { ...s.units };
+                if (!newUnits[selectedUnit]) newUnits[selectedUnit] = {};
 
-        // 1. Optimistic Update (Immediate Feedback)
-        setStudents(prevStudents => {
-            return prevStudents.map(student => {
-                if (student.id === studentId) {
-                    const newUnits = { ...student.units };
-                    if (!newUnits[selectedUnit]) newUnits[selectedUnit] = {};
+                // Max Value Check
+                const col = UNIT_CONFIGS[selectedUnit as keyof typeof UNIT_CONFIGS]?.columns.find(c => c.key === field);
+                let finalVal = numericValue;
+                if (col && finalVal > col.max) finalVal = col.max;
 
-                    const currentGrades = { ...newUnits[selectedUnit] };
-                    let finalValue = numericValue;
-
-                    // Determine max for this field
-                    const col = UNIT_CONFIGS[selectedUnit].columns.find((c: any) => c.key === field);
-                    let max = col ? col.max : 10;
-
-                    // Special rule for Unit 3 Prova
-                    if (selectedUnit === '3') {
-                        const talentShowGrade = field === 'talentShow' ? numericValue : (currentGrades.talentShow || 0);
-                        if (field === 'exam') {
-                            if (talentShowGrade > 0) max = 8.0;
-                        }
-                    }
-
-                    if (finalValue > max) finalValue = max;
-                    if (finalValue < 0) finalValue = 0;
-
-                    newUnits[selectedUnit] = {
-                        ...currentGrades,
-                        [field]: finalValue
-                    };
-
-                    // Correction rule
-                    if (selectedUnit === '3' && field === 'talentShow' && finalValue > 0) {
-                        if ((newUnits[selectedUnit].exam || 0) > 8) {
-                            newUnits[selectedUnit].exam = 8;
-                        }
-                    }
-
-                    finalStudent = { ...student, units: newUnits };
-                    return finalStudent;
-                }
-                return student;
-            });
-        });
-
-        // 2. Debounced Save (Network)
-        if (finalStudent) {
-            // Clear existing timeout for this student
-            if (saveTimeoutRefs.current[studentId]) {
-                clearTimeout(saveTimeoutRefs.current[studentId]);
+                newUnits[selectedUnit] = {
+                    ...newUnits[selectedUnit],
+                    [field]: finalVal
+                };
+                return { ...s, units: newUnits };
             }
+            return s;
+        }));
 
-            setIsSyncing(true);
+        // 2. Debounced Save
+        setIsSaving(true);
+        if (saveTimeoutRefs.current[studentId]) clearTimeout(saveTimeoutRefs.current[studentId]);
 
-            // Set new timeout (1 second wait)
-            saveTimeoutRefs.current[studentId] = setTimeout(async () => {
-                try {
-                    console.log(`Saving grades for student ${studentId}...`);
-                    if (finalStudent) {
-                        // FIX: Added data destructuring and select() to verify row was actually updated
-                        const { data, error } = await supabase
-                            .from('students')
-                            .update({ units: finalStudent.units })
-                            .eq('id', studentId)
-                            .select();
+        saveTimeoutRefs.current[studentId] = setTimeout(async () => {
+            try {
+                // Get latest student state from Ref
+                const student = studentsRef.current.find(s => s.id === studentId);
+                if (!student) return;
 
-                        if (error) throw error;
+                const unitData = student.units[selectedUnit] || {};
 
-                        if (!data || data.length === 0) {
-                            throw new Error("Salvo mas sem confirmação (0 linhas alteradas). Verifique permissões.");
-                        }
-                    }
-                    console.log("Saved successfully.");
-                } catch (error: any) {
-                    console.error('Erro ao salvar nota:', error);
-                    alert(`Falha ao salvar nota: ${error.message || 'Erro de conexão'}`);
-                } finally {
-                    delete saveTimeoutRefs.current[studentId];
-                    if (Object.keys(saveTimeoutRefs.current).length === 0) {
-                        setIsSyncing(false);
-                    }
-                }
-            }, 1000);
-        }
+                console.log(`Saving grades for ${student.name} (Unit ${selectedUnit})...`);
+
+                const payload = {
+                    student_id: parseInt(studentId), // Ensure ID is number if DB expects bigint
+                    unit: selectedUnit,
+                    data: unitData,
+                    user_id: currentUser!.id,
+                    series_id: parseInt(selectedSeriesId!),
+                    section: selectedSection
+                };
+
+                const { error } = await supabase
+                    .from('grades')
+                    .upsert(payload, { onConflict: 'student_id, unit' });
+
+                if (error) throw error;
+                console.log("Saved successfully.");
+
+            } catch (err: any) {
+                console.error("Save failed:", err);
+                alert(`Erro ao salvar: ${err.message}`);
+            } finally {
+                delete saveTimeoutRefs.current[studentId];
+                if (Object.keys(saveTimeoutRefs.current).length === 0) setIsSaving(false);
+            }
+        }, 1000);
     };
 
-    if (loading) return (
-        <div className="flex flex-col items-center justify-center p-20 animate-pulse">
-            <div className={`size-12 border-4 border-${theme.primaryColor}/20 border-t-${theme.primaryColor} rounded-full animate-spin mb-4`}></div>
-            <p className="font-black text-slate-400 uppercase tracking-widest text-xs">Acessando Diário de Classe...</p>
-        </div>
-    );
+    const getGrade = (student: Student, field: string) => {
+        return student.units?.[selectedUnit]?.[field]?.toString() || '';
+    };
 
-    const currentColumns = UNIT_CONFIGS[selectedUnit]?.columns || [];
+    const calculateTotal = (student: Student) => {
+        const grades = student.units?.[selectedUnit] || {};
+        return Object.values(grades).reduce((a: number, b: any) => a + (Number(b) || 0), 0);
+    };
 
-    const generatePDF = () => {
+    const exportPDF = () => {
         const doc = new jsPDF();
-        const currentYear = new Date().getFullYear();
+        doc.text(`Notas - ${activeSeries} - Turma ${selectedSection} - Unidade ${selectedUnit}`, 14, 15);
 
-        // Title
-        doc.setFontSize(24);
-        doc.setTextColor(30, 41, 59); // slate-800
-        doc.text('PROF. ACERTA+', 14, 20);
+        const config = UNIT_CONFIGS[selectedUnit as keyof typeof UNIT_CONFIGS];
+        if (!config) return;
 
-        doc.setFontSize(14);
-        doc.setTextColor(71, 85, 105); // slate-600
-        doc.text('Diário de Avaliações', 14, 28);
-
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`Professor: ${currentUser?.name || ''}`, 14, 38);
-        doc.text(`Disciplina: ${theme.subject}`, 14, 43);
-        doc.text(`Turma: ${activeSeries?.name} ${selectedSection}`, 14, 48);
-        doc.text(`Unidade: ${selectedUnit}ª Unidade`, 14, 53);
-        doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}`, 14, 58);
-
-        // Table Data
-        const tableColumn = ["Nº", "Aluno", ...currentColumns.map((c: any) => c.label), "Média"];
-        const tableRows = students.map(s => {
-            const grades = s.units[selectedUnit] || {};
-            const rowData = [
-                s.number,
-                s.name,
-                ...currentColumns.map((c: any) => (grades as any)[c.key]?.toFixed(1) || '0.0'),
-                calculateAverage(s, selectedUnit).toFixed(1)
-            ];
-            return rowData;
+        const tableBody = students.map(s => {
+            const row: any[] = [s.number, s.name];
+            config.columns.forEach(col => {
+                row.push(getGrade(s, col.key) || '-');
+            });
+            row.push(calculateTotal(s).toFixed(1));
+            return row;
         });
 
         autoTable(doc, {
-            head: [tableColumn],
-            body: tableRows,
-            startY: 68,
-            theme: 'grid',
-            headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
-            styles: { fontSize: 8, cellPadding: 2 },
-            columnStyles: {
-                0: { cellWidth: 10 },
-                1: { cellWidth: 50 },
-            }
+            head: [['Nº', 'Nome', ...config.columns.map(c => c.label), 'Total']],
+            body: tableBody,
+            startY: 20,
         });
 
-        try {
-            const fileName = `Avaliacoes_${activeSeries?.name}_${selectedSection}_Unid${selectedUnit}`.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf';
-
-            // Generate PDF as blob for more robust download
-            const blob = doc.output('blob');
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-
-            console.log('PDF exportado com sucesso:', fileName);
-        } catch (error) {
-            console.error('Erro ao exportar PDF:', error);
-            alert('Erro ao gerar PDF. Por favor, tente novamente.');
-        }
+        doc.save(`notas_unidade_${selectedUnit}.pdf`);
     };
 
-    if (!selectedSeriesId || !selectedSection) {
+    if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in duration-500">
-                <div className={`size-20 rounded-2xl bg-${theme.primaryColor}/10 flex items-center justify-center mb-6`}>
-                    <span className={`material-symbols-outlined text-4xl text-${theme.primaryColor}`}>{theme.icon}</span>
-                </div>
-                <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Selecione uma Turma</h3>
-                <p className="text-slate-500 text-center max-w-sm">Escolha uma turma no menu superior para gerenciar as notas dos alunos.</p>
+            <div className="flex justify-center items-center h-64">
+                <div className={`animate-spin rounded-full h-8 w-8 border-b-2 border-${theme.primaryColor}-600`}></div>
             </div>
         );
     }
 
+    const currentConfig = UNIT_CONFIGS[selectedUnit as keyof typeof UNIT_CONFIGS];
+
     return (
-        <div className="max-w-[1400px] mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header Content */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div className="flex items-center gap-6">
-                    <div className={`size-12 md:size-16 rounded-[18px] md:rounded-[22px] bg-${theme.primaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/30`}>
-                        <span className="material-symbols-outlined text-2xl md:text-3xl">edit_square</span>
-                    </div>
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Diário de Avaliações</h1>
-                        <p className="text-slate-400 dark:text-slate-500 font-bold text-sm">
-                            {activeSeries?.name} {selectedSection} • <span className={`text-${theme.primaryColor}`}>{currentUser?.subject}</span>
-                        </p>
-                    </div>
+        <div className="space-y-6 animate-fade-in">
+            {/* Header Controls */}
+            <div className="glass-panel p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                    {Object.keys(UNIT_CONFIGS).map((unit) => (
+                        <button
+                            key={unit}
+                            onClick={() => setSelectedUnit(unit)}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${selectedUnit === unit
+                                    ? `bg-${theme.primaryColor}-500 text-white shadow-lg`
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'
+                                }`}
+                        >
+                            {unit}ª Unidade
+                        </button>
+                    ))}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 no-print">
+                <div className="flex items-center gap-2">
+                    {isSaving ? (
+                        <span className="flex items-center text-amber-500 text-sm">
+                            <Wifi className="w-4 h-4 mr-1 animate-pulse" /> Salvando...
+                        </span>
+                    ) : (
+                        <span className="flex items-center text-emerald-500 text-sm">
+                            <CheckCircle className="w-4 h-4 mr-1" /> Salvo
+                        </span>
+                    )}
                     <button
-                        onClick={generatePDF}
-                        className={`h-11 px-4 flex items-center gap-2 border border-slate-200 dark:border-slate-800 hover:border-${theme.primaryColor} hover:text-${theme.primaryColor} text-slate-600 dark:text-slate-400 rounded-2xl transition-all shadow-sm active:scale-95 bg-white dark:bg-slate-900 font-bold text-[10px] uppercase tracking-widest group order-2 lg:order-1`}
-                        title="Exportar Diário em PDF"
+                        onClick={exportPDF}
+                        className={`flex items-center space-x-2 px-4 py-2 bg-${theme.primaryColor}-500 hover:bg-${theme.primaryColor}-600 text-white rounded-lg transition-colors`}
                     >
-                        <span className="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">description</span>
-                        <span className="hidden sm:inline">Exportar PDF</span>
+                        <Download size={18} />
+                        <span>Exportar PDF</span>
                     </button>
-
-                    <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-1 hidden lg:block order-1.5"></div>
-
-                    <div className="bg-white dark:bg-slate-900 p-1 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex overflow-x-auto w-full lg:w-auto order-1 lg:order-2">
-                        {['1', '2', '3'].map(unit => (
-                            <button
-                                key={unit}
-                                onClick={() => setSelectedUnit(unit)}
-                                className={`flex-1 lg:px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all transform active:scale-95 whitespace-nowrap ${selectedUnit === unit
-                                    ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/20`
-                                    : 'text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                                    }`}
-                            >
-                                {unit}ª Unit.
-                            </button>
-                        ))}
-                    </div>
                 </div>
             </div>
 
-            {/* Premium Multi-Step Grid Holder */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[32px] shadow-2xl shadow-slate-200/40 dark:shadow-none overflow-hidden flex flex-col relative group">
-                {/* Column Indicator */}
-                <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-${theme.primaryColor} to-${theme.secondaryColor} opacity-50`}></div>
-
-                <div className="overflow-x-auto w-full relative custom-scrollbar">
-                    <table className="w-full text-left border-collapse min-w-[800px]">
-                        <thead>
-                            <tr className="bg-slate-50/50 dark:bg-slate-950/50 border-b border-slate-100 dark:border-slate-800">
-                                <th className="px-8 py-6 min-w-[300px] sticky left-0 bg-slate-50 dark:bg-slate-950 z-30 transition-colors group-hover:bg-white dark:group-hover:bg-slate-900">
-                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Lista de Alunos</span>
+            {/* Grades Table */}
+            <div className="glass-panel rounded-xl overflow-hidden shadow-lg border border-slate-200/60 dark:border-slate-700/60">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead className={`bg-${theme.primaryColor}-50 dark:bg-slate-800 border-b border-${theme.primaryColor}-100 dark:border-slate-700`}>
+                            <tr>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-16">
+                                    Nº
                                 </th>
-                                {currentColumns.map((col: any) => (
-                                    <th key={col.key} className="px-4 py-6 text-center min-w-[120px]">
-                                        <div className="flex flex-col gap-1 items-center">
-                                            <span className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-300 tracking-wider whitespace-nowrap">{col.label}</span>
-                                            <span className={`text-[9px] font-black text-white px-2 py-0.5 rounded-full bg-slate-300 dark:bg-slate-700 tracking-widest`}>
-                                                MÁX {selectedUnit === '3' && col.key === 'exam' ? '8/10' : col.max.toFixed(1)}
+                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                    Nome
+                                </th>
+                                {currentConfig?.columns.map((col) => (
+                                    <th key={col.key} className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-32">
+                                        <div className="flex flex-col items-center">
+                                            <span>{col.label}</span>
+                                            <span className="text-[10px] opacity-70 font-normal">
+                                                (Max: {col.max})
                                             </span>
                                         </div>
                                     </th>
                                 ))}
-                                <th className="px-6 py-6 text-center min-w-[120px] bg-slate-50 dark:bg-slate-950/80">
-                                    <div className="flex flex-col gap-1 items-center">
-                                        <span className={`text-[10px] font-black uppercase text-${theme.primaryColor} tracking-widest`}>Nota Unidade</span>
-                                        <span className={`text-[8px] font-black text-${theme.primaryColor}/60 uppercase`}>Result. Final</span>
-                                    </div>
+                                <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-24 bg-slate-50/50 dark:bg-slate-800/50">
+                                    Total
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800/80">
-                            {students.length === 0 ? (
-                                <tr>
-                                    <td colSpan={currentColumns.length + 2} className="px-8 py-20 text-center">
-                                        <p className="font-bold text-slate-400">Nenhum aluno cadastrado nesta turma.</p>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                            {students.map((student) => (
+                                <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
+                                        {student.number}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex items-center">
+                                            <div className={`flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br ${student.color} flex items-center justify-center text-white text-xs font-bold shadow-sm mr-3`}>
+                                                {student.initials}
+                                            </div>
+                                            <div className="text-sm font-medium text-slate-900 dark:text-white">
+                                                {student.name}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    {currentConfig?.columns.map((col) => (
+                                        <td key={col.key} className="px-6 py-4 whitespace-nowrap">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max={col.max}
+                                                step="0.1"
+                                                className={`w-full text-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-${theme.primaryColor}-500 focus:border-transparent transition-all font-mono text-sm`}
+                                                value={getGrade(student, col.key)}
+                                                onChange={(e) => handleGradeChange(student.id, col.key, e.target.value)}
+                                                placeholder="-"
+                                            />
+                                        </td>
+                                    ))}
+                                    <td className="px-6 py-4 whitespace-nowrap text-center bg-slate-50/30 dark:bg-slate-800/30">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${calculateTotal(student) >= 6
+                                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                                : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'
+                                            }`}>
+                                            {calculateTotal(student).toFixed(1)}
+                                        </span>
                                     </td>
                                 </tr>
-                            ) : (
-                                students.map((student) => {
-                                    const average = calculateAverage(student, selectedUnit);
-                                    const isApproved = average >= 6;
-
-                                    return (
-                                        <tr key={student.id} className="group/row hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-all duration-200">
-                                            <td className="px-8 py-4 sticky left-0 bg-white dark:bg-slate-900 group-hover/row:bg-slate-50 dark:group-hover/row:bg-slate-800 z-20 transition-colors border-r border-slate-50 dark:border-slate-800">
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`size-10 rounded-2xl bg-gradient-to-br ${student.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-xs font-black text-white shadow-lg shadow-slate-200 dark:shadow-none`}>
-                                                        {student.initials}
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-black text-slate-800 dark:text-white group-hover/row:text-primary transition-colors pr-4">{student.name}</span>
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Matrícula: #{student.number.padStart(2, '0')}</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            {currentColumns.map((col: any) => {
-                                                const value = (student.units[selectedUnit] as any)?.[col.key] ?? 0;
-                                                let dynamicMax = col.max;
-                                                if (selectedUnit === '3' && col.key === 'exam') {
-                                                    if (((student.units[selectedUnit] as any)?.talentShow || 0) > 0) {
-                                                        dynamicMax = 8.0;
-                                                    }
-                                                }
-
-                                                return (
-                                                    <td key={col.key} className="px-4 py-4 text-center">
-                                                        <div className="relative inline-block group/input">
-                                                            <input
-                                                                type="number"
-                                                                value={value === 0 ? '' : value}
-                                                                onChange={(e) => handleGradeChange(student.id, col.key, e.target.value)}
-                                                                placeholder="0.0"
-                                                                step="0.1"
-                                                                min="0"
-                                                                max={dynamicMax}
-                                                                className={`w-16 h-11 text-center font-black bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-xl focus:ring-8 focus:ring-${theme.primaryColor}/5 focus:border-${theme.primaryColor} focus:bg-white dark:focus:bg-black outline-none transition-all shadow-sm focus:scale-110 relative z-10`}
-                                                            />
-                                                            <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-${theme.primaryColor} rounded-full opacity-0 group-focus-within/input:opacity-100 transition-opacity blur-sm`}></div>
-                                                        </div>
-                                                    </td>
-                                                )
-                                            })}
-                                            <td className="px-6 py-4 text-center bg-slate-50/20 dark:bg-slate-950/20">
-                                                <div className="flex flex-col items-center">
-                                                    <span className={`text-xl font-black ${isApproved ? 'text-emerald-500' : 'text-rose-500'} tracking-tighter`}>
-                                                        {average.toFixed(1)}
-                                                    </span>
-                                                    <span className={`text-[8px] font-black uppercase tracking-[0.2em] transform -translate-y-1 ${isApproved ? 'text-emerald-500/60' : 'text-rose-500/60'}`}>
-                                                        {isApproved ? 'Aprovado' : 'Abaixo'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )
-                                })
-                            )}
+                            ))}
                         </tbody>
                     </table>
-                </div>
 
-                <div className="p-4 bg-slate-50/50 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center no-print">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-4">
-                        Regras de cálculo aplicadas dinamicamente
-                    </span>
-                    <div className="flex items-center gap-4 pr-4">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                            Total: <span className={`text-${theme.primaryColor}`}>{students.length}</span> Diários
-                        </span>
-                    </div>
+                    {students.length === 0 && (
+                        <div className="text-center py-12">
+                            <p className="text-slate-500 dark:text-slate-400">Nenhum aluno encontrado nesta turma.</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
