@@ -79,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     name: sbData.name,
                     email: sbData.email,
                     photoUrl: sbData.photo_url || 'https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=200&h=200&auto=format&fit=crop',
-                    subject: sbData.subject || '',
+                    subject: sbData.subject || 'Matemática',
                     subjects: sbData.subjects || []
                 };
                 if (usedFallback) console.log("Perfil carregado via Fallback HTTP!");
@@ -100,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (storedSubject && (finalUser.subject === storedSubject || finalUser.subjects?.includes(storedSubject))) {
                     setActiveSubject(storedSubject);
                 } else {
-                    setActiveSubject(finalUser.subject || '');
+                    setActiveSubject(finalUser.subject || 'Matemática');
                 }
             }
         } catch (err: any) {
@@ -114,10 +114,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Safety timeout to prevent infinite loading
         const safetyTimeout = setTimeout(() => {
             if (mounted && loading) {
-                console.warn("Auth check timed out (12s limit). Forcing app load.");
+                console.warn("Auth check timed out (4s limit). Forcing app load.");
                 setLoading(false);
             }
-        }, 12000); // Increased from 5s to 12s for slow mobile networks
+        }, 4000);
 
         // Initial session check
         const initSession = async () => {

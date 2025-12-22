@@ -13,7 +13,7 @@ import { DashboardBanner } from '../components/DashboardBanner';
 export const Dashboard: React.FC = () => {
   const { selectedSeriesId, selectedSection, classes } = useClass();
   const theme = useTheme();
-  const { currentUser } = useAuth();
+  const { currentUser, activeSubject } = useAuth();
   // Granular loading states
   const [loadingCounts, setLoadingCounts] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -42,7 +42,7 @@ export const Dashboard: React.FC = () => {
       fetchOccurrences();
       fetchActivities();
     }
-  }, [currentUser, selectedSeriesId, selectedSection]);
+  }, [currentUser, selectedSeriesId, selectedSection, activeSubject]);
 
   const refreshAll = (silent = true) => {
     fetchCounts(silent);
@@ -77,7 +77,7 @@ export const Dashboard: React.FC = () => {
       supabase.removeChannel(channel);
       clearInterval(interval);
     };
-  }, [currentUser, selectedSeriesId]);
+  }, [currentUser, selectedSeriesId, activeSubject]);
 
   const fetchCounts = async (silent = false) => {
     if (!currentUser) return;
@@ -86,7 +86,8 @@ export const Dashboard: React.FC = () => {
       const { count: gCount } = await supabase
         .from('students')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', currentUser.id);
+        .eq('user_id', currentUser.id); // Students are global usually, but if we want to filter count by subject context we might need joins.
+      // For now, global count remains global.
       setGlobalCount(gCount || 0);
 
       if (selectedSeriesId) {
@@ -97,7 +98,30 @@ export const Dashboard: React.FC = () => {
         const { count: sCount } = await query;
         setClassCount(sCount || 0);
       } else {
-        setClassCount(gCount || 0);
+        // If no series selected, maybe filter by Active Subject?
+        // Classes are filtered by activeSubject in Context.
+        // If we want "Students in my Math Classes", we need to filter by series IDs that belong to Math.
+        // For dashboard simplicity, if no series selected, we can show total students in active subject classes.
+        // FETCH ALL CLASSES FOR THIS SUBJECT
+        const { data: subjectClasses } = await supabase
+          .from('classes')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .eq('subject', activeSubject);
+
+        const classIds = (subjectClasses || []).map(c => c.id);
+
+        if (classIds.length > 0) {
+          const { count: subjCount } = await supabase
+            .from('students')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', currentUser.id)
+            .in('series_id', classIds);
+          setClassCount(subjCount || 0);
+        } else {
+          // Fallback to global if no classes, or 0? 0 makes more sense for "Math Students"
+          setClassCount(0);
+        }
       }
     } catch (e) {
       console.error("Error fetching counts:", e);
@@ -141,6 +165,7 @@ export const Dashboard: React.FC = () => {
       const { data: attData } = await supabase.from('attendance')
         .select('student_id')
         .eq('user_id', currentUser.id)
+        .eq('subject', activeSubject)
         .eq('date', today)
         .eq('status', 'P');
 
@@ -165,6 +190,8 @@ export const Dashboard: React.FC = () => {
       let query = supabase.from('occurrences')
         .select('*')
         .eq('user_id', currentUser.id)
+        // Occurrences don't have subject column usually, they are linked to student.
+        // We might want to filter by students in active classes.
         .order('date', { ascending: false });
 
       if (selectedSeriesId) {
@@ -179,7 +206,19 @@ export const Dashboard: React.FC = () => {
           setRecentOccurrences([]);
           setStats(prev => ({ ...prev, newObservations: 0 }));
           setLoadingOccurrences(false);
-          return;
+        } else {
+          // Filter by Active Subject Classes if no series selected
+          const { data: subjectClasses } = await supabase
+            .from('classes')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .eq('subject', activeSubject);
+          const sIds = (subjectClasses || []).map(c => c.id);
+          if (sIds.length > 0) {
+            const { data: students } = await supabase.from('students').select('id').in('series_id', sIds);
+            const studIds = (students || []).map(s => s.id);
+            if (studIds.length > 0) query = query.in('student_id', studIds);
+          }
         }
       }
 
@@ -211,6 +250,11 @@ export const Dashboard: React.FC = () => {
       let query = supabase.from('plans')
         .select('*')
         .eq('user_id', currentUser.id)
+        .eq('subject', activeSubject) // Plans have subject column? No, they link to series. 
+        // We need to verify if plans table has subject. 
+        // We migrated classes to have subject.
+        // Plans link to series_id.
+        // So we filter by series that are in this subject.
         .order('start_date', { ascending: false });
 
       if (selectedSeriesId) {
@@ -218,6 +262,15 @@ export const Dashboard: React.FC = () => {
         if (selectedSection) {
           query = query.or(`section.eq.${selectedSection},section.is.null`);
         }
+      } else {
+        const { data: subjectClasses } = await supabase
+          .from('classes')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .eq('subject', activeSubject);
+        const classIds = (subjectClasses || []).map(c => c.id);
+        if (classIds.length > 0) query = query.in('series_id', classIds);
+        else query = query.in('series_id', [-1]); // Empty
       }
 
       const { data } = await query.limit(5);
@@ -252,6 +305,7 @@ export const Dashboard: React.FC = () => {
       let query = supabase.from('activities')
         .select('*')
         .eq('user_id', currentUser.id)
+        // Activities link to series_id too.
         .order('date', { ascending: false });
 
       if (selectedSeriesId) {
@@ -259,6 +313,15 @@ export const Dashboard: React.FC = () => {
         if (selectedSection) {
           query = query.or(`section.eq.${selectedSection},section.is.null`);
         }
+      } else {
+        const { data: subjectClasses } = await supabase
+          .from('classes')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .eq('subject', activeSubject);
+        const classIds = (subjectClasses || []).map(c => c.id);
+        if (classIds.length > 0) query = query.in('series_id', classIds);
+        else query = query.in('series_id', [-1]); // Empty
       }
 
       const { data } = await query.limit(5);
