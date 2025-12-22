@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Student, Occurrence } from '../types';
 import { supabase } from '../lib/supabase';
+import { DatePicker } from '../components/DatePicker';
 
 export const Observations: React.FC = () => {
     const { selectedSeriesId, selectedSection, activeSeries } = useClass();
@@ -463,12 +464,11 @@ export const Observations: React.FC = () => {
                                         </select>
                                     </div>
                                     <div className="md:col-span-4">
-                                        <label className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3 ml-1">Data</label>
-                                        <input
-                                            type="date"
+                                        <DatePicker
+                                            label="Data"
                                             value={occurrenceDate}
-                                            onChange={(e) => setOccurrenceDate(e.target.value)}
-                                            className={`w-full h-14 px-6 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-sm focus:border-${theme.primaryColor} focus:ring-4 focus:ring-${theme.primaryColor}/10 transition-all`}
+                                            onChange={setOccurrenceDate}
+                                            className="w-full"
                                         />
                                     </div>
                                     <div className="md:col-span-12">

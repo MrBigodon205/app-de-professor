@@ -62,3 +62,8 @@ body {
     overflow: visible !important;
   }
 }
+
+/* Fix Date Input Icon Color in Dark Mode */
+.dark ::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}

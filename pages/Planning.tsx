@@ -6,6 +6,7 @@ import { Plan, AttachmentFile } from '../types';
 import { supabase } from '../lib/supabase';
 import DOMPurify from 'dompurify';
 import { RichTextEditor } from '../components/RichTextEditor';
+import { DatePicker } from '../components/DatePicker';
 export const Planning: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
     const { currentUser } = useAuth();
@@ -435,21 +436,19 @@ export const Planning: React.FC = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Data Início</label>
-                                        <input
-                                            type="date"
+                                        <DatePicker
+                                            label="Data Início"
                                             value={formStartDate}
-                                            onChange={e => setFormStartDate(e.target.value)}
-                                            className="w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 text-lg outline-none"
+                                            onChange={setFormStartDate}
+                                            className="w-full"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Data Fim</label>
-                                        <input
-                                            type="date"
+                                        <DatePicker
+                                            label="Data Fim"
                                             value={formEndDate}
-                                            onChange={e => setFormEndDate(e.target.value)}
-                                            className="w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 text-lg outline-none"
+                                            onChange={setFormEndDate}
+                                            className="w-full"
                                         />
                                     </div>
                                 </div>

@@ -97,7 +97,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 </button>
 
                 {showCalendar && (
-                    <div className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-4 z-50 w-[280px] animate-in fade-in zoom-in-95 duration-200">
+                    <div className="absolute top-full left-0 mt-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-4 z-[9999] w-[280px] animate-in fade-in zoom-in-95 duration-200">
                         <div className="flex items-center justify-between mb-4">
                             <button onClick={() => changeMonth(-1)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-500" type="button">
                                 <span className="material-symbols-outlined text-sm">chevron_left</span>
