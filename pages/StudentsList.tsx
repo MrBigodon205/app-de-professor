@@ -311,150 +311,148 @@ export const StudentsList: React.FC = () => {
                     </div>
                 </div>
 
+                <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto relative z-10">
+                    {selectedIds.length > 0 ? (
+                        <button
+                            onClick={handleBulkDelete}
+                            className="flex items-center gap-3 bg-red-100 hover:bg-red-200 text-red-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95 animate-in fade-in zoom-in"
+                        >
+                            <span className="material-symbols-outlined text-xl">delete</span>
+                            Remover ({selectedIds.length})
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => setIsImporting(true)}
+                            className="flex items-center gap-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
+                        >
+                            <span className="material-symbols-outlined text-xl">playlist_add</span>
+                            Importar em Massa
+                        </button>
+                    )}
+                    <button
+                        onClick={() => setIsAdding(!isAdding)}
+                        className={`flex items-center gap-3 bg-${theme.primaryColor} hover:opacity-90 text-white font-bold h-12 px-6 rounded-2xl shadow-lg shadow-${theme.primaryColor}/20 transition-all active:scale-95`}
+                    >
+                        <span className="material-symbols-outlined text-xl">add_circle</span>
+                        Novo Aluno
+                    </button>
+                </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto relative z-10">
-                {selectedIds.length > 0 ? (
-                    <button
-                        onClick={handleBulkDelete}
-                        className="flex items-center gap-3 bg-red-100 hover:bg-red-200 text-red-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95 animate-in fade-in zoom-in"
-                    >
-                        <span className="material-symbols-outlined text-xl">delete</span>
-                        Remover ({selectedIds.length})
-                    </button>
-                ) : (
-                    <button
-                        onClick={() => setIsImporting(true)}
-                        className="flex items-center gap-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
-                    >
-                        <span className="material-symbols-outlined text-xl">playlist_add</span>
-                        Importar em Massa
-                    </button>
-                )}
-                <button
-                    onClick={() => setIsAdding(!isAdding)}
-                    className={`flex items-center gap-3 bg-${theme.primaryColor} hover:opacity-90 text-white font-bold h-12 px-6 rounded-2xl shadow-lg shadow-${theme.primaryColor}/20 transition-all active:scale-95`}
-                >
-                    <span className="material-symbols-outlined text-xl">add_circle</span>
-                    Novo Aluno
-                </button>
-            </div>
-        </div>
+            {/* Bulk Import Modal */}
+            {
+                isImporting && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-in fade-in duration-300">
+                        <div className="bg-white dark:bg-slate-900 rounded-[32px] w-full max-w-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-200 dark:border-slate-800">
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className={`size-12 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
+                                    <span className="material-symbols-outlined">publish</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Importação em Massa</h2>
+                                    <p className="text-slate-500 text-sm font-medium">Cole a lista de nomes ou anexe um arquivo de texto.</p>
+                                </div>
+                            </div>
 
-            {/* Bulk Import Modal */ }
-    {
-        isImporting && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-in fade-in duration-300">
-                <div className="bg-white dark:bg-slate-900 rounded-[32px] w-full max-w-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-200 dark:border-slate-800">
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className={`size-12 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
-                            <span className="material-symbols-outlined">publish</span>
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Importação em Massa</h2>
-                            <p className="text-slate-500 text-sm font-medium">Cole a lista de nomes ou anexe um arquivo de texto.</p>
+                            <div className="mb-6">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className={`flex-1 h-14 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-${theme.primaryColor} hover:bg-${theme.primaryColor}/5 text-slate-500 hover:text-${theme.primaryColor} transition-all flex items-center justify-center gap-3 font-bold group`}
+                                    >
+                                        <span className="material-symbols-outlined group-hover:bounce">attach_file</span>
+                                        <span>Anexar Arquivo (TXT/CSV)</span>
+                                    </button>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileImport}
+                                        accept=".txt,.csv"
+                                        className="hidden"
+                                    />
+                                </div>
+
+                                <textarea
+                                    value={importText}
+                                    onChange={(e) => setImportText(e.target.value)}
+                                    placeholder="Alice Silva&#10;Bernardo Souza&#10;Carlos Henrique..."
+                                    className={`w-full h-80 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-${theme.primaryColor}/10 focus:border-${theme.primaryColor} transition-all resize-none font-medium leading-relaxed custom-scrollbar`}
+                                />
+                                <div className="flex items-center justify-between mt-3 px-2">
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                        <span className={`size-2 rounded-full bg-${theme.primaryColor}`}></span>
+                                        {importText.split('\n').filter(n => n.trim().length > 0).length} nomes identificados
+                                    </span>
+                                    <span className="text-[10px] font-bold text-slate-400">Pressione Enter para cada novo nome</span>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => setIsImporting(false)}
+                                    className="flex-1 h-14 rounded-2xl font-black text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all uppercase tracking-widest text-xs"
+                                    disabled={isProcessing}
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleBulkImport}
+                                    className={`flex-[2] h-14 rounded-2xl bg-${theme.primaryColor} text-white font-black shadow-xl shadow-${theme.primaryColor}/20 hover:opacity-90 transition-all flex items-center justify-center gap-3 disabled:opacity-50 uppercase tracking-widest text-xs`}
+                                    disabled={isProcessing}
+                                >
+                                    {isProcessing ? (
+                                        <>
+                                            <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            Processando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Confirmar Importação
+                                            <span className="material-symbols-outlined text-xl">arrow_forward</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
+                )
+            }
 
-                    <div className="mb-6">
-                        <div className="flex items-center gap-4 mb-4">
-                            <button
-                                onClick={() => fileInputRef.current?.click()}
-                                className={`flex-1 h-14 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-${theme.primaryColor} hover:bg-${theme.primaryColor}/5 text-slate-500 hover:text-${theme.primaryColor} transition-all flex items-center justify-center gap-3 font-bold group`}
-                            >
-                                <span className="material-symbols-outlined group-hover:bounce">attach_file</span>
-                                <span>Anexar Arquivo (TXT/CSV)</span>
-                            </button>
+            {
+                isAdding && (
+                    <div className={`bg-${theme.primaryColor}/5 border-2 border-dashed border-${theme.primaryColor}/20 p-8 rounded-3xl animate-in fade-in slide-in-from-top-4 duration-300`}>
+                        <div className="flex items-center gap-3 mb-6">
+                            <span className={`material-symbols-outlined text-${theme.primaryColor}`}>person_add</span>
+                            <h4 className="font-black text-slate-700 dark:text-white uppercase tracking-widest text-sm">Adicionar Novo Aluno</h4>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-4">
                             <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleFileImport}
-                                accept=".txt,.csv"
-                                className="hidden"
+                                type="text"
+                                value={newStudentName}
+                                onChange={(e) => setNewStudentName(e.target.value)}
+                                placeholder="Digite o nome completo do aluno..."
+                                className={`flex-1 h-14 px-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 dark:bg-slate-900 focus:ring-4 focus:ring-${theme.primaryColor}/10 focus:border-${theme.primaryColor} transition-all font-bold`}
+                                autoFocus
                             />
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleAddStudent}
+                                    className={`h-14 px-8 bg-${theme.primaryColor} text-white rounded-2xl font-black shadow-lg shadow-${theme.primaryColor}/20 hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2`}
+                                >
+                                    <span className="material-symbols-outlined text-xl">save</span>
+                                    Salvar
+                                </button>
+                                <button
+                                    onClick={() => setIsAdding(false)}
+                                    className="h-14 px-6 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-2xl font-black border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
                         </div>
-
-                        <textarea
-                            value={importText}
-                            onChange={(e) => setImportText(e.target.value)}
-                            placeholder="Alice Silva&#10;Bernardo Souza&#10;Carlos Henrique..."
-                            className={`w-full h-80 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-${theme.primaryColor}/10 focus:border-${theme.primaryColor} transition-all resize-none font-medium leading-relaxed custom-scrollbar`}
-                        />
-                        <div className="flex items-center justify-between mt-3 px-2">
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <span className={`size-2 rounded-full bg-${theme.primaryColor}`}></span>
-                                {importText.split('\n').filter(n => n.trim().length > 0).length} nomes identificados
-                            </span>
-                            <span className="text-[10px] font-bold text-slate-400">Pressione Enter para cada novo nome</span>
-                        </div>
                     </div>
-
-                    <div className="flex gap-4">
-                        <button
-                            onClick={() => setIsImporting(false)}
-                            className="flex-1 h-14 rounded-2xl font-black text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all uppercase tracking-widest text-xs"
-                            disabled={isProcessing}
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            onClick={handleBulkImport}
-                            className={`flex-[2] h-14 rounded-2xl bg-${theme.primaryColor} text-white font-black shadow-xl shadow-${theme.primaryColor}/20 hover:opacity-90 transition-all flex items-center justify-center gap-3 disabled:opacity-50 uppercase tracking-widest text-xs`}
-                            disabled={isProcessing}
-                        >
-                            {isProcessing ? (
-                                <>
-                                    <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                    Processando...
-                                </>
-                            ) : (
-                                <>
-                                    Confirmar Importação
-                                    <span className="material-symbols-outlined text-xl">arrow_forward</span>
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
-    {
-        isAdding && (
-            <div className={`bg-${theme.primaryColor}/5 border-2 border-dashed border-${theme.primaryColor}/20 p-8 rounded-3xl animate-in fade-in slide-in-from-top-4 duration-300`}>
-                <div className="flex items-center gap-3 mb-6">
-                    <span className={`material-symbols-outlined text-${theme.primaryColor}`}>person_add</span>
-                    <h4 className="font-black text-slate-700 dark:text-white uppercase tracking-widest text-sm">Adicionar Novo Aluno</h4>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-4">
-                    <input
-                        type="text"
-                        value={newStudentName}
-                        onChange={(e) => setNewStudentName(e.target.value)}
-                        placeholder="Digite o nome completo do aluno..."
-                        className={`flex-1 h-14 px-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 dark:bg-slate-900 focus:ring-4 focus:ring-${theme.primaryColor}/10 focus:border-${theme.primaryColor} transition-all font-bold`}
-                        autoFocus
-                    />
-                    <div className="flex gap-2">
-                        <button
-                            onClick={handleAddStudent}
-                            className={`h-14 px-8 bg-${theme.primaryColor} text-white rounded-2xl font-black shadow-lg shadow-${theme.primaryColor}/20 hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2`}
-                        >
-                            <span className="material-symbols-outlined text-xl">save</span>
-                            Salvar
-                        </button>
-                        <button
-                            onClick={() => setIsAdding(false)}
-                            className="h-14 px-6 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-2xl font-black border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
-                        >
-                            Cancelar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )
-    }
+                )
+            }
 
             <div className={`bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden transition-all duration-300 ${loading ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
                 <div className="overflow-x-auto custom-scrollbar">
@@ -463,12 +461,12 @@ export const StudentsList: React.FC = () => {
                             <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                                 <th className="px-4 py-3 w-12">
                                     <div className="flex items-center justify-center">
-                                       <input 
-                                         type="checkbox" 
-                                         className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
-                                         checked={students.length > 0 && selectedIds.length === students.length}
-                                         onChange={toggleSelectAll}
-                                       />
+                                        <input
+                                            type="checkbox"
+                                            className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
+                                            checked={students.length > 0 && selectedIds.length === students.length}
+                                            onChange={toggleSelectAll}
+                                        />
                                     </div>
                                 </th>
                                 <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest w-24">Nº</th>
@@ -494,8 +492,8 @@ export const StudentsList: React.FC = () => {
                                     <tr key={student.id} className={`group transition-all ${selectedIds.includes(student.id) ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/30'}`}>
                                         <td className="px-4 py-4">
                                             <div className="flex items-center justify-center">
-                                                <input 
-                                                    type="checkbox" 
+                                                <input
+                                                    type="checkbox"
                                                     className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
                                                     checked={selectedIds.includes(student.id)}
                                                     onChange={() => toggleSelect(student.id)}
