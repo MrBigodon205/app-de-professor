@@ -122,6 +122,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUserId(session.user.id);
                 // if (mounted) setLoading(false); // This line is not needed here, as `mounted` is not in scope for `fetchProfile`
             }
+        } finally {
+            setLoading(false);
         }
     };
 
