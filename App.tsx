@@ -1,4 +1,5 @@
 import React from 'react';
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
@@ -24,6 +25,7 @@ const App: React.FC = () => {
       <AuthProvider>
         <ClassProvider>
           <Router>
+            <SpeedInsights />
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/*" element={
