@@ -356,13 +356,15 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="max-w-7xl w-full mx-auto flex flex-col gap-8 animate-in fade-in pb-10">
-      <DashboardHeader
-        currentUser={currentUser}
-        theme={theme}
-        loading={loadingCounts} // Use counts loading for header spinner if needed, or false
-        isContextSelected={isContextSelected}
-        contextName={contextName}
-      />
+      <div data-tour="dashboard-kpi">
+        <DashboardHeader
+          currentUser={currentUser}
+          theme={theme}
+          loading={loadingCounts} // Use counts loading for header spinner if needed, or false
+          isContextSelected={isContextSelected}
+          contextName={contextName}
+        />
+      </div>
 
       <DashboardBanner theme={theme} currentUser={currentUser} />
 

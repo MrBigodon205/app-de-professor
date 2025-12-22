@@ -290,6 +290,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <div className="relative z-50 hidden md:block">
               {/* ... (Existing Desktop Series Switcher code) ... */}
               <button
+                data-tour="class-selector"
                 onClick={() => setIsSeriesDropdownOpen(!isSeriesDropdownOpen)}
                 className="flex items-center gap-3 pl-1 pr-4 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all group border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
                 title="Alterar Série"
