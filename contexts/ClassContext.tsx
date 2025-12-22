@@ -50,12 +50,16 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!currentUser) return;
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('classes')
                 .select('*')
-                .eq('user_id', currentUser.id)
-                .eq('subject', activeSubject)
-                .order('created_at', { ascending: true });
+                .eq('user_id', currentUser.id);
+
+            if (activeSubject) {
+                query = query.or(`subject.eq.${activeSubject},subject.is.null`);
+            }
+
+            const { data, error } = await query.order('created_at', { ascending: true });
 
             if (error) throw error;
 

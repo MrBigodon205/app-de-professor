@@ -214,7 +214,7 @@ export const Dashboard: React.FC = () => {
           .from('classes')
           .select('id')
           .eq('user_id', currentUser.id)
-          .eq('subject', activeSubject);
+          .or(`subject.eq.${activeSubject},subject.is.null`);
         const sIds = (subjectClasses || []).map(c => c.id);
         if (sIds.length > 0) {
           const { data: students } = await supabase.from('students').select('id').in('series_id', sIds);
@@ -269,7 +269,7 @@ export const Dashboard: React.FC = () => {
           .from('classes')
           .select('id')
           .eq('user_id', currentUser.id)
-          .eq('subject', activeSubject);
+          .or(`subject.eq.${activeSubject},subject.is.null`);
         const classIds = (subjectClasses || []).map(c => c.id);
         if (classIds.length > 0) query = query.in('series_id', classIds);
         else query = query.in('series_id', [-1]); // Empty
@@ -320,7 +320,7 @@ export const Dashboard: React.FC = () => {
           .from('classes')
           .select('id')
           .eq('user_id', currentUser.id)
-          .eq('subject', activeSubject);
+          .or(`subject.eq.${activeSubject},subject.is.null`);
         const classIds = (subjectClasses || []).map(c => c.id);
         if (classIds.length > 0) query = query.in('series_id', classIds);
         else query = query.in('series_id', [-1]); // Empty
