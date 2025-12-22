@@ -222,98 +222,99 @@ export const Dashboard: React.FC = () => {
           if (studIds.length > 0) query = query.in('student_id', studIds);
         }
       }
-    }
+
 
       const { data, error } = await query.limit(5);
-    if (error) throw error;
+      if (error) throw error;
 
-    setRecentOccurrences((data || []).map(o => ({
-      id: o.id.toString(),
-      studentId: o.student_id.toString(),
-      date: o.date,
-      type: o.type as any,
-      description: o.description,
-      userId: o.user_id
-    })));
+      setRecentOccurrences((data || []).map(o => ({
+        id: o.id.toString(),
+        studentId: o.student_id.toString(),
+        date: o.date,
+        type: o.type as any,
+        description: o.description,
+        userId: o.user_id
+      })));
 
-    setStats(prev => ({ ...prev, newObservations: data?.length || 0 }));
-  } catch (e) {
-    console.error("Error fetching occurrences:", e);
-  } finally {
-    if (!silent) setLoadingOccurrences(false);
-  }
-};
-
-const fetchPlans = async (silent = false) => {
-  if (!currentUser) return;
-  if (!silent) setLoadingPlans(true);
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    let query = supabase.from('plans')
-      .select('*')
-      .eq('user_id', currentUser.id)
-      .eq('subject', activeSubject) // Plans have subject column? No, they link to series. 
-      // We need to verify if plans table has subject. 
-      // We migrated classes to have subject.
-      // Plans link to series_id.
-      // So we filter by series that are in this subject.
-      .order('start_date', { ascending: false });
-
-    if (selectedSeriesId) {
-      query = query.eq('series_id', selectedSeriesId);
-      if (selectedSection) {
-        query = query.or(`section.eq.${selectedSection},section.is.null`);
-      }
-    } else {
-      const { data: subjectClasses } = await supabase
-        .from('classes')
-        .select('id')
-        .eq('user_id', currentUser.id)
-        .eq('subject', activeSubject);
-      const classIds = (subjectClasses || []).map(c => c.id);
-      if (classIds.length > 0) query = query.in('series_id', classIds);
-      else query = query.in('series_id', [-1]); // Empty
+      setStats(prev => ({ ...prev, newObservations: data?.length || 0 }));
+    } catch (e) {
+      console.error("Error fetching occurrences:", e);
+    } finally {
+      if (!silent) setLoadingOccurrences(false);
     }
+  };
 
-    const { data } = await query.limit(5);
+  const fetchPlans = async (silent = false) => {
+    if (!currentUser) return;
+    if (!silent) setLoadingPlans(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      let query = supabase.from('plans')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .eq('subject', activeSubject) // Plans have subject column? No, they link to series. 
+        // We need to verify if plans table has subject. 
+        // We migrated classes to have subject.
+        // Plans link to series_id.
+        // So we filter by series that are in this subject.
+        .order('start_date', { ascending: false });
 
-    const formatted = (data || []).map(p => ({
-      id: p.id.toString(),
-      title: p.title,
-      description: p.description,
-      startDate: p.start_date,
-      endDate: p.end_date,
-      seriesId: p.series_id.toString(),
-      section: p.section,
-      files: p.files || [],
-      userId: p.user_id
-    }));
+      if (selectedSeriesId) {
+        query = query.eq('series_id', selectedSeriesId);
+        if (selectedSection) {
+          query = query.or(`section.eq.${selectedSection},section.is.null`);
+        }
+      } else {
+        const { data: subjectClasses } = await supabase
+          .from('classes')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .eq('subject', activeSubject);
+        const classIds = (subjectClasses || []).map(c => c.id);
+        if (classIds.length > 0) query = query.in('series_id', classIds);
+        else query = query.in('series_id', [-1]); // Empty
+      }
 
-    setClassPlans(formatted.slice(0, 3));
+      const { data } = await query.limit(5);
 
-    const activePlan = formatted.find(p => today >= p.startDate && today <= p.endDate);
-    setTodaysPlan(activePlan || null);
-  } catch (e) {
-    console.error("Error fetching plans:", e);
-  } finally {
-    if (!silent) setLoadingPlans(false);
-  }
-};
+      const formatted = (data || []).map(p => ({
+        id: p.id.toString(),
+        title: p.title,
+        description: p.description,
+        startDate: p.start_date,
+        endDate: p.end_date,
+        seriesId: p.series_id.toString(),
+        section: p.section,
+        files: p.files || [],
+        userId: p.user_id
+      }));
 
-const fetchActivities = async (silent = false) => {
-  if (!currentUser) return;
-  if (!silent) setLoadingActivities(true);
-  try {
-    let query = supabase.from('activities')
-      .select('*')
-      .eq('user_id', currentUser.id)
-      // Activities link to series_id too.
-      .order('date', { ascending: false });
+      setClassPlans(formatted.slice(0, 3));
 
-    if (selectedSeriesId) {
-      query = query.eq('series_id', selectedSeriesId);
-      if (selectedSection) {
-        query = query.or(`section.eq.${selectedSection},section.is.null`);
+      const activePlan = formatted.find(p => today >= p.startDate && today <= p.endDate);
+      setTodaysPlan(activePlan || null);
+    } catch (e) {
+      console.error("Error fetching plans:", e);
+    } finally {
+      if (!silent) setLoadingPlans(false);
+    }
+  };
+
+  const fetchActivities = async (silent = false) => {
+    if (!currentUser) return;
+    if (!silent) setLoadingActivities(true);
+    try {
+      let query = supabase.from('activities')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        // Activities link to series_id too.
+        .order('date', { ascending: false });
+
+      if (selectedSeriesId) {
+        query = query.eq('series_id', selectedSeriesId);
+        if (selectedSection) {
+          query = query.or(`section.eq.${selectedSection},section.is.null`);
+        }
       }
     } else {
       const { data: subjectClasses } = await supabase
