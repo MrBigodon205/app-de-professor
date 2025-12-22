@@ -88,7 +88,7 @@ export const Login: React.FC = () => {
         </div>
 
         <div className="flex flex-1 flex-col px-6 lg:px-20 xl:px-28 pt-10 pb-6">
-          <div className="mx-auto w-full max-w-md">
+          <div className="mx-auto w-full max-w-md animate-in fade-in zoom-in-95 duration-500 slide-in-from-bottom-4">
             {/* ... Form Content ... */}
             <div className="mb-8 text-center md:text-left">
               <h2 className="text-slate-900 dark:text-white text-2xl font-bold uppercase tracking-tight mb-2">

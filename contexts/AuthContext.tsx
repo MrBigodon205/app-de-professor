@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             try {
                 const { data, error } = await withTimeout(
                     supabase.from('profiles').select('*').eq('id', uid).single() as any,
-                    10000,
+                    5000,
                     "Profile Fetch"
                 ) as any;
                 if (error) throw error;

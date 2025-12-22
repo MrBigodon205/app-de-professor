@@ -461,7 +461,7 @@ export const Activities: React.FC = () => {
     }
 
     return (
-        <div className="flex h-full gap-6 max-w-[1600px] mx-auto overflow-hidden animate-in fade-in">
+        <div className="flex h-full gap-6 max-w-[1600px] mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-500">
             {/* Hidden File Input */}
             <input
                 type="file"
