@@ -220,7 +220,17 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </nav>
           </div >
 
-          <div className="p-4 border-t border-border-light dark:border-border-dark">
+          <div className="p-4 border-t border-border-light dark:border-border-dark flex flex-col gap-2">
+            <button
+              onClick={() => {
+                document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+              }}
+              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <span className="material-symbols-outlined text-2xl">dark_mode</span>
+              <span className="text-sm font-medium">Alternar Tema</span>
+            </button>
             <button
               onClick={logout}
               className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-red-50 hover:text-red-600 transition-colors"
@@ -271,8 +281,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                  For now, keeping toggle but perhaps it should be redundant if bottom nav has 'Menu'. 
                  Actually, let's HIDE the hamburger on mobile since BottomNav has 'Menu'. 
              */}
+            {/* Sidebar Toggle */}
             <button
-              className="hidden md:hidden text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              data-tour="mobile-menu"
+              className="md:hidden text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
               onClick={() => setIsMobileMenuOpen(true)}
             >
               <span className="material-symbols-outlined">menu</span>

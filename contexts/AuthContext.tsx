@@ -224,6 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const login = async (email: string, password: string) => {
+        setLoading(true); // Prevent redirect race condition
         // Helper for Raw Fetch Login (Fallback)
         const rawLogin = async () => {
             // console.log("Tentando login via Raw Fetch...");

@@ -84,7 +84,25 @@ export const Tutorial: React.FC = () => {
 
     const steps: Step[] = [
         {
-            target: 'aside', // Sidebar
+            target: 'body',
+            content: (
+                <div className="text-center p-2">
+                    <div className="text-4xl mb-4">👋</div>
+                    <h2 className={`text-2xl font-bold text-${theme.primaryColor} mb-2`}>
+                        Olá, {currentUser?.name?.split(' ')[0]}!
+                    </h2>
+                    <p className="text-slate-600 dark:text-slate-300">
+                        Bem-vindo ao <strong>Prof. Acerta+</strong>!
+                        <br />Vamos fazer um tour rápido para você dominar tudo por aqui?
+                    </p>
+                </div>
+            ),
+            placement: 'center',
+            disableBeacon: true,
+        },
+        // Desktop Sidebar Step
+        {
+            target: 'aside',
             content: (
                 <div>
                     <h3 className="text-xl font-bold mb-2">Comando Central</h3>
@@ -93,6 +111,17 @@ export const Tutorial: React.FC = () => {
             ),
             placement: 'right',
             disableBeacon: true,
+        },
+        // Mobile Menu Step (Fallback if sidebar hidden)
+        {
+            target: '[data-tour="mobile-menu"]',
+            content: (
+                <div>
+                    <h3 className="text-xl font-bold mb-2">Menu Principal</h3>
+                    <p>Toque aqui para acessar todas as funcionalidades em seu celular.</p>
+                </div>
+            ),
+            placement: 'bottom',
         },
         {
             target: '[data-tour="class-selector"]',
