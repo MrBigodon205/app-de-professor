@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTheme } from '../hooks/useTheme';
 
 interface DatePickerProps {
@@ -23,11 +24,20 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         return value ? new Date(value + 'T12:00:00') : new Date();
     });
     const calendarRef = useRef<HTMLDivElement>(null);
+    const [coords, setCoords] = useState({ top: 0, left: 0 });
 
     // Close calendar when clicking outside
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+            // Check if click is inside the button (calendarRef) OR inside the portal content
+            const portalElement = document.getElementById('datepicker-portal');
+
+            if (
+                calendarRef.current &&
+                !calendarRef.current.contains(event.target as Node) &&
+                portalElement &&
+                !portalElement.contains(event.target as Node)
+            ) {
                 setShowCalendar(false);
             }
         }
@@ -41,6 +51,19 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             setViewDate(new Date(value + 'T12:00:00'));
         }
     }, [value]);
+
+    // Calculate position when opening
+    useEffect(() => {
+        if (showCalendar && calendarRef.current) {
+            const rect = calendarRef.current.getBoundingClientRect();
+            // Check if near bottom of screen to flip up? For now just display below.
+            // Add scrollY to handle page scroll
+            setCoords({
+                top: rect.bottom + window.scrollY + 8,
+                left: rect.left + window.scrollX
+            });
+        }
+    }, [showCalendar]);
 
     const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
     const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
@@ -96,8 +119,12 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                     </div>
                 </button>
 
-                {showCalendar && (
-                    <div className="absolute top-full left-0 mt-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-4 z-[9999] w-[280px] animate-in fade-in zoom-in-95 duration-200">
+                {showCalendar && createPortal(
+                    <div
+                        id="datepicker-portal"
+                        style={{ top: coords.top, left: coords.left }}
+                        className="absolute bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-4 z-[99999] w-[280px] animate-in fade-in zoom-in-95 duration-200"
+                    >
                         <div className="flex items-center justify-between mb-4">
                             <button onClick={() => changeMonth(-1)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-500" type="button">
                                 <span className="material-symbols-outlined text-sm">chevron_left</span>
@@ -143,7 +170,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                                 );
                             })}
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )}
             </div>
         </div>
