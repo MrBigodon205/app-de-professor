@@ -220,8 +220,16 @@ export const Grades: React.FC = () => {
                         const { error } = await supabase
                             .from('students')
                             .update({ units: finalStudent.units })
-                            .eq('id', studentId);
+                            .eq('id', studentId)
+                            .select(); // Add select to get data/count
+
                         if (error) throw error;
+                        // if (data.length === 0) throw new Error("Permissão negada (RLS) ou Aluno não encontrado.");
+                        // Actually standard update returns status 204 often if no select.
+                        // But we added select().
+                        if (!data || data.length === 0) {
+                            throw new Error("Salvo com sucesso, mas o banco não retornou dados. Verifique permissões (RLS).");
+                        }
                     }
                     console.log("Saved successfully.");
                 } catch (error: any) {
