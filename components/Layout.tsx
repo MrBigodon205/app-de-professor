@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
 import { ProfileModal } from './ProfileModal';
+import { Tutorial } from './Onboarding/Tutorial';
 import { NotificationCenter } from './NotificationCenter';
 import { MobileBottomNav } from './MobileBottomNav';
 import { MobileClassSelector } from './MobileClassSelector';
@@ -74,7 +75,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   return (
     <div className="flex h-screen w-full bg-background-light dark:bg-background-dark overflow-hidden">
-
+      <Tutorial />
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
