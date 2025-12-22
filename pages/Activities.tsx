@@ -184,9 +184,9 @@ export const Activities: React.FC = () => {
         setSelectedActivityId(null);
         setFormTitle('');
         setFormType('Prova');
-        setFormDate(new Date().toISOString().split('T')[0]);
-        setFormStartDate(new Date().toISOString().split('T')[0]);
-        setFormEndDate(new Date().toISOString().split('T')[0]);
+        setFormDate(new Date().toLocaleDateString('sv-SE'));
+        setFormStartDate(new Date().toLocaleDateString('sv-SE'));
+        setFormEndDate(new Date().toLocaleDateString('sv-SE'));
         setFormDescription('');
         setFormFiles([]);
         setFormSeriesId(selectedSeriesId);

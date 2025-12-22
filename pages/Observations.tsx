@@ -21,7 +21,7 @@ export const Observations: React.FC = () => {
     // Form States
     const [occType, setOccType] = useState('Indisciplina');
     const [occDescription, setOccDescription] = useState('');
-    const [occurrenceDate, setOccurrenceDate] = useState(new Date().toISOString().split('T')[0]);
+    const [occurrenceDate, setOccurrenceDate] = useState(new Date().toLocaleDateString('sv-SE'));
     const [editingOccId, setEditingOccId] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
 
