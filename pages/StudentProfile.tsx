@@ -62,17 +62,36 @@ export const StudentProfile: React.FC = () => {
 
             if (studentError) throw studentError;
 
-            const formattedStudents: Student[] = studentsData.map(s => ({
-                id: s.id.toString(),
-                name: s.name,
-                number: s.number,
-                initials: s.initials || '',
-                color: s.color || '',
-                classId: s.series_id.toString(),
-                section: s.section,
-                userId: s.user_id,
-                units: s.units || {}
-            }));
+            // Fetch Grades (from new table)
+            const studentIds = studentsData.map(s => s.id);
+            const { data: gradesData, error: gradesError } = await supabase
+                .from('grades')
+                .select('*')
+                .in('student_id', studentIds)
+                .eq('user_id', currentUser.id);
+
+            if (gradesError) throw gradesError;
+
+            const formattedStudents: Student[] = studentsData.map(s => {
+                // Find all grade records for this student
+                const sGrades = gradesData?.filter(g => g.student_id === s.id) || [];
+                const unitsMap: any = {};
+                sGrades.forEach(g => {
+                    unitsMap[g.unit] = g.data || {};
+                });
+
+                return {
+                    id: s.id.toString(),
+                    name: s.name,
+                    number: s.number,
+                    initials: s.initials || '',
+                    color: s.color || '',
+                    classId: s.series_id.toString(),
+                    section: s.section,
+                    userId: s.user_id,
+                    units: unitsMap
+                };
+            });
             formattedStudents.sort((a, b) => parseInt(a.number) - parseInt(b.number));
 
             // Fetch occurrences, attendance, activities, and plans in parallel
