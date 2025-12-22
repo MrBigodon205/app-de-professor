@@ -159,6 +159,41 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </div >
             </div >
 
+            {/* Mobile Subject Switcher (New) */}
+            <div className="md:hidden px-3 mb-2">
+              <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block px-1">Matéria Atual</label>
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden">
+                <button
+                  onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)}
+                  className="w-full flex items-center justify-between p-3"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={`size-2 rounded-full bg-${theme.primaryColor}`}></span>
+                    <span className="font-bold text-sm text-slate-700 dark:text-slate-200">{activeSubject}</span>
+                  </div>
+                  <span className="material-symbols-outlined text-slate-400">expand_more</span>
+                </button>
+
+                {isSubjectDropdownOpen && (
+                  <div className="border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
+                    {Array.from(new Set([currentUser?.subject, ...(currentUser?.subjects || [])])).filter(Boolean).map(subj => (
+                      <button
+                        key={subj}
+                        onClick={() => {
+                          updateActiveSubject(subj);
+                          setIsSubjectDropdownOpen(false);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-3 text-sm font-medium border-l-4 ${activeSubject === subj ? `border-${theme.primaryColor} bg-${theme.primaryColor}/5 text-${theme.primaryColor}` : 'border-transparent text-slate-600 dark:text-slate-400'}`}
+                      >
+                        {subj}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Nav */}
             < nav className="flex flex-col gap-1.5 mt-2 overflow-y-auto max-h-[calc(100vh-320px)] custom-scrollbar pr-2" >
               {

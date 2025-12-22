@@ -97,7 +97,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
         if (success) {
             alert('Perfil atualizado com sucesso!');
             // Optional: window.location.reload() if theme changes need deep refresh
-            window.location.reload();
+            // window.location.reload(); -> Removed to avoid re-login feeling as requested
         } else {
             alert('Erro ao atualizar perfil.');
         }

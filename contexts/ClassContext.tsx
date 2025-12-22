@@ -92,6 +92,12 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     setSelectedSection(formattedClasses[0].sections[0]);
                 }
             }
+
+            // Validate Selection: If selectedSeriesId is not in the new list (filtered by subject), clear it!
+            if (selectedSeriesId && !uniqueClasses.find(c => c.id === selectedSeriesId)) {
+                setSelectedSeriesId('');
+                setSelectedSection('');
+            }
         } catch (e) {
             console.error("Failed to fetch classes", e);
         } finally {
