@@ -224,8 +224,9 @@ export const Grades: React.FC = () => {
                         if (error) throw error;
                     }
                     console.log("Saved successfully.");
-                } catch (error) {
+                } catch (error: any) {
                     console.error('Erro ao salvar nota:', error);
+                    alert(`Falha ao salvar nota: ${error.message || 'Erro de conexão'}`);
                 } finally {
                     delete saveTimeoutRefs.current[studentId];
                     if (Object.keys(saveTimeoutRefs.current).length === 0) {
