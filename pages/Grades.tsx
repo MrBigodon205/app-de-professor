@@ -52,12 +52,10 @@ export const Grades: React.FC = () => {
     useEffect(() => {
         if (selectedSeriesId && selectedSection) {
             fetchStudents();
-            // Polling Fallback: re-fetch every 10 seconds to ensure sync even if Realtime fails
+            // Polling Fallback: re-fetch every 10 seconds to ensure sync
             const interval = setInterval(() => {
                 // Only fetch if we are NOT currently typing/saving to avoid overwriting user input
                 if (!isSyncing && Object.keys(saveTimeoutRefs.current).length === 0) {
-                    // We could implement a nicer silent fetch, but for now simple fetch is safer
-                    // Actually, silent fetch is better: don't set loading=true
                     fetchStudents(true);
                 }
             }, 10000);
@@ -118,9 +116,6 @@ export const Grades: React.FC = () => {
                 },
                 (payload) => {
                     const newRecord = payload.new as any;
-                    // Only update if we are not the one triggering the save (optimistic UI handles ours)
-                    // But determining "my" save vs "other tab" save is hard without a clientID.
-                    // For now, we trust the debounce buffers.
                     // If we receive an update while NOT typing, we accept it.
                     if (Object.keys(saveTimeoutRefs.current).length === 0) {
                         if (newRecord && newRecord.section === selectedSection && newRecord.user_id === currentUser.id) {
@@ -217,18 +212,17 @@ export const Grades: React.FC = () => {
                 try {
                     console.log(`Saving grades for student ${studentId}...`);
                     if (finalStudent) {
-                        const { error } = await supabase
+                        // FIX: Added data destructuring and select() to verify row was actually updated
+                        const { data, error } = await supabase
                             .from('students')
                             .update({ units: finalStudent.units })
                             .eq('id', studentId)
-                            .select(); // Add select to get data/count
+                            .select();
 
                         if (error) throw error;
-                        // if (data.length === 0) throw new Error("Permissão negada (RLS) ou Aluno não encontrado.");
-                        // Actually standard update returns status 204 often if no select.
-                        // But we added select().
+
                         if (!data || data.length === 0) {
-                            throw new Error("Salvo com sucesso, mas o banco não retornou dados. Verifique permissões (RLS).");
+                            throw new Error("Salvo mas sem confirmação (0 linhas alteradas). Verifique permissões.");
                         }
                     }
                     console.log("Saved successfully.");
