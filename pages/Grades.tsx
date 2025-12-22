@@ -4,10 +4,41 @@ import { useAuth } from '../contexts/AuthContext';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { supabase } from '../utils/supabaseClient';
-import { Student, Grades as GradesType, UNIT_CONFIGS } from '../types';
+import { Student, Grades as GradesType } from '../types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Save, Download, Calculator, AlertCircle, CheckCircle, Wifi, WifiOff } from 'lucide-react';
+// import { Save, Download, Calculator, AlertCircle, CheckCircle, Wifi, WifiOff } from 'lucide-react'; // REMOVED
+
+const UNIT_CONFIGS: any = {
+    '1': {
+        columns: [
+            { key: 'qualitative', label: 'Qualitativo', max: 2.0 },
+            { key: 'simulado', label: 'Simulado', max: 2.0 },
+            { key: 'test', label: 'Teste', max: 4.0 },
+            { key: 'workshop', label: 'Workshop', max: 2.0 },
+            { key: 'exam', label: 'Prova', max: 10.0 },
+        ],
+    },
+    '2': {
+        columns: [
+            { key: 'qualitative', label: 'Qualitativo', max: 2.0 },
+            { key: 'simulado', label: 'Simulado', max: 2.0 },
+            { key: 'test', label: 'Teste', max: 4.0 },
+            { key: 'scienceFair', label: 'Feira de Ciências', max: 2.0 },
+            { key: 'exam', label: 'Prova', max: 10.0 },
+        ],
+    },
+    '3': {
+        columns: [
+            { key: 'qualitative', label: 'Qualitativo', max: 2.0 },
+            { key: 'simulado', label: 'Simulado', max: 2.0 },
+            { key: 'test', label: 'Teste', max: 4.0 },
+            { key: 'gincana', label: 'Gincana', max: 2.0 },
+            { key: 'talentShow', label: 'Amostra de Talentos', max: 2.0 },
+            { key: 'exam', label: 'Prova', max: 10.0 },
+        ],
+    },
+};
 
 interface GradeData {
     [key: string]: number;
@@ -22,7 +53,7 @@ interface GradeRecord {
 }
 
 export const Grades: React.FC = () => {
-    const { selectedSeriesId, selectedSection } = useClass();
+    const { selectedSeriesId, selectedSection, activeSeries } = useClass();
     const { currentUser } = useAuth();
     const theme = useTheme();
     const [students, setStudents] = useState<Student[]>([]);
@@ -240,8 +271,8 @@ export const Grades: React.FC = () => {
                             key={unit}
                             onClick={() => setSelectedUnit(unit)}
                             className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${selectedUnit === unit
-                                    ? `bg-${theme.primaryColor}-500 text-white shadow-lg`
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'
+                                ? `bg-${theme.primaryColor}-500 text-white shadow-lg`
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'
                                 }`}
                         >
                             {unit}ª Unidade
@@ -251,19 +282,21 @@ export const Grades: React.FC = () => {
 
                 <div className="flex items-center gap-2">
                     {isSaving ? (
-                        <span className="flex items-center text-amber-500 text-sm">
-                            <Wifi className="w-4 h-4 mr-1 animate-pulse" /> Salvando...
+                        <span className="flex items-center text-amber-500 text-sm font-bold bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800 transition-all">
+                            <span className="material-symbols-outlined text-sm mr-2 animate-pulse">cloud_upload</span>
+                            Salvando...
                         </span>
                     ) : (
-                        <span className="flex items-center text-emerald-500 text-sm">
-                            <CheckCircle className="w-4 h-4 mr-1" /> Salvo
+                        <span className="flex items-center text-emerald-600 dark:text-emerald-400 text-sm font-bold bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 transition-all">
+                            <span className="material-symbols-outlined text-sm mr-2">check_circle</span>
+                            Salvo
                         </span>
                     )}
                     <button
                         onClick={exportPDF}
-                        className={`flex items-center space-x-2 px-4 py-2 bg-${theme.primaryColor}-500 hover:bg-${theme.primaryColor}-600 text-white rounded-lg transition-colors`}
+                        className={`flex items-center space-x-2 px-4 py-2 bg-${theme.primaryColor}-500 hover:bg-${theme.primaryColor}-600 text-white rounded-lg transition-colors shadow-md shadow-${theme.primaryColor}/20`}
                     >
-                        <Download size={18} />
+                        <span className="material-symbols-outlined text-lg">download</span>
                         <span>Exportar PDF</span>
                     </button>
                 </div>
@@ -328,8 +361,8 @@ export const Grades: React.FC = () => {
                                     ))}
                                     <td className="px-6 py-4 whitespace-nowrap text-center bg-slate-50/30 dark:bg-slate-800/30">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${calculateTotal(student) >= 6
-                                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                                : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'
+                                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                            : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'
                                             }`}>
                                             {calculateTotal(student).toFixed(1)}
                                         </span>
