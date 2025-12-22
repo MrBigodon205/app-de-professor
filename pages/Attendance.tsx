@@ -294,6 +294,8 @@ export const Attendance: React.FC = () => {
                         student_id: studentId,
                         date,
                         status,
+                        series_id: selectedSeriesId,
+                        section: selectedSection,
                         user_id: currentUser.id
                     }, { onConflict: 'student_id, date, user_id' }); // Explicit constraint check if needed, mostly auto
 
@@ -329,6 +331,8 @@ export const Attendance: React.FC = () => {
                             student_id: s.id,
                             date,
                             status,
+                            series_id: selectedSeriesId,
+                            section: selectedSection,
                             user_id: currentUser.id
                         }, { onConflict: 'student_id, date, user_id' });
                 }
