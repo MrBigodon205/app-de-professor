@@ -92,7 +92,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       {/* Sidebar / Mobile Drawer */}
       {/* On mobile, this acts as the "More Menu" drawer */}
-      <aside className={`fixed inset - y - 0 left - 0 z - [60] w - 72 bg - surface - light dark: bg - surface - dark border - r border - border - light dark: border - border - dark transform transition - transform duration - 300 ease -in -out md:relative md: translate - x - 0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} shadow - 2xl md: shadow - none`}>
+      <aside className={`fixed inset-y-0 left-0 z-[60] w-72 bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} shadow-2xl md:shadow-none`}>
         <div className="flex flex-col h-full justify-between">
           {/* Close Button for Mobile Drawer */}
           <div className="md:hidden absolute top-4 right-4 z-50">
@@ -107,7 +107,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <div className="p-4 flex flex-col gap-4">
             {/* User Profile / Brand - NEW LOGO */}
             <div className="flex gap-3 items-center px-2 py-4 border-b border-dashed border-slate-200 dark:border-slate-800 mb-2">
-              <div className={`size - 10 rounded - xl bg - gradient - to - br from - ${theme.primaryColor} to - ${theme.secondaryColor} text - white flex items - center justify - center shadow - lg shadow - ${theme.primaryColor}/20`}>
+              <div className={`size-10 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
                 <span className="material-symbols-outlined text-2xl">school</span>
               </div >
               <div className="flex flex-col">
@@ -117,7 +117,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div >
 
             {/* Mobile Profile & Notification Actions (Visible only on mobile sidebar) */}
-            < div className="md:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700" >
+            <div className="md:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
               {/* ... (existing Mobile Profile UI) ... */}
               < div
                 className="flex items-center gap-3 cursor-pointer"
@@ -179,7 +179,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   </Link>
                 ))
               }
-            </nav >
+            </nav>
           </div >
 
           <div className="p-4 border-t border-border-light dark:border-border-dark">
@@ -192,10 +192,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </button>
           </div>
         </div >
-      </aside >
+      </aside>
 
       {/* Main Content */}
-      < div className="flex-1 flex flex-col min-w-0 h-full relative bg-background-light dark:bg-background-dark" >
+      <div className="flex-1 flex flex-col min-w-0 h-full relative bg-background-light dark:bg-background-dark">
         {/* Overlay for mobile sidebar */}
         {
           isMobileMenuOpen && (
