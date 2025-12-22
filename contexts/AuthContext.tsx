@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const fetchProfile = async (uid: string, retryCount = 0) => {
         // Raw Fetch Helper for Profile
         const rawProfileFetch = async () => {
-            console.log("Tentando buscar perfil via Raw Fetch...");
+            // console.log("Tentando buscar perfil via Raw Fetch...");
             const supabaseUrl = (supabase as any).supabaseUrl;
             const supabaseKey = (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     subject: sbData.subject || 'Matemática',
                     subjects: sbData.subjects || []
                 };
-                if (usedFallback) console.log("Perfil carregado via Fallback HTTP!");
+                if (usedFallback) { /* console.log("Perfil carregado via Fallback HTTP!"); */ }
                 // Fallback Removed: We rely on Supabase Profile.
                 // If profile is missing, we must let it fail or handle creation properly.
                 // But restoring from localStorage/localhost is dangerous for sync.
@@ -166,7 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const login = async (email: string, password: string) => {
         // Helper for Raw Fetch Login (Fallback)
         const rawLogin = async () => {
-            console.log("Tentando login via Raw Fetch...");
+            // console.log("Tentando login via Raw Fetch...");
             const supabaseUrl = (supabase as any).supabaseUrl;
             const supabaseKey = (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -198,7 +198,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         try {
             // 1. Try Standard Supabase Client Login (Timeout bumped to 30s)
-            console.log("Tentando login padrão...");
+            // console.log("Tentando login padrão...");
             try {
                 const { data, error } = await withTimeout(
                     supabase.auth.signInWithPassword({ email, password }),
@@ -306,8 +306,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return false;
         }
 
-        console.log("Starting profile update for user:", userId);
-        console.log("Update payload:", JSON.stringify(data, null, 2));
+        // console.log("Starting profile update for user:", userId);
+        // console.log("Update payload:", JSON.stringify(data, null, 2));
 
         try {
             // 1. Update Auth User if password is provided
@@ -326,7 +326,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (Object.prototype.hasOwnProperty.call(data, 'subjects')) profileUpdate.subjects = data.subjects;
             if (Object.prototype.hasOwnProperty.call(data, 'email')) profileUpdate.email = data.email;
 
-            console.log("Supabase profile payload:", JSON.stringify(profileUpdate, null, 2));
+            // console.log("Supabase profile payload:", JSON.stringify(profileUpdate, null, 2));
 
             // Only update profiles if there's something to update
             if (Object.keys(profileUpdate).length > 0) {

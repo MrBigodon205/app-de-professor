@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Plan, AttachmentFile } from '../types';
 import { supabase } from '../lib/supabase';
+import DOMPurify from 'dompurify';
 import { RichTextEditor } from '../components/RichTextEditor';
 export const Planning: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
@@ -602,7 +603,7 @@ export const Planning: React.FC = () => {
                                         </h3>
                                         <div
                                             className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 custom-html-content"
-                                            dangerouslySetInnerHTML={{ __html: currentPlan.description }}
+                                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description) }}
                                         />
                                     </div>
                                 </div>

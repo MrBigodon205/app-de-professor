@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Activity, AttachmentFile, Student } from '../types';
 import { supabase } from '../lib/supabase';
+import DOMPurify from 'dompurify';
 import { DatePicker } from '../components/DatePicker';
 import { RichTextEditor } from '../components/RichTextEditor';
 
@@ -800,7 +801,7 @@ export const Activities: React.FC = () => {
                                     </h3>
                                     <div
                                         className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 leading-relaxed custom-html-content"
-                                        dangerouslySetInnerHTML={{ __html: currentActivity.description }}
+                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentActivity.description) }}
                                     />
                                 </div>
 
