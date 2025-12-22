@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useClass } from '../contexts/ClassContext';
-import { useTheme } from '../contexts/ThemeContext';
-import { supabase } from '../utils/supabaseClient';
+import { useTheme } from '../hooks/useTheme';
+import { supabase } from '../lib/supabase';
 import { Student, Grades as GradesType } from '../types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
