@@ -17,11 +17,12 @@ export const Tutorial: React.FC = () => {
         const key = `${TUTORIAL_KEY}_${currentUser.id}`;
         const completed = localStorage.getItem(key);
 
-        if (!completed) {
-            // Delay slightly to ensure UI is ready
-            const timer = setTimeout(() => setRun(true), 1500); // Increased delay slightly
-            return () => clearTimeout(timer);
-        }
+        // For testing purposes, we ignore the completed check
+        // if (!completed) {
+        // Delay slightly to ensure UI is ready
+        const timer = setTimeout(() => setRun(true), 1500); // Increased delay slightly
+        return () => clearTimeout(timer);
+        // }
     }, [currentUser]);
 
     const handleJoyrideCallback = (data: CallBackProps) => {
@@ -30,6 +31,7 @@ export const Tutorial: React.FC = () => {
         if (([STATUS.FINISHED, STATUS.SKIPPED] as string[]).includes(status)) {
             setRun(false);
             if (currentUser) {
+                console.log("Tutorial concluído. Salvando estado para:", currentUser.id);
                 localStorage.setItem(`${TUTORIAL_KEY}_${currentUser.id}`, 'true');
             }
             if (status === STATUS.FINISHED) {
