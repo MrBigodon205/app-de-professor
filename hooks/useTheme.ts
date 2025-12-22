@@ -150,10 +150,10 @@ const THEME_MAP: Record<Subject, ThemeConfig> = {
 };
 
 export const useTheme = () => {
-    const { currentUser } = useAuth();
+    const { currentUser, activeSubject } = useAuth();
 
-    const subject = currentUser?.subject || 'Matemática';
-    const config = THEME_MAP[subject] || THEME_MAP['Matemática'];
+    const subject = activeSubject || currentUser?.subject || 'Matemática';
+    const config = THEME_MAP[subject as Subject] || THEME_MAP['Matemática'];
 
     return {
         subject,
