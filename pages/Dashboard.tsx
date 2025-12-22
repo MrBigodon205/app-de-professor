@@ -398,98 +398,102 @@ export const Dashboard: React.FC = () => {
         )
       }
 
-      {/* Main KPI Card - Total Students */}
-      <div className="bg-white dark:bg-surface-dark rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 dark:border-slate-800 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
-        <div className="absolute top-0 right-0 p-40 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-full blur-3xl -mr-20 -mt-20 transition-all group-hover:scale-110"></div>
+      {/* Main KPI Grid - Bento Style */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4 md:gap-6">
-            <div className={`size-14 md:size-20 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/30 group-hover:scale-110 transition-transform duration-300`}>
-              <span className="material-symbols-outlined text-3xl md:text-4xl">groups</span>
+        {/* Total Students (Large Card) */}
+        <div className="md:col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 relative overflow-hidden group hover:shadow-2xl transition-all duration-500">
+          <div className="absolute top-0 right-0 p-40 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700"></div>
+
+          <div className="relative flex flex-col h-full justify-between">
+            <div className="flex items-start justify-between">
+              <div className={`size-16 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/25 group-hover:rotate-6 transition-transform duration-300`}>
+                <span className="material-symbols-outlined text-3xl">groups</span>
+              </div>
+              <div className="flex flex-col items-end">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/10">
+                  <span className="size-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                  Ativos
+                </span>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-1">Total de Alunos</h2>
-              <p className="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest text-[9px] md:text-[10px]">Todas as Séries</p>
+
+            <div className="mt-6">
+              {loadingCounts ? (
+                <div className="h-16 w-32 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse"></div>
+              ) : (
+                <span className="block text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">{displayCount}</span>
+              )}
+              <h2 className="text-lg font-bold text-slate-500 dark:text-slate-400 mt-2">Alunos Matriculados</h2>
+              <p className="text-xs text-slate-400 font-medium uppercase tracking-widest mt-1">{isContextSelected ? 'Nesta Turma' : 'Total Geral'}</p>
             </div>
-          </div>
-          <div className="text-left sm:text-right w-full sm:w-auto flex sm:flex-col items-end sm:items-end justify-between">
-            {loadingCounts ? (
-              <div className="h-12 w-24 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse"></div>
-            ) : (
-              <span className="block text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter">{displayCount}</span>
-            )}
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-[10px] font-bold uppercase tracking-wide mt-2">
-              <span className="size-1.5 bg-green-500 rounded-full animate-pulse"></span>
-              Ativos
-            </span>
           </div>
         </div>
-      </div>
 
-      {/* Secondary Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Secondary Cards Grid */}
+
 
         {/* Grades */}
-        <Link to="/grades" className="bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
-          <div className={`absolute inset-0 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent opacity-0 group-hover:opacity-100 transition-all`}></div>
-          <div className="flex items-start justify-between mb-6 relative">
-            <div className={`size-14 rounded-2xl bg-${theme.primaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20 group-hover:scale-110 transition-transform`}>
-              <span className="material-symbols-outlined text-2xl">grade</span>
+        {/* Grades (Small Card) */}
+        <Link to="/grades" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between">
+          <div className="flex justify-between items-start">
+            <div className={`size-12 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+              <span className="material-symbols-outlined">grade</span>
             </div>
-            <span className={`text-[10px] font-black text-${theme.primaryColor} bg-${theme.primaryColor}/10 px-3 py-1.5 rounded-full uppercase tracking-wider`}>{isContextSelected ? 'Turma' : 'Global'}</span>
+            <span className="material-symbols-outlined text-slate-300">arrow_outward</span>
           </div>
-          <div className="relative">
-            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-xs mb-1">Média Geral</h3>
+          <div>
+            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Média da Turma</h3>
             {loadingStats ? (
-              <div className="h-10 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+              <div className="h-8 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mt-1"></div>
             ) : (
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-slate-900 dark:text-white">{stats.gradeAverage.toFixed(1)}</span>
-                <span className="text-sm font-bold text-slate-300">/ 10</span>
+              <div className="flex items-baseline gap-1 mt-1">
+                <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.gradeAverage.toFixed(1)}</span>
+                <span className="text-xs font-bold text-slate-400">/ 10</span>
               </div>
             )}
           </div>
         </Link>
 
         {/* Attendance */}
-        <Link to="/attendance" className="bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/5 group-hover:to-transparent transition-all"></div>
-          <div className="flex items-start justify-between mb-6 relative">
-            <div className="size-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined text-2xl">event_available</span>
+        {/* Attendance (Small Card) */}
+        <Link to="/attendance" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between">
+          <div className="flex justify-between items-start">
+            <div className="size-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined">event_available</span>
             </div>
-            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full uppercase tracking-wider">Hoje</span>
+            <span className="material-symbols-outlined text-slate-300">arrow_outward</span>
           </div>
-          <div className="relative">
-            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-xs mb-1">Presença</h3>
-            {loadingStats ? ( // Dependent on same stats logic for now
-              <div className="h-10 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+          <div>
+            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Presença Hoje</h3>
+            {loadingStats ? (
+              <div className="h-8 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mt-1"></div>
             ) : (
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-slate-900 dark:text-white">{stats.presentToday}</span>
-                <span className="text-sm font-bold text-slate-300">/ {displayCount}</span>
+              <div className="flex items-baseline gap-1 mt-1">
+                <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.presentToday}</span>
+                <span className="text-xs font-bold text-slate-400">/ {displayCount}</span>
               </div>
             )}
           </div>
         </Link>
 
         {/* Observations */}
-        <Link to="/observations" className="bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-amber-500/0 group-hover:from-amber-500/5 group-hover:to-transparent transition-all"></div>
-          <div className="flex items-start justify-between mb-6 relative">
-            <div className="size-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined text-2xl">notification_important</span>
+        {/* Observations (Small Card) */}
+        <Link to="/observations" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between">
+          <div className="flex justify-between items-start">
+            <div className="size-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined">notification_important</span>
             </div>
-            <span className="text-[10px] font-black text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-full uppercase tracking-wider">Notificações</span>
+            <span className="material-symbols-outlined text-slate-300">arrow_outward</span>
           </div>
-          <div className="relative">
-            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-xs mb-1">Ocorrências</h3>
+          <div>
+            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Ocorrências</h3>
             {loadingOccurrences ? (
-              <div className="h-10 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+              <div className="h-8 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mt-1"></div>
             ) : (
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-slate-900 dark:text-white">{stats.newObservations}</span>
-                <span className="text-sm font-bold text-slate-300">novas</span>
+              <div className="flex items-baseline gap-1 mt-1">
+                <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.newObservations}</span>
+                <span className="text-xs font-bold text-slate-400">Novas</span>
               </div>
             )}
           </div>
@@ -497,9 +501,11 @@ export const Dashboard: React.FC = () => {
 
       </div>
 
+
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Activities and Plans */}
-        <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col h-full">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
               <span className={`material-symbols-outlined text-${theme.primaryColor}`}>assignment_turned_in</span>
@@ -553,7 +559,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Recent Ocurrences */}
-        <div className="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col h-full">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
               <span className="material-symbols-outlined text-slate-400">history</span>
