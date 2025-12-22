@@ -100,6 +100,7 @@ export const Grades: React.FC = () => {
     };
 
     // --- REALTIME SUBSCRIPTION FOR GRADES ---
+    /*
     useEffect(() => {
         if (!currentUser || !selectedSeriesId || !selectedSection) return;
 
@@ -133,6 +134,7 @@ export const Grades: React.FC = () => {
             supabase.removeChannel(channel);
         };
     }, [selectedSeriesId, selectedSection, currentUser]);
+    */
     // ----------------------------------------
 
     const calculateAverage = (student: Student, unit: string) => {
