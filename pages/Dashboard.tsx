@@ -253,7 +253,7 @@ export const Dashboard: React.FC = () => {
       let query = supabase.from('plans')
         .select('*')
         .eq('user_id', currentUser.id)
-        .eq('subject', activeSubject) // Plans have subject column? No, they link to series. 
+        // .eq('subject', activeSubject) // Plans use series_id which is filtered below 
         // We need to verify if plans table has subject. 
         // We migrated classes to have subject.
         // Plans link to series_id.
