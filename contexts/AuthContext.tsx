@@ -294,6 +294,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (msg === 'Invalid login credentials') msg = 'E-mail ou senha inválidos.';
             if (msg.includes('timed out')) msg = 'Tempo esgotado. Verifique sua conexão.';
 
+            setLoading(false);
             return { success: false, error: msg };
         }
     };
