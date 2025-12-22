@@ -535,7 +535,7 @@ export const Observations: React.FC = () => {
                                                     <div className="flex items-center gap-4">
                                                         <div className="flex items-center gap-2 text-slate-400">
                                                             <span className="material-symbols-outlined text-sm">calendar_today</span>
-                                                            <span className="text-[10px] font-black font-mono tracking-tighter">{new Date(occ.date).toLocaleDateString('pt-BR')}</span>
+                                                            <span className="text-[10px] font-black font-mono tracking-tighter">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-1 opacity-0 group-hover/occ:opacity-100 transition-opacity">
                                                             <button

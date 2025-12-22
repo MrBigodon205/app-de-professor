@@ -520,8 +520,7 @@ export const Activities: React.FC = () => {
                                             {act.type}
                                         </span>
                                         <div className="flex items-center gap-1 text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
-                                            <span className="material-symbols-outlined text-[14px]">event</span>
-                                            {new Date(act.date).toLocaleDateString('pt-BR')}
+                                            <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold px-2 py-1 rounded-md">{new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -773,9 +772,9 @@ export const Activities: React.FC = () => {
                                             </div>
                                             <div className="font-bold text-slate-700 dark:text-gray-200">
                                                 {currentActivity.type === 'Conteúdo' ? (
-                                                    `${new Date(currentActivity.startDate || currentActivity.date).toLocaleDateString('pt-BR')} - ${new Date(currentActivity.endDate || currentActivity.date).toLocaleDateString('pt-BR')}`
+                                                    `${new Date((currentActivity.startDate || currentActivity.date) + 'T12:00:00').toLocaleDateString('pt-BR')} - ${new Date((currentActivity.endDate || currentActivity.date) + 'T12:00:00').toLocaleDateString('pt-BR')}`
                                                 ) : (
-                                                    new Date(currentActivity.date).toLocaleDateString('pt-BR')
+                                                    new Date(currentActivity.date + 'T12:00:00').toLocaleDateString('pt-BR')
                                                 )}
                                             </div>
                                         </div>

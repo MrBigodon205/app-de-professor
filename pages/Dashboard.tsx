@@ -41,6 +41,7 @@ export const Dashboard: React.FC = () => {
       fetchStats();
       fetchOccurrences();
       fetchActivities();
+      fetchPlans();
     }
   }, [currentUser, selectedSeriesId, selectedSection, activeSubject]);
 
@@ -390,7 +391,7 @@ export const Dashboard: React.FC = () => {
                 </Link>
                 <div className="flex items-center gap-2 text-sm">
                   <span className="material-symbols-outlined">schedule</span>
-                  Termina em {new Date(todaysPlan.endDate).toLocaleDateString('pt-BR')}
+                  Termina em {new Date(todaysPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                 </div>
               </div>
             </div>
@@ -528,7 +529,7 @@ export const Dashboard: React.FC = () => {
                         <span className="material-symbols-outlined text-emerald-500">task_alt</span>
                         <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{act.title}</span>
                       </div>
-                      <span className="text-xs text-slate-400">{new Date(act.date).toLocaleDateString('pt-BR')}</span>
+                      <span className="text-xs text-slate-400">{new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                     </div>
                   ))
                 )}
@@ -549,7 +550,7 @@ export const Dashboard: React.FC = () => {
                         <span className={`material-symbols-outlined text-${theme.primaryColor}`}>calendar_today</span>
                         <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{plan.title}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 uppercase">{new Date(plan.startDate).toLocaleDateString('pt-BR')}</span>
+                      <span className="text-[10px] text-slate-400 uppercase">{new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                     </div>
                   ))
                 )}
@@ -584,7 +585,7 @@ export const Dashboard: React.FC = () => {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-bold text-slate-900 dark:text-white">{occ.type}</p>
-                      <span className="text-[10px] font-bold text-slate-400 bg-white dark:bg-slate-900 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-800">{occ.date}</span>
+                      <span className="text-[10px] font-bold text-slate-400 bg-white dark:bg-slate-900 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-800">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                     </div>
                     <p className="text-sm text-slate-500 line-clamp-1">{occ.description}</p>
                   </div>

@@ -352,7 +352,7 @@ export const Planning: React.FC = () => {
                                     <div className="flex items-center gap-3 mt-2">
                                         <div className="flex items-center gap-1 text-xs text-slate-500 font-medium bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
                                             <span className="material-symbols-outlined text-[14px]">event</span>
-                                            {new Date(plan.startDate).toLocaleDateString('pt-BR')}
+                                            {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                                         </div>
                                         {plan.files && plan.files.length > 0 && (
                                             <div className="flex items-center gap-1 text-xs text-slate-400">
@@ -588,7 +588,7 @@ export const Planning: React.FC = () => {
                                             <div>
                                                 <div className="text-xs uppercase font-bold text-slate-400">Data</div>
                                                 <div className="font-bold text-slate-700 dark:text-gray-200">
-                                                    {new Date(currentPlan.startDate).toLocaleDateString('pt-BR')}
+                                                    {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                                                 </div>
                                             </div>
                                         </div>
