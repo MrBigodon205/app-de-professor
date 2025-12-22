@@ -20,42 +20,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [userId, setUserId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const LOCAL_API_URL = 'http://localhost:3002/users';
-    const IS_DEV = import.meta.env.DEV;
+    // Local API fallback logic removed to ensure Single Source of Truth from Supabase
 
-    const getLocalUser = async (id: string): Promise<User | null> => {
-        if (!IS_DEV) return null;
-        try {
-            const res = await fetch(`${LOCAL_API_URL}/${id}`);
-            if (res.ok) return await res.json();
-        } catch (e) {
-            console.warn("Local server unavailable for get");
-        }
-        return null;
-    };
-
-    const saveLocalUser = async (user: User) => {
-        if (!IS_DEV) return;
-        try {
-            const existing = await getLocalUser(user.id);
-            const method = existing ? 'PUT' : 'POST';
-            const url = existing ? `${LOCAL_API_URL}/${user.id}` : LOCAL_API_URL;
-
-            // Ensure we don't lose the password if we are constructing the user from Supabase profile (which lacks password)
-            let body = { ...user };
-            if (existing && existing.password && !body.password) {
-                body.password = existing.password;
-            }
-
-            await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-        } catch (e) {
-            console.warn("Local server unavailable for save");
-        }
-    };
 
     const fetchProfile = async (uid: string, retryCount = 0) => {
         // Raw Fetch Helper for Profile
@@ -114,23 +80,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     subjects: sbData.subjects || []
                 };
                 if (usedFallback) console.log("Perfil carregado via Fallback HTTP!");
-                saveLocalUser(finalUser); // Sync backup
-            } else {
-                // EMERGENCY FALLBACK: Create Minimal User from Session Logic if available
-                // We can't easily get session email here without passing it, but let's check local storage next
-                const localUser = await getLocalUser(uid);
-                if (localUser) {
-                    console.log("Restaurando usuário do backup local...");
-                    finalUser = localUser;
-                } else {
-                    // Last Resort: If we can't find profile, we might be stuck. 
-                    // But usually, if login succeeded, we should at least let them in?
-                    // Without a profile, the app might crash if it expects 'subjects'. 
-                    // We will retry once more then give up.
-                    if (retryCount < 2) {
-                        setTimeout(() => fetchProfile(uid, retryCount + 1), 1000);
-                        return;
-                    }
+                // Fallback Removed: We rely on Supabase Profile.
+                // If profile is missing, we must let it fail or handle creation properly.
+                // But restoring from localStorage/localhost is dangerous for sync.
+                if (retryCount < 2) {
+                    setTimeout(() => fetchProfile(uid, retryCount + 1), 1000);
+                    return;
                 }
             }
 
@@ -301,16 +256,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // Background seeding
                 seedUserData(data.user.id);
 
-                // Save to local DB immediately
-                const newUser: User = {
-                    id: data.user.id,
-                    name,
-                    email,
-                    password,
-                    subject,
-                    subjects
-                };
-                saveLocalUser(newUser);
+                // Local backup removed
+
 
                 return { success: true };
             }
@@ -390,10 +337,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (!newState.id) newState.id = userId;
                 setCurrentUser(newState as User);
 
-                // 4. Update Local DB (Backup/Sync)
-                // We pass the FULL updated user object to saveLocalUser, including password if it was in the update data
-                const userToSave = { ...newState, password: data.password || currentUser?.password };
-                saveLocalUser(userToSave as User);
+                // Local backup removed
+
             }
 
             return true;

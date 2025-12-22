@@ -46,18 +46,31 @@ export const Grades: React.FC = () => {
     const [selectedUnit, setSelectedUnit] = useState<string>('1');
     const [loading, setLoading] = useState(true);
 
+    const [isSyncing, setIsSyncing] = useState(false);
+    const saveTimeoutRefs = React.useRef<{ [key: string]: NodeJS.Timeout }>({});
+
     useEffect(() => {
         if (selectedSeriesId && selectedSection) {
             fetchStudents();
+            // Polling Fallback: re-fetch every 10 seconds to ensure sync even if Realtime fails
+            const interval = setInterval(() => {
+                // Only fetch if we are NOT currently typing/saving to avoid overwriting user input
+                if (!isSyncing && Object.keys(saveTimeoutRefs.current).length === 0) {
+                    // We could implement a nicer silent fetch, but for now simple fetch is safer
+                    // Actually, silent fetch is better: don't set loading=true
+                    fetchStudents(true);
+                }
+            }, 10000);
+            return () => clearInterval(interval);
         } else {
             setStudents([]);
             setLoading(false);
         }
     }, [selectedSeriesId, selectedSection]);
 
-    const fetchStudents = async () => {
+    const fetchStudents = async (silent = false) => {
         if (!currentUser || !selectedSeriesId || !selectedSection) return;
-        setLoading(true);
+        if (!silent) setLoading(true);
         try {
             const { data, error } = await supabase
                 .from('students')
@@ -84,7 +97,7 @@ export const Grades: React.FC = () => {
         } catch (error) {
             console.error('Erro ao buscar alunos:', error);
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     };
 
@@ -101,26 +114,27 @@ export const Grades: React.FC = () => {
                     event: '*',
                     schema: 'public',
                     table: 'students',
-                    filter: `series_id=eq.${selectedSeriesId}` // Optimisation: only listen for THIS class
-                    // note: cannot filter by multiple columns easily in one string standardly without separate config, 
-                    // but series_id is a good enough partial filter.
+                    filter: `series_id=eq.${selectedSeriesId}`
                 },
                 (payload) => {
                     const newRecord = payload.new as any;
-                    // Double check if the update belongs to us and this section
-                    if (newRecord && newRecord.section === selectedSection && newRecord.user_id === currentUser.id) {
-                        console.log("Realtime Grades Update Received!", payload);
-                        fetchStudents();
-                    } else if (payload.eventType === 'DELETE') {
-                        // On delete we just refetch to be safe
-                        fetchStudents();
+                    // Only update if we are not the one triggering the save (optimistic UI handles ours)
+                    // But determining "my" save vs "other tab" save is hard without a clientID.
+                    // For now, we trust the debounce buffers.
+                    // If we receive an update while NOT typing, we accept it.
+                    if (Object.keys(saveTimeoutRefs.current).length === 0) {
+                        if (newRecord && newRecord.section === selectedSection && newRecord.user_id === currentUser.id) {
+                            console.log("Realtime Grades Update Received!", payload);
+                            fetchStudents(true);
+                        } else if (payload.eventType === 'DELETE') {
+                            fetchStudents(true);
+                        }
                     }
                 }
             )
             .subscribe();
 
         return () => {
-            console.log("Cleaning up Grades Realtime...");
             supabase.removeChannel(channel);
         };
     }, [selectedSeriesId, selectedSection, currentUser]);
@@ -139,14 +153,15 @@ export const Grades: React.FC = () => {
         return parseFloat(average.toFixed(1));
     };
 
-    const handleGradeChange = async (studentId: string, field: string, value: string) => {
+    const handleGradeChange = (studentId: string, field: string, value: string) => {
         const numericValue = value === '' ? 0 : parseFloat(value);
         if (isNaN(numericValue)) return;
 
         let finalStudent: Student | undefined;
 
+        // 1. Optimistic Update (Immediate Feedback)
         setStudents(prevStudents => {
-            const updated = prevStudents.map(student => {
+            return prevStudents.map(student => {
                 if (student.id === studentId) {
                     const newUnits = { ...student.units };
                     if (!newUnits[selectedUnit]) newUnits[selectedUnit] = {};
@@ -158,7 +173,7 @@ export const Grades: React.FC = () => {
                     const col = UNIT_CONFIGS[selectedUnit].columns.find((c: any) => c.key === field);
                     let max = col ? col.max : 10;
 
-                    // Special rule for Unit 3 Prova - MUST use latest numericValue if field is talentShow
+                    // Special rule for Unit 3 Prova
                     if (selectedUnit === '3') {
                         const talentShowGrade = field === 'talentShow' ? numericValue : (currentGrades.talentShow || 0);
                         if (field === 'exam') {
@@ -174,7 +189,7 @@ export const Grades: React.FC = () => {
                         [field]: finalValue
                     };
 
-                    // If updating talentShow, we might need to cap the existing exam grade
+                    // Correction rule
                     if (selectedUnit === '3' && field === 'talentShow' && finalValue > 0) {
                         if ((newUnits[selectedUnit].exam || 0) > 8) {
                             newUnits[selectedUnit].exam = 8;
@@ -186,19 +201,38 @@ export const Grades: React.FC = () => {
                 }
                 return student;
             });
-            return updated;
         });
 
-        try {
-            if (finalStudent) {
-                const { error } = await supabase
-                    .from('students')
-                    .update({ units: finalStudent.units })
-                    .eq('id', studentId);
-                if (error) throw error;
+        // 2. Debounced Save (Network)
+        if (finalStudent) {
+            // Clear existing timeout for this student
+            if (saveTimeoutRefs.current[studentId]) {
+                clearTimeout(saveTimeoutRefs.current[studentId]);
             }
-        } catch (error) {
-            console.error('Erro ao salvar nota:', error);
+
+            setIsSyncing(true);
+
+            // Set new timeout (1 second wait)
+            saveTimeoutRefs.current[studentId] = setTimeout(async () => {
+                try {
+                    console.log(`Saving grades for student ${studentId}...`);
+                    if (finalStudent) {
+                        const { error } = await supabase
+                            .from('students')
+                            .update({ units: finalStudent.units })
+                            .eq('id', studentId);
+                        if (error) throw error;
+                    }
+                    console.log("Saved successfully.");
+                } catch (error) {
+                    console.error('Erro ao salvar nota:', error);
+                } finally {
+                    delete saveTimeoutRefs.current[studentId];
+                    if (Object.keys(saveTimeoutRefs.current).length === 0) {
+                        setIsSyncing(false);
+                    }
+                }
+            }, 1000);
         }
     };
 

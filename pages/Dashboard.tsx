@@ -40,14 +40,48 @@ export const Dashboard: React.FC = () => {
       fetchCounts();
       fetchStats();
       fetchOccurrences();
-      fetchPlans();
       fetchActivities();
     }
   }, [currentUser, selectedSeriesId, selectedSection]);
 
-  const fetchCounts = async () => {
+  const refreshAll = (silent = true) => {
+    fetchCounts(silent);
+    fetchStats(silent);
+    fetchOccurrences(silent);
+    fetchPlans(silent);
+    fetchActivities(silent);
+  };
+
+  // --- REALTIME SUBSCRIPTION ---
+  useEffect(() => {
     if (!currentUser) return;
-    setLoadingCounts(true);
+
+    // Polling Fallback (Every 10s)
+    const interval = setInterval(() => {
+      refreshAll(true);
+    }, 10000);
+
+    console.log("Setting up Realtime for Dashboard...");
+
+    // Listen to everything relevant for the dashboard
+    const channel = supabase.channel(`dashboard_sync_${currentUser.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => refreshAll(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'occurrences' }, () => refreshAll(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => refreshAll(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, () => refreshAll(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'plans' }, () => refreshAll(true))
+      .subscribe();
+
+    return () => {
+      console.log("Cleaning up Dashboard Realtime...");
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
+  }, [currentUser, selectedSeriesId]);
+
+  const fetchCounts = async (silent = false) => {
+    if (!currentUser) return;
+    if (!silent) setLoadingCounts(true);
     try {
       const { count: gCount } = await supabase
         .from('students')
@@ -68,13 +102,13 @@ export const Dashboard: React.FC = () => {
     } catch (e) {
       console.error("Error fetching counts:", e);
     } finally {
-      setLoadingCounts(false);
+      if (!silent) setLoadingCounts(false);
     }
   };
 
-  const fetchStats = async () => {
+  const fetchStats = async (silent = false) => {
     if (!currentUser) return;
-    setLoadingStats(true);
+    if (!silent) setLoadingStats(true);
     try {
       let studentsQuery = supabase.from('students').select('units, id').eq('user_id', currentUser.id);
       if (selectedSeriesId) studentsQuery = studentsQuery.eq('series_id', selectedSeriesId);
@@ -120,13 +154,13 @@ export const Dashboard: React.FC = () => {
     } catch (e) {
       console.error("Error fetching stats:", e);
     } finally {
-      setLoadingStats(false);
+      if (!silent) setLoadingStats(false);
     }
   };
 
-  const fetchOccurrences = async () => {
+  const fetchOccurrences = async (silent = false) => {
     if (!currentUser) return;
-    setLoadingOccurrences(true);
+    if (!silent) setLoadingOccurrences(true);
     try {
       let query = supabase.from('occurrences')
         .select('*')
@@ -165,13 +199,13 @@ export const Dashboard: React.FC = () => {
     } catch (e) {
       console.error("Error fetching occurrences:", e);
     } finally {
-      setLoadingOccurrences(false);
+      if (!silent) setLoadingOccurrences(false);
     }
   };
 
-  const fetchPlans = async () => {
+  const fetchPlans = async (silent = false) => {
     if (!currentUser) return;
-    setLoadingPlans(true);
+    if (!silent) setLoadingPlans(true);
     try {
       const today = new Date().toISOString().split('T')[0];
       let query = supabase.from('plans')
@@ -207,13 +241,13 @@ export const Dashboard: React.FC = () => {
     } catch (e) {
       console.error("Error fetching plans:", e);
     } finally {
-      setLoadingPlans(false);
+      if (!silent) setLoadingPlans(false);
     }
   };
 
-  const fetchActivities = async () => {
+  const fetchActivities = async (silent = false) => {
     if (!currentUser) return;
-    setLoadingActivities(true);
+    if (!silent) setLoadingActivities(true);
     try {
       let query = supabase.from('activities')
         .select('*')
@@ -246,7 +280,7 @@ export const Dashboard: React.FC = () => {
     } catch (e) {
       console.error("Error fetching activities:", e);
     } finally {
-      setLoadingActivities(false);
+      if (!silent) setLoadingActivities(false);
     }
   };
 

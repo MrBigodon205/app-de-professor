@@ -73,7 +73,7 @@ const MiniCalendar: React.FC<{
     };
 
     return (
-        <div className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 z-50 w-[320px] animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 z-50 w-[300px] sm:w-[320px] animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-4">
                 <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 transition-colors">
                     <span className="material-symbols-outlined text-sm">chevron_left</span>
@@ -128,10 +128,11 @@ export const Attendance: React.FC = () => {
     const theme = useTheme();
     const [students, setStudents] = useState<Student[]>([]);
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-    const [attendanceMap, setAttendanceMap] = useState<{ [key: string]: string }>({});
-
+    const [attendanceMap, setAttendanceMap] = useState<Record<string, string>>({});
     // State to hold ALL record dates for the calendar indicators
     const [activeDates, setActiveDates] = useState<Set<string>>(new Set());
+    const [isSaving, setIsSaving] = useState(false);
+    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const [loading, setLoading] = useState(true);
     const [showCalendar, setShowCalendar] = useState(false);
@@ -158,9 +159,9 @@ export const Attendance: React.FC = () => {
         }
     }, [date, selectedSeriesId, selectedSection]);
 
-    const fetchData = async () => {
+    const fetchData = async (silent = false) => {
         if (!currentUser || !selectedSeriesId || !selectedSection) return;
-        setLoading(true);
+        if (!silent) setLoading(true);
         try {
             // Fetch students for the current class/section
             const { data: studentsData, error: studentsError } = await supabase
@@ -210,13 +211,18 @@ export const Attendance: React.FC = () => {
         } catch (e) {
             console.error("Fetch data failed", e);
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     };
 
     // --- REALTIME SUBSCRIPTION ---
     useEffect(() => {
         if (!currentUser || !selectedSeriesId || !selectedSection) return;
+
+        // Polling Fallback (Every 10s)
+        const interval = setInterval(() => {
+            if (!isSaving) fetchData(true);
+        }, 10000);
 
         console.log("Setting up Realtime for Attendance...");
 
@@ -235,7 +241,7 @@ export const Attendance: React.FC = () => {
                     // The 'filter' in subscription handles date.
                     // We should verify userID if multiple teachers share db but row level security usually handles this.
                     // Re-fetch data to sync
-                    fetchData();
+                    fetchData(true);
                 }
             )
             .subscribe();
@@ -243,6 +249,7 @@ export const Attendance: React.FC = () => {
         return () => {
             console.log("Cleaning up Realtime...");
             supabase.removeChannel(channel);
+            clearInterval(interval);
         };
     }, [date, selectedSeriesId, selectedSection, currentUser]);
     // -----------------------------
@@ -267,89 +274,71 @@ export const Attendance: React.FC = () => {
 
     const updateRecord = async (studentId: string, status: string) => {
         if (!currentUser) return;
+        setIsSaving(true);
         try {
-            // Check if record exists
-            const { data: existing, error: fetchError } = await supabase
-                .from('attendance')
-                .select('id')
-                .eq('student_id', studentId)
-                .eq('date', date)
-                .eq('user_id', currentUser.id);
-
-            if (fetchError) throw fetchError;
-
-            if (status !== '') setActiveDates(prev => new Set(prev).add(date));
-
-            if (existing && existing.length > 0) {
-                const recordId = existing[0].id;
-                if (status === '') {
-                    const { error: deleteError } = await supabase
-                        .from('attendance')
-                        .delete()
-                        .eq('id', recordId);
-                    if (deleteError) throw deleteError;
-                } else {
-                    const { error: updateError } = await supabase
-                        .from('attendance')
-                        .update({ status })
-                        .eq('id', recordId);
-                    if (updateError) throw updateError;
-                }
-            } else if (status !== '') {
-                const { error: insertError } = await supabase
+            if (status === '') {
+                // Delete if empty
+                const { error } = await supabase
                     .from('attendance')
-                    .insert({
+                    .delete()
+                    .eq('student_id', studentId)
+                    .eq('date', date)
+                    .eq('user_id', currentUser.id);
+
+                if (error) throw error;
+            } else {
+                // Upsert if present
+                const { error } = await supabase
+                    .from('attendance')
+                    .upsert({
                         student_id: studentId,
                         date,
                         status,
                         user_id: currentUser.id
-                    });
-                if (insertError) throw insertError;
+                    }, { onConflict: 'student_id, date, user_id' }); // Explicit constraint check if needed, mostly auto
+
+                if (error) throw error;
+                setActiveDates(prev => new Set(prev).add(date));
             }
         } catch (e) {
             console.error(`Failed to update ${studentId}`, e);
+        } finally {
+            setIsSaving(false);
         }
     };
 
     const markAll = async (status: string) => {
         if (!currentUser) return;
+        setIsSaving(true);
         const newMap = { ...attendanceMap };
         students.forEach(s => newMap[s.id] = status);
         setAttendanceMap(newMap);
         if (status !== '') setActiveDates(prev => new Set(prev).add(date));
 
         try {
-            const { data: todaysRecords, error: fetchError } = await supabase
-                .from('attendance')
-                .select('*')
-                .eq('date', date)
-                .eq('user_id', currentUser.id);
-
-            if (fetchError) throw fetchError;
-
             const promises = students.map(async (s) => {
-                const existing = todaysRecords.find(r => r.student_id.toString() === s.id);
-                if (existing) {
-                    if (status === '') {
-                        return supabase.from('attendance').delete().eq('id', existing.id);
-                    } else if (existing.status !== status) {
-                        return supabase.from('attendance').update({ status }).eq('id', existing.id);
-                    }
-                    return Promise.resolve();
-                } else if (status !== '') {
-                    return supabase.from('attendance').insert({
-                        student_id: s.id,
-                        date,
-                        status,
-                        user_id: currentUser.id
-                    });
+                if (status === '') {
+                    return supabase.from('attendance')
+                        .delete()
+                        .eq('student_id', s.id)
+                        .eq('date', date)
+                        .eq('user_id', currentUser.id);
+                } else {
+                    return supabase.from('attendance')
+                        .upsert({
+                            student_id: s.id,
+                            date,
+                            status,
+                            user_id: currentUser.id
+                        }, { onConflict: 'student_id, date, user_id' });
                 }
-                return Promise.resolve();
             });
 
             await Promise.all(promises);
         } catch (e) {
             console.error("Bulk update failed", e);
+        } finally {
+            setTimeout(() => setIsSaving(false), 500); // Small delay to allow realtime catchup logic if needed
         }
     };
 
@@ -376,156 +365,177 @@ export const Attendance: React.FC = () => {
 
         // Title and Logo-ish text
         doc.setFontSize(24);
-        doc.setTextColor(255, 255, 255);
-        doc.setFont('helvetica', 'bold');
-        doc.text("Prof. Acerta+", 14, 18);
+        if (!currentUser) return;
 
-        doc.setFontSize(18);
-        doc.setFont('helvetica', 'normal');
-        doc.text("Registro de Frequência Anual", 14, 28);
+        // 1. Determine Scope (Current Year by default)
+        const targetYear = new Date().getFullYear();
 
-        // Right side info
-        doc.setFontSize(10);
-        doc.setTextColor(200, 200, 200);
-        const currentDate = new Date(date + 'T12:00:00');
-        const targetYear = currentDate.getFullYear();
-        doc.text(`ANO LETIVO: ${targetYear}`, 283, 15, { align: 'right' });
-        doc.text(`DISCIPLINA: ${currentUser.subject}`, 283, 22, { align: 'right' });
-        doc.text(`TURMA: ${activeSeries?.name} ${selectedSection}`, 283, 29, { align: 'right' });
+        // 2. FETCH FULL YEAR RECORDS (Independent of current view)
+        setLoading(true); // Show loading feedback
 
-        // Data Fetching and processing
-        const { data: allRecords, error: fetchError } = await supabase
-            .from('attendance')
-            .select('*')
-            .eq('user_id', currentUser.id);
+        try {
+            const { data: allRecords, error } = await supabase
+                .from('attendance')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .in('student_id', students.map(s => s.id));
+            // We could filter by date range here for optimization: .gte('date', `${targetYear}-01-01`).lte('date', `${targetYear}-12-31`)
+            // but JS filtering is fine for typical class sizes.
 
-        if (fetchError) throw fetchError;
+            if (error) throw error;
 
-        const currentStudentIds = new Set(students.map(s => s.id));
-        const filteredRecords = allRecords.filter(r => currentStudentIds.has(r.student_id.toString()));
+            const yearRecords = (allRecords || []).filter((r: any) => {
+                const rDate = new Date(r.date + 'T12:00:00');
+                return rDate.getFullYear() === targetYear;
+            });
 
-        let recordsForPdf = filteredRecords.map(r => ({
-            studentId: r.student_id.toString(),
-            date: r.date,
-            status: r.status
-        }));
+            // Add any UNSAVED local changes for the CURRENT day (if any)
+            // Note: usually we save immediately, but to be safe:
+            Object.keys(attendanceMap).forEach(sid => {
+                const pendingStatus = attendanceMap[sid];
+                // Check if this specific date/student is already in fetched records?
+                const existingIndex = yearRecords.findIndex((r: any) => r.student_id.toString() === sid && r.date === date);
 
-        // Merge today's state if not in DB yet
-        recordsForPdf = recordsForPdf.filter(r => r.date !== date);
-        students.forEach(s => {
-            if (attendanceMap[s.id]) {
-                recordsForPdf.push({ studentId: s.id, date: date, status: attendanceMap[s.id] });
-            }
-        });
-
-        const yearRecords = recordsForPdf.filter((r: any) => {
-            const rDate = new Date(r.date + 'T12:00:00');
-            return rDate.getFullYear() === targetYear;
-        });
-
-        const activeDatesSet = new Set<string>();
-        yearRecords.forEach((r: any) => activeDatesSet.add(r.date));
-
-        const sortedDateStrings = Array.from(activeDatesSet).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-
-        if (sortedDateStrings.length === 0) {
-            alert("Nenhum registro de frequência encontrado para este ano.");
-            return;
-        }
-
-        const head = [['Nº', 'Nome do Aluno', ...sortedDateStrings.map(ds => {
-            const d = new Date(ds + 'T12:00:00');
-            return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-        }), 'Total %']];
-
-        const body = students.map(s => {
-            let presenceCount = 0;
-            let validDays = 0;
-
-            const row: any[] = [s.number, s.name];
-            sortedDateStrings.forEach(ds => {
-                const record = yearRecords.find((r: any) => r.studentId === s.id && r.date === ds);
-                const status = record ? record.status : '';
-                row.push(status);
-
-                if (status === 'P') {
-                    presenceCount++;
-                    validDays++;
-                } else if (status === 'F' || status === 'J') {
-                    validDays++;
+                if (existingIndex >= 0) {
+                    // Overwrite with local pending state
+                    yearRecords[existingIndex].status = pendingStatus;
+                } else {
+                    // Add new
+                    yearRecords.push({
+                        studentId: sid, // Maintain consistency with fetched snake_case vs camelCase?
+                        student_id: sid,
+                        date: date,
+                        status: pendingStatus
+                    });
                 }
             });
 
-            const percentage = validDays > 0 ? ((presenceCount / validDays) * 100).toFixed(0) + '%' : '-';
-            row.push(percentage);
-            return row;
-        });
+            const activeDatesSet = new Set<string>();
+            yearRecords.forEach((r: any) => activeDatesSet.add(r.date));
+            const sortedDateStrings = Array.from(activeDatesSet).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
-        autoTable(doc, {
-            head: head,
-            body: body,
-            startY: 45,
-            theme: 'grid',
-            styles: {
-                fontSize: sortedDateStrings.length > 20 ? 5 : 7,
-                cellPadding: 1,
-                halign: 'center',
-                valign: 'middle',
-                lineWidth: 0.05,
-                lineColor: [200, 200, 200]
-            },
-            headStyles: {
-                fillColor: [248, 250, 252],
-                textColor: [30, 41, 59],
-                fontStyle: 'bold',
-                lineWidth: 0.1,
-                lineColor: [30, 41, 59]
-            },
-            alternateRowStyles: { fillColor: [252, 253, 255] },
-            columnStyles: {
-                0: { cellWidth: 8, fontStyle: 'bold' },
-                1: { cellWidth: 40, halign: 'left' },
-                [head[0].length - 1]: { cellWidth: 12, fontStyle: 'bold', fillColor: [248, 250, 252] }
-            },
-            didParseCell: (data) => {
-                if (data.section === 'body' && data.column.index > 1 && data.column.index < head[0].length - 1) {
-                    const val = data.cell.raw;
-                    if (val === 'F') { data.cell.styles.textColor = [225, 29, 72]; data.cell.styles.fontStyle = 'bold'; }
-                    else if (val === 'P') { data.cell.styles.textColor = [5, 150, 105]; data.cell.styles.fontStyle = 'bold'; }
-                    else if (val === 'J') { data.cell.styles.textColor = [217, 119, 6]; data.cell.styles.fontStyle = 'bold'; }
-                    else if (val === 'S') { data.cell.styles.textColor = [100, 116, 139]; data.cell.styles.fontStyle = 'normal'; }
-                }
+            if (sortedDateStrings.length === 0) {
+                alert("Nenhum registro de frequência encontrado para este ano.");
+                return;
             }
-        });
-
-        // Legend at the bottom
-        const finalY = (doc as any).lastAutoTable.finalY + 10;
-        doc.setFontSize(8);
-        doc.setTextColor(100, 116, 139);
-        doc.setFont('helvetica', 'bold');
-        doc.text("LEGENDA DE FREQUÊNCIA:", 14, finalY);
-
-        doc.setFont('helvetica', 'normal');
-        let currentX = 14;
-        const legendItems = [
-            { s: 'P', l: 'Presença', c: [5, 150, 105] },
-            { s: 'F', l: 'Falta', c: [225, 29, 72] },
-            { s: 'J', l: 'Justificada', c: [217, 119, 6] },
-            { s: 'S', l: 'Sem Aula', c: [100, 116, 139] }
-        ];
-
-        currentX += 45;
-        legendItems.forEach(item => {
-            doc.setTextColor(...(item.c as [number, number, number]));
+            doc.setTextColor(255, 255, 255);
             doc.setFont('helvetica', 'bold');
-            doc.text(`${item.s}:`, currentX, finalY);
-            doc.setTextColor(100, 116, 139);
-            doc.setFont('helvetica', 'normal');
-            doc.text(item.l, currentX + 5, finalY);
-            currentX += 30;
-        });
+            doc.text("Prof. Acerta+", 14, 18);
 
-        doc.save(`Frequencia_Anual_${activeSeries?.name}_${selectedSection}_${targetYear}.pdf`);
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'normal');
+            doc.text("Registro de Frequência Anual", 14, 28);
+
+            // Right side info
+            doc.setFontSize(10);
+            doc.setTextColor(200, 200, 200);
+            const currentDate = new Date(date + 'T12:00:00');
+            // const targetYear = currentDate.getFullYear(); // This is now defined above
+            doc.text(`ANO LETIVO: ${targetYear}`, 283, 15, { align: 'right' });
+            doc.text(`DISCIPLINA: ${currentUser.subject}`, 283, 22, { align: 'right' });
+            doc.text(`TURMA: ${activeSeries?.name} ${selectedSection}`, 283, 29, { align: 'right' });
+
+            const head = [['Nº', 'Nome do Aluno', ...sortedDateStrings.map(ds => {
+                const d = new Date(ds + 'T12:00:00');
+                return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+            }), 'Total %']];
+
+            const body = students.map(s => {
+                let presenceCount = 0;
+                let validDays = 0;
+
+                const row: any[] = [s.number, s.name];
+                sortedDateStrings.forEach(ds => {
+                    // Find record. Note: fetched rows use snake_case 'student_id', 'user_id'. Local pushed use camelCase 'studentId'?
+                    // We normalized above to have both or check both.
+                    const record = yearRecords.find((r: any) => (r.student_id?.toString() === s.id || r.studentId === s.id) && r.date === ds);
+                    const status = record ? record.status : '';
+                    row.push(status);
+
+                    if (status === 'P') {
+                        presenceCount++;
+                        validDays++;
+                    } else if (status === 'F' || status === 'J') {
+                        validDays++;
+                    }
+                });
+
+                const percentage = validDays > 0 ? ((presenceCount / validDays) * 100).toFixed(0) + '%' : '-';
+                row.push(percentage);
+                return row;
+            });
+
+            autoTable(doc, {
+                head: head,
+                body: body,
+                startY: 45,
+                theme: 'grid',
+                styles: {
+                    fontSize: sortedDateStrings.length > 20 ? 5 : 7,
+                    cellPadding: 1,
+                    halign: 'center',
+                    valign: 'middle',
+                    lineWidth: 0.05,
+                    lineColor: [200, 200, 200]
+                },
+                headStyles: {
+                    fillColor: [248, 250, 252],
+                    textColor: [30, 41, 59],
+                    fontStyle: 'bold',
+                    lineWidth: 0.1,
+                    lineColor: [30, 41, 59]
+                },
+                alternateRowStyles: { fillColor: [252, 253, 255] },
+                columnStyles: {
+                    0: { cellWidth: 8, fontStyle: 'bold' },
+                    1: { cellWidth: 40, halign: 'left' },
+                    [head[0].length - 1]: { cellWidth: 12, fontStyle: 'bold', fillColor: [248, 250, 252] }
+                },
+                didParseCell: (data) => {
+                    if (data.section === 'body' && data.column.index > 1 && data.column.index < head[0].length - 1) {
+                        const val = data.cell.raw;
+                        if (val === 'F') { data.cell.styles.textColor = [225, 29, 72]; data.cell.styles.fontStyle = 'bold'; }
+                        else if (val === 'P') { data.cell.styles.textColor = [5, 150, 105]; data.cell.styles.fontStyle = 'bold'; }
+                        else if (val === 'J') { data.cell.styles.textColor = [217, 119, 6]; data.cell.styles.fontStyle = 'bold'; }
+                        else if (val === 'S') { data.cell.styles.textColor = [100, 116, 139]; data.cell.styles.fontStyle = 'normal'; }
+                    }
+                }
+            });
+
+            // Legend at the bottom
+            const finalY = (doc as any).lastAutoTable.finalY + 10;
+            doc.setFontSize(8);
+            doc.setTextColor(100, 116, 139);
+            doc.setFont('helvetica', 'bold');
+            doc.text("LEGENDA DE FREQUÊNCIA:", 14, finalY);
+
+            doc.setFont('helvetica', 'normal');
+            let currentX = 14;
+            const legendItems = [
+                { s: 'P', l: 'Presença', c: [5, 150, 105] },
+                { s: 'F', l: 'Falta', c: [225, 29, 72] },
+                { s: 'J', l: 'Justificada', c: [217, 119, 6] },
+                { s: 'S', l: 'Sem Aula', c: [100, 116, 139] }
+            ];
+
+            currentX += 45;
+            legendItems.forEach(item => {
+                doc.setTextColor(...(item.c as [number, number, number]));
+                doc.setFont('helvetica', 'bold');
+                doc.text(`${item.s}:`, currentX, finalY);
+                doc.setTextColor(100, 116, 139);
+                doc.setFont('helvetica', 'normal');
+                doc.text(item.l, currentX + 5, finalY);
+                currentX += 30;
+            });
+
+            doc.save(`Frequencia_Anual_${activeSeries?.name}_${selectedSection}_${targetYear}.pdf`);
+        } catch (e) {
+            console.error("PDF Fail", e);
+            alert("Erro ao gerar PDF.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (!selectedSeriesId) {

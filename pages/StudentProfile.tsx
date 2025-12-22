@@ -48,9 +48,9 @@ export const StudentProfile: React.FC = () => {
         }
     }, [students, selectedStudentId]);
 
-    const fetchData = async () => {
+    const fetchData = async (silent = false) => {
         if (!currentUser) return;
-        setLoading(true);
+        if (!silent) setLoading(true);
         try {
             // Fetch students for the current class/section
             const { data: studentsData, error: studentError } = await supabase
@@ -135,9 +135,34 @@ export const StudentProfile: React.FC = () => {
         } catch (e) {
             console.error(e)
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     };
+
+    // --- REALTIME SUBSCRIPTION ---
+    useEffect(() => {
+        if (!currentUser || !selectedSeriesId) return;
+
+        // Polling Fallback (Every 10s)
+        const interval = setInterval(() => {
+            fetchData(true);
+        }, 10000);
+
+        console.log("Setting up Realtime for StudentProfile...");
+
+        // Listen to changes in related tables
+        const channel = supabase.channel(`profile_sync_${selectedSeriesId}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => fetchData(true))
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'occurrences' }, () => fetchData(true))
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => fetchData(true))
+            .subscribe();
+
+        return () => {
+            console.log("Cleaning up StudentProfile Realtime...");
+            supabase.removeChannel(channel);
+            clearInterval(interval);
+        };
+    }, [selectedSeriesId, selectedSection, currentUser]);
 
     const handleExportPDF = () => {
         if (!student) return;

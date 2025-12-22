@@ -37,9 +37,9 @@ export const Planning: React.FC = () => {
         }
     }, [selectedSeriesId]);
 
-    const fetchPlans = async () => {
+    const fetchPlans = async (silent = false) => {
         if (!currentUser) return;
-        setLoading(true);
+        if (!silent) setLoading(true);
         try {
             let query = supabase.from('plans').select('*').eq('user_id', currentUser.id);
 
@@ -73,9 +73,42 @@ export const Planning: React.FC = () => {
         } catch (e) {
             console.error("Failed to load plans", e);
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     };
+
+    // --- REALTIME SUBSCRIPTION ---
+    useEffect(() => {
+        if (!currentUser || !selectedSeriesId) return;
+
+        // Polling Fallback (Every 10s)
+        const interval = setInterval(() => {
+            fetchPlans(true);
+        }, 10000);
+
+        console.log("Setting up Realtime for Planning...");
+
+        const channel = supabase.channel(`planning_sync_${selectedSeriesId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'plans'
+                },
+                (payload) => {
+                    console.log("Realtime Plan Change Received!", payload);
+                    fetchPlans(true);
+                }
+            )
+            .subscribe();
+
+        return () => {
+            console.log("Cleaning up Planning Realtime...");
+            supabase.removeChannel(channel);
+            clearInterval(interval);
+        };
+    }, [selectedSeriesId, currentUser]);
 
     const handleNewPlan = () => {
         if (!selectedSeriesId) {
@@ -306,6 +339,7 @@ export const Planning: React.FC = () => {
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
+                accept="*/*"
                 onChange={handleFileChange}
             />
 
@@ -469,9 +503,9 @@ export const Planning: React.FC = () => {
                                         <button
                                             onClick={() => fileInputRef.current?.click()}
                                             type="button"
-                                            className={`flex items-center gap-2 px-4 py-2 bg-${theme.primaryColor}/10 text-${theme.primaryColor} rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-${theme.primaryColor} hover:text-white transition-all active:scale-95 border border-${theme.primaryColor}/20 hover:border-transparent shadow-sm`}
+                                            className={`flex items-center gap-2 px-5 py-3 bg-${theme.primaryColor}/10 text-${theme.primaryColor} rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-${theme.primaryColor} hover:text-white transition-all active:scale-95 border border-${theme.primaryColor}/20 hover:border-transparent shadow-sm`}
                                         >
-                                            <span className="material-symbols-outlined text-sm">upload_file</span>
+                                            <span className="material-symbols-outlined text-base">upload_file</span>
                                             Adicionar Arquivo
                                         </button>
                                     </div>

@@ -38,9 +38,9 @@ export const Observations: React.FC = () => {
         // Obsolete effect removed (generalObsText is now derived from student state)
     }, [selectedStudentId, students]);
 
-    const fetchData = async () => {
+    const fetchData = async (silent = false) => {
         if (!currentUser) return;
-        setLoading(true);
+        if (!silent) setLoading(true);
         try {
             const { data: studentsData, error: studentError } = await supabase
                 .from('students')
@@ -95,9 +95,42 @@ export const Observations: React.FC = () => {
         } catch (e) {
             console.error("Error fetching data:", e);
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     };
+
+    // --- REALTIME SUBSCRIPTION FOR OCCURRENCES ---
+    useEffect(() => {
+        if (!currentUser || !selectedSeriesId) return;
+
+        // Polling Fallback (Every 10s)
+        const interval = setInterval(() => {
+            fetchData(true);
+        }, 10000);
+
+        console.log("Setting up Realtime for Occurrences...");
+
+        const channel = supabase.channel(`occurrences_sync_${selectedSeriesId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'occurrences'
+                },
+                (payload) => {
+                    console.log("Realtime Occurrence Change Received!", payload);
+                    fetchData(true);
+                }
+            )
+            .subscribe();
+
+        return () => {
+            console.log("Cleaning up Occurrence Realtime...");
+            supabase.removeChannel(channel);
+            clearInterval(interval);
+        };
+    }, [selectedSeriesId, currentUser]);
 
     const selectedStudent = students.find(s => s.id === selectedStudentId);
 
