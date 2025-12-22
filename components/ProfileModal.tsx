@@ -1,16 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
+import { supabase } from '../lib/supabase';
 
 interface ProfileModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
-
-const SUBJECTS: string[] = [
-    'Filosofia', 'Educação Física', 'Matemática', 'Física', 'História', 'Geografia',
-    'Artes', 'Projeto de Vida', 'Literatura', 'Português', 'Redação', 'Química', 'Ciências'
-];
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
     const { currentUser, updateProfile, logout } = useAuth();
@@ -27,6 +23,32 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [subject, setSubject] = useState('');
+    const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
+
+    useEffect(() => {
+        fetchSubjects();
+    }, []);
+
+    const fetchSubjects = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('school_subjects')
+                .select('name')
+                .order('name');
+
+            if (error) throw error;
+            if (data) {
+                setAvailableSubjects(data.map(s => s.name));
+            }
+        } catch (error) {
+            console.error('Error fetching subjects:', error);
+            // Fallback defaults if fetch fails
+            setAvailableSubjects([
+                'Matemática', 'Português', 'História', 'Geografia', 'Ciências',
+                'Física', 'Química', 'Biologia', 'Inglês', 'Artes', 'Educação Física'
+            ]);
+        }
+    };
 
     useEffect(() => {
         if (currentUser) {
@@ -197,13 +219,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                                 <div>
                                     <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">Disciplina Principal</label>
                                     <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar p-1">
-                                        {SUBJECTS.map(subj => (
+                                        {availableSubjects.map(subj => (
                                             <button
                                                 key={subj}
                                                 onClick={() => setSubject(subj)}
                                                 className={`p-2 rounded-lg text-xs font-bold transition-all border ${subject === subj
-                                                        ? `bg-${theme.primaryColor}/10 border-${theme.primaryColor} text-${theme.primaryColor}`
-                                                        : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                                    ? `bg-${theme.primaryColor}/10 border-${theme.primaryColor} text-${theme.primaryColor}`
+                                                    : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
                                                     }`}
                                             >
                                                 {subj}
