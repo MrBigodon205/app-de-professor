@@ -3,7 +3,6 @@ import React from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { useTheme } from '../hooks/useTheme';
-
 interface RichTextEditorProps {
     value: string;
     onChange: (value: string) => void;

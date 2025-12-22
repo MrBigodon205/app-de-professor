@@ -55,9 +55,10 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 .select('*')
                 .eq('user_id', currentUser.id);
 
-            if (activeSubject) {
-                query = query.or(`subject.eq.${activeSubject},subject.is.null`);
-            }
+            // TEMPORARY: Disable subject filter to debug missing data
+            // if (activeSubject) {
+            //    query = query.or(`subject.eq.${activeSubject},subject.is.null`);
+            // }
 
             const { data, error } = await query.order('created_at', { ascending: true });
 
