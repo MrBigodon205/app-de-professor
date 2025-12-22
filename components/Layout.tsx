@@ -9,7 +9,7 @@ import { MobileBottomNav } from './MobileBottomNav';
 import { MobileClassSelector } from './MobileClassSelector';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, activeSubject, updateActiveSubject } = useAuth();
   const theme = useTheme();
   const { classes, activeSeries, selectedSeriesId, selectedSection, selectSeries, selectSection, deleteSeries, addSeries, removeSectionFromSeries, addSectionToSeries } = useClass();
   const location = useLocation();
@@ -20,6 +20,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [newSeriesName, setNewSeriesName] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isClassSelectorOpen, setIsClassSelectorOpen] = useState(false);
+  const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -30,7 +31,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     { path: '/grades', label: 'Notas', icon: 'grade' },
     { path: '/attendance', label: 'Frequência', icon: 'co_present' },
     { path: '/students', label: 'Alunos', icon: 'groups' },
-    { path: '/occurrences', label: 'Ocorrências', icon: 'warning' },
+    { path: '/observations', label: 'Ocorrências', icon: 'warning' },
+    { path: '/reports', label: 'Relatórios', icon: 'description' },
   ];
 
   const handleSelectSeries = (id: string) => {
@@ -340,6 +342,44 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </div>
 
           <div className="flex items-center gap-4 pl-4 border-l border-slate-100 dark:border-slate-800">
+            {/* Subject Switcher (Desktop) */}
+            {currentUser?.subjects && currentUser.subjects.length > 0 && (
+              <div className="relative hidden md:block">
+                <button
+                  onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <span className={`size-2 rounded-full bg-${theme.primaryColor}`}></span>
+                  {activeSubject}
+                  <span className="material-symbols-outlined text-xs">expand_more</span>
+                </button>
+
+                {isSubjectDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-[60]" onClick={() => setIsSubjectDropdownOpen(false)}></div>
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[61] animate-in fade-in zoom-in-95 duration-200">
+                      <div className="p-2 space-y-1">
+                        {Array.from(new Set([currentUser.subject, ...(currentUser.subjects || [])])).map(subj => (
+                          <button
+                            key={subj}
+                            onClick={() => {
+                              updateActiveSubject(subj);
+                              setIsSubjectDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeSubject === subj
+                              ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}`
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                          >
+                            {subj}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Notification - Visible on Mobile too maybe? No, moving to sidebar or specific page */}
             <div className="hidden md:block">
               <NotificationCenter />
@@ -371,7 +411,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               {/* Hidden Name on Mobile */}
               <div className="hidden md:flex flex-col items-start leading-tight">
                 <span className="text-[13px] font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors">{currentUser?.name?.split(' ')[0]}</span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{theme.subject}</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activeSubject || theme.subject}</span>
               </div>
             </button>
           </div>

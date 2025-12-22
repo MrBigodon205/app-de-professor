@@ -11,6 +11,8 @@ interface AuthContextType {
     logout: () => void;
     updateProfile: (data: Partial<User>) => Promise<boolean>;
     loading: boolean;
+    activeSubject: string;
+    updateActiveSubject: (subject: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,6 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [activeSubject, setActiveSubject] = useState<string>('');
 
     // Local API fallback logic removed to ensure Single Source of Truth from Supabase
 
@@ -92,6 +95,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (finalUser) {
                 setCurrentUser(finalUser);
                 setUserId(finalUser.id);
+                // Initialize activeSubject if not set or invalid
+                const storedSubject = localStorage.getItem(`activeSubject_${finalUser.id}`);
+                if (storedSubject && (finalUser.subject === storedSubject || finalUser.subjects?.includes(storedSubject))) {
+                    setActiveSubject(storedSubject);
+                } else {
+                    setActiveSubject(finalUser.subject || '');
+                }
             }
         } catch (err: any) {
             console.error(`Critico: Erro no fetchProfile:`, err.message);
@@ -349,8 +359,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const updateActiveSubject = (subject: string) => {
+        setActiveSubject(subject);
+        if (userId) {
+            localStorage.setItem(`activeSubject_${userId}`, subject);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ currentUser, userId, login, register, logout, updateProfile, loading }}>
+        <AuthContext.Provider value={{ currentUser, userId, login, register, logout, updateProfile, loading, activeSubject, updateActiveSubject }}>
             {children}
         </AuthContext.Provider>
     );

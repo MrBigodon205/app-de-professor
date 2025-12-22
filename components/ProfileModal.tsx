@@ -26,6 +26,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [subject, setSubject] = useState('');
+    const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
     const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
 
     useEffect(() => {
@@ -35,6 +36,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                 setName(currentUser.name);
                 setEmail(currentUser.email);
                 setSubject(currentUser.subject || 'Matemática');
+                setSelectedSubjects(currentUser.subjects || []);
                 setPassword('');
                 setConfirmPassword('');
             }
@@ -86,7 +88,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
         }
 
         setLoading(true);
-        const success = await updateProfile({ name, email, subject });
+        // Ensure primary subject is included in selected subjects
+        const finalSubjects = Array.from(new Set([...selectedSubjects, subject]));
+
+        const success = await updateProfile({ name, email, subject, subjects: finalSubjects });
         setLoading(false);
 
         if (success) {
@@ -95,6 +100,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
             window.location.reload();
         } else {
             alert('Erro ao atualizar perfil.');
+        }
+    };
+
+    const toggleSubject = (subj: string) => {
+        if (selectedSubjects.includes(subj)) {
+            setSelectedSubjects(selectedSubjects.filter(s => s !== subj));
+        } else {
+            setSelectedSubjects([...selectedSubjects, subj]);
         }
     };
 
@@ -171,8 +184,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                         <button
                             onClick={() => setActiveTab('profile')}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'profile'
-                                    ? `bg-white dark:bg-slate-700 shadow-sm text-${theme.primaryColor}`
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                ? `bg-white dark:bg-slate-700 shadow-sm text-${theme.primaryColor}`
+                                : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
                                 }`}
                         >
                             <span className="material-symbols-outlined">person</span>
@@ -181,8 +194,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                         <button
                             onClick={() => setActiveTab('security')}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'security'
-                                    ? `bg-white dark:bg-slate-700 shadow-sm text-${theme.primaryColor}`
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                ? `bg-white dark:bg-slate-700 shadow-sm text-${theme.primaryColor}`
+                                : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
                                 }`}
                         >
                             <span className="material-symbols-outlined">lock</span>
@@ -239,17 +252,28 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Disciplina Principal</label>
+                                        <select
+                                            value={subject}
+                                            onChange={(e) => setSubject(e.target.value)}
+                                            className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all mb-4"
+                                        >
+                                            {availableSubjects.map(subj => (
+                                                <option key={subj} value={subj}>{subj}</option>
+                                            ))}
+                                        </select>
+
+                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Minhas Disciplinas (Múltipla escolha)</label>
                                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                             {availableSubjects.map(subj => (
                                                 <button
                                                     key={subj}
-                                                    onClick={() => setSubject(subj)}
-                                                    className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all truncate ${subject === subj
-                                                            ? `bg-${theme.primaryColor}/10 border-${theme.primaryColor} text-${theme.primaryColor}`
-                                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
+                                                    onClick={() => toggleSubject(subj)}
+                                                    className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all truncate ${selectedSubjects.includes(subj) || subject === subj
+                                                        ? `bg-${theme.primaryColor}/10 border-${theme.primaryColor} text-${theme.primaryColor}`
+                                                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
                                                         }`}
                                                 >
-                                                    {subj}
+                                                    {subj} {(subject === subj) && '(Principal)'}
                                                 </button>
                                             ))}
                                         </div>

@@ -16,6 +16,7 @@ export interface ClassConfig {
   name: string;
   sections: string[];
   userId: string;
+  subject?: string;
 }
 
 export interface Student {

@@ -30,18 +30,21 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [selectedSeriesId, setSelectedSeriesId] = useState<string>('');
     const [selectedSection, setSelectedSection] = useState<string>('');
     const [loading, setLoading] = useState(true);
-    const { currentUser } = useAuth();
+
+    const { currentUser, activeSubject } = useAuth();
 
     const activeSeries = classes.find(c => c.id === selectedSeriesId);
 
     useEffect(() => {
-        if (currentUser) {
+        if (currentUser && activeSubject) {
             fetchClasses();
+        } else if (currentUser && !activeSubject) {
+            // Wait for activeSubject to be set
         } else {
             setClasses([]);
             setLoading(false);
         }
-    }, [currentUser]);
+    }, [currentUser, activeSubject]);
 
     const fetchClasses = async () => {
         if (!currentUser) return;
@@ -51,6 +54,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 .from('classes')
                 .select('*')
                 .eq('user_id', currentUser.id)
+                .eq('subject', activeSubject)
                 .order('created_at', { ascending: true });
 
             if (error) throw error;
@@ -59,7 +63,8 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 id: c.id.toString(),
                 name: c.name,
                 sections: c.sections,
-                userId: c.user_id
+                userId: c.user_id,
+                subject: c.subject
             }));
 
             // Deduplicate only if name AND sections are identical
@@ -130,7 +135,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             sections = ['A'];
         }
 
-        const newSeries = { name, sections, user_id: currentUser.id };
+        const newSeries = { name, sections, user_id: currentUser.id, subject: activeSubject };
 
         const { data, error } = await supabase
             .from('classes')
@@ -147,7 +152,8 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             id: data.id.toString(),
             name: data.name,
             sections: data.sections,
-            userId: data.user_id
+            userId: data.user_id,
+            subject: data.subject
         };
 
         setClasses(prev => [...prev, saved]);
