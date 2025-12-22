@@ -100,7 +100,8 @@ export type Subject =
   | 'Química'
   | 'Inglês'
   | 'Ensino Religioso'
-  | 'Ciências';
+  | 'Ciências'
+  | 'Geral';
 
 export interface User {
   id: string;
