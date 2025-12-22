@@ -22,6 +22,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [userId, setUserId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeSubject, setActiveSubject] = useState<string>('');
+    const [profileChannel, setProfileChannel] = useState<any>(null);
 
     // Local API fallback logic removed to ensure Single Source of Truth from Supabase
 
@@ -154,6 +155,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             subscription.unsubscribe();
         };
     }, []);
+
+    useEffect(() => {
+        if (!userId) {
+            if (profileChannel) {
+                supabase.removeChannel(profileChannel);
+                setProfileChannel(null);
+            }
+            return;
+        }
+
+        const channel = supabase.channel(`profile_sync:${userId}`)
+            .on('postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
+                (payload) => {
+                    console.log("Profile updated externally!", payload);
+                    const newProfile = payload.new as any;
+                    // Update local state instantly
+                    setCurrentUser(prev => {
+                        if (!prev) return null;
+                        return {
+                            ...prev,
+                            name: newProfile.name,
+                            subject: newProfile.subject,
+                            subjects: newProfile.subjects || [],
+                            photoUrl: newProfile.photo_url
+                        };
+                    });
+
+                    // Also update activeSubject if needed? 
+                    // Usually we don't force activeSubject change unless user initiated. 
+                    // But if subject list changed, maybe?
+                    // For now, syncing the "Primary Subject" (currentUser.subject) is enough.
+                    // The 'activeSubject' state is session-based (localStorage).
+                }
+            )
+            .subscribe();
+
+        setProfileChannel(channel);
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [userId]);
 
     // Helper to race a promise against a timeout
     const withTimeout = <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {

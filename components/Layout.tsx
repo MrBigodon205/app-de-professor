@@ -232,7 +232,25 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 h-full relative bg-background-light dark:bg-background-dark">
+      <div className="flex-1 flex flex-col min-w-0 h-full relative bg-background-light dark:bg-background-dark custom-bg-transition overflow-hidden">
+
+        {/* Dynamic Background Pattern */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
+          {/* Gradient Blob */}
+          <div className={`absolute -top-[20%] -right-[10%] w-[70%] h-[70%] rounded-full bg-${theme.primaryColor}/5 blur-3xl`}></div>
+          <div className={`absolute -bottom-[20%] -left-[10%] w-[70%] h-[70%] rounded-full bg-${theme.secondaryColor}/5 blur-3xl`}></div>
+
+          {/* Icons Grid Pattern */}
+          <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] grid grid-cols-6 md:grid-cols-8 gap-8 p-8 transform -rotate-12 scale-150">
+            {Array.from({ length: 48 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-center">
+                <span className={`material-symbols-outlined text-4xl md:text-6xl text-${theme.primaryColor}`}>
+                  {theme.illustrations[i % theme.illustrations.length]}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
         {/* Overlay for mobile sidebar */}
         {
           isMobileMenuOpen && (
