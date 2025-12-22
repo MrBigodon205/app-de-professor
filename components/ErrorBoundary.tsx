@@ -62,6 +62,7 @@ export class ErrorBoundary extends Component<Props, State> {
             );
         }
 
+        // @ts-ignore
         return this.props.children;
     }
 }

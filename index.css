@@ -46,6 +46,7 @@ body {
   .rounded-2xl,
   .rounded-3xl {
     border-radius: 0 !important;
+    -webkit-print-color-adjust: exact !important;
   }
 
   .bg-slate-50,

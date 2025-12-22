@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // 1. Try Standard Fetch (with timeout)
             try {
                 const { data, error } = await withTimeout(
-                    supabase.from('profiles').select('*').eq('id', uid).single(),
+                    supabase.from('profiles').select('*').eq('id', uid).single() as any,
                     10000,
                     "Profile Fetch"
                 ) as any;

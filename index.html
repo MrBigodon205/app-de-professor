@@ -1,84 +1,88 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="light">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="referrer" content="no-referrer" />
-    <title>Prof. Acerta+ 3.1</title>
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Noto+Sans:wght@300..800&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-      rel="stylesheet"
-    />
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              primary: "#137fec",
-              "primary-hover": "#0f6ac7",
-              "primary-dark": "#2563eb",
-              "background-light": "#f6f7f8",
-              "background-dark": "#101922",
-              "surface-light": "#ffffff",
-              "surface-dark": "#1a2632",
-              "header-dark": "#111827",
-              "input-bg": "#f3f4f6",
-              "border-light": "#e7edf3",
-              "border-dark": "#2a3b4d",
-              "text-main": "#0d141b",
-              "text-secondary": "#4c739a",
-            },
-            fontFamily: {
-              display: ["Lexend", "sans-serif"],
-              body: ["Noto Sans", "sans-serif"],
-            },
-            boxShadow: {
-              soft: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
-            },
-            animation: {
-              'bounce-slow': 'bounce 3s infinite',
-            }
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer" />
+  <title>Prof. Acerta+ 3.1</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Noto+Sans:wght@300..800&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script>window.global = window;</script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#137fec",
+            "primary-hover": "#0f6ac7",
+            "primary-dark": "#2563eb",
+            "background-light": "#f6f7f8",
+            "background-dark": "#101922",
+            "surface-light": "#ffffff",
+            "surface-dark": "#1a2632",
+            "header-dark": "#111827",
+            "input-bg": "#f3f4f6",
+            "border-light": "#e7edf3",
+            "border-dark": "#2a3b4d",
+            "text-main": "#0d141b",
+            "text-secondary": "#4c739a",
           },
+          fontFamily: {
+            display: ["Lexend", "sans-serif"],
+            body: ["Noto Sans", "sans-serif"],
+          },
+          boxShadow: {
+            soft: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+          },
+          animation: {
+            'bounce-slow': 'bounce 3s infinite',
+          }
         },
-      };
-    </script>
-    <style>
-      body {
-        font-family: 'Lexend', sans-serif;
-      }
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-      }
-      .material-symbols-outlined {
-        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-      }
-      .icon-filled {
-        font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-      }
-    </style>
+      },
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Lexend', sans-serif;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .icon-filled {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -90,10 +94,12 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-background-light dark:bg-background-dark text-text-main dark:text-white antialiased">
-    <div id="root"></div>
+
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-white antialiased">
+  <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

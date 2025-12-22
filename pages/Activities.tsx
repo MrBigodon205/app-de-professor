@@ -5,8 +5,10 @@ import { useTheme } from '../hooks/useTheme';
 import { Activity, AttachmentFile, Student } from '../types';
 import { supabase } from '../lib/supabase';
 import { DatePicker } from '../components/DatePicker';
+import { RichTextEditor } from '../components/RichTextEditor';
 
-const ACTIVITY_TYPES = ['Prova', 'Trabalho', 'Dever de Casa', 'Seminário', 'Pesquisa', 'Conteúdo', 'Outro'];
+// Fallback types if fetch fails
+const DEFAULT_ACTIVITY_TYPES = ['Prova', 'Trabalho', 'Dever de Casa', 'Seminário', 'Pesquisa', 'Conteúdo', 'Outro'];
 
 export const Activities: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
@@ -20,6 +22,7 @@ export const Activities: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [isEditing, setIsEditing] = useState(false);
+    const [activityTypes, setActivityTypes] = useState<string[]>(DEFAULT_ACTIVITY_TYPES);
 
     // Form State
     const [formTitle, setFormTitle] = useState('');
@@ -33,8 +36,29 @@ export const Activities: React.FC = () => {
     const [formSection, setFormSection] = useState('');
 
     useEffect(() => {
+        fetchActivityTypes();
+    }, []);
+
+    useEffect(() => {
         fetchActivities();
     }, [selectedSeriesId]);
+
+    const fetchActivityTypes = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('activity_types')
+                .select('name')
+                .order('name');
+
+            if (error) throw error;
+            if (data && data.length > 0) {
+                setActivityTypes(data.map(t => t.name));
+            }
+        } catch (error) {
+            console.error('Error fetching activity types:', error);
+            // Keep defaults
+        }
+    };
 
     useEffect(() => {
         if (selectedSeriesId && selectedSection) {
@@ -589,7 +613,7 @@ export const Activities: React.FC = () => {
                                                 onChange={e => setFormType(e.target.value as any)}
                                                 className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-lg appearance-none outline-none`}
                                             >
-                                                {ACTIVITY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                                                {activityTypes.map(t => <option key={t} value={t}>{t}</option>)}
                                             </select>
                                             <span className="material-symbols-outlined absolute right-3 top-3.5 pointer-events-none text-slate-500">expand_more</span>
                                         </div>
@@ -620,12 +644,11 @@ export const Activities: React.FC = () => {
 
                                 <div>
                                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Descrição</label>
-                                    <textarea
+                                    <RichTextEditor
                                         value={formDescription}
-                                        onChange={e => setFormDescription(e.target.value)}
-                                        className={`w-full h-64 p-4 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none leading-relaxed`}
+                                        onChange={setFormDescription}
                                         placeholder="Descreva a atividade, critérios de avaliação e instruções..."
-                                    ></textarea>
+                                    />
                                 </div>
 
                                 {/* Files Section */}
@@ -766,9 +789,10 @@ export const Activities: React.FC = () => {
                                         <span className={`material-symbols-outlined text-${theme.primaryColor}`}>subject</span>
                                         Detalhes da Atividade
                                     </h3>
-                                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed">
-                                        {currentActivity.description}
-                                    </div>
+                                    <div
+                                        className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 leading-relaxed custom-html-content"
+                                        dangerouslySetInnerHTML={{ __html: currentActivity.description }}
+                                    />
                                 </div>
 
                                 {/* Delivery List / Completion Tracking */}

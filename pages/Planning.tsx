@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Plan, AttachmentFile } from '../types';
 import { supabase } from '../lib/supabase';
-import { DatePicker } from '../components/DatePicker';
+import { RichTextEditor } from '../components/RichTextEditor';
 
 export const Planning: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
@@ -29,7 +29,7 @@ export const Planning: React.FC = () => {
 
     useEffect(() => {
         fetchPlans();
-    }, [selectedSeriesId]);
+    }, [selectedSeriesId, currentUser]);
 
     useEffect(() => {
         if (selectedSeriesId) {
@@ -66,7 +66,9 @@ export const Planning: React.FC = () => {
 
             setPlans(formatted);
             if (formatted.length > 0 && !selectedPlanId) {
-                setSelectedPlanId(formatted[0].id);
+                // Determine if we should select the first plan or keep current selection
+                // Logic mostly for initial load or series switch
+                if (!selectedPlanId) setSelectedPlanId(formatted[0].id);
             } else if (formatted.length === 0) {
                 setSelectedPlanId(null);
             }
@@ -163,59 +165,30 @@ export const Planning: React.FC = () => {
         };
 
         try {
-            let saved: Plan;
-
             if (selectedPlanId && isEditing && plans.some(p => p.id === selectedPlanId)) {
                 // Update
-                const { data, error } = await supabase
+                const { error } = await supabase
                     .from('plans')
                     .update(planData)
-                    .eq('id', selectedPlanId)
-                    .select()
-                    .single();
+                    .eq('id', selectedPlanId);
 
                 if (error) throw error;
-                saved = {
-                    id: data.id.toString(),
-                    title: data.title,
-                    seriesId: data.series_id.toString(),
-                    section: data.section || '',
-                    startDate: data.start_date,
-                    endDate: data.end_date,
-                    description: data.description,
-                    files: data.files || [],
-                    userId: data.user_id
-                };
-                setPlans(plans.map(p => p.id === saved.id ? saved : p));
-                alert("Planejamento atualizado!");
+                fetchPlans(true);
+                alert("Plano atualizado!");
             } else {
                 // Create
-                const { data, error } = await supabase
+                const { error } = await supabase
                     .from('plans')
-                    .insert(planData)
-                    .select()
-                    .single();
+                    .insert(planData);
 
                 if (error) throw error;
-                saved = {
-                    id: data.id.toString(),
-                    title: data.title,
-                    seriesId: data.series_id.toString(),
-                    section: data.section || '',
-                    startDate: data.start_date,
-                    endDate: data.end_date,
-                    description: data.description,
-                    files: data.files || [],
-                    userId: data.user_id
-                };
-                setPlans([saved, ...plans]);
-                setSelectedPlanId(saved.id);
-                alert("Planejamento criado!");
+                fetchPlans(true);
+                alert("Plano criado!");
             }
             setIsEditing(false);
         } catch (e: any) {
             console.error(e);
-            alert(`Erro ao salvar: ${e.message || 'Erro desconhecido'}`);
+            alert("Erro ao salvar plano.");
         } finally {
             setLoading(false);
         }
@@ -229,11 +202,9 @@ export const Planning: React.FC = () => {
 
         const confirmed = window.confirm("Tem certeza que deseja apagar este planejamento?");
         if (!confirmed) {
-            console.log('Exclusão cancelada pelo usuário');
             return;
         }
 
-        console.log('Excluindo planejamento:', selectedPlanId);
         setLoading(true);
 
         try {
@@ -244,11 +215,9 @@ export const Planning: React.FC = () => {
 
             if (!error) {
                 const updatedPlans = plans.filter(p => p.id !== selectedPlanId);
-                console.log('Planejamento excluído. Total restante:', updatedPlans.length);
                 setPlans(updatedPlans);
                 setSelectedPlanId(null);
                 setIsEditing(false);
-                window.dispatchEvent(new CustomEvent('refresh-notifications'));
                 alert("Planejamento excluído com sucesso!");
             } else {
                 console.error('Erro ao excluir:', error.message);
@@ -262,7 +231,7 @@ export const Planning: React.FC = () => {
         }
     };
 
-    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -286,8 +255,6 @@ export const Planning: React.FC = () => {
             }
         };
         reader.readAsDataURL(file);
-
-        // Reset input
         e.target.value = '';
     };
 
@@ -295,7 +262,6 @@ export const Planning: React.FC = () => {
         setFormFiles(formFiles.filter(f => f.id !== id));
     };
 
-    // Robust Download Logic (Blob-based)
     const handleDownload = (file: AttachmentFile) => {
         try {
             if (file.url.startsWith('data:')) {
@@ -347,8 +313,8 @@ export const Planning: React.FC = () => {
             <div className={`w-full lg:w-80 flex flex-col gap-4 shrink-0 transition-all ${selectedPlanId || isEditing ? 'hidden lg:flex' : 'flex'}`}>
                 <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="font-bold text-slate-900 dark:text-white text-lg">Planejamentos</h2>
-                        <button onClick={handleNewPlan} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Novo Planejamento">
+                        <h2 className="font-bold text-slate-900 dark:text-white text-lg">Aulas</h2>
+                        <button onClick={handleNewPlan} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Nova Aula">
                             <span className="material-symbols-outlined text-[20px]">add</span>
                         </button>
                     </div>
@@ -367,7 +333,7 @@ export const Planning: React.FC = () => {
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
                     {displayedPlans.length === 0 ? (
                         <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                            Nenhum planejamento encontrado.
+                            Nenhuma aula encontrada.
                         </div>
                     ) : (
                         displayedPlans.map(plan => (
@@ -380,12 +346,10 @@ export const Planning: React.FC = () => {
                             >
                                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
                                 <div className="pl-2">
-                                    <h4 className={`font-bold text-sm mb-1.5 truncate ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
-                                    <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                                        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-md ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800'}`}>
-                                            <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-                                            {new Date(plan.startDate).toLocaleDateString('pt-BR')}
-                                        </span>
+                                    <h4 className={`font-bold text-sm truncate pr-2 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
+                                    <div className="flex items-center gap-1 text-xs text-slate-500 mt-1.5">
+                                        <span className="material-symbols-outlined text-[12px]">event</span>
+                                        {new Date(plan.startDate).toLocaleDateString('pt-BR')}
                                     </div>
                                 </div>
                             </button>
@@ -400,18 +364,18 @@ export const Planning: React.FC = () => {
                     // --- HERO EMPTY STATE ---
                     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-300">
                         <div className={`size-32 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-8 shadow-sm border border-slate-100 dark:border-slate-700`}>
-                            <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600">event_note</span>
+                            <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600">edit_calendar</span>
                         </div>
-                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">Planejamento de <span className={`text-${theme.primaryColor}`}>{theme.subject}</span></h2>
+                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">Planejamento de Aulas</h2>
                         <p className="text-slate-500 max-w-md mb-8 leading-relaxed">
-                            Organize seus roteiros de aula, anexe materiais e mantenha o registro do conteúdo de {theme.subject} de forma prática.
+                            Organize seus roteiros de aula, anexe materiais e mantenha o registro do conteúdo ministrado.
                         </p>
                         <button
                             onClick={handleNewPlan}
                             className={`group relative inline-flex items-center justify-center gap-3 bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl shadow-${theme.primaryColor}/20 transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden`}
                         >
                             <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">add</span>
-                            Iniciar Novo Planejamento
+                            Criar Nova Aula
                             <div className="absolute inset-0 rounded-2xl ring-2 ring-white/20 group-hover:ring-white/40 transition-all"></div>
                         </button>
                     </div>
@@ -431,14 +395,14 @@ export const Planning: React.FC = () => {
                                         <div className={`size-10 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
                                             <span className="material-symbols-outlined">{selectedPlanId ? 'edit_document' : 'post_add'}</span>
                                         </div>
-                                        {selectedPlanId ? 'Editar Planejamento' : 'Novo Planejamento'}
+                                        {selectedPlanId ? 'Editar Aula' : 'Nova Aula'}
                                     </h2>
                                 </div>
                             </div>
 
                             <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4">
                                 <div>
-                                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Título da Aula</label>
+                                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Tema da Aula</label>
                                     <input
                                         type="text"
                                         value={formTitle}
@@ -450,56 +414,60 @@ export const Planning: React.FC = () => {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <DatePicker
-                                        label="Data de Início"
-                                        value={formStartDate}
-                                        onChange={setFormStartDate}
-                                        className="w-full"
-                                    />
-                                    <DatePicker
-                                        label="Data de Término"
-                                        value={formEndDate}
-                                        onChange={setFormEndDate}
-                                        className="w-full"
-                                    />
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Data Início</label>
+                                        <input
+                                            type="date"
+                                            value={formStartDate}
+                                            onChange={e => setFormStartDate(e.target.value)}
+                                            className="w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 text-lg outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Data Fim</label>
+                                        <input
+                                            type="date"
+                                            value={formEndDate}
+                                            onChange={e => setFormEndDate(e.target.value)}
+                                            className="w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 text-lg outline-none"
+                                        />
+                                    </div>
                                 </div>
 
-                                <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row gap-8">
+                                <div className="flex flex-col md:flex-row gap-4">
                                     <div className="flex-1">
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Série (Obrigatória)</label>
-                                        <div className="font-bold text-lg text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                        <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Série</label>
+                                        <div className="font-bold text-lg text-slate-700 dark:text-slate-200 flex items-center gap-2 h-[54px] px-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
                                             <span className="material-symbols-outlined text-slate-400">school</span>
-                                            {activeSeries?.name || formSeriesId || 'Selecione no Menu'}
+                                            {activeSeries?.name || formSeriesId}
                                         </div>
                                     </div>
-                                    <div className="w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
                                     <div className="flex-1">
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Turma (Opcional)</label>
+                                        <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Turma</label>
                                         <select
                                             value={formSection}
                                             onChange={e => setFormSection(e.target.value)}
-                                            className={`block w-full md:w-48 text-sm font-bold rounded-xl border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-${theme.primaryColor} focus:border-${theme.primaryColor} p-2.5 transition-shadow`}
+                                            className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 h-[54px]`}
                                         >
-                                            <option value="">Todas as Turmas</option>
-                                            {activeSeries?.sections.map(s => <option key={s} value={s}>Turma {s}</option>)}
+                                            <option value="">Todas</option>
+                                            {activeSeries?.sections.map(s => <option key={s} value={s}>{s}</option>)}
                                         </select>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Descrição / Roteiro</label>
-                                    <textarea
+                                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Conteúdo e Metodologia</label>
+                                    <RichTextEditor
                                         value={formDescription}
-                                        onChange={e => setFormDescription(e.target.value)}
+                                        onChange={setFormDescription}
                                         placeholder="Descreva o conteúdo, objetivos e metodologia..."
-                                        className={`w-full h-64 p-4 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none leading-relaxed`}
-                                    ></textarea>
+                                    />
                                 </div>
 
                                 {/* File Attachments (Mock) */}
                                 <div>
                                     <div className="flex items-center justify-between mb-4">
-                                        <label className="text-xs font-black uppercase text-slate-400 ml-1 tracking-widest">Materiais de Apoio</label>
+                                        <label className="text-xs font-black uppercase text-slate-400 ml-1 tracking-widest">Anexos</label>
                                         <button
                                             onClick={() => fileInputRef.current?.click()}
                                             type="button"
@@ -599,9 +567,9 @@ export const Planning: React.FC = () => {
                                                 <span className="material-symbols-outlined">event</span>
                                             </div>
                                             <div>
-                                                <div className="text-xs uppercase font-bold text-slate-400">Período</div>
+                                                <div className="text-xs uppercase font-bold text-slate-400">Data</div>
                                                 <div className="font-bold text-slate-700 dark:text-gray-200">
-                                                    {new Date(currentPlan.startDate).toLocaleDateString('pt-BR')} - {new Date(currentPlan.endDate).toLocaleDateString('pt-BR')}
+                                                    {new Date(currentPlan.startDate).toLocaleDateString('pt-BR')}
                                                 </div>
                                             </div>
                                         </div>
@@ -613,44 +581,45 @@ export const Planning: React.FC = () => {
                                             <span className={`material-symbols-outlined text-${theme.primaryColor}`}>subject</span>
                                             Roteiro da Aula
                                         </h3>
-                                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed">
-                                            {currentPlan.description}
-                                        </div>
+                                        <div
+                                            className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 custom-html-content"
+                                            dangerouslySetInnerHTML={{ __html: currentPlan.description }}
+                                        />
                                     </div>
+                                </div>
 
-                                    {/* Files */}
-                                    <div>
-                                        <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                                            <span className={`material-symbols-outlined text-${theme.primaryColor}`}>folder</span>
-                                            Materiais Anexados
-                                        </h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                            {(currentPlan.files || []).map(file => (
-                                                <button
-                                                    key={file.id}
-                                                    onClick={() => handleDownload(file)}
-                                                    className={`group block w-full text-left bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-${theme.primaryColor}/50 hover:shadow-md transition-all`}
-                                                >
-                                                    <div className="flex items-start gap-4">
-                                                        <div className={`size-12 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
-                                                            <span className="material-symbols-outlined text-2xl">description</span>
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <div className="font-bold text-slate-700 dark:text-slate-200 truncate mb-1">{file.name}</div>
-                                                            <div className="text-xs text-slate-400">{file.size}</div>
-                                                            <div className={`mt-2 text-xs font-bold text-${theme.primaryColor} opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1`}>
-                                                                Baixar Arquivo <span className="material-symbols-outlined text-[14px]">download</span>
-                                                            </div>
+                                {/* Files */}
+                                <div>
+                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                        <span className={`material-symbols-outlined text-${theme.primaryColor}`}>folder</span>
+                                        Materiais Anexados
+                                    </h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                        {(currentPlan.files || []).map(file => (
+                                            <button
+                                                key={file.id}
+                                                onClick={() => handleDownload(file)}
+                                                className={`group block w-full text-left bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-${theme.primaryColor}/50 hover:shadow-md transition-all`}
+                                            >
+                                                <div className="flex items-start gap-4">
+                                                    <div className={`size-12 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
+                                                        <span className="material-symbols-outlined text-2xl">description</span>
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="font-bold text-slate-700 dark:text-slate-200 truncate mb-1">{file.name}</div>
+                                                        <div className="text-xs text-slate-400">{file.size}</div>
+                                                        <div className={`mt-2 text-xs font-bold text-${theme.primaryColor} opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1`}>
+                                                            Baixar Arquivo <span className="material-symbols-outlined text-[14px]">download</span>
                                                         </div>
                                                     </div>
-                                                </button>
-                                            ))}
-                                            {(currentPlan.files || []).length === 0 && (
-                                                <div className="col-span-full py-8 text-center text-slate-400 italic bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-sm">
-                                                    Nenhum material anexado.
                                                 </div>
-                                            )}
-                                        </div>
+                                            </button>
+                                        ))}
+                                        {(currentPlan.files || []).length === 0 && (
+                                            <div className="col-span-full py-8 text-center text-slate-400 italic bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-sm">
+                                                Nenhum material anexado.
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </>
