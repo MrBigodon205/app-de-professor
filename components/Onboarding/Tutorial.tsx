@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../contexts/AuthContext';
 
-const TUTORIAL_KEY = 'tutorial_completed_v1';
+const TUTORIAL_KEY = 'tutorial_completed_v2'; // Bump version to force re-run
 
 export const Tutorial: React.FC = () => {
     const theme = useTheme();
@@ -12,23 +12,31 @@ export const Tutorial: React.FC = () => {
     const [run, setRun] = useState(false);
     const [showWelcome, setShowWelcome] = useState(false);
 
+    // Glitch Fix: Ensure we only initialize once per mount/session
+    const initialized = useRef(false);
+
     useEffect(() => {
-        if (!currentUser) return;
+        if (!currentUser || initialized.current) return;
 
         const key = `${TUTORIAL_KEY}_${currentUser.id}`;
         const completed = localStorage.getItem(key);
 
-        // FOR TESTING: Always show if requested, otherwise check 'completed'
+        // Mark as initialized to prevent re-runs on profile updates
+        initialized.current = true;
+
+        // Auto-start for testing or if not completed
+        // FOR TESTING: Always show
         // if (!completed) {
-        // Delay slightly to ensure UI is ready
-        const timer = setTimeout(() => setShowWelcome(true), 1000);
+        const timer = setTimeout(() => setShowWelcome(true), 1500);
         return () => clearTimeout(timer);
-        // }
+        //}
+
     }, [currentUser]);
 
     const startTour = () => {
         setShowWelcome(false);
-        setRun(true);
+        // Small delay to allow modal to close completely
+        setTimeout(() => setRun(true), 500);
     };
 
     const handleJoyrideCallback = (data: CallBackProps) => {
@@ -64,22 +72,6 @@ export const Tutorial: React.FC = () => {
             confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
             confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
         }, 250);
-
-        // Flash of light
-        const flash = document.createElement('div');
-        flash.style.position = 'fixed';
-        flash.style.inset = '0';
-        flash.style.backgroundColor = 'white';
-        flash.style.zIndex = '100000';
-        flash.style.transition = 'opacity 1s ease-out';
-        flash.style.opacity = '1';
-        flash.style.pointerEvents = 'none';
-        document.body.appendChild(flash);
-
-        setTimeout(() => {
-            flash.style.opacity = '0';
-            setTimeout(() => flash.remove(), 1000);
-        }, 100);
     };
 
     const steps: Step[] = [
@@ -89,56 +81,95 @@ export const Tutorial: React.FC = () => {
                 <div className="text-center p-2">
                     <div className="text-4xl mb-4">👋</div>
                     <h2 className={`text-2xl font-bold text-${theme.primaryColor} mb-2`}>
-                        Olá, {currentUser?.name?.split(' ')[0]}!
+                        Bem-vindo(a), {currentUser?.name?.split(' ')[0]}!
                     </h2>
                     <p className="text-slate-600 dark:text-slate-300">
-                        Bem-vindo ao <strong>Prof. Acerta+</strong>!
-                        <br />Vamos fazer um tour rápido para você dominar tudo por aqui?
+                        O <strong>Prof. Acerta+</strong> foi desenhado para simplificar sua vida.
+                        <br />Vou te mostrar cada detalhe em 1 minuto.
                     </p>
                 </div>
             ),
             placement: 'center',
             disableBeacon: true,
         },
-        // Desktop Sidebar Step
-        {
-            target: 'aside',
-            content: (
-                <div>
-                    <h3 className="text-xl font-bold mb-2">Comando Central</h3>
-                    <p>Aqui você navega por <strong>Planejamentos</strong>, <strong>Atividades</strong> e seus <strong>Alunos</strong>.</p>
-                </div>
-            ),
-            placement: 'right',
-            disableBeacon: true,
-        },
-        // Mobile Menu Step (Fallback if sidebar hidden)
-        {
-            target: '[data-tour="mobile-menu"]',
-            content: (
-                <div>
-                    <h3 className="text-xl font-bold mb-2">Menu Principal</h3>
-                    <p>Toque aqui para acessar todas as funcionalidades em seu celular.</p>
-                </div>
-            ),
-            placement: 'bottom',
-        },
         {
             target: '[data-tour="class-selector"]',
             content: (
                 <div>
-                    <h3 className="text-xl font-bold mb-2">O Coração da Aula</h3>
-                    <p>Selecione a <strong>Série</strong> e <strong>Turma</strong> aqui. Tudo o que você vê na tela muda automaticamente para a turma escolhida.</p>
+                    <h3 className="text-xl font-bold mb-2">1. Seletor de Turmas</h3>
+                    <p>Este é o controle principal! Ao mudar a turma aqui, <strong>todo o sistema</strong> (notas, chamadas, planos) muda para a turma escolhida.</p>
                 </div>
             ),
             placement: 'bottom',
         },
         {
+            target: 'aside',
+            content: (
+                <div>
+                    <h3 className="text-xl font-bold mb-2">2. Navegação Principal</h3>
+                    <p>Aqui você acessa todas as ferramentas. Vamos ver as principais...</p>
+                </div>
+            ),
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="sidebar-dashboard"]',
+            content: (
+                <div>
+                    <h3 className="text-lg font-bold mb-1">Início (Dashboard)</h3>
+                    <p>Sua visão geral do dia. Aulas de hoje, pendências e atalhos rápidos.</p>
+                </div>
+            ),
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="sidebar-planning"]',
+            content: (
+                <div>
+                    <h3 className="text-lg font-bold mb-1">Planejamento</h3>
+                    <p>Crie e organize suas aulas. Use a IA para gerar planos incríveis em segundos.</p>
+                </div>
+            ),
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="sidebar-activities"]',
+            content: (
+                <div>
+                    <h3 className="text-lg font-bold mb-1">Atividades</h3>
+                    <p>Gerencie provas, trabalhos e tarefas. Tudo fica salvo e organizado por data.</p>
+                </div>
+            ),
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="sidebar-students"]',
+            content: (
+                <div>
+                    <h3 className="text-lg font-bold mb-1">Meus Alunos</h3>
+                    <p>Lista completa da turma. Acesse o perfil individual de cada aluno clicando neles.</p>
+                </div>
+            ),
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="theme-toggle"]',
+            content: (
+                <div>
+                    <h3 className="text-xl font-bold mb-2">3. Conforto Visual</h3>
+                    <p>Trabalha à noite? Ative o <strong>Modo Escuro</strong> aqui para descansar a vista.</p>
+                </div>
+            ),
+            placement: 'right',
+        },
+        // Dashboard Specifics (Only if on Dashboard?)
+        // Since we are likely on Dashboard at start:
+        {
             target: '[data-tour="dashboard-kpi"]',
             content: (
                 <div>
-                    <h3 className="text-xl font-bold mb-2">Visão de Águia</h3>
-                    <p>Métricas vitais: Presença, Notas e Ocorrências em tempo real.</p>
+                    <h3 className="text-xl font-bold mb-2">4. Resumo Rápido</h3>
+                    <p>Veja quantos alunos, planos e atividades você tem na turma selecionada.</p>
                 </div>
             ),
             placement: 'bottom',
@@ -147,13 +178,13 @@ export const Tutorial: React.FC = () => {
             target: 'body',
             content: (
                 <div className="text-center">
-                    <div className="text-5xl mb-4 animate-bounce">🚀</div>
-                    <h3 className="font-bold text-2xl mb-2 text-slate-800 dark:text-white">Tudo Pronto!</h3>
-                    <p className="text-slate-600 dark:text-slate-300">Você está no comando agora. Transforme a educação!</p>
+                    <div className="text-4xl mb-4">🚀</div>
+                    <h3 className="text-2xl font-bold mb-2">Tudo pronto!</h3>
+                    <p>Você já domina o básico. Agora é só começar a usar!</p>
                 </div>
             ),
             placement: 'center',
-        }
+        },
     ];
 
     const CustomTooltip = ({
