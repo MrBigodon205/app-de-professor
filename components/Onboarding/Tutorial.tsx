@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Joyride, { CallBackProps, STATUS, Step, TooltipRenderProps } from 'react-joyride';
 import confetti from 'canvas-confetti';
 import { useTheme } from '../../hooks/useTheme';

@@ -203,6 +203,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     key={item.path}
                     to={item.path}
                     onClick={() => setIsMobileMenuOpen(false)}
+                    data-tour={`sidebar-${item.path.replace('/', '')}`}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive(item.path)
                       ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}`
                       : 'text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400 hover:text-text-main dark:hover:text-white'
