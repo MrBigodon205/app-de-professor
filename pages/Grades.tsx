@@ -223,12 +223,13 @@ export const Grades: React.FC = () => {
 
     const calculateTotal = (student: Student) => {
         const grades = student.units?.[selectedUnit] || {};
-        return Object.values(grades).reduce((a: number, b: any) => a + (Number(b) || 0), 0);
+        const total = Object.values(grades).reduce((a: number, b: any) => a + (Number(b) || 0), 0);
+        return total / 2;
     };
 
     const exportPDF = () => {
         const doc = new jsPDF();
-        doc.text(`Notas - ${activeSeries} - Turma ${selectedSection} - Unidade ${selectedUnit}`, 14, 15);
+        doc.text(`Notas - ${activeSeries?.name || ''} - Turma ${selectedSection} - Unidade ${selectedUnit}`, 14, 15);
 
         const config = UNIT_CONFIGS[selectedUnit as keyof typeof UNIT_CONFIGS];
         if (!config) return;
@@ -243,7 +244,7 @@ export const Grades: React.FC = () => {
         });
 
         autoTable(doc, {
-            head: [['Nº', 'Nome', ...config.columns.map(c => c.label), 'Total']],
+            head: [['Nº', 'Nome', ...config.columns.map(c => c.label), 'Média']],
             body: tableBody,
             startY: 20,
         });
@@ -325,7 +326,7 @@ export const Grades: React.FC = () => {
                                     </th>
                                 ))}
                                 <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-24 bg-slate-50/50 dark:bg-slate-800/50">
-                                    Total
+                                    Média
                                 </th>
                             </tr>
                         </thead>
