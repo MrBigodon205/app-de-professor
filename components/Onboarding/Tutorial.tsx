@@ -12,20 +12,26 @@ export const Tutorial: React.FC = () => {
     const [run, setRun] = useState(false);
 
     useEffect(() => {
-        const completed = localStorage.getItem(TUTORIAL_KEY);
-        if (!completed && currentUser) {
+        if (!currentUser) return;
+
+        const key = `${TUTORIAL_KEY}_${currentUser.id}`;
+        const completed = localStorage.getItem(key);
+
+        if (!completed) {
             // Delay slightly to ensure UI is ready
-            const timer = setTimeout(() => setRun(true), 1000);
+            const timer = setTimeout(() => setRun(true), 1500); // Increased delay slightly
             return () => clearTimeout(timer);
         }
     }, [currentUser]);
 
     const handleJoyrideCallback = (data: CallBackProps) => {
-        const { status, type } = data;
+        const { status } = data;
 
         if (([STATUS.FINISHED, STATUS.SKIPPED] as string[]).includes(status)) {
             setRun(false);
-            localStorage.setItem(TUTORIAL_KEY, 'true');
+            if (currentUser) {
+                localStorage.setItem(`${TUTORIAL_KEY}_${currentUser.id}`, 'true');
+            }
             if (status === STATUS.FINISHED) {
                 triggerFireworks();
             }
