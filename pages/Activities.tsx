@@ -493,7 +493,7 @@ export const Activities: React.FC = () => {
                 </div>
 
                 {/* List Items */}
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0">
                     {displayedActivities.length === 0 ? (
                         <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
                             Nenhuma atividade encontrada.
@@ -503,30 +503,39 @@ export const Activities: React.FC = () => {
                             <button
                                 key={act.id}
                                 onClick={() => handleSelectActivity(act)}
-                                className={`w-full text-left p-4 rounded-xl border transition-all duration-200 group relative overflow-hidden ${selectedActivityId === act.id
-                                    ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-md shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}`
-                                    : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm'}`}
+                                className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${selectedActivityId === act.id
+                                    ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}`
+                                    : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
                             >
-                                <div className={`absolute left-0 top-0 bottom-0 w-1 ${selectedActivityId === act.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
-                                <div className="pl-2">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <h4 className={`font-bold text-sm truncate pr-2 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
-                                        <span className="material-symbols-outlined text-[16px] text-slate-400 opacity-50">{getIconForType(act.type)}</span>
+                                <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${selectedActivityId === act.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
+                                <div className="pl-3">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h4 className={`font-bold text-base truncate pr-2 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
+                                        <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">chevron_right</span>
                                     </div>
-                                    <div className="flex items-center justify-between text-xs text-slate-500 font-medium mt-1.5">
-                                        <span className={`px-2 py-0.5 rounded-md ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800'}`}>
+
+                                    <div className="flex items-center gap-2 text-xs font-medium">
+                                        <span className={`px-2.5 py-1 rounded-md ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                                             {act.type}
                                         </span>
-                                        <span className="flex items-center gap-1">
-                                            <span className="material-symbols-outlined text-[12px]">event</span>
+                                        <div className="flex items-center gap-1 text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
+                                            <span className="material-symbols-outlined text-[14px]">event</span>
                                             {new Date(act.date).toLocaleDateString('pt-BR')}
-                                        </span>
+                                        </div>
                                     </div>
                                 </div>
                             </button>
                         ))
                     )}
                 </div>
+
+                {/* Mobile FAB */}
+                <button
+                    onClick={handleNewActivity}
+                    className={`lg:hidden fixed bottom-24 right-6 size-14 rounded-2xl bg-${theme.primaryColor} text-white shadow-xl shadow-${theme.primaryColor}/30 flex items-center justify-center z-50 active:scale-90 transition-all`}
+                >
+                    <span className="material-symbols-outlined text-3xl">add</span>
+                </button>
             </div>
 
             {/* Main Content */}

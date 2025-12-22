@@ -1,122 +1,73 @@
 import React, { useState } from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { useClass } from '../contexts/ClassContext';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
 import { ProfileModal } from './ProfileModal';
 import { NotificationCenter } from './NotificationCenter';
+import { MobileBottomNav } from './MobileBottomNav';
+import { MobileClassSelector } from './MobileClassSelector';
 
-const navItems = [
-  { icon: 'dashboard', label: 'Dashboard', path: '/' },
-  { icon: 'menu_book', label: 'Planejamentos', path: '/planning' },
-  { icon: 'assignment', label: 'Atividades', path: '/activities' },
-  { icon: 'group', label: 'Alunos', path: '/students' },
-  { icon: 'assignment_ind', label: 'Relatório Individual', path: '/reports' },
-  { icon: 'school', label: 'Notas', path: '/grades' },
-  { icon: 'check_circle', label: 'Presenças', path: '/attendance' },
-  { icon: 'edit_note', label: 'Observações', path: '/observations' },
-];
-
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-export const Layout: React.FC<LayoutProps> = ({ children }) => {
+export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { currentUser, logout } = useAuth();
+  const theme = useTheme();
+  const { classes, activeSeries, selectedSeriesId, selectedSection, selectSeries, selectSection, deleteSeries, addSeries, removeSectionFromSeries, addSectionToSeries } = useClass();
   const location = useLocation();
-  const navigate = useNavigate();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
-  const { logout, currentUser } = useAuth();
-  const theme = useTheme();
-
-  // Consume Context
-  const {
-    classes,
-    selectedSeriesId,
-    selectedSection,
-    activeSeries,
-    selectSeries,
-    selectSection,
-    addClass,
-    removeClass,
-    addSection,
-    removeSection
-  } = useClass();
-
-  // Local UI state
   const [isSeriesDropdownOpen, setIsSeriesDropdownOpen] = useState(false);
   const [newSeriesName, setNewSeriesName] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isClassSelectorOpen, setIsClassSelectorOpen] = useState(false);
 
-  // --- Actions ---
+  const isActive = (path: string) => location.pathname === path;
 
-  // 1. Add Series
-  const handleAddSeries = async () => {
-    if (!newSeriesName.trim()) return;
-    await addClass(newSeriesName);
-    setNewSeriesName('');
-    setIsSeriesDropdownOpen(false);
-  };
+  const navItems = [
+    { path: '/dashboard', label: 'Início', icon: 'dashboard' },
+    { path: '/planning', label: 'Planejamento', icon: 'calendar_month' },
+    { path: '/activities', label: 'Atividades', icon: 'assignment' },
+    { path: '/grades', label: 'Notas', icon: 'grade' },
+    { path: '/attendance', label: 'Frequência', icon: 'co_present' },
+    { path: '/students', label: 'Alunos', icon: 'groups' },
+    { path: '/occurrences', label: 'Ocorrências', icon: 'warning' },
+  ];
 
-  // 2. Remove Series
-  const handleDeleteSeries = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation(); // Prevent selection
-    if (!confirm('Excluir esta série e todas as suas turmas?')) return;
-    await removeClass(id);
-  };
-
-  // 3. Select Series
   const handleSelectSeries = (id: string) => {
-    if (id === selectedSeriesId) {
-      setIsSeriesDropdownOpen(false);
-      return;
-    }
     selectSeries(id);
     setIsSeriesDropdownOpen(false);
   };
 
-  // 4. Switch Section (Click to switch)
-  const handleSwitchSection = (sec: string) => {
-    selectSection(sec);
+  const handleDeleteSeries = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (window.confirm('Tem certeza que deseja excluir esta série?')) {
+      await deleteSeries(id);
+    }
   };
 
-  // 5. Add Section (One Click)
+  const handleAddSeries = async () => {
+    if (!newSeriesName.trim()) return;
+    await addSeries(newSeriesName);
+    setNewSeriesName('');
+  };
+
+  const handleSwitchSection = (section: string) => {
+    selectSection(section);
+  };
+
+  const handleRemoveSectionOneClick = async (e: React.MouseEvent, section: string) => {
+    e.stopPropagation();
+    if (window.confirm(`Excluir turma ${section}?`)) {
+      await removeSectionFromSeries(activeSeries!.id, section);
+    }
+  };
+
   const handleAddSectionOneClick = async () => {
     if (!activeSeries) return;
-
-    // Determine next letter
-    let nextChar = 'A';
-    if (activeSeries.sections.length > 0) {
-      const lastSec = activeSeries.sections[activeSeries.sections.length - 1];
-      if (lastSec.length === 1 && /[A-Z]/.test(lastSec)) {
-        let candidate = String.fromCharCode(lastSec.charCodeAt(0) + 1);
-        nextChar = candidate;
-      } else {
-        nextChar = 'A';
-      }
-    }
-    await addSection(activeSeries.id, nextChar);
-  };
-
-  // 6. Remove Section (One Click - Small X)
-  const handleRemoveSectionOneClick = async (e: React.MouseEvent, secToRemove: string) => {
-    e.stopPropagation();
-    if (!activeSeries) return;
-    if (!confirm(`Excluir turma ${secToRemove}?`)) return;
-    await removeSection(activeSeries.id, secToRemove);
-  };
-
-
-  // If login page, don't show layout
-  if (location.pathname === '/login') {
-    return <>{children}</>;
-  }
-
-  const isActive = (path: string) => {
-    if (path === '/' && location.pathname !== '/') return false;
-    // Special case for dynamic routes like students/:id
-    if (path === '/students' && location.pathname.startsWith('/students')) return true;
-    return location.pathname.startsWith(path);
+    const next = String.fromCharCode(activeSeries.sections.length > 0
+      ? activeSeries.sections[activeSeries.sections.length - 1].charCodeAt(0) + 1
+      : 65);
+    await addSectionToSeries(activeSeries.id, next);
   };
 
   return (
@@ -134,24 +85,41 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         onClose={() => setIsNotificationModalOpen(false)}
       />
 
-      {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <MobileClassSelector
+        isOpen={isClassSelectorOpen}
+        onClose={() => setIsClassSelectorOpen(false)}
+      />
+
+      {/* Sidebar / Mobile Drawer */}
+      {/* On mobile, this acts as the "More Menu" drawer */}
+      <aside className={`fixed inset - y - 0 left - 0 z - [60] w - 72 bg - surface - light dark: bg - surface - dark border - r border - border - light dark: border - border - dark transform transition - transform duration - 300 ease -in -out md:relative md: translate - x - 0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} shadow - 2xl md: shadow - none`}>
         <div className="flex flex-col h-full justify-between">
+          {/* Close Button for Mobile Drawer */}
+          <div className="md:hidden absolute top-4 right-4 z-50">
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
           <div className="p-4 flex flex-col gap-4">
             {/* User Profile / Brand - NEW LOGO */}
             <div className="flex gap-3 items-center px-2 py-4 border-b border-dashed border-slate-200 dark:border-slate-800 mb-2">
-              <div className={`size-10 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
+              <div className={`size - 10 rounded - xl bg - gradient - to - br from - ${theme.primaryColor} to - ${theme.secondaryColor} text - white flex items - center justify - center shadow - lg shadow - ${theme.primaryColor}/20`}>
                 <span className="material-symbols-outlined text-2xl">school</span>
-              </div>
+              </div >
               <div className="flex flex-col">
                 <h1 className="text-text-main dark:text-white text-lg font-black leading-none tracking-tight">Prof. Acerta<span className={`text-${theme.primaryColor}`}>+</span></h1>
                 <p className="text-text-secondary dark:text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">Gestão Inteligente</p>
               </div>
-            </div>
+            </div >
 
             {/* Mobile Profile & Notification Actions (Visible only on mobile sidebar) */}
-            <div className="md:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
-              <div
+            < div className="md:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700" >
+              {/* ... (existing Mobile Profile UI) ... */}
+              < div
                 className="flex items-center gap-3 cursor-pointer"
                 onClick={() => {
                   setIsProfileModalOpen(true);
@@ -172,10 +140,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <span className="text-[9px] uppercase tracking-widest text-slate-400">Meu Perfil</span>
                 </div>
                 <span className="material-symbols-outlined text-slate-400 ml-auto">settings</span>
-              </div>
+              </div >
 
               {/* Mobile Notification Link */}
-              <div
+              < div
                 className="flex items-center gap-3 mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 cursor-pointer"
                 onClick={() => {
                   setIsNotificationModalOpen(true);
@@ -186,31 +154,33 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <span className="material-symbols-outlined text-sm text-slate-600 dark:text-slate-300">notifications</span>
                 </span>
                 <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Notificações</span>
-              </div>
-            </div>
+              </div >
+            </div >
 
             {/* Nav */}
-            <nav className="flex flex-col gap-1.5 mt-2 overflow-y-auto max-h-[calc(100vh-320px)] custom-scrollbar pr-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive(item.path)
-                    ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}`
-                    : 'text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400 hover:text-text-main dark:hover:text-white'
-                    }`}
-                >
-                  <span className={`material-symbols-outlined text-2xl ${isActive(item.path) ? 'icon-filled' : ''}`}>
-                    {item.icon}
-                  </span>
-                  <span className={`text-sm font-medium ${isActive(item.path) ? 'font-bold' : ''}`}>
-                    {item.label}
-                  </span>
-                </Link>
-              ))}
-            </nav>
-          </div>
+            < nav className="flex flex-col gap-1.5 mt-2 overflow-y-auto max-h-[calc(100vh-320px)] custom-scrollbar pr-2" >
+              {
+                navItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive(item.path)
+                      ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}`
+                      : 'text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400 hover:text-text-main dark:hover:text-white'
+                      }`}
+                  >
+                    <span className={`material-symbols-outlined text-2xl ${isActive(item.path) ? 'icon-filled' : ''}`}>
+                      {item.icon}
+                    </span>
+                    <span className={`text-sm font-medium ${isActive(item.path) ? 'font-bold' : ''}`}>
+                      {item.label}
+                    </span>
+                  </Link>
+                ))
+              }
+            </nav >
+          </div >
 
           <div className="p-4 border-t border-border-light dark:border-border-dark">
             <button
@@ -221,37 +191,54 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <span className="text-sm font-medium">Sair</span>
             </button>
           </div>
-        </div>
-      </aside>
+        </div >
+      </aside >
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 h-full relative bg-background-light dark:bg-background-dark">
+      < div className="flex-1 flex flex-col min-w-0 h-full relative bg-background-light dark:bg-background-dark" >
         {/* Overlay for mobile sidebar */}
-        {isMobileMenuOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-all"
-            onClick={() => setIsMobileMenuOpen(false)}
-          ></div>
-        )}
+        {
+          isMobileMenuOpen && (
+            <div
+              className="fixed inset-0 bg-black/60 z-[55] md:hidden backdrop-blur-sm transition-all"
+              onClick={() => setIsMobileMenuOpen(false)}
+            ></div>
+          )
+        }
 
-        {/* Header - Modernized with Glassmorphism */}
-        <header className="flex items-center justify-between border-b border-white/50 dark:border-slate-800 bg-white/80 dark:bg-surface-dark/90 backdrop-blur-md px-6 py-4 z-[40] shrink-0 gap-4 sticky top-0 transition-all">
+        {/* Header - HIDDEN on mobile now? Or simplified? Keeping simplified for now as per plan */}
+        <header className="flex items-center justify-between border-b border-white/50 dark:border-slate-800 bg-white/80 dark:bg-surface-dark/90 backdrop-blur-md px-4 md:px-6 py-3 md:py-4 z-[40] shrink-0 gap-4 sticky top-0 transition-all">
 
           <div className="flex items-center gap-4 flex-1">
+            {/* Sidebar Toggle - Hidden on mobile if we use Bottom Nav + Menu Button, BUT we might want a way to access it from header too? 
+                 Plan says: "Simplified Mobile Header: Logo (Left) + Profile (Right)." and "Class Switcher... Below header"
+                 For now, keeping toggle but perhaps it should be redundant if bottom nav has 'Menu'. 
+                 Actually, let's HIDE the hamburger on mobile since BottomNav has 'Menu'. 
+             */}
             <button
-              className="md:hidden text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              className="hidden md:hidden text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
               onClick={() => setIsMobileMenuOpen(true)}
             >
               <span className="material-symbols-outlined">menu</span>
             </button>
 
-            {/* 1. Series Clicker (Left) */}
-            <div className="relative z-50">
+            {/* Mobile Logo (Visible only on mobile) */}
+            <div className="md:hidden flex items-center gap-2">
+              <div className={`size-8 rounded-lg bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center`}>
+                <span className="material-symbols-outlined text-lg">school</span>
+              </div>
+              <span className="font-bold text-slate-800 dark:text-white text-sm">Prof. Acerta+</span>
+            </div>
+
+            {/* 1. Series Clicker (Desktop & Mobile) - Refactoring for mobile friendliness later */}
+            <div className="relative z-50 hidden md:block">
+              {/* ... (Existing Desktop Series Switcher code) ... */}
               <button
                 onClick={() => setIsSeriesDropdownOpen(!isSeriesDropdownOpen)}
                 className="flex items-center gap-3 pl-1 pr-4 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all group border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
                 title="Alterar Série"
               >
+                {/* ... existing button content ... */}
                 <div className={`size-11 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20 group-hover:scale-105 group-hover:shadow-${theme.primaryColor}/30 transition-all`}>
                   <span className="material-symbols-outlined">{theme.icon}</span>
                 </div>
@@ -265,10 +252,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </div>
                 </div>
               </button>
-
-              {/* Dropdown Menu */}
+              {/* ... Dropdown ... */}
               {isSeriesDropdownOpen && (
                 <div className="absolute top-full left-0 mt-3 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-black/50 border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 p-2 origin-top-left">
+                  {/* ... same dropdown content ... */}
                   <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 mb-1">
                     Minhas Turmas
                   </div>
@@ -314,10 +301,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             <div className="h-10 w-px bg-gradient-to-b from-transparent via-slate-200 dark:via-slate-700 to-transparent mx-2 hidden md:block"></div>
 
-            {/* 2. Section Selector (Active Tabs) */}
-            <div className="flex-1 min-w-0 mx-2 md:mx-0 overflow-hidden">
+            {/* 2. Section Selector (Active Tabs) - Hidden on Mobile for now, will replace with Mobile Context Bar */}
+            <div className="flex-1 min-w-0 mx-2 md:mx-0 overflow-hidden hidden md:block">
+              {/* ... (Existing Desktop Tab implementation) ... */}
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mask-linear-fade py-1 pr-4">
-                {/* Mobile Label if needed or just buttons */}
                 {activeSeries?.sections.map(sec => (
                   <div key={sec} className="relative group/tab shrink-0">
                     <button
@@ -338,8 +325,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </button>
                   </div>
                 ))}
-
-                {/* Add Section Button */}
                 {activeSeries && (
                   <button
                     onClick={handleAddSectionOneClick}
@@ -354,17 +339,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           </div>
 
-          <div className="hidden md:flex items-center gap-4 pl-4 border-l border-slate-100 dark:border-slate-800">
-            <NotificationCenter />
+          <div className="flex items-center gap-4 pl-4 border-l border-slate-100 dark:border-slate-800">
+            {/* Notification - Visible on Mobile too maybe? No, moving to sidebar or specific page */}
+            <div className="hidden md:block">
+              <NotificationCenter />
+            </div>
 
-            {/* User Profile Trigger - Clickable */}
+            {/* User Profile - Mobile: Just Avatar */}
             <button
               onClick={() => setIsProfileModalOpen(true)}
               className="flex items-center gap-3 bg-white dark:bg-slate-800/50 pl-1.5 pr-4 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-primary transition-all group active:scale-95"
             >
               <div className="relative">
                 <div
-                  className={`size-10 rounded-full bg-cover bg-center border-2 border-white dark:border-slate-700 shadow-md bg-slate-200 overflow-hidden shrink-0 group-hover:scale-110 transition-transform`}
+                  className={`size-8 md:size-10 rounded-full bg-cover bg-center border-2 border-white dark:border-slate-700 shadow-md bg-slate-200 overflow-hidden shrink-0 group-hover:scale-110 transition-transform`}
                   style={{
                     backgroundImage: currentUser?.photoUrl
                       ? `url(${currentUser.photoUrl})`
@@ -377,11 +365,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </div>
                   )}
                 </div>
-                {/* Status Dot */}
                 <div className="absolute -bottom-0.5 -right-0.5 size-3 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full shadow-sm"></div>
               </div>
 
-              <div className="flex flex-col items-start leading-tight">
+              {/* Hidden Name on Mobile */}
+              <div className="hidden md:flex flex-col items-start leading-tight">
                 <span className="text-[13px] font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors">{currentUser?.name?.split(' ')[0]}</span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{theme.subject}</span>
               </div>
@@ -389,11 +377,36 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar">
+        {/* Mobile Context Bar (Class Switcher & Current Section) - VISIBLE ONLY ON MOBILE */}
+        <div className="md:hidden px-4 pt-2 -mb-2 z-30">
+          <button
+            onClick={() => setIsClassSelectorOpen(true)}
+            className="w-full bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <div className={`size-10 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
+                <span className="material-symbols-outlined">school</span>
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="text-[10px] uppercase font-bold text-slate-400">Turma Atual</span>
+                <span className="text-sm font-bold text-slate-900 dark:text-white">
+                  {activeSeries ? activeSeries.name : 'Selecione uma turma'} {selectedSection ? ` - ${selectedSection}` : ''}
+                </span>
+              </div>
+            </div>
+            <span className="material-symbols-outlined text-slate-400">expand_more</span>
+          </button>
+        </div>
+
+
+        {/* Page Content - Adjust padding for Bottom Nav */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar pb-24 md:pb-8">
           {children}
         </main>
-      </div>
-    </div>
+
+        {/* Mobile Bottom Navigation */}
+        <MobileBottomNav onMoreClick={() => setIsMobileMenuOpen(true)} />
+      </div >
+    </div >
   );
 };

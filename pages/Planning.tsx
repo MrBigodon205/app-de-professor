@@ -330,7 +330,7 @@ export const Planning: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0">
                     {displayedPlans.length === 0 ? (
                         <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
                             Nenhuma aula encontrada.
@@ -340,22 +340,42 @@ export const Planning: React.FC = () => {
                             <button
                                 key={plan.id}
                                 onClick={() => handleSelectPlan(plan)}
-                                className={`w-full text-left p-4 rounded-xl border transition-all duration-200 group relative overflow-hidden ${selectedPlanId === plan.id
-                                    ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-md shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}`
-                                    : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm'}`}
+                                className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${selectedPlanId === plan.id
+                                    ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}`
+                                    : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
                             >
-                                <div className={`absolute left-0 top-0 bottom-0 w-1 ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
-                                <div className="pl-2">
-                                    <h4 className={`font-bold text-sm truncate pr-2 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
-                                    <div className="flex items-center gap-1 text-xs text-slate-500 mt-1.5">
-                                        <span className="material-symbols-outlined text-[12px]">event</span>
-                                        {new Date(plan.startDate).toLocaleDateString('pt-BR')}
+                                <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
+                                <div className="pl-3">
+                                    <h4 className={`font-bold text-base truncate pr-2 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
+
+                                    <div className="flex items-center gap-3 mt-2">
+                                        <div className="flex items-center gap-1 text-xs text-slate-500 font-medium bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                                            <span className="material-symbols-outlined text-[14px]">event</span>
+                                            {new Date(plan.startDate).toLocaleDateString('pt-BR')}
+                                        </div>
+                                        {plan.files && plan.files.length > 0 && (
+                                            <div className="flex items-center gap-1 text-xs text-slate-400">
+                                                <span className="material-symbols-outlined text-[14px]">attachment</span>
+                                                {plan.files.length}
+                                            </div>
+                                        )}
                                     </div>
+                                </div>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-primary transition-colors">
+                                    <span className="material-symbols-outlined">chevron_right</span>
                                 </div>
                             </button>
                         ))
                     )}
                 </div>
+
+                {/* Mobile FAB */}
+                <button
+                    onClick={handleNewPlan}
+                    className={`lg:hidden fixed bottom-24 right-6 size-14 rounded-2xl bg-${theme.primaryColor} text-white shadow-xl shadow-${theme.primaryColor}/30 flex items-center justify-center z-50 active:scale-90 transition-all`}
+                >
+                    <span className="material-symbols-outlined text-3xl">add</span>
+                </button>
             </div>
 
             {/* Main Content */}
