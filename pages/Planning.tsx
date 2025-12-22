@@ -5,6 +5,8 @@ import { useTheme } from '../hooks/useTheme';
 import { Plan, AttachmentFile } from '../types';
 import { supabase } from '../lib/supabase';
 import { DatePicker } from '../components/DatePicker';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 export const Planning: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
@@ -488,12 +490,23 @@ export const Planning: React.FC = () => {
 
                                 <div>
                                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Descrição / Roteiro</label>
-                                    <textarea
-                                        value={formDescription}
-                                        onChange={e => setFormDescription(e.target.value)}
-                                        placeholder="Descreva o conteúdo, objetivos e metodologia..."
-                                        className={`w-full h-64 p-4 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none leading-relaxed`}
-                                    ></textarea>
+                                    <div className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                                        <ReactQuill
+                                            theme="snow"
+                                            value={formDescription}
+                                            onChange={setFormDescription}
+                                            className="h-64 mb-12 dark:text-white"
+                                            modules={{
+                                                toolbar: [
+                                                    [{ 'header': [1, 2, false] }],
+                                                    ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+                                                    ['link', 'image'],
+                                                    ['clean']
+                                                ]
+                                            }}
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* File Attachments (Mock) */}
@@ -613,9 +626,10 @@ export const Planning: React.FC = () => {
                                             <span className={`material-symbols-outlined text-${theme.primaryColor}`}>subject</span>
                                             Roteiro da Aula
                                         </h3>
-                                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed">
-                                            {currentPlan.description}
-                                        </div>
+                                        <div
+                                            className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 leading-relaxed ql-editor"
+                                            dangerouslySetInnerHTML={{ __html: currentPlan.description }}
+                                        ></div>
                                     </div>
 
                                     {/* Files */}
