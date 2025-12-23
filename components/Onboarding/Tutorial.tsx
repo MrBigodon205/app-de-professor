@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../contexts/AuthContext';
 
-const TUTORIAL_KEY = 'tutorial_completed_v3'; // Bump version to force re-run
+const TUTORIAL_KEY = 'tutorial_completed_v4'; // Bump version to force re-run
 
 export const Tutorial: React.FC = () => {
     const theme = useTheme();
