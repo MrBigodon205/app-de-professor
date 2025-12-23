@@ -193,31 +193,64 @@ export const StudentProfile: React.FC = () => {
         const presentCount = studentAttendance.filter(a => a.status === 'P').length;
         const attendancePercentage = totalClasses > 0 ? ((presentCount / totalClasses) * 100).toFixed(1) : '100';
 
-        // Branding
-        doc.setFontSize(24);
-        doc.setTextColor(30, 41, 59);
+        // --- MODERN HEADER ---
+        doc.setFillColor(63, 81, 181); // Indigo Primary
+        doc.rect(0, 0, 210, 40, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
         doc.text('PROF. ACERTA+', 14, 20);
 
-        doc.setFontSize(14);
-        doc.setTextColor(71, 85, 105);
-        doc.text('Relatório Individual do Aluno', 14, 28);
-
-        // Student Info
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`Aluno: ${student.name}`, 14, 40);
-        doc.text(`Matrícula: #${student.number}`, 14, 45);
-        doc.text(`Turma: ${activeSeries?.name} ${selectedSection}`, 14, 50);
-        doc.text(`Disciplina: ${currentUser?.subject || ''}`, 14, 55);
-        doc.text(`Emissão: ${new Date().toLocaleDateString('pt-BR')}`, 14, 60);
-
-        // Attendance & Engagement Summary
         doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Relatório Individual do Aluno', 14, 30);
+
+        doc.setFontSize(10);
+        doc.text(`Emissão: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, 150, 30);
+
+        // --- STUDENT INFO CARD ---
+        doc.setFillColor(248, 250, 252); // Slate 50
+        doc.setDrawColor(226, 232, 240); // Slate 200
+        doc.roundedRect(14, 50, 182, 35, 3, 3, 'FD');
+
+        doc.setTextColor(71, 85, 105);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('DADOS DO ALUNO', 20, 60);
+
+        doc.setFont('helvetica', 'normal');
         doc.setTextColor(30, 41, 59);
-        doc.text('Engajamento e Frequência', 14, 75);
+
+        // Grid Layout
+        doc.text(`Nome:`, 20, 70);
+        doc.setFont('helvetica', 'bold');
+        doc.text(student.name.toUpperCase(), 35, 70);
+
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Matrícula:`, 20, 78);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`#${student.number}`, 40, 78);
+
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Turma:`, 110, 70);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${activeSeries?.name} - ${selectedSection}`, 125, 70);
+
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Disciplina:`, 110, 78);
+        doc.setFont('helvetica', 'bold');
+        doc.text((currentUser?.subject || 'Geral').toUpperCase(), 132, 78);
+
+        let currentY = 100;
+
+        // --- ATTENDANCE SUMMARY ---
+        doc.setFontSize(14);
+        doc.setTextColor(63, 81, 181);
+        doc.text('Frequência e Engajamento', 14, currentY);
 
         autoTable(doc, {
-            startY: 80,
+            startY: currentY + 5,
             head: [['Total de Aulas', 'Presenças', 'Faltas', 'Frequência %']],
             body: [[
                 totalClasses,
@@ -226,56 +259,80 @@ export const StudentProfile: React.FC = () => {
                 `${attendancePercentage}%`
             ]],
             theme: 'grid',
-            headStyles: { fillColor: [30, 41, 59] },
+            headStyles: { fillColor: [63, 81, 181], textColor: 255, fontSize: 11, fontStyle: 'bold', halign: 'center' },
+            bodyStyles: { fontSize: 11, halign: 'center', textColor: 50 },
+            styles: { cellPadding: 6 }
         });
 
-        // Academic Record
-        doc.text('Desempenho Acadêmico', 14, (doc as any).lastAutoTable.finalY + 15);
+        currentY = (doc as any).lastAutoTable.finalY + 15;
+
+        // --- ACADEMIC RECORD ---
+        doc.setFontSize(14);
+        doc.setTextColor(63, 81, 181);
+        doc.text('Desempenho Acadêmico', 14, currentY);
+
         const academicRows = ['1', '2', '3'].map(unit => {
             const data = student.units[unit] || {};
             const avg = calculateUnitAverage(data);
             return [
                 `${unit}ª Unidade`,
-                data.qualitative?.toFixed(1) || '0.0',
-                data.simulado?.toFixed(1) || '0.0',
-                data.test?.toFixed(1) || '0.0',
-                data.exam?.toFixed(1) || '0.0',
-                avg.toFixed(1)
+                data.qualitative?.toFixed(1) || '-',
+                data.simulado?.toFixed(1) || '-',
+                data.test?.toFixed(1) || '-',
+                data.exam?.toFixed(1) || '-',
+                { content: avg.toFixed(1), styles: { fontStyle: 'bold', textColor: avg >= 6 ? [22, 163, 74] : [220, 38, 38] } }
             ];
         });
 
         autoTable(doc, {
-            startY: (doc as any).lastAutoTable.finalY + 20,
-            head: [['Unidade', 'Qualit.', 'Simul.', 'Teste', 'Prova', 'Média']],
+            startY: currentY + 5,
+            head: [['Unidade', 'Qualitativo', 'Simulado', 'Teste', 'Prova', 'Média Final']],
             body: academicRows,
             theme: 'striped',
-            headStyles: { fillColor: [71, 85, 105] },
+            headStyles: { fillColor: [63, 81, 181], textColor: 255, fontSize: 10, fontStyle: 'bold' },
+            columnStyles: {
+                0: { fontStyle: 'bold' },
+                5: { fontStyle: 'bold' }
+            },
+            styles: { cellPadding: 5, halign: 'center' }
         });
 
-        // Behavioral Log
+        currentY = (doc as any).lastAutoTable.finalY + 15;
+
+        // --- BEHAVIORAL LOG ---
         if (studentOccurrences.length > 0) {
-            doc.text('Registro de Ocorrências', 14, (doc as any).lastAutoTable.finalY + 15);
+            doc.text('Registro de Ocorrências', 14, currentY);
             autoTable(doc, {
-                startY: (doc as any).lastAutoTable.finalY + 20,
+                startY: currentY + 5,
                 head: [['Data', 'Tipo', 'Descrição']],
-                body: studentOccurrences.map(o => [o.date, o.type, o.description]),
+                body: studentOccurrences.map(o => [
+                    new Date(o.date + 'T12:00:00').toLocaleDateString('pt-BR'),
+                    o.type,
+                    o.description
+                ]),
                 theme: 'grid',
-                headStyles: { fillColor: [148, 163, 184] },
-                columnStyles: { 2: { cellWidth: 100 } }
+                headStyles: { fillColor: [234, 88, 12], textColor: 255 }, // Orange for alerts
+                columnStyles: {
+                    0: { cellWidth: 30 },
+                    1: { cellWidth: 30, fontStyle: 'bold' },
+                    2: { cellWidth: 'auto' }
+                },
+                styles: { cellPadding: 4, fontSize: 10 }
             });
         }
 
+        // Footer
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text(`Página ${i} de ${pageCount} - Gerado por Prof. Acerta+`, 105, 290, { align: 'center' });
+        }
+
         try {
-            const fileName = `Relatorio_${student.name}_${activeSeries?.name}_${selectedSection}`.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf';
-            const blob = doc.output('blob');
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            const fileName = `Relatorio_${student.name}_${activeSeries?.name || ''}`.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf';
+            doc.save(fileName);
         } catch (error) {
             console.error('Erro ao gerar PDF do aluno:', error);
         }

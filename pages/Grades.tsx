@@ -229,7 +229,22 @@ export const Grades: React.FC = () => {
 
     const exportPDF = () => {
         const doc = new jsPDF();
-        doc.text(`Notas - ${activeSeries?.name || ''} - Turma ${selectedSection} - Unidade ${selectedUnit}`, 14, 15);
+
+        // --- HEADER ---
+        doc.setFillColor(63, 81, 181); // Indigo Primary
+        doc.rect(0, 0, 210, 35, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text('PROF. ACERTA+ | Relatório de Notas', 14, 23);
+
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${activeSeries?.name || ''} - Turma ${selectedSection} - ${selectedUnit}ª Unidade`, 14, 23, { align: 'left', baseline: 'top', transform: new DOMMatrix().translate(0, 5) } as any);
+        // Clean text placement without complex transforms if matrix fails
+        doc.text(`${activeSeries?.name || ''} - Turma ${selectedSection} - ${selectedUnit}ª Unidade`, 14, 30);
+
 
         const config = UNIT_CONFIGS[selectedUnit as keyof typeof UNIT_CONFIGS];
         if (!config) return;
@@ -239,17 +254,39 @@ export const Grades: React.FC = () => {
             config.columns.forEach(col => {
                 row.push(getGrade(s, col.key) || '-');
             });
-            row.push(calculateTotal(s).toFixed(1));
+            const avg = calculateTotal(s);
+            row.push({
+                content: avg.toFixed(1),
+                styles: { fontStyle: 'bold', textColor: avg >= 6 ? [22, 163, 74] : [220, 38, 38] }
+            });
             return row;
         });
 
         autoTable(doc, {
             head: [['Nº', 'Nome', ...config.columns.map(c => c.label), 'Média']],
             body: tableBody,
-            startY: 20,
+            startY: 45,
+            theme: 'grid',
+            headStyles: { fillColor: [63, 81, 181], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [248, 250, 252] },
+            styles: { fontSize: 10, cellPadding: 4, valign: 'middle' },
+            columnStyles: {
+                0: { cellWidth: 15, halign: 'center' }, // Number
+                1: { fontStyle: 'bold' }, // Name
+                [config.columns.length + 2]: { halign: 'center', fontStyle: 'bold' } // Media
+            }
         });
 
-        doc.save(`notas_unidade_${selectedUnit}.pdf`);
+        // Footer
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text(`Página ${i} de ${pageCount} - Gerado em ${new Date().toLocaleDateString('pt-BR')}`, 105, 290, { align: 'center' });
+        }
+
+        doc.save(`notas_unidade_${selectedUnit}_${activeSeries?.name}_${selectedSection}.pdf`);
     };
 
     if (loading) {
