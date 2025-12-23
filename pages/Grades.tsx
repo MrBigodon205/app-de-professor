@@ -271,8 +271,8 @@ export const Grades: React.FC = () => {
                         <button
                             key={unit}
                             onClick={() => setSelectedUnit(unit)}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${selectedUnit === unit
-                                ? `bg-${theme.primaryColor}-500 text-white shadow-lg`
+                            className={`px-4 py-2 rounded-md text-sm font-bold transition-all duration-200 ${selectedUnit === unit
+                                ? `bg-${theme.primaryColor}-600 dark:bg-${theme.primaryColor}-500 text-white shadow-md transform scale-105`
                                 : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'
                                 }`}
                         >

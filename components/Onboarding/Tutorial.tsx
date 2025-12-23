@@ -264,17 +264,17 @@ export const Tutorial: React.FC = () => {
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-500"></div>
 
                     {/* Modal Content */}
-                    <div className="relative bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl p-8 md:p-12 max-w-lg w-full text-center overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 border border-white/10 ring-1 ring-black/5">
+                    <div className="relative bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl p-6 md:p-12 max-w-lg w-full text-center overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 border border-white/10 ring-1 ring-black/5 mx-4">
                         {/* Background Shapes */}
-                        <div className={`absolute -top-20 -right-20 w-64 h-64 bg-${theme.primaryColor}/10 rounded-full blur-3xl`}></div>
-                        <div className={`absolute -bottom-20 -left-20 w-64 h-64 bg-${theme.secondaryColor}/10 rounded-full blur-3xl`}></div>
+                        <div className={`absolute -top-20 -right-20 w-48 md:w-64 h-48 md:h-64 bg-${theme.primaryColor}/10 rounded-full blur-3xl`}></div>
+                        <div className={`absolute -bottom-20 -left-20 w-48 md:w-64 h-48 md:h-64 bg-${theme.secondaryColor}/10 rounded-full blur-3xl`}></div>
 
                         <div className="relative z-10">
-                            <div className="text-6xl mb-6 animate-bounce">👋</div>
-                            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4 tracking-tight">
+                            <div className="text-4xl md:text-6xl mb-4 md:mb-6 animate-bounce">👋</div>
+                            <h2 className="text-2xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3 md:mb-4 tracking-tight">
                                 Olá, <span className={`text-${theme.primaryColor}`}>{currentUser?.name?.split(' ')[0]}</span>!
                             </h2>
-                            <p className="text-lg text-slate-600 dark:text-slate-300 mb-8 leading-relaxed">
+                            <p className="text-base md:text-lg text-slate-600 dark:text-slate-300 mb-6 md:mb-8 leading-relaxed">
                                 Seja bem-vindo ao <strong>Prof. Acerta+</strong>.<br />
                                 Preparamos uma experiência incrível para otimizar suas aulas. Vamos conhecer?
                             </p>
