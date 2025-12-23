@@ -20,7 +20,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
         removeSection
     } = useClass();
 
-    const { theme } = useTheme();
+    const theme = useTheme();
 
     const [newSeriesName, setNewSeriesName] = useState('');
     const [newSectionName, setNewSectionName] = useState('');
