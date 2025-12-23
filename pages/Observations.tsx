@@ -437,10 +437,13 @@ export const Observations: React.FC = () => {
                     ) : (
                         <div className="max-w-4xl mx-auto flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* Premium Form */}
-                            <div className="bg-slate-50 dark:bg-slate-950/50 rounded-[32px] border-2 border-dashed border-slate-200 dark:border-slate-800 p-8 relative overflow-hidden group/form">
-                                <div className={`absolute top-0 left-0 w-2 h-full bg-${theme.primaryColor} opacity-20`}></div>
+                            <div className="bg-slate-50 dark:bg-slate-950/50 rounded-[32px] border-2 border-dashed border-slate-200 dark:border-slate-800 p-8 relative group/form">
+                                {/* Decorative Background - Clipped for rounded corners */}
+                                <div className="absolute inset-0 rounded-[30px] overflow-hidden pointer-events-none">
+                                    <div className={`absolute top-0 left-0 w-2 h-full bg-${theme.primaryColor} opacity-20`}></div>
+                                </div>
 
-                                <h3 className="font-black text-lg text-slate-800 dark:text-white mb-8 flex items-center gap-4">
+                                <h3 className="font-black text-lg text-slate-800 dark:text-white mb-8 flex items-center gap-4 relative z-10">
                                     <div className={`size-11 rounded-1.5xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
                                         <span className="material-symbols-outlined text-2xl">{editingOccId ? 'edit_note' : 'add_moderator'}</span>
                                     </div>
