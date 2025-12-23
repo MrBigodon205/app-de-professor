@@ -8,6 +8,7 @@ import { Tutorial } from './Onboarding/Tutorial';
 import { NotificationCenter } from './NotificationCenter';
 import { MobileBottomNav } from './MobileBottomNav';
 import { MobileClassSelector } from './MobileClassSelector';
+import { ClassManager } from './ClassManager';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, logout, activeSubject, updateActiveSubject } = useAuth();
@@ -92,10 +93,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         onClose={() => setIsNotificationModalOpen(false)}
       />
 
-      import {ClassManager} from './ClassManager';
-      // ... other imports
-
-      // ... inside Layout
       <ClassManager
         isOpen={isClassSelectorOpen}
         onClose={() => setIsClassSelectorOpen(false)}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useClass } from '../contexts/ClassContext';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../hooks/useTheme';
 
 interface ClassManagerProps {
     isOpen: boolean;
@@ -15,7 +15,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
         selectSeries,
         selectSection,
         addClass,
-        deleteSeries,
+        removeClass, // Fixed name
         addSection,
         removeSection
     } = useClass();
@@ -49,13 +49,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
     const handleDeleteSeries = async (id: string, name: string) => {
         if (window.confirm(`Tem certeza que deseja excluir a série "${name}" e todos os seus alunos?`)) {
             try {
-                await deleteSeries(id); // Context likely exports 'deleteSeries' or 'removeClass' - checked Context, it exports 'removeClass'. Need to cast or fix usage.
-                // Wait, context exports 'removeClass', but in previous edits I used 'deleteSeries'. 
-                // Let's check Context again in my memory. 'removeClass' is line 20. 
-                // But 'MobileClassSelector' used 'deleteSeries'. Did I update Context to alias it?
-                // Step 2175: Context exports `removeClass`.
-                // MobileClassSelector (Step 2181) calls `deleteSeries`. THIS IS A BUG.
-                // I need to use `removeClass`.
+                await removeClass(id);
             } catch (error: any) {
                 alert('Erro ao excluir série: ' + error.message);
             }
