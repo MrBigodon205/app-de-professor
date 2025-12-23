@@ -677,7 +677,7 @@ export const StudentProfile: React.FC = () => {
                                                         <span className="material-symbols-outlined text-sm">check</span>
                                                     </span>
                                                 ) : (
-                                                    <span className="size-6 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-400 flex items-center justify-center shrink-0">
+                                                    <span className="size-6 rounded-full bg-rose-500/10 text-rose-600 flex items-center justify-center shrink-0">
                                                         <span className="material-symbols-outlined text-xs">close</span>
                                                     </span>
                                                 )}
