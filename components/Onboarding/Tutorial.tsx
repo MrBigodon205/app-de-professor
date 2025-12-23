@@ -198,7 +198,7 @@ export const Tutorial: React.FC = () => {
     }: TooltipRenderProps) => (
         <div
             {...tooltipProps}
-            className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-6 rounded-3xl shadow-2xl border border-white/20 dark:border-slate-700 max-w-sm relative overflow-hidden ring-1 ring-black/5"
+            className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-6 rounded-3xl shadow-2xl border border-white/20 dark:border-slate-700 w-[90vw] sm:w-auto sm:max-w-sm relative overflow-hidden ring-1 ring-black/5 mx-auto"
         >
             <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-${theme.primaryColor} to-${theme.secondaryColor}`} />
 
