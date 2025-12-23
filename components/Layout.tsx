@@ -20,6 +20,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [isSeriesDropdownOpen, setIsSeriesDropdownOpen] = useState(false);
   const [newSeriesName, setNewSeriesName] = useState('');
+  const [newSectionName, setNewSectionName] = useState(''); // Added for Header Input
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isClassSelectorOpen, setIsClassSelectorOpen] = useState(false);
   const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
@@ -338,7 +339,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     <button
                       onClick={() => handleSwitchSection(sec)}
                       className={`relative min-w-[3rem] h-10 px-4 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center border ${selectedSection === sec
-                        ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-900 shadow-lg shadow-slate-200 dark:shadow-slate-900/50 border-transparent transform -translate-y-0.5'
+                        ? `bg-white dark:bg-slate-800 text-${theme.primaryColor} border-${theme.primaryColor} shadow-md shadow-${theme.primaryColor}/10`
                         : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
                     >
                       {sec}
@@ -346,21 +347,43 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     {/* Remove Interaction */}
                     <button
                       onClick={(e) => handleRemoveSectionOneClick(e, sec)}
-                      className="absolute -top-1.5 -right-1.5 size-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover/tab:opacity-100 transition-all transform scale-0 group-hover/tab:scale-100 cursor-pointer z-20 hover:bg-red-600 border-2 border-white dark:border-surface-dark"
+                      className="absolute -top-1.5 -right-1.5 size-5 bg-white dark:bg-slate-700 text-red-500 rounded-full shadow-md border dark:border-slate-600 flex items-center justify-center opacity-0 group-hover/tab:opacity-100 transition-all transform scale-0 group-hover/tab:scale-100 cursor-pointer z-20 hover:scale-110"
                       title="Remover Turma"
                     >
-                      <span className="material-symbols-outlined text-[10px]">close</span>
+                      <span className="material-symbols-outlined text-[10px] font-bold">close</span>
                     </button>
                   </div>
                 ))}
+
+                {/* Add Section Input - Desktop Header Version */}
                 {activeSeries && (
-                  <button
-                    onClick={handleAddSectionOneClick}
-                    className="size-10 min-w-[2.5rem] rounded-xl border border-dashed border-slate-300 dark:border-slate-600 hover:border-primary hover:text-primary text-slate-400 flex items-center justify-center transition-all hover:bg-primary/5 active:scale-95 group shrink-0"
-                    title="Adicionar Próxima Turma"
-                  >
-                    <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">add</span>
-                  </button>
+                  <div className="h-10 bg-white dark:bg-slate-800 rounded-xl flex items-center px-1 border border-slate-200 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all shadow-sm">
+                    <input
+                      className="w-12 h-full bg-transparent px-2 text-xs font-bold text-center uppercase outline-none placeholder:normal-case placeholder:font-normal text-slate-700 dark:text-slate-300"
+                      placeholder="Nova"
+                      maxLength={3}
+                      value={newSectionName}
+                      onChange={e => setNewSectionName(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && newSectionName.trim()) {
+                          addSectionToSeries(activeSeries.id, newSectionName.toUpperCase());
+                          setNewSectionName('');
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={async () => {
+                        if (newSectionName.trim()) {
+                          await addSectionToSeries(activeSeries.id, newSectionName.toUpperCase());
+                          setNewSectionName('');
+                        }
+                      }}
+                      disabled={!newSectionName.trim()}
+                      className={`size-8 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-${theme.primaryColor} hover:text-white text-slate-400 flex items-center justify-center transition-colors`}
+                    >
+                      <span className="material-symbols-outlined text-sm">add</span>
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
