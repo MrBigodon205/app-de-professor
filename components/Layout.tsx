@@ -92,7 +92,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         onClose={() => setIsNotificationModalOpen(false)}
       />
 
-      <MobileClassSelector
+      import {ClassManager} from './ClassManager';
+      // ... other imports
+
+      // ... inside Layout
+      <ClassManager
         isOpen={isClassSelectorOpen}
         onClose={() => setIsClassSelectorOpen(false)}
       />
@@ -303,16 +307,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <span className="font-bold text-slate-800 dark:text-white text-sm">Prof. Acerta+</span>
             </div>
 
-            {/* 1. Series Clicker (Desktop & Mobile) - Refactoring for mobile friendliness later */}
-            <div className="relative z-50 hidden md:block">
-              {/* ... (Existing Desktop Series Switcher code) ... */}
+            {/* 1. Series Clicker (Desktop) - Opens Class Manager */}
+            <div className="hidden md:block">
               <button
                 data-tour="class-selector"
-                onClick={() => setIsSeriesDropdownOpen(!isSeriesDropdownOpen)}
+                onClick={() => setIsClassSelectorOpen(true)}
                 className="flex items-center gap-3 pl-1 pr-4 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all group border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
-                title="Alterar Série"
+                title="Gerenciar Turmas"
               >
-                {/* ... existing button content ... */}
                 <div className={`size-11 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20 group-hover:scale-105 group-hover:shadow-${theme.primaryColor}/30 transition-all`}>
                   <span className="material-symbols-outlined">{theme.icon}</span>
                 </div>
@@ -322,57 +324,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     <span className="font-bold text-lg text-slate-900 dark:text-white whitespace-nowrap">
                       {activeSeries ? activeSeries.name : 'Selecione...'}
                     </span>
-                    <span className="material-symbols-outlined text-slate-400 text-sm group-hover:text-primary transition-colors duration-300">expand_more</span>
+                    <span className="material-symbols-outlined text-slate-400 text-sm group-hover:text-primary transition-colors duration-300">edit_square</span>
                   </div>
                 </div>
               </button>
-              {/* ... Dropdown ... */}
-              {isSeriesDropdownOpen && (
-                <>
-                  <div className="absolute top-full left-0 mt-3 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-black/50 border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 p-2 origin-top-left z-[60]">
-                    {/* ... same dropdown content ... */}
-                    <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 mb-1">
-                      Minhas Turmas
-                    </div>
-                    <div className="max-h-60 overflow-y-auto space-y-1 custom-scrollbar">
-                      {classes.map(cls => (
-                        <div
-                          key={cls.id}
-                          onClick={() => handleSelectSeries(cls.id)}
-                          className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all group/item ${selectedSeriesId === cls.id ? 'bg-primary/5 text-primary' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className={`size-2 rounded-full ring-2 ring-offset-2 dark:ring-offset-slate-900 ${selectedSeriesId === cls.id ? 'bg-primary ring-primary/30' : 'bg-slate-300 dark:bg-slate-600 ring-transparent'}`}></div>
-                            <span className="font-bold text-sm">{cls.name}</span>
-                          </div>
-                          <button
-                            onClick={(e) => handleDeleteSeries(e, cls.id)}
-                            className="size-7 rounded-lg flex items-center justify-center hover:bg-red-50 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100"
-                            title="Excluir Série"
-                          >
-                            <span className="material-symbols-outlined text-lg">delete</span>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <div className="flex gap-2">
-                        <input
-                          className="flex-1 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none transition-all placeholder:text-slate-400"
-                          placeholder="Nova Série..."
-                          value={newSeriesName}
-                          onChange={e => setNewSeriesName(e.target.value)}
-                          onKeyDown={e => e.key === 'Enter' && handleAddSeries()}
-                        />
-                        <button onClick={handleAddSeries} className="bg-primary text-white rounded-lg px-3 py-2 hover:bg-primary-dark transition-colors shadow-sm shadow-primary/20">
-                          <span className="material-symbols-outlined text-lg">add</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="fixed inset-0 z-[55] cursor-default" onClick={() => setIsSeriesDropdownOpen(false)}></div>
-                </>
-              )}
             </div>
 
             <div className="h-10 w-px bg-gradient-to-b from-transparent via-slate-200 dark:via-slate-700 to-transparent mx-2 hidden md:block"></div>
