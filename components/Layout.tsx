@@ -13,7 +13,7 @@ import { ClassManager } from './ClassManager';
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, logout, activeSubject, updateActiveSubject } = useAuth();
   const theme = useTheme();
-  const { classes, activeSeries, selectedSeriesId, selectedSection, selectSeries, selectSection, deleteSeries, addSeries, removeSectionFromSeries, addSectionToSeries } = useClass();
+  const { classes, activeSeries, selectedSeriesId, selectedSection, selectSeries, selectSection, deleteSeries, addSeries, removeSection, addSection } = useClass();
   const location = useLocation();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
