@@ -14,14 +14,24 @@ export const MobileClassSelector: React.FC<MobileClassSelectorProps> = ({ isOpen
 
     const handleAdd = async () => {
         if (!newSeriesName.trim()) return;
-        await addSeries(newSeriesName);
-        setNewSeriesName('');
+        try {
+            await addSeries(newSeriesName);
+            setNewSeriesName('');
+            alert('Série adicionada com sucesso!');
+        } catch (error: any) {
+            alert('Erro ao adicionar série: ' + error.message);
+        }
     };
 
     const handleDelete = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
         if (window.confirm("Tem certeza que deseja excluir esta série e todos os dados associados?")) {
-            await deleteSeries(id);
+            try {
+                await deleteSeries(id);
+                // alert('Série excluída com sucesso!'); // Feedback might be too annoying for delete if it disappears instantly
+            } catch (error: any) {
+                alert('Erro ao excluir série: ' + error.message);
+            }
         }
     };
 

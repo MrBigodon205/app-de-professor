@@ -156,7 +156,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         if (error) {
             console.error("Failed to add class", error.message);
-            return;
+            throw new Error(error.message);
         }
 
         const saved: ClassConfig = {

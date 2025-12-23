@@ -44,7 +44,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const handleDeleteSeries = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (window.confirm('Tem certeza que deseja excluir esta série?')) {
-      await deleteSeries(id);
+      try {
+        await deleteSeries(id);
+      } catch (e: any) {
+        alert('Erro ao excluir série: ' + e.message);
+      }
     }
   };
 
@@ -96,7 +100,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {/* Mobile Sidebar - Drawer */}
       {/* On mobile, this acts as the "More Menu" drawer */}
       <aside className={`fixed inset-y-0 left-0 z-[60] w-[85vw] max-w-[300px] bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:w-72 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} shadow-2xl md:shadow-none`}>
-        <div className="flex flex-col h-full justify-between">
+        <div className="flex flex-col h-[100dvh] justify-between">
           {/* Close Button for Mobile Drawer */}
           <div className="md:hidden absolute top-4 right-4 z-50">
             <button
