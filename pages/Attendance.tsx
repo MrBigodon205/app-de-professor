@@ -359,32 +359,41 @@ export const Attendance: React.FC = () => {
         const doc = new jsPDF({ orientation: 'landscape' });
         const primaryRGB = getThemeRGB(theme.primaryColor);
 
-        // Header Background
-        doc.setFillColor(30, 41, 59); // Dark slate for premium feel
+        // --- 1. MODERN HEADER ---
+        doc.setFillColor(...primaryRGB);
         doc.rect(0, 0, 297, 40, 'F');
 
-        // Accent bar
-        doc.setFillColor(...primaryRGB);
-        doc.rect(0, 38, 297, 2, 'F');
+        // Circular Overlay Accents
+        doc.setFillColor(255, 255, 255);
+        doc.setGState(new doc.GState({ opacity: 0.1 }));
+        doc.circle(280, -10, 50, 'F');
+        doc.circle(20, 50, 30, 'F');
+        doc.setGState(new doc.GState({ opacity: 1 }));
 
-        // Title and Logo-ish text
-        doc.setFontSize(24);
-        if (!currentUser) return;
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(28);
+        doc.setFont('helvetica', 'bold');
+        doc.text("PROF. ACERTA+", 14, 25);
 
-        // 1. Determine Scope (Current Year by default)
-        const targetYear = new Date().getFullYear();
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Registro de Frequência - ${activeSeries?.name} ${selectedSection}`, 14, 34);
 
-        // 2. FETCH FULL YEAR RECORDS (Independent of current view)
-        setLoading(true); // Show loading feedback
+        doc.setFontSize(10);
+        const timestamp = `Emissão: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`;
+        doc.text(timestamp, 283, 34, { align: 'right' });
 
+        // --- 2. DATA PREPARATION ---
+        setLoading(true);
         try {
+            const targetYear = new Date(date).getFullYear();
+
+            // Fetch Full Year Records
             const { data: allRecords, error } = await supabase
                 .from('attendance')
                 .select('*')
                 .eq('user_id', currentUser.id)
                 .in('student_id', students.map(s => s.id));
-            // We could filter by date range here for optimization: .gte('date', `${targetYear}-01-01`).lte('date', `${targetYear}-12-31`)
-            // but JS filtering is fine for typical class sizes.
 
             if (error) throw error;
 
@@ -393,75 +402,44 @@ export const Attendance: React.FC = () => {
                 return rDate.getFullYear() === targetYear;
             });
 
-            // Add any UNSAVED local changes for the CURRENT day (if any)
-            // Note: usually we save immediately, but to be safe:
+            // Merge local pending changes
             Object.keys(attendanceMap).forEach(sid => {
                 const pendingStatus = attendanceMap[sid];
-                // Check if this specific date/student is already in fetched records?
                 const existingIndex = yearRecords.findIndex((r: any) => r.student_id.toString() === sid && r.date === date);
-
                 if (existingIndex >= 0) {
-                    // Overwrite with local pending state
                     yearRecords[existingIndex].status = pendingStatus;
-                } else {
-                    // Add new
+                } else if (pendingStatus) {
                     yearRecords.push({
-                        studentId: sid, // Maintain consistency with fetched snake_case vs camelCase?
-                        student_id: sid,
+                        student_id: Number(sid),
                         date: date,
                         status: pendingStatus
                     });
                 }
             });
 
+            // Calculate Dates and Sort
             const activeDatesSet = new Set<string>();
             yearRecords.forEach((r: any) => activeDatesSet.add(r.date));
             const sortedDateStrings = Array.from(activeDatesSet).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
-            if (sortedDateStrings.length === 0) {
-                alert("Nenhum registro de frequência encontrado para este ano.");
-                return;
-            }
-            doc.setTextColor(255, 255, 255);
-            doc.setFont('helvetica', 'bold');
-            doc.text("Prof. Acerta+", 14, 18);
-
-            doc.setFontSize(18);
-            doc.setFont('helvetica', 'normal');
-            doc.text("Registro de Frequência Anual", 14, 28);
-
-            // Right side info
-            doc.setFontSize(10);
-            doc.setTextColor(200, 200, 200);
-            const currentDate = new Date(date + 'T12:00:00');
-            // const targetYear = currentDate.getFullYear(); // This is now defined above
-            doc.text(`ANO LETIVO: ${targetYear}`, 283, 15, { align: 'right' });
-            doc.text(`DISCIPLINA: ${currentUser.subject}`, 283, 22, { align: 'right' });
-            doc.text(`TURMA: ${activeSeries?.name} ${selectedSection}`, 283, 29, { align: 'right' });
-
+            // --- 3. TABLE GENERATION ---
             const head = [['Nº', 'Nome do Aluno', ...sortedDateStrings.map(ds => {
                 const d = new Date(ds + 'T12:00:00');
                 return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-            }), 'Total %']];
+            }), 'Presenças %']];
 
             const body = students.map(s => {
                 let presenceCount = 0;
                 let validDays = 0;
-
                 const row: any[] = [s.number, s.name];
+
                 sortedDateStrings.forEach(ds => {
-                    // Find record. Note: fetched rows use snake_case 'student_id', 'user_id'. Local pushed use camelCase 'studentId'?
-                    // We normalized above to have both or check both.
-                    const record = yearRecords.find((r: any) => (r.student_id?.toString() === s.id || r.studentId === s.id) && r.date === ds);
-                    const status = record ? record.status : '';
+                    const record = yearRecords.find((r: any) => r.student_id.toString() === s.id && r.date === ds);
+                    const status = record ? record.status : '-';
                     row.push(status);
 
-                    if (status === 'P') {
-                        presenceCount++;
-                        validDays++;
-                    } else if (status === 'F' || status === 'J') {
-                        validDays++;
-                    }
+                    if (status === 'P') { presenceCount++; validDays++; }
+                    else if (status === 'F' || status === 'J') { validDays++; }
                 });
 
                 const percentage = validDays > 0 ? ((presenceCount / validDays) * 100).toFixed(0) + '%' : '-';
@@ -475,67 +453,58 @@ export const Attendance: React.FC = () => {
                 startY: 45,
                 theme: 'grid',
                 styles: {
-                    fontSize: sortedDateStrings.length > 20 ? 5 : 7,
-                    cellPadding: 1,
-                    halign: 'center',
+                    fontSize: 8,
+                    cellPadding: 1.5,
                     valign: 'middle',
-                    lineWidth: 0.05,
-                    lineColor: [200, 200, 200]
+                    halign: 'center',
+                    lineColor: [226, 232, 240],
+                    lineWidth: 0.1,
                 },
                 headStyles: {
                     fillColor: [248, 250, 252],
                     textColor: [30, 41, 59],
                     fontStyle: 'bold',
                     lineWidth: 0.1,
-                    lineColor: [30, 41, 59]
                 },
-                alternateRowStyles: { fillColor: [252, 253, 255] },
+                alternateRowStyles: {
+                    fillColor: [252, 253, 255]
+                },
                 columnStyles: {
-                    0: { cellWidth: 8, fontStyle: 'bold' },
-                    1: { cellWidth: 40, halign: 'left' },
-                    [head[0].length - 1]: { cellWidth: 12, fontStyle: 'bold', fillColor: [248, 250, 252] }
+                    0: { fontStyle: 'bold', cellWidth: 10 },
+                    1: { halign: 'left', cellWidth: 50 },
+                    [head[0].length - 1]: { fontStyle: 'bold', fillColor: [241, 245, 249] }
                 },
                 didParseCell: (data) => {
                     if (data.section === 'body' && data.column.index > 1 && data.column.index < head[0].length - 1) {
                         const val = data.cell.raw;
-                        if (val === 'F') { data.cell.styles.textColor = [225, 29, 72]; data.cell.styles.fontStyle = 'bold'; }
-                        else if (val === 'P') { data.cell.styles.textColor = [5, 150, 105]; data.cell.styles.fontStyle = 'bold'; }
-                        else if (val === 'J') { data.cell.styles.textColor = [217, 119, 6]; data.cell.styles.fontStyle = 'bold'; }
-                        else if (val === 'S') { data.cell.styles.textColor = [100, 116, 139]; data.cell.styles.fontStyle = 'normal'; }
+                        if (val === 'P') {
+                            data.cell.styles.textColor = [22, 163, 74];
+                            data.cell.styles.fontStyle = 'bold';
+                        } else if (val === 'F') {
+                            data.cell.styles.textColor = [225, 29, 72];
+                            data.cell.styles.fontStyle = 'bold';
+                        } else if (val === 'J') {
+                            data.cell.styles.textColor = [217, 119, 6];
+                        } else {
+                            data.cell.styles.textColor = [148, 163, 184];
+                        }
                     }
                 }
             });
 
-            // Legend at the bottom
-            const finalY = (doc as any).lastAutoTable.finalY + 10;
+            // --- 4. FOOTER ---
+            const pageCount = (doc as any).internal.getNumberOfPages();
             doc.setFontSize(8);
-            doc.setTextColor(100, 116, 139);
-            doc.setFont('helvetica', 'bold');
-            doc.text("LEGENDA DE FREQUÊNCIA:", 14, finalY);
+            doc.setTextColor(150);
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.text(`Página ${i} de ${pageCount}`, 283, 200, { align: 'right' }); // Landscape A4 height is 210
+            }
 
-            doc.setFont('helvetica', 'normal');
-            let currentX = 14;
-            const legendItems = [
-                { s: 'P', l: 'Presença', c: [5, 150, 105] },
-                { s: 'F', l: 'Falta', c: [225, 29, 72] },
-                { s: 'J', l: 'Justificada', c: [217, 119, 6] },
-                { s: 'S', l: 'Sem Aula', c: [100, 116, 139] }
-            ];
+            doc.save(`Frequencia_${activeSeries?.name}_${selectedSection}_${targetYear}.pdf`);
 
-            currentX += 45;
-            legendItems.forEach(item => {
-                doc.setTextColor(...(item.c as [number, number, number]));
-                doc.setFont('helvetica', 'bold');
-                doc.text(`${item.s}:`, currentX, finalY);
-                doc.setTextColor(100, 116, 139);
-                doc.setFont('helvetica', 'normal');
-                doc.text(item.l, currentX + 5, finalY);
-                currentX += 30;
-            });
-
-            doc.save(`Frequencia_Anual_${activeSeries?.name}_${selectedSection}_${targetYear}.pdf`);
         } catch (e) {
-            console.error("PDF Fail", e);
+            console.error("PDF Error", e);
             alert("Erro ao gerar PDF.");
         } finally {
             setLoading(false);
