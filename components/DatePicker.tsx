@@ -1,9 +1,11 @@
+import React, { useState, useEffect, useRef } from 'react';
+
 interface DatePickerProps {
     value: string;
     onChange: (date: string) => void;
     label?: string;
     theme?: any;
-    className?: string; // Added prop
+    className?: string;
 }
 
 export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, theme, className }) => {
