@@ -626,6 +626,7 @@ export const Attendance: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto relative z-10">
                     <div className="relative" ref={calendarRef}>
                         <button
+                            data-tour="attendance-date"
                             onClick={() => setShowCalendar(!showCalendar)}
                             className={`flex items-center gap-4 px-5 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl hover:border-${theme.primaryColor} hover:bg-white dark:hover:bg-slate-800 transition-all group/cal shadow-sm`}
                         >
@@ -683,7 +684,7 @@ export const Attendance: React.FC = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="flex flex-wrap gap-2 p-1">
+            <div className="flex flex-wrap gap-2 p-1" data-tour="attendance-quick-actions">
                 <button onClick={() => markAll('P')} className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500 text-white rounded-2xl text-xs font-bold hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-emerald-500/20">
                     <span className="material-symbols-outlined text-lg">done_all</span>
                     <span className="whitespace-nowrap">Presença Geral</span>

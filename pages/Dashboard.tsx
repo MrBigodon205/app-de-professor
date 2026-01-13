@@ -524,7 +524,7 @@ export const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Activities and Plans */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col h-full">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col h-full" data-tour="dashboard-activities">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
               <span className={`material-symbols-outlined text-${theme.primaryColor}`}>assignment_turned_in</span>
@@ -542,12 +542,12 @@ export const Dashboard: React.FC = () => {
                   <p className="text-sm text-slate-400 italic">Nenhuma atividade recente.</p>
                 ) : (
                   upcomingActivities.map(act => (
-                    <div key={act.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <div key={act.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all duration-300 group cursor-default">
                       <div className="flex items-center gap-3">
-                        <span className="material-symbols-outlined text-emerald-500">task_alt</span>
+                        <span className="material-symbols-outlined text-emerald-500 group-hover:scale-110 transition-transform duration-300">task_alt</span>
                         <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{act.title}</span>
                       </div>
-                      <span className="text-xs text-slate-400">{new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                      <span className="text-xs text-slate-400 group-hover:text-slate-500 transition-colors">{new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                     </div>
                   ))
                 )}
@@ -563,12 +563,12 @@ export const Dashboard: React.FC = () => {
                   <p className="text-sm text-slate-400 italic">Nenhum planejamento recente.</p>
                 ) : (
                   classPlans.map(plan => (
-                    <div key={plan.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <div key={plan.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all duration-300 group cursor-default">
                       <div className="flex items-center gap-3">
-                        <span className={`material-symbols-outlined text-${theme.primaryColor}`}>calendar_today</span>
+                        <span className={`material-symbols-outlined text-${theme.primaryColor} group-hover:rotate-6 transition-transform duration-300`}>calendar_today</span>
                         <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{plan.title}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 uppercase">{new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                      <span className="text-[10px] text-slate-400 uppercase group-hover:text-slate-500 transition-colors">{new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                     </div>
                   ))
                 )}
@@ -578,7 +578,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Recent Ocurrences */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col h-full">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col h-full" data-tour="dashboard-occurrences">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
               <span className="material-symbols-outlined text-slate-400">history</span>

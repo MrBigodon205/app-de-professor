@@ -71,6 +71,21 @@
   .font-arial-black {
     font-family: 'Arial Black', sans-serif;
   }
+
+  /* PERFORMANCE OPTIMIZATIONS (90FPS+) */
+  .hardware-accelerated {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    /* Force GPU Layer */
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  .smooth-scroll {
+    -webkit-overflow-scrolling: touch;
+    /* Momentum scrolling on iOS */
+    scroll-behavior: smooth;
+  }
 }
 
 /* FOOLPROOF DARK MODE OVERRIDES */
@@ -219,6 +234,34 @@ body {
 /* Fix Date Input Icon Color in Dark Mode */
 .dark ::-webkit-calendar-picker-indicator {
   filter: invert(1);
+}
+
+/* Animations for smoother feel */
+.animate-enter {
+  animation: enter 0.3s ease-out forwards;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Global Transition Fluidity */
+* {
+  @apply transition-colors duration-100;
+}
+
+/* Micro-interactions */
+button:active,
+a:active {
+  transform: scale(0.98);
 }
 
 @keyframes shimmer {

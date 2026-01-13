@@ -644,7 +644,7 @@ export const Planning: React.FC = () => {
 
 
             {/* Sidebar */}
-            <div className={`w-full lg:w-80 flex flex-col gap-4 shrink-0 transition-all ${selectedPlanId || isEditing ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`w-full lg:w-80 flex flex-col gap-4 shrink-0 transition-all ${selectedPlanId || isEditing ? 'hidden lg:flex' : 'flex'}`} data-tour="planning-sidebar">
                 <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4">
                     <div className="flex justify-between items-center mb-4">
                         <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
@@ -655,7 +655,7 @@ export const Planning: React.FC = () => {
                                 Atividades
                             </Link>
                         </div>
-                        <button onClick={handleNewPlan} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Nova Aula">
+                        <button onClick={handleNewPlan} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Nova Aula" data-tour="planning-new-btn">
                             <span className="material-symbols-outlined text-[20px]">add</span>
                         </button>
                     </div>
@@ -1034,32 +1034,32 @@ export const Planning: React.FC = () => {
                                     {/* Header Action Buttons */}
                                     <div className="absolute top-6 right-6 flex gap-2">
                                         <button
-                                            onClick={() => { setIsEditing(true); setShowForm(true); setViewMode(false); }}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hidden sm:flex"
-                                            title="Editar Aula"
+                                            onClick={handleExportPDF}
+                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
+                                            title="Baixar PDF"
+                                        >
+                                            <span className="material-symbols-outlined">picture_as_pdf</span>
+                                        </button>
+                                        <button
+                                            onClick={handleExportWord}
+                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
+                                            title="Baixar Word"
+                                        >
+                                            <span className="material-symbols-outlined">description</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setIsEditing(true)}
+                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
+                                            title="Editar"
                                         >
                                             <span className="material-symbols-outlined">edit</span>
                                         </button>
                                         <button
-                                            onClick={handleExportWord}
-                                            className="p-2 bg-blue-500/20 hover:bg-blue-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
-                                            title="Exportar Word"
-                                        >
-                                            <span className="material-symbols-outlined text-blue-200">description</span>
-                                        </button>
-                                        <button
-                                            onClick={handleExportPDF}
-                                            className="p-2 bg-indigo-500/20 hover:bg-indigo-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
-                                            title="Exportar PDF"
-                                        >
-                                            <span className="material-symbols-outlined text-indigo-200">picture_as_pdf</span>
-                                        </button>
-                                        <button
                                             onClick={handleDelete}
-                                            className="p-2 bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
-                                            title="Excluir Aula"
+                                            className="p-2 bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95 group"
+                                            title="Excluir"
                                         >
-                                            <span className="material-symbols-outlined text-red-200">delete</span>
+                                            <span className="material-symbols-outlined text-red-200 group-hover:text-white transition-colors">delete</span>
                                         </button>
                                     </div>
                                 </div>

@@ -303,7 +303,7 @@ export const Observations: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1" data-tour="obs-student-list">
                     {filteredStudents.map(student => (
                         <button
                             key={student.id}
@@ -453,7 +453,7 @@ export const Observations: React.FC = () => {
                     ) : (
                         <div className="max-w-4xl mx-auto flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* Premium Form */}
-                            <div className="bg-slate-50 dark:bg-slate-950/50 rounded-[32px] border-2 border-dashed border-slate-200 dark:border-slate-800 p-8 relative group/form">
+                            <div className="bg-slate-50 dark:bg-slate-950/50 rounded-[32px] border-2 border-dashed border-slate-200 dark:border-slate-800 p-8 relative group/form" data-tour="obs-form">
                                 {/* Decorative Background - Clipped for rounded corners */}
                                 <div className="absolute inset-0 rounded-[30px] overflow-hidden pointer-events-none">
                                     <div className={`absolute top-0 left-0 w-2 h-full bg-${theme.primaryColor} opacity-20`}></div>

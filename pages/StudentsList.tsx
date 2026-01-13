@@ -322,6 +322,7 @@ export const StudentsList: React.FC = () => {
                         </button>
                     ) : (
                         <button
+                            data-tour="students-import-btn"
                             onClick={() => setIsImporting(true)}
                             className="flex items-center gap-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
                         >
@@ -330,6 +331,7 @@ export const StudentsList: React.FC = () => {
                         </button>
                     )}
                     <button
+                        data-tour="students-add-btn"
                         onClick={() => setIsAdding(!isAdding)}
                         className={`flex items-center gap-3 bg-${theme.primaryColor} hover:opacity-90 text-white font-bold h-12 px-6 rounded-2xl shadow-lg shadow-${theme.primaryColor}/20 transition-all active:scale-95`}
                     >

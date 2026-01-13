@@ -562,6 +562,7 @@ export const StudentProfile: React.FC = () => {
                     </div>
                     <button
                         onClick={handleExportPDF}
+                        data-tour="reports-export-btn"
                         className={`h-14 px-8 rounded-2xl bg-${theme.primaryColor} hover:opacity-90 text-white font-black flex items-center justify-center gap-3 transition-all shadow-xl shadow-${theme.primaryColor}/20 self-end active:scale-95 uppercase tracking-widest text-xs`}
                     >
                         <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
@@ -574,7 +575,7 @@ export const StudentProfile: React.FC = () => {
                 {/* Left Column: Chart & Unit Reports */}
                 <div className="lg:col-span-2 flex flex-col gap-8">
                     {/* PERFORMANCE CHART */}
-                    <div className="bg-white dark:bg-slate-900 p-8 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 p-8 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 relative overflow-hidden" data-tour="reports-chart">
                         <div className={`absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-${theme.primaryColor} to-${theme.secondaryColor}`}></div>
 
                         <div className="flex items-center justify-between mb-8">

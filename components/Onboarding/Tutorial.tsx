@@ -1,54 +1,32 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useEffect, useState } from 'react';
+import { useTutorial } from '../../contexts/TutorialContext';
 import { TutorialDesktop } from './TutorialDesktop';
 import { TutorialMobile } from './TutorialMobile';
 
-const TUTORIAL_KEY = 'tutorial_v7_cleanup'; // Updated key for cleanup version
-
 export const Tutorial: React.FC = () => {
-    const { currentUser } = useAuth();
-    const [shouldShow, setShouldShow] = useState(false);
+    const { completed, stopTutorial } = useTutorial();
     const [isMobile, setIsMobile] = useState(false);
-
-    // Check initialization only once
-    const initialized = useRef(false);
 
     useEffect(() => {
         const checkDevice = () => {
-            setIsMobile(window.innerWidth < 1024); // lg breakpoint
+            // Forcing Desktop Tutorial logic for everyone for this "Comprehensive" request, 
+            // because Mobile Joyride works fine and is better than the static one for "teaching everything".
+            // However, let's keep the check if we want to fallback.
+            // Actually, the user wants "show all interface", implying interaction. 
+            // The previous MobileTutorial was just a slideshow. 
+            // Let's use TutorialDesktop (responsive) for both, or at least test it.
+            // But for safety, I'll stick to logic:
+            setIsMobile(window.innerWidth < 1024);
         };
-
         checkDevice();
         window.addEventListener('resize', checkDevice);
         return () => window.removeEventListener('resize', checkDevice);
     }, []);
 
-    useEffect(() => {
-        if (!currentUser || initialized.current) return;
+    // We can use the same component for both if styled properly, 
+    // or keep the Mobile one if it's preferred. 
+    // Given the request "navigate showing all interface", the specific targeting of elements is better.
+    // So let's try to use TutorialDesktop for BOTH (it is responsive).
 
-        const key = `${TUTORIAL_KEY}_${currentUser.id}`;
-        const completed = localStorage.getItem(key);
-
-        initialized.current = true;
-
-        // Auto-start if not completed
-        // For testing, user can manually wipe key or we just show it if !completed
-        if (!completed) {
-            // Small delay to ensure UI is ready
-            setTimeout(() => setShouldShow(true), 1000);
-        }
-    }, [currentUser]);
-
-    const handleComplete = () => {
-        setShouldShow(false);
-        if (currentUser) {
-            localStorage.setItem(`${TUTORIAL_KEY}_${currentUser.id}`, 'true');
-        }
-    };
-
-    if (!shouldShow) return null;
-
-    return isMobile
-        ? <TutorialMobile onComplete={handleComplete} />
-        : <TutorialDesktop onComplete={handleComplete} />;
+    return <TutorialDesktop onComplete={stopTutorial} />;
 };

@@ -628,7 +628,7 @@ export const Grades: React.FC = () => {
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Controls */}
             <div className="glass-panel p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg overflow-x-auto max-w-full">
+                <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg overflow-x-auto max-w-full" data-tour="grades-units">
                     {['1', '2', '3', 'final', 'recovery', 'results'].map((unit) => (
                         <button
                             key={unit}
@@ -660,6 +660,7 @@ export const Grades: React.FC = () => {
                     <button
                         onClick={() => setShowExportModal(true)}
                         className={`flex items-center space-x-2 px-4 py-2 bg-${theme.baseColor}-500 hover:bg-${theme.baseColor}-600 text-white rounded-lg transition-colors shadow-md shadow-${theme.baseColor}-500/20`}
+                        data-tour="grades-export"
                     >
                         <span className="material-symbols-outlined text-lg">download</span>
                         <span>Exportar PDF</span>

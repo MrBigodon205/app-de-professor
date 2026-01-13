@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
 import { ProfileModal } from './ProfileModal';
-import { Tutorial } from './Onboarding/Tutorial';
+
 import { NotificationCenter } from './NotificationCenter';
 import { MobileBottomNav } from './MobileBottomNav';
 import { MobileClassSelector } from './MobileClassSelector';
@@ -81,7 +81,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   return (
     <div className="flex h-screen w-full bg-background-light dark:bg-background-dark overflow-hidden">
-      <Tutorial />
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
@@ -428,6 +427,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
             {/* User Profile - Mobile: Just Avatar */}
             <button
+              data-tour="user-profile-trigger"
               onClick={() => setIsProfileModalOpen(true)}
               className="flex items-center gap-3 bg-white dark:bg-slate-800/50 pl-1.5 pr-4 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-primary transition-all group active:scale-95"
             >

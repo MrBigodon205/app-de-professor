@@ -761,7 +761,7 @@ export const Activities: React.FC = () => {
             />
 
             {/* Sidebar with Card List Style */}
-            <div className={`w-full lg:w-80 flex flex-col gap-4 shrink-0 transition-all ${selectedActivityId || isEditing ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`w-full lg:w-80 flex flex-col gap-4 shrink-0 transition-all ${selectedActivityId || isEditing ? 'hidden lg:flex' : 'flex'}`} data-tour="activities-sidebar">
                 {/* Sidebar Header */}
                 <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4">
                     <div className="flex justify-between items-center mb-4">
@@ -773,7 +773,7 @@ export const Activities: React.FC = () => {
                                 Atividades
                             </button>
                         </div>
-                        <button onClick={handleNewActivity} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Nova Atividade">
+                        <button onClick={handleNewActivity} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Nova Atividade" data-tour="activities-new-btn">
                             <span className="material-symbols-outlined text-[20px]">add</span>
                         </button>
                     </div>
@@ -1288,8 +1288,8 @@ export const Activities: React.FC = () => {
                                                                 <span className="text-xs font-mono text-slate-400 w-5">{s.number}</span>
                                                                 <span className={`text-sm font-bold ${isDone ? `text-${theme.primaryColor}` : 'text-slate-600 dark:text-slate-300'}`}>{s.name}</span>
                                                             </div>
-                                                            <div className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all ${isDone ? `bg-${theme.primaryColor} border-${theme.primaryColor} text-white scale-110` : `border-slate-200 dark:border-slate-700 group-hover:border-${theme.primaryColor}/50`}`}>
-                                                                {isDone && <span className="material-symbols-outlined text-[16px] font-bold">check</span>}
+                                                            <div className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 ${isDone ? `bg-${theme.primaryColor} border-${theme.primaryColor} text-white scale-110 shadow-sm shadow-${theme.primaryColor}/30` : `border-slate-200 dark:border-slate-700 group-hover:border-${theme.primaryColor}/50 group-hover:scale-110`}`}>
+                                                                {isDone && <span className="material-symbols-outlined text-[16px] font-bold animate-in zoom-in spin-in-180 duration-300">check</span>}
                                                             </div>
                                                         </div>
                                                     );
