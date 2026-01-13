@@ -520,8 +520,16 @@ export const Grades: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center h-64">
-                <div className={`animate-spin rounded-full h-8 w-8 border-b-2 border-${theme.baseColor}-600`}></div>
+            <div className="space-y-6 animate-pulse">
+                <div className="h-16 bg-slate-100 dark:bg-slate-800 rounded-xl"></div>
+                <div className="space-y-4">
+                    <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-lg w-1/3"></div>
+                    <div className="grid grid-cols-1 gap-4">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="h-14 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-800"></div>
+                        ))}
+                    </div>
+                </div>
             </div>
         );
     }

@@ -35,6 +35,42 @@
   .card {
     @apply rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900;
   }
+
+  .progress-fill {
+    @apply h-full transition-all duration-500;
+    width: var(--progress-width, 0%);
+  }
+
+  .activity-progress {
+    @apply w-full h-2 rounded-full overflow-hidden appearance-none bg-slate-100 dark:bg-slate-700 block border-none;
+  }
+
+  .activity-progress::-webkit-progress-bar {
+    @apply bg-slate-100 dark:bg-slate-700;
+  }
+
+  .activity-progress::-webkit-progress-value {
+    background-color: currentColor;
+    @apply transition-all duration-500 rounded-full;
+  }
+
+  .activity-progress::-moz-progress-bar {
+    background-color: currentColor;
+    @apply transition-all duration-500 rounded-full;
+  }
+
+  .profile-avatar {
+    @apply size-8 md:size-10 rounded-full border-2 border-white dark:border-slate-700 shadow-md bg-slate-200 overflow-hidden shrink-0 group-hover:scale-110 transition-transform flex items-center justify-center;
+  }
+
+  .landscape-container {
+    max-width: 297mm;
+    min-height: 210mm;
+  }
+
+  .font-arial-black {
+    font-family: 'Arial Black', sans-serif;
+  }
 }
 
 /* FOOLPROOF DARK MODE OVERRIDES */

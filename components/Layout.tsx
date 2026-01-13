@@ -367,7 +367,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   <button
                     onClick={async () => {
                       const existingLetters = activeSeries.sections.filter(s => s.length === 1 && /[A-Z]/.test(s));
-                      const nextLetter = existingLetters.length === 0 ? 'A' : String.fromCharCode([...new Set(existingLetters)].sort().pop()!.charCodeAt(0) + 1);
+                      const nextLetter = existingLetters.length === 0 ? 'A' : String.fromCharCode(([...new Set(existingLetters)].sort().pop() as string).charCodeAt(0) + 1);
                       await addSection(activeSeries.id, nextLetter);
                     }}
                     className={`h-10 pl-3 pr-4 rounded-full flex items-center gap-2 border-2 border-dashed border-slate-200 dark:border-white/10 text-slate-400 hover:border-${theme.primaryColor} hover:text-white hover:bg-${theme.primaryColor} transition-all duration-300 hover:scale-105 active:scale-95 group/nova shadow-sm hover:shadow-lg hover:shadow-${theme.primaryColor}/20`}
@@ -432,15 +432,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               className="flex items-center gap-3 bg-white dark:bg-slate-800/50 pl-1.5 pr-4 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-primary transition-all group active:scale-95"
             >
               <div className="relative">
-                <div
-                  className={`size-8 md:size-10 rounded-full bg-cover bg-center border-2 border-white dark:border-slate-700 shadow-md bg-slate-200 overflow-hidden shrink-0 group-hover:scale-110 transition-transform`}
-                  style={{
-                    backgroundImage: currentUser?.photoUrl
-                      ? `url(${currentUser.photoUrl})`
-                      : undefined
-                  }}
-                >
-                  {!currentUser?.photoUrl && (
+                <div className="profile-avatar">
+                  {currentUser?.photoUrl ? (
+                    <img src={currentUser.photoUrl} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
                     <div className={`size-full flex items-center justify-center bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white font-bold text-sm tracking-tighter`}>
                       {(currentUser?.name || '??').substring(0, 2).toUpperCase()}
                     </div>

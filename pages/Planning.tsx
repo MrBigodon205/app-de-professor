@@ -498,7 +498,7 @@ export const Planning: React.FC = () => {
 
     return (
         <main className="flex h-full gap-6 max-w-[1600px] mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-500">
-            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
+            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} title="Adicionar anexo" aria-label="Adicionar anexo" />
 
             {/* AI MODAL */}
 
@@ -525,7 +525,7 @@ export const Planning: React.FC = () => {
                     {/* Section Filter */}
                     {activeSeries && activeSeries.sections?.length > 0 && (
                         <div className="px-1">
-                            <select
+                            <select aria-label="Filtrar por turma" title="Filtrar por turma"
                                 value={filterSection}
                                 onChange={e => setFilterSection(e.target.value)}
                                 className="w-full p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:ring-2 focus:ring-indigo-500/50 outline-none"
@@ -693,7 +693,7 @@ export const Planning: React.FC = () => {
                                                 <div>
                                                     <label className="label">Turma</label>
                                                     <div className="relative">
-                                                        <select value={formSection} onChange={e => setFormSection(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 appearance-none outline-none`}>
+                                                        <select aria-label="Turma" title="Turma" value={formSection} onChange={e => setFormSection(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 appearance-none outline-none`}>
                                                             <option value="">Selecione...</option>
                                                             {activeSeries?.sections?.map(section => (
                                                                 <option key={section} value={section}>{section}</option>
@@ -706,7 +706,7 @@ export const Planning: React.FC = () => {
                                                 <div>
                                                     <label className="label">Tipo de Atividade</label>
                                                     <div className="relative">
-                                                        <select value={formActivityType} onChange={e => setFormActivityType(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 appearance-none outline-none`}>
+                                                        <select value={formActivityType} onChange={e => setFormActivityType(e.target.value)} title="Tipo de Atividade" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 appearance-none outline-none`}>
                                                             <option value="">Selecione...</option>
                                                             <option value="Aula Expositiva">Aula Expositiva</option>
                                                             <option value="Atividade Prática">Atividade Prática</option>
@@ -739,7 +739,7 @@ export const Planning: React.FC = () => {
                                                 </div>
                                                 <div>
                                                     <label className="label">Professor(a)</label>
-                                                    <input type="text" value={currentUser?.name} disabled className="input-field opacity-60 cursor-not-allowed" />
+                                                    <input type="text" value={currentUser?.name} disabled className="input-field opacity-60 cursor-not-allowed" title="Professor" />
                                                 </div>
                                             </div>
                                         </div>
@@ -815,7 +815,7 @@ export const Planning: React.FC = () => {
                                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                                         <div>
                                             <label className="label">Recursos Utilizados</label>
-                                            <textarea value={formResources} onChange={e => setFormResources(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-32`} />
+                                            <textarea title="Recursos Utilizados" placeholder="Listar os recursos utilizados..." value={formResources} onChange={e => setFormResources(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-32`} />
                                         </div>
 
                                         <div className="space-y-3">
@@ -858,7 +858,7 @@ export const Planning: React.FC = () => {
                     // VIEW MODE (Print / Detailed)
                     <div className="flex-1 overflow-y-auto relative animate-in fade-in h-full custom-scrollbar bg-slate-50 dark:bg-black/20">
                         {currentPlan && (
-                            <div className="landscape-container mx-auto bg-white shadow-lg my-4 md:my-8 print:my-0 print:shadow-none text-black transition-all duration-300 relative" style={{ maxWidth: '297mm', minHeight: '210mm' }}>
+                            <div className="landscape-container mx-auto bg-white shadow-lg my-4 md:my-8 print:my-0 print:shadow-none text-black transition-all duration-300 relative">
                                 <div className="p-4 md:p-[10mm] print:p-0 overflow-x-auto">
                                     {/* Action Buttons */}
                                     <div className="flex flex-wrap justify-between md:justify-end gap-2 md:gap-3 mb-6 print:hidden sticky top-0 md:relative z-10 bg-white/95 md:bg-transparent backdrop-blur-sm p-2 md:p-0 border-b md:border-none border-slate-100">
@@ -983,7 +983,7 @@ export const Planning: React.FC = () => {
                                                         <td className="w-[1%] border-l border-slate-300 p-0"></td>
                                                         <td className="w-[34%] align-middle border-none text-right p-0">
                                                             <div className="flex flex-col items-end">
-                                                                <div className="text-[#0ea5e9] text-5xl font-black leading-none" style={{ fontFamily: 'Arial Black, sans-serif' }}>CENSC</div>
+                                                                <div className="text-[#0ea5e9] text-5xl font-black leading-none font-arial-black">CENSC</div>
                                                                 <div className="text-[#0ea5e9] text-[8px] font-bold uppercase mt-1 text-right leading-tight">
                                                                     CENTRO EDUCACIONAL<br />NOSSA SRA DO CENÁCULO
                                                                 </div>

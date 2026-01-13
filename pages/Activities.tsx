@@ -522,6 +522,8 @@ export const Activities: React.FC = () => {
                 className="hidden"
                 accept="*/*"
                 onChange={handleFileChange}
+                title="Upload de arquivo"
+                aria-label="Upload de arquivo"
             />
 
             {/* Sidebar with Card List Style */}
@@ -694,6 +696,8 @@ export const Activities: React.FC = () => {
                                             <select
                                                 value={formType}
                                                 onChange={e => setFormType(e.target.value as any)}
+                                                title="Tipo de Atividade"
+                                                aria-label="Tipo de Atividade"
                                                 className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-lg appearance-none outline-none`}
                                             >
                                                 {activityTypes.map(t => <option key={t} value={t}>{t}</option>)}
@@ -717,6 +721,8 @@ export const Activities: React.FC = () => {
                                         <select
                                             value={formSection}
                                             onChange={e => setFormSection(e.target.value)}
+                                            title="Selecionar Turma"
+                                            aria-label="Selecionar Turma"
                                             className={`block w-full md:w-48 text-sm font-bold rounded-xl border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-${theme.primaryColor} focus:border-${theme.primaryColor} p-2.5 transition-shadow`}
                                         >
                                             <option value="">Todas as Turmas</option>
@@ -919,12 +925,11 @@ export const Activities: React.FC = () => {
                                                         <span>Progresso</span>
                                                         <span>{currentActivity.completions?.length || 0} / {students.length}</span>
                                                     </div>
-                                                    <div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                                                        <div
-                                                            className={`h-full bg-${theme.primaryColor} transition-all duration-500`}
-                                                            style={{ width: `${(currentActivity.completions?.length || 0) / (students.length || 1) * 100}%` }}
-                                                        ></div>
-                                                    </div>
+                                                    <progress
+                                                        value={currentActivity.completions?.length || 0}
+                                                        max={students.length || 1}
+                                                        className={`activity-progress text-${theme.primaryColor}`}
+                                                    />
                                                 </div>
                                             </div>
                                             <button
