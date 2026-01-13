@@ -378,53 +378,60 @@ export const Dashboard: React.FC = () => {
       <DashboardBanner theme={theme} currentUser={currentUser} />
 
       {/* PLAN OF THE DAY BANNER */}
-      {
-        loadingPlans ? (
-          <div className="h-40 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse"></div>
-        ) : todaysPlan && (
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
-            {/* ... Plan content ... */}
-            <div className="absolute right-0 top-0 p-4 opacity-10">
-              <span className="material-symbols-outlined text-[150px]">calendar_month</span>
-            </div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2 text-blue-100 font-bold uppercase text-xs tracking-wider">
-                <span className="bg-white/20 px-2 py-0.5 rounded">Atividade do Dia</span>
-                <span>•</span>
-                <span>{new Date().toLocaleDateString('pt-BR')}</span>
+      <div className="min-h-[160px]">
+        {
+          loadingPlans ? (
+            <div className="h-[160px] rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse"></div>
+          ) : todaysPlan ? (
+            <div className="h-[160px] bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden flex flex-col justify-center">
+              {/* ... Plan content ... */}
+              <div className="absolute right-0 top-0 p-4 opacity-10">
+                <span className="material-symbols-outlined text-[150px]">calendar_month</span>
               </div>
-              <h2 className="text-2xl font-bold mb-2">{todaysPlan.title}</h2>
-              <p className="text-blue-100 max-w-2xl line-clamp-2">{todaysPlan.description}</p>
+              <div className="relative z-10 w-full">
+                <div className="flex items-center gap-2 mb-2 text-blue-100 font-bold uppercase text-xs tracking-wider">
+                  <span className="bg-white/20 px-2 py-0.5 rounded">Atividade do Dia</span>
+                  <span>•</span>
+                  <span>{new Date().toLocaleDateString('pt-BR')}</span>
+                </div>
+                <h2 className="text-2xl font-bold mb-2 truncate">{todaysPlan.title}</h2>
+                <p className="text-blue-100 max-w-2xl line-clamp-1">{todaysPlan.description}</p>
 
-              <div className="flex items-center gap-4 mt-6">
-                <Link to="/planning" className={`bg-white text-${theme.primaryColor} px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-50 transition-colors`}>
-                  Ver Detalhes
-                </Link>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="material-symbols-outlined">schedule</span>
-                  Termina em {new Date(todaysPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                <div className="flex items-center gap-4 mt-4">
+                  <Link to="/planning" className={`bg-white text-${theme.primaryColor} px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-50 transition-colors`}>
+                    Ver Detalhes
+                  </Link>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="material-symbols-outlined">schedule</span>
+                    Termina em {new Date(todaysPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )
-      }
+          ) : (
+            <div className="h-[160px] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-400">
+              <span className="material-symbols-outlined text-4xl mb-2 opacity-50">event_busy</span>
+              <span className="text-sm font-medium">Nenhum planejamento para hoje</span>
+            </div>
+          )
+        }
+      </div>
 
       {/* Main KPI Grid - Bento Style */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
         {/* Total Students (Large Card) */}
-        <div className="md:col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 relative overflow-hidden group hover:shadow-2xl transition-all duration-500 flex flex-col justify-between">
+        <div className="md:col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 relative overflow-hidden group hover:shadow-2xl transition-all duration-500 flex flex-col justify-between min-h-[240px]">
           <div className="absolute top-0 right-0 p-40 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700"></div>
 
-          <div className="relative flex items-start justify-between">
-            <div className="flex flex-col">
+          <div className="relative flex items-start justify-between h-full">
+            <div className="flex flex-col justify-between h-full">
               <div className={`size-16 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/25 group-hover:rotate-6 transition-transform duration-300`}>
                 <span className="material-symbols-outlined text-3xl">groups</span>
               </div>
               <div className="mt-4">
                 {loadingCounts ? (
-                  <div className="h-12 w-24 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse"></div>
+                  <div className="h-[60px] w-24 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse"></div>
                 ) : (
                   <span className="block text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">{displayCount}</span>
                 )}
@@ -432,7 +439,7 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col items-end pt-2">
+            <div className="flex-1 flex flex-col items-end pt-2 h-full justify-between">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/10 mb-6">
                 <span className="size-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
                 Atividade Recente
@@ -451,7 +458,7 @@ export const Dashboard: React.FC = () => {
 
         {/* Grades */}
         {/* Grades (Small Card) */}
-        <Link to="/grades" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between">
+        <Link to="/grades" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between  min-h-[180px]">
           <div className="flex justify-between items-start">
             <div className={`size-12 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
               <span className="material-symbols-outlined">grade</span>
@@ -461,7 +468,7 @@ export const Dashboard: React.FC = () => {
           <div>
             <h3 className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Média da Turma</h3>
             {loadingStats ? (
-              <div className="h-8 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mt-1"></div>
+              <div className="h-9 w-24 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mt-1"></div>
             ) : (
               <div className="flex items-baseline gap-1 mt-1">
                 <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.gradeAverage.toFixed(1)}</span>
@@ -473,7 +480,7 @@ export const Dashboard: React.FC = () => {
 
         {/* Attendance */}
         {/* Attendance (Small Card) */}
-        <Link to="/attendance" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between">
+        <Link to="/attendance" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px]">
           <div className="flex justify-between items-start">
             <div className="size-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <span className="material-symbols-outlined">event_available</span>
@@ -483,7 +490,7 @@ export const Dashboard: React.FC = () => {
           <div>
             <h3 className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Presença Hoje</h3>
             {loadingStats ? (
-              <div className="h-8 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mt-1"></div>
+              <div className="h-9 w-24 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mt-1"></div>
             ) : (
               <div className="flex items-baseline gap-1 mt-1">
                 <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.presentToday}</span>
@@ -495,7 +502,7 @@ export const Dashboard: React.FC = () => {
 
         {/* Observations */}
         {/* Observations (Small Card) */}
-        <Link to="/observations" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between">
+        <Link to="/observations" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px]">
           <div className="flex justify-between items-start">
             <div className="size-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <span className="material-symbols-outlined">notification_important</span>
@@ -505,7 +512,7 @@ export const Dashboard: React.FC = () => {
           <div>
             <h3 className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Ocorrências</h3>
             {loadingOccurrences ? (
-              <div className="h-8 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mt-1"></div>
+              <div className="h-9 w-24 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mt-1"></div>
             ) : (
               <div className="flex items-baseline gap-1 mt-1">
                 <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.newObservations}</span>
