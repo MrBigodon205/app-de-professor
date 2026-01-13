@@ -57,49 +57,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     supabase.from('profiles').select('*').eq('id', uid).single() as any,
                     5000,
                     "Profile Fetch"
-                ) as any;
+                    supabase.from('profiles').select('*').eq('id', uid).single(),
+                    8000,
+                    "Busca de Perfil"
+                );
                 if (error) throw error;
-                sbData = data;
-            } catch (err: any) {
-                console.warn("Falha no Profile Fetch padrão:", err.message);
-                // 2. Fallback to Raw Fetch
-                try {
-                    sbData = await rawProfileFetch();
-                    usedFallback = true;
-                } catch (rawErr) {
-                    console.error("Falha total no Profile Fetch:", rawErr);
-                }
+                profile = data;
+            } catch (e) {
+                console.warn("SDK Profile fetch failed, trying raw fetch...");
+                profile = await rawProfileFetch();
             }
 
-            // 3. Construct User Object (Fail-Open)
-            let finalUser: User | null = null;
-
-            if (sbData) {
-                finalUser = {
-                    id: sbData.id,
-                    name: sbData.name,
-                    email: sbData.email,
-                    photoUrl: sbData.photo_url || 'https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=200&h=200&auto=format&fit=crop',
-                    subject: sbData.subject || 'Matemática',
-                    subjects: sbData.subjects || []
+            if (profile) {
+                const finalUser: User = {
+                    id: profile.id,
+                    name: profile.name,
+                    email: profile.email,
+                    photoUrl: profile.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=random`,
+                    subject: profile.subject,
+                    subjects: profile.subjects || []
                 };
-                if (usedFallback) { /* console.log("Perfil carregado via Fallback HTTP!"); */ }
-                // Fallback Removed: We rely on Supabase Profile.
-                // If profile is missing, we must let it fail or handle creation properly.
-                // But restoring from localStorage/localhost is dangerous for sync.
-                if (retryCount < 2) {
-                    setTimeout(() => fetchProfile(uid, retryCount + 1), 1000);
-                    return;
-                }
-            }
 
-            if (finalUser) {
-                // Cache user profile instantly
                 localStorage.setItem(`cached_profile_${finalUser.id}`, JSON.stringify(finalUser));
-
                 setCurrentUser(finalUser);
                 setUserId(finalUser.id);
-                // Initialize activeSubject if not set or invalid
+
+                // Initialize activeSubject
                 const storedSubject = localStorage.getItem(`activeSubject_${finalUser.id}`);
                 if (storedSubject && (finalUser.subject === storedSubject || finalUser.subjects?.includes(storedSubject))) {
                     setActiveSubject(storedSubject);
@@ -108,23 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
             }
         } catch (err: any) {
-            console.error(`Critico: Erro no fetchProfile:`, err.message);
-            // Fallback: Try to use session user if profile fetch completely fails
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user && session.user.id === uid) {
-                console.warn("Using Session Fallback for User");
-                const fallbackUser: User = {
-                    id: session.user.id,
-                    name: session.user.user_metadata?.name || 'Professor',
-                    email: session.user.email || '',
-                    photoUrl: 'https://ui-avatars.com/api/?name=Professor&background=random',
-                    subject: 'Geral', // Default
-                    subjects: ['Geral']
-                };
-                setCurrentUser(fallbackUser);
-                setUserId(session.user.id);
-                // if (mounted) setLoading(false); // This line is not needed here, as `mounted` is not in scope for `fetchProfile`
-            }
+            console.error(`fetchProfile error:`, err.message);
         } finally {
             setLoading(false);
         }
@@ -168,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     }
 
                     // Background refresh
-                    await fetchProfile(session.user.id);
+                    fetchProfile(session.user.id);
                     initialLoadDone = true;
                 }
             } catch (err) {
@@ -200,7 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 // Only fetch if it's not the initial redundant call or if it's a specific event
                 if (!initialLoadDone || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-                    await fetchProfile(session.user.id);
+                    fetchProfile(session.user.id);
                     initialLoadDone = true;
                 }
             } else {
@@ -361,12 +328,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     } catch (e) { }
                 }
 
-                // Ensure profile is fetched (background if cached, blocking if not)
-                if (!cached) {
-                    await fetchProfile(authResult.user.id);
-                } else {
-                    fetchProfile(authResult.user.id);
-                }
+                // Ensure profile is fetched (ALWAYS in background to not block navigation)
+                fetchProfile(authResult.user.id);
 
                 return { success: true };
             }

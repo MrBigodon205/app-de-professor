@@ -36,15 +36,12 @@ export const Dashboard: React.FC = () => {
   const [classPlans, setClassPlans] = useState<any[]>([]);
 
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser?.id) {
       // Trigger fetches independently to avoid blocking UI
-      fetchCounts();
-      fetchStats();
-      fetchOccurrences();
-      fetchActivities();
-      fetchPlans();
+      // Use currentUser.id to avoid re-triggering when name/photo updates
+      refreshAll(false);
     }
-  }, [currentUser, selectedSeriesId, selectedSection, activeSubject]);
+  }, [currentUser?.id, selectedSeriesId, selectedSection, activeSubject]);
 
   const refreshAll = (silent = true) => {
     fetchCounts(silent);
@@ -58,10 +55,10 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     if (!currentUser) return;
 
-    // Polling Fallback (Every 10s)
+    // Polling Fallback (Increased to 60s since we have Realtime)
     const interval = setInterval(() => {
       refreshAll(true);
-    }, 10000);
+    }, 60000);
 
     console.log("Setting up Realtime for Dashboard...");
 
