@@ -1028,10 +1028,13 @@ export const Planning: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                        )}
                             </div>
                         )}
                     </div>
-        </main >
+                )}
+            </div>
+        )}
+        </div>
+</main >
     );
 };
