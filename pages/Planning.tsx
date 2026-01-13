@@ -373,56 +373,51 @@ export const Planning: React.FC = () => {
                 </head>
                 <body>
                     <div class="Section1">
-                        <!-- HEADER MATCHING PDF -->
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
-                            <table style="width: 100%; border-collapse: collapse; border: none;">
-                                <tr>
-                                    <td style="width: 65%; vertical-align: top; border: none; padding: 0;">
-                                        <div style="margin-bottom: 8px;">
-                                            <span class="header-label">Turma:</span> 
-                                            <span style="font-size: 11pt; font-weight: bold; color: #000; display: inline-block; width: 70%; border-bottom: 1px solid #000;">
+                        <!-- HEADER MATCHING IMAGE -->
+                        <table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 20px;">
+                            <tr>
+                                <td style="width: 65%; vertical-align: top; border: none; padding: 0;">
+                                    <table style="width: 100%; border-collapse: collapse; border: none;">
+                                        <tr>
+                                            <td style="width: 100px; padding: 2px 0;"><span style="font-size: 10pt; font-weight: bold;">Turma:</span></td>
+                                            <td style="border-bottom: 1px solid black; padding: 2px 5px;"><span style="font-size: 11pt; font-weight: bold;">
                                                 ${(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
                 ? (activeSeries?.name + ' - ' + currentPlan.section)
                 : (activeSeries?.name + ' - ' + (activeSeries?.sections?.join(', ') || 'Todas as Turmas'))}
-                                            </span>
-                                        </div>
-                                        <div style="margin-bottom: 8px;">
-                                            <span class="header-label">Professor:</span> 
-                                            <span style="font-size: 11pt; font-weight: bold; color: #000; display: inline-block; width: 70%; border-bottom: 1px solid #000;">
-                                                ${currentUser?.name?.toUpperCase() || ''}
-                                            </span>
-                                        </div>
-                                        <div style="margin-bottom: 8px;">
-                                            <span class="header-label">Componente:</span> 
-                                            <span style="font-size: 11pt; font-weight: bold; color: #000; display: inline-block; width: 70%; border-bottom: 1px solid #000;">
-                                                ${currentPlan.subject || ''}
-                                            </span>
-                                        </div>
-                                        <div style="margin-bottom: 8px;">
-                                            <span class="header-label">Período:</span> 
-                                            <span style="font-size: 11pt; font-weight: bold; color: #000; display: inline-block; width: 70%; border-bottom: 1px solid #000;">
+                                            </span></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 100px; padding: 2px 0;"><span style="font-size: 10pt; font-weight: bold;">Professor:</span></td>
+                                            <td style="border-bottom: 1px solid black; padding: 2px 5px;"><span style="font-size: 11pt; font-weight: bold;">${currentUser?.name?.toUpperCase() || ''}</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 100px; padding: 2px 0;"><span style="font-size: 10pt; font-weight: bold;">Componente:</span></td>
+                                            <td style="border-bottom: 1px solid black; padding: 2px 5px;"><span style="font-size: 11pt; font-weight: bold; color: #0369a1;">${currentPlan.subject || ''}</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 100px; padding: 2px 0;"><span style="font-size: 10pt; font-weight: bold;">Período:</span></td>
+                                            <td style="border-bottom: 1px solid black; padding: 2px 5px;"><span style="font-size: 11pt; font-weight: bold;">
                                                 ${new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} até ${new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                            </span>
+                                            </span></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 100px; padding: 2px 0;"><span style="font-size: 10pt; font-weight: bold;">Coordenação:</span></td>
+                                            <td style="border-bottom: 1px solid black; padding: 2px 5px;"><span style="font-size: 11pt; font-weight: bold;">${currentPlan.coordinator_name || 'MOISÉS FERREIRA'}</span></td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td style="width: 2%; border-left: 1.5pt solid #d1d5db; padding: 0;"></td>
+                                <td style="width: 33%; vertical-align: middle; border: none; text-align: right; padding: 0;">
+                                    <div style="text-align: right;">
+                                        <div style="color: #0ea5e9; font-size: 36pt; font-weight: 900; font-family: 'Arial Black', sans-serif; letter-spacing: -2px; line-height: 1;">CENSC</div>
+                                        <div style="color: #0ea5e9; font-size: 9pt; font-weight: bold; text-transform: uppercase; margin-top: 5px; line-height: 1.2;">
+                                            CENTRO EDUCACIONAL<br>NOSSA SRA DO CENÁCULO
                                         </div>
-                                        <div>
-                                            <span class="header-label">Coordenação:</span> 
-                                            <span style="font-size: 11pt; font-weight: bold; color: #000; display: inline-block; width: 70%;">
-                                                ${currentPlan.coordinator_name || 'MOISÉS FERREIRA'}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td style="width: 5%; border: none; border-left: 1px solid #ccc; padding: 0;"></td>
-                                    <td style="width: 30%; border: none; text-align: right; vertical-align: middle; padding: 0;">
-                                        <div style="display: flex; flex-direction: column; align-items: flex-end;">
-                                            <div class="logo-text" style="color: #0ea5e9; font-size: 32pt; font-weight: 900; font-family: 'Arial Black', sans-serif; letter-spacing: -2px; line-height: 1;">CENSC</div>
-                                            <div class="logo-sub" style="color: #0ea5e9; font-size: 9pt; font-weight: bold; text-transform: uppercase;">
-                                                CENTRO EDUCACIONAL<br>NOSSA SRA DO CENÁCULO
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <div style="border-bottom: 1.5pt solid black; margin-bottom: 20px; width: 100%;"></div>
 
                         <!-- CONTENT TABLE MATCHING PDF -->
                         <div style="border: 1px solid #000;">
@@ -468,13 +463,13 @@ export const Planning: React.FC = () => {
                             </table>
                         </div>
 
-                        <!-- FOOTER / OBSERVAÇÕES -->
-                        <div style="margin-top: 20px;">
-                            <strong style="font-size: 10pt; text-transform: uppercase;">OBSERVAÇÕES:</strong>
-                            <div style="border: 1px solid #000; margin-top: 5px; padding: 5px;">
-                                <div style="border-bottom: 1px solid #000; height: 25px; margin-bottom: 5px;"></div>
-                                <div style="border-bottom: 1px solid #000; height: 25px; margin-bottom: 5px;"></div>
-                                <div style="height: 25px; margin-bottom: 5px;"></div>
+                        <!-- FOOTER / OBSERVAÇÕES MATCHING IMAGE -->
+                        <div style="margin-top: 30px;">
+                            <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase; border: none; margin-bottom: 5px;">OBSERVAÇÕES:</div>
+                            <div style="border: 1px solid black; padding: 10px;">
+                                <div style="border-bottom: 1px solid black; height: 30px; margin-bottom: 5px;"></div>
+                                <div style="border-bottom: 1px solid black; height: 30px; margin-bottom: 5px;"></div>
+                                <div style="height: 30px;"></div>
                             </div>
                         </div>
                     </div>
@@ -913,50 +908,56 @@ export const Planning: React.FC = () => {
 
                                     {/* PRINTABLE CONTENT (Matches CENSC Layout - Landscape) */}
                                     <div className="printable-content bg-white min-w-[700px] md:min-w-0">
-                                        {/* HEADER */}
-                                        <div className="flex justify-between items-start mb-6 border-b-2 border-slate-800 pb-2">
-                                            <div className="w-[65%] space-y-2">
-                                                <div className="flex items-end gap-2 mb-1">
-                                                    <span className="font-bold text-sm whitespace-nowrap w-24">Turma:</span>
-                                                    <div className="border-b border-black flex-1 font-bold text-base px-2 leading-none relative top-0.5">
-                                                        {(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
-                                                            ? `${activeSeries?.name} - ${currentPlan.section}`
-                                                            : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-end gap-2 mb-1">
-                                                    <span className="font-bold text-sm whitespace-nowrap w-24">Professor:</span>
-                                                    <div className="border-b border-black flex-1 font-bold text-base px-2 leading-none relative top-0.5">{currentUser?.name?.toUpperCase()}</div>
-                                                </div>
-                                                <div className="flex items-end gap-2 mb-1">
-                                                    <span className="font-bold text-sm whitespace-nowrap">Componente:</span>
-                                                    <div className="border-b border-black flex-1 font-bold text-base px-2 leading-none relative top-0.5">{currentPlan.subject}</div>
-                                                </div>
-                                                <div className="flex items-end gap-2 mb-1">
-                                                    <span className="font-bold text-sm whitespace-nowrap w-24">Período:</span>
-                                                    <div className="border-b border-black flex-1 font-bold text-base px-2 leading-none relative top-0.5">
-                                                        {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} até {new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-end gap-2">
-                                                    <span className="font-bold text-sm whitespace-nowrap">Coordenação:</span>
-                                                    <div className="font-bold text-base px-2 leading-none">{currentPlan.coordinator_name || 'MOISÉS FERREIRA'}</div>
-                                                </div>
-                                            </div>
-
-                                            <div className="w-[5%] border-l border-gray-300 mx-4 self-stretch"></div>
-
-                                            <div className="w-[30%] flex flex-col items-end justify-center pt-2 text-right">
-                                                {/* LOGO */}
-                                                <div className="flex items-center justify-end gap-1 mb-0 w-full">
-                                                    <span className="material-symbols-outlined text-[40px] text-[#0ea5e9]">school</span>
-                                                    <span className="text-4xl font-black text-[#0ea5e9] tracking-tighter" style={{ fontFamily: 'Arial Black, sans-serif' }}>CENSC</span>
-                                                </div>
-                                                <span className="text-[10px] text-[#0ea5e9] font-bold uppercase tracking-wider leading-tight text-right w-full">
-                                                    Centro Educacional<br />Nossa Sra do Cenáculo
-                                                </span>
-                                            </div>
+                                        <div className="flex justify-between items-start mb-6">
+                                            <table className="w-full border-collapse border-none">
+                                                <tbody>
+                                                    <tr>
+                                                        <td className="w-[65%] align-top border-none p-0">
+                                                            <table className="w-full border-collapse border-none">
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td className="w-24 py-1"><span className="text-xs font-bold whitespace-nowrap">Turma:</span></td>
+                                                                        <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold">
+                                                                            {(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
+                                                                                ? `${activeSeries?.name} - ${currentPlan.section}`
+                                                                                : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`}
+                                                                        </span></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td className="w-24 py-1"><span className="text-xs font-bold whitespace-nowrap">Professor:</span></td>
+                                                                        <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentUser?.name}</span></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td className="w-24 py-1"><span className="text-xs font-bold whitespace-nowrap">Componente:</span></td>
+                                                                        <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold text-[#0369a1]">{currentPlan.subject}</span></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td className="w-24 py-1"><span className="text-xs font-bold whitespace-nowrap">Período:</span></td>
+                                                                        <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold">
+                                                                            {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} até {new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                                                        </span></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td className="w-24 py-1"><span className="text-xs font-bold whitespace-nowrap">Coordenação:</span></td>
+                                                                        <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentPlan.coordinator_name || 'MOISÉS FERREIRA'}</span></td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </td>
+                                                        <td className="w-[1%] border-l border-slate-300 p-0"></td>
+                                                        <td className="w-[34%] align-middle border-none text-right p-0">
+                                                            <div className="flex flex-col items-end">
+                                                                <div className="text-[#0ea5e9] text-5xl font-black leading-none" style={{ fontFamily: 'Arial Black, sans-serif' }}>CENSC</div>
+                                                                <div className="text-[#0ea5e9] text-[8px] font-bold uppercase mt-1 text-right leading-tight">
+                                                                    CENTRO EDUCACIONAL<br />NOSSA SRA DO CENÁCULO
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
+                                        <div className="border-b-2 border-black mb-6 w-full"></div>
 
                                         {/* TABLE */}
                                         <div className="border border-black">
@@ -1027,11 +1028,10 @@ export const Planning: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
+                        )}
                             </div>
                         )}
                     </div>
-                )}
-            </div>
-        </main>
+        </main >
     );
 };
