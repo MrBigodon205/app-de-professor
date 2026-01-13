@@ -111,6 +111,10 @@ html.dark option,
   color: #ffffff !important;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   overscroll-behavior-y: contain;
@@ -215,4 +219,32 @@ body {
 /* Fix Date Input Icon Color in Dark Mode */
 .dark ::-webkit-calendar-picker-indicator {
   filter: invert(1);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-pulse {
+  background: linear-gradient(90deg,
+      rgba(226, 232, 240, 0.5) 25%,
+      rgba(241, 245, 249, 0.8) 50%,
+      rgba(226, 232, 240, 0.5) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite linear;
+}
+
+.dark .animate-pulse {
+  background: linear-gradient(90deg,
+      rgba(30, 41, 59, 0.5) 25%,
+      rgba(51, 65, 85, 0.8) 50%,
+      rgba(30, 41, 59, 0.5) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite linear;
 }

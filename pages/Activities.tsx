@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import DOMPurify from 'dompurify';
 import { DatePicker } from '../components/DatePicker';
 import { RichTextEditor } from '../components/RichTextEditor';
+import { useDebounce } from '../hooks/useDebounce';
 
 // Fallback types if fetch fails
 const DEFAULT_ACTIVITY_TYPES = ['Prova', 'Trabalho', 'Dever de Casa', 'Seminário', 'Pesquisa', 'Conteúdo', 'Outro'];
@@ -23,6 +24,7 @@ export const Activities: React.FC = () => {
     const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const [isEditing, setIsEditing] = useState(false);
     const [activityTypes, setActivityTypes] = useState<string[]>(DEFAULT_ACTIVITY_TYPES);
 
@@ -500,7 +502,13 @@ export const Activities: React.FC = () => {
     };
 
     const currentActivity = activities.find(a => a.id === selectedActivityId);
-    const displayedActivities = activities.filter(a => a.title.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const displayedActivities = React.useMemo(() => {
+        return activities.filter(a =>
+            a.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+            a.type.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+        );
+    }, [activities, debouncedSearchTerm]);
 
     const getIconForType = (type: string) => {
         switch (type) {

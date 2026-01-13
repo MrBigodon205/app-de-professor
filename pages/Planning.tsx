@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import DOMPurify from 'dompurify';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { DatePicker } from '../components/DatePicker';
+import { useDebounce } from '../hooks/useDebounce';
 
 export const Planning: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
@@ -20,6 +21,7 @@ export const Planning: React.FC = () => {
     const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const [isEditing, setIsEditing] = useState(false);
     const [activeTab, setActiveTab] = useState<'geral' | 'conteudo' | 'bncc' | 'recursos'>('geral');
     const [viewMode, setViewMode] = useState(false);
@@ -94,7 +96,6 @@ export const Planning: React.FC = () => {
 
             formatted.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 
-            setPlans(formatted);
             setPlans(formatted);
             if (formatted.length > 0 && !selectedPlanId && window.innerWidth >= 1024) {
                 if (!selectedPlanId) setSelectedPlanId(formatted[0].id);
@@ -489,12 +490,14 @@ export const Planning: React.FC = () => {
 
 
     const currentPlan = plans.find(p => p.id === selectedPlanId);
-    const displayedPlans = plans.filter(p =>
-        p.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        (filterSection
-            ? (p.section === filterSection || p.section === 'Todas' || p.section === 'Todas as Turmas' || p.section === 'Única')
-            : true)
-    );
+    const displayedPlans = React.useMemo(() => {
+        return plans.filter(plan => {
+            const matchesSearch = plan.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                (plan.description && plan.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
+            const matchesSection = !filterSection || plan.section === filterSection;
+            return matchesSearch && matchesSection;
+        });
+    }, [plans, debouncedSearchTerm, filterSection]);
 
     return (
         <main className="flex h-full gap-6 max-w-[1600px] mx-auto overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">

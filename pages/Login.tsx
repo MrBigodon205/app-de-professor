@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { Subject } from '../types';
 
@@ -101,18 +102,32 @@ export const Login: React.FC = () => {
 
             <div className="mb-6">
               {/* Tabs */}
-              <nav aria-label="Tabs" className="flex gap-6 border-b border-slate-100 dark:border-slate-800">
+              <nav aria-label="Tabs" className="flex gap-6 border-b border-slate-100 dark:border-slate-800 relative">
                 <button
                   onClick={() => setActiveTab('login')}
-                  className={`${activeTab === 'login' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-400 hover:text-slate-600'} whitespace-nowrap border-b-2 py-2 px-1 text-sm transition-colors`}
+                  className={`${activeTab === 'login' ? 'text-primary' : 'text-slate-400 hover:text-slate-600'} relative whitespace-nowrap py-4 px-1 text-sm font-bold transition-colors`}
                 >
                   Entrar
+                  {activeTab === 'login' && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
                 </button>
                 <button
                   onClick={() => setActiveTab('register')}
-                  className={`${activeTab === 'register' ? 'border-primary text-primary font-bold' : 'border-transparent text-slate-400 hover:text-slate-600'} whitespace-nowrap border-b-2 py-2 px-1 text-sm transition-colors`}
+                  className={`${activeTab === 'register' ? 'text-primary' : 'text-slate-400 hover:text-slate-600'} relative whitespace-nowrap py-4 px-1 text-sm font-bold transition-colors`}
                 >
                   Cadastrar
+                  {activeTab === 'register' && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
                 </button>
               </nav>
             </div>
@@ -131,102 +146,124 @@ export const Login: React.FC = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {activeTab === 'register' && (
-                <>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, x: activeTab === 'login' ? -10 : 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: activeTab === 'login' ? 10 : -10 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="space-y-5"
+                >
+                  {activeTab === 'register' && (
+                    <>
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                      >
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 ml-1" htmlFor="name">Nome Completo</label>
+                        <input className="block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800 py-4 px-5 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6" id="name" placeholder="Seu nome" value={name} onChange={e => setName(e.target.value)} required />
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                      >
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 ml-1">Disciplinas</label>
+                        <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 max-h-48 overflow-y-auto">
+                          {SUBJECTS.map(s => (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => {
+                                if (selectedSubjects.includes(s)) {
+                                  setSelectedSubjects(selectedSubjects.filter(sub => sub !== s));
+                                } else {
+                                  setSelectedSubjects([...selectedSubjects, s]);
+                                }
+                              }}
+                              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedSubjects.includes(s)
+                                ? 'bg-primary text-white shadow-md'
+                                : 'bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                }`}
+                            >
+                              <span className="material-symbols-outlined text-[16px]">
+                                {selectedSubjects.includes(s) ? 'check_circle' : 'add_circle'}
+                              </span>
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                        {selectedSubjects.length > 0 && (
+                          <p className="mt-2 text-[10px] text-slate-400 italic flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[12px]">info</span>
+                            A primeira selecionada ({selectedSubjects[0]}) será seu tema principal.
+                          </p>
+                        )}
+                      </motion.div>
+                    </>
+                  )}
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 ml-1" htmlFor="name">Nome Completo</label>
-                    <input className="block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800 py-4 px-5 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6" id="name" placeholder="Seu nome" value={name} onChange={e => setName(e.target.value)} required />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 ml-1">Disciplinas</label>
-                    <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 max-h-48 overflow-y-auto">
-                      {SUBJECTS.map(s => (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => {
-                            if (selectedSubjects.includes(s)) {
-                              setSelectedSubjects(selectedSubjects.filter(sub => sub !== s));
-                            } else {
-                              setSelectedSubjects([...selectedSubjects, s]);
-                            }
-                          }}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedSubjects.includes(s)
-                            ? 'bg-primary text-white shadow-md'
-                            : 'bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
-                            }`}
-                        >
-                          <span className="material-symbols-outlined text-[16px]">
-                            {selectedSubjects.includes(s) ? 'check_circle' : 'add_circle'}
-                          </span>
-                          {s}
-                        </button>
-                      ))}
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 ml-1" htmlFor="email">E-mail Institucional</label>
+                    <div className="relative">
+                      <input className="block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800 py-4 px-5 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6" id="email" name="email" placeholder="seuemail@escola.com" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
                     </div>
-                    {selectedSubjects.length > 0 && (
-                      <p className="mt-2 text-[10px] text-slate-400 italic flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[12px]">info</span>
-                        A primeira selecionada ({selectedSubjects[0]}) será seu tema principal.
-                      </p>
-                    )}
                   </div>
-                </>
-              )}
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 ml-1" htmlFor="email">E-mail Institucional</label>
-                <div className="relative">
-                  <input className="block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800 py-4 px-5 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6" id="email" name="email" placeholder="seuemail@escola.com" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 ml-1" htmlFor="password">Senha</label>
-                <div className="relative">
-                  <input
-                    className="block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800 py-4 pl-5 pr-12 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6"
-                    id="password"
-                    name="password"
-                    placeholder="••••••••"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                  />
-                  <div
-                    className="absolute inset-y-0 right-0 flex items-center pr-4 cursor-pointer group"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-[20px]">
-                      {showPassword ? "visibility" : "visibility_off"}
-                    </span>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 ml-1" htmlFor="password">Senha</label>
+                    <div className="relative">
+                      <input
+                        className="block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800 py-4 pl-5 pr-12 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6"
+                        id="password"
+                        name="password"
+                        placeholder="••••••••"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        required
+                      />
+                      <div
+                        className="absolute inset-y-0 right-0 flex items-center pr-4 cursor-pointer group"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-[20px]">
+                          {showPassword ? "visibility" : "visibility_off"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {activeTab === 'register' && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 ml-1" htmlFor="confirm-password">Confirmar Senha</label>
-                  <div className="relative">
-                    <input
-                      className="block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800 py-4 pl-5 pr-12 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6"
-                      id="confirm-password"
-                      name="confirm-password"
-                      placeholder="••••••••"
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={e => setConfirmPassword(e.target.value)}
-                      required
-                    />
-                    <div
-                      className="absolute inset-y-0 right-0 flex items-center pr-4 cursor-pointer group"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  {activeTab === 'register' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
                     >
-                      <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-[20px]">
-                        {showConfirmPassword ? "visibility" : "visibility_off"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 ml-1" htmlFor="confirm-password">Confirmar Senha</label>
+                      <div className="relative">
+                        <input
+                          className="block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800 py-4 pl-5 pr-12 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6"
+                          id="confirm-password"
+                          name="confirm-password"
+                          placeholder="••••••••"
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                          required
+                        />
+                        <div
+                          className="absolute inset-y-0 right-0 flex items-center pr-4 cursor-pointer group"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-[20px]">
+                            {showConfirmPassword ? "visibility" : "visibility_off"}
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
 
               <div className="flex items-start pt-2 pl-1">
                 <div className="flex h-6 items-center">
@@ -238,14 +275,16 @@ export const Login: React.FC = () => {
               </div>
 
               <div className="pt-2">
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex w-full justify-center items-center gap-2 rounded-xl bg-primary px-3 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-green-500/30 hover:bg-primary-hover hover:shadow-green-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all duration-200 ease-in-out transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex w-full justify-center items-center gap-2 rounded-xl bg-primary px-3 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-green-500/30 hover:bg-primary-hover hover:shadow-green-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all duration-200"
                 >
                   {isSubmitting ? 'Processando...' : (activeTab === 'login' ? 'Entrar Agora' : 'Cadastrar')}
                   {!isSubmitting && <span className="material-symbols-outlined text-lg">arrow_forward</span>}
-                </button>
+                </motion.button>
               </div>
             </form>
           </div>
