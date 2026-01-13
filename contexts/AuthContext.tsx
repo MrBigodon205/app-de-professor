@@ -253,7 +253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [userId]);
 
     // Helper to race a promise against a timeout
-    const withTimeout = <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
+    const withTimeout = <T,>(promise: PromiseLike<T>, ms: number, label: string): Promise<T> => {
         return Promise.race([
             promise,
             new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`${label} timed out`)), ms))

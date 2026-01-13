@@ -85,6 +85,7 @@ export interface AttendanceRecord {
   studentId: string;
   date: string;
   status: 'P' | 'F' | 'J' | 'S';
+  unit?: string;
   userId: string;
 }
 
@@ -95,6 +96,7 @@ export interface Occurrence {
   description: string;
   date: string;
   userId: string;
+  unit?: string;
 }
 
 export type Subject =

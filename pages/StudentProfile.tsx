@@ -108,6 +108,7 @@ export const StudentProfile: React.FC = () => {
                 type: o.type,
                 description: o.description,
                 date: o.date,
+                unit: o.unit, // Map unit
                 userId: o.user_id
             }));
 
@@ -116,6 +117,7 @@ export const StudentProfile: React.FC = () => {
                 studentId: a.student_id.toString(),
                 date: a.date,
                 status: a.status as any,
+                unit: a.unit, // Map unit
                 userId: a.user_id
             }));
 
@@ -191,150 +193,237 @@ export const StudentProfile: React.FC = () => {
         const studentAttendance = attendance.filter(a => a.studentId === student.id);
         const totalClasses = studentAttendance.length;
         const presentCount = studentAttendance.filter(a => a.status === 'P').length;
-        const attendancePercentage = totalClasses > 0 ? ((presentCount / totalClasses) * 100).toFixed(1) : '100';
+        const attendancePercentage = totalClasses > 0 ? ((presentCount / totalClasses) * 100).toFixed(0) : '100';
+        const totalOccurrences = studentOccurrences.length;
+        const activeAlerts = studentOccurrences.filter(o => o.type !== 'Elogio').length;
 
-        // --- MODERN HEADER ---
-        doc.setFillColor(63, 81, 181); // Indigo Primary
-        doc.rect(0, 0, 210, 40, 'F');
+        // --- HELPER: Draw Premium Header ---
+        const drawHeader = () => {
+            // Background
+            doc.setFillColor(63, 81, 181); // Primary Indigo
+            doc.rect(0, 0, 210, 50, 'F');
 
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(22);
+            // Decorative Circles (Glass effect simulated with opacity)
+            doc.setFillColor(255, 255, 255);
+            doc.setGState(new (doc as any).GState({ opacity: 0.1 }));
+            doc.circle(190, 10, 40, 'F');
+            doc.circle(20, 50, 30, 'F');
+            doc.setGState(new (doc as any).GState({ opacity: 1 }));
+
+            // Brand Text
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(24);
+            doc.text('PROF. ACERTA+', 14, 25);
+
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Sistema de Gestão Escolar Inteligente', 14, 32);
+
+            // Report Title Badge
+            doc.setFillColor(255, 255, 255);
+            doc.roundedRect(150, 15, 46, 20, 3, 3, 'F');
+            doc.setTextColor(63, 81, 181);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.text('RELATÓRIO DO ALUNO', 173, 22, { align: 'center' });
+            doc.setFontSize(6);
+            doc.text(new Date().toLocaleDateString('pt-BR'), 173, 28, { align: 'center' });
+        };
+
+        // --- HELPER: Draw Stat Card ---
+        const drawStatCard = (x: number, y: number, label: string, value: string, subtext: string, color: [number, number, number]) => {
+            // Shadow simulation
+            doc.setFillColor(240, 240, 240);
+            doc.roundedRect(x + 1, y + 1, 55, 25, 3, 3, 'F');
+
+            // Card BG
+            doc.setFillColor(255, 255, 255);
+            doc.setDrawColor(230, 230, 230);
+            doc.roundedRect(x, y, 55, 25, 3, 3, 'FD');
+
+            // Accent Line
+            doc.setFillColor(...color);
+            doc.rect(x + 3, y + 5, 2, 15, 'F');
+
+            // Text
+            doc.setTextColor(100, 116, 139); // Slate 500
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'bold');
+            doc.text(label.toUpperCase(), x + 8, y + 8);
+
+            doc.setTextColor(30, 41, 59); // Slate 800
+            doc.setFontSize(14);
+            doc.text(value, x + 8, y + 16);
+
+            doc.setTextColor(148, 163, 184); // Slate 400
+            doc.setFontSize(6);
+            doc.text(subtext, x + 8, y + 21);
+        };
+
+        // Invoke Header
+        drawHeader();
+
+        // --- STUDENT INFO CONTEXT ---
         doc.setFont('helvetica', 'bold');
-        doc.text('PROF. ACERTA+', 14, 20);
-
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Relatório Individual do Aluno', 14, 30);
-
-        doc.setFontSize(10);
-        doc.text(`Emissão: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, 150, 30);
-
-        // --- STUDENT INFO CARD ---
-        doc.setFillColor(248, 250, 252); // Slate 50
-        doc.setDrawColor(226, 232, 240); // Slate 200
-        doc.roundedRect(14, 50, 182, 35, 3, 3, 'FD');
-
-        doc.setTextColor(71, 85, 105);
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text('DADOS DO ALUNO', 20, 60);
-
-        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(18);
         doc.setTextColor(30, 41, 59);
+        doc.text(student.name.toUpperCase(), 14, 70);
 
-        // Grid Layout
-        doc.text(`Nome:`, 20, 70);
-        doc.setFont('helvetica', 'bold');
-        doc.text(student.name.toUpperCase(), 35, 70);
+        doc.setFontSize(10);
+        doc.setTextColor(100, 116, 139);
+        doc.text(`${activeSeries?.name} • Turma ${selectedSection} • Matrícula #${student.number}`, 14, 76);
 
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Matrícula:`, 20, 78);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`#${student.number}`, 40, 78);
+        // --- STATS ROW ---
+        drawStatCard(14, 85, 'Frequência Global', `${attendancePercentage}%`, `${presentCount} presenças em ${totalClasses} aulas`, [34, 197, 94] /* Green */);
+        drawStatCard(76, 85, 'Total Ocorrências', totalOccurrences.toString(), `${activeAlerts} alertas registrados`, [249, 115, 22] /* Orange */);
 
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Turma:`, 110, 70);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`${activeSeries?.name} - ${selectedSection}`, 125, 70);
-
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Disciplina:`, 110, 78);
-        doc.setFont('helvetica', 'bold');
-        doc.text((currentUser?.subject || 'Geral').toUpperCase(), 132, 78);
-
-        let currentY = 100;
-
-        // --- ATTENDANCE SUMMARY ---
-        doc.setFontSize(14);
-        doc.setTextColor(63, 81, 181);
-        doc.text('Frequência e Engajamento', 14, currentY);
-
-        autoTable(doc, {
-            startY: currentY + 5,
-            head: [['Total de Aulas', 'Presenças', 'Faltas', 'Frequência %']],
-            body: [[
-                totalClasses,
-                presentCount,
-                totalClasses - presentCount,
-                `${attendancePercentage}%`
-            ]],
-            theme: 'grid',
-            headStyles: { fillColor: [63, 81, 181], textColor: 255, fontSize: 11, fontStyle: 'bold', halign: 'center' },
-            bodyStyles: { fontSize: 11, halign: 'center', textColor: 50 },
-            styles: { cellPadding: 6 }
+        // Calculate Global Grade Average
+        let totalAvg = 0;
+        let unitCount = 0;
+        ['1', '2', '3'].forEach(u => {
+            const avg = calculateUnitAverage(student.units[u]);
+            if (avg > 0) {
+                totalAvg += avg;
+                unitCount++;
+            }
         });
+        const finalAvg = unitCount > 0 ? (totalAvg / unitCount).toFixed(1) : '-';
+        drawStatCard(138, 85, 'Média Geral', finalAvg, 'Baseado nas unidades lançadas', [99, 102, 241] /* Indigo */);
 
-        currentY = (doc as any).lastAutoTable.finalY + 15;
+        let startY = 125;
+        let maxFinalY = startY;
 
-        // --- ACADEMIC RECORD ---
-        doc.setFontSize(14);
-        doc.setTextColor(63, 81, 181);
-        doc.text('Desempenho Acadêmico', 14, currentY);
+        // Define columns: 3 columns of ~60mm width with gap
+        const columnWidth = 58;
+        const columnGap = 4;
+        const columns = [
+            { unit: '1', x: 14 },
+            { unit: '2', x: 14 + columnWidth + columnGap },
+            { unit: '3', x: 14 + (columnWidth + columnGap) * 2 }
+        ];
 
-        const academicRows = ['1', '2', '3'].map(unit => {
-            const data = student.units[unit] || {};
-            const avg = calculateUnitAverage(data);
-            return [
-                `${unit}ª Unidade`,
-                data.qualitative?.toFixed(1) || '-',
-                data.simulado?.toFixed(1) || '-',
-                data.test?.toFixed(1) || '-',
-                data.exam?.toFixed(1) || '-',
-                { content: avg.toFixed(1), styles: { fontStyle: 'bold', textColor: avg >= 6 ? [22, 163, 74] : [220, 38, 38] } }
-            ];
-        });
+        // --- CYCLE THROUGH UNITS (SIDE BY SIDE) ---
+        columns.forEach((col) => {
+            let currentY = startY;
+            const unit = col.unit;
 
-        autoTable(doc, {
-            startY: currentY + 5,
-            head: [['Unidade', 'Qualitativo', 'Simulado', 'Teste', 'Prova', 'Média Final']],
-            body: academicRows,
-            theme: 'striped',
-            headStyles: { fillColor: [63, 81, 181], textColor: 255, fontSize: 10, fontStyle: 'bold' },
-            columnStyles: {
-                0: { fontStyle: 'bold' },
-                5: { fontStyle: 'bold' }
-            },
-            styles: { cellPadding: 5, halign: 'center' }
-        });
+            // Unit Header
+            doc.setFillColor(241, 245, 249); // Slate 100
+            doc.rect(col.x, currentY, columnWidth, 8, 'F');
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(30, 41, 59);
+            doc.text(`${unit}ª UNIDADE`, col.x + 4, currentY + 5.5);
 
-        currentY = (doc as any).lastAutoTable.finalY + 15;
+            const unitData = student.units[unit] || {};
+            const avg = calculateUnitAverage(unitData);
 
-        // --- BEHAVIORAL LOG ---
-        if (studentOccurrences.length > 0) {
-            doc.text('Registro de Ocorrências', 14, currentY);
-            autoTable(doc, {
-                startY: currentY + 5,
-                head: [['Data', 'Tipo', 'Descrição']],
-                body: studentOccurrences.map(o => [
-                    new Date(o.date + 'T12:00:00').toLocaleDateString('pt-BR'),
-                    o.type,
-                    o.description
-                ]),
-                theme: 'grid',
-                headStyles: { fillColor: [234, 88, 12], textColor: 255 }, // Orange for alerts
-                columnStyles: {
-                    0: { cellWidth: 30 },
-                    1: { cellWidth: 30, fontStyle: 'bold' },
-                    2: { cellWidth: 'auto' }
-                },
-                styles: { cellPadding: 4, fontSize: 10 }
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.text(`Média: ${avg.toFixed(1)}`, col.x + columnWidth - 4, currentY + 5.5, { align: 'right' });
+
+            currentY += 12;
+
+            // 1. GRADES TABLE
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(71, 85, 105);
+            doc.text('Avaliações', col.x, currentY);
+            currentY += 3;
+
+            const gradeRows: any[] = [];
+            Object.entries(unitData).forEach(([key, value]) => {
+                if (key !== 'observation' && typeof value === 'number') {
+                    // Shorten keys for compact layout if needed
+                    let label = key.charAt(0).toUpperCase() + key.slice(1);
+                    if (label === 'Qualitative') label = 'Qualit.';
+
+                    gradeRows.push([label, value.toFixed(1)]);
+                }
             });
-        }
 
-        // Footer
+            if (gradeRows.length > 0) {
+                autoTable(doc, {
+                    startY: currentY,
+                    head: [['Atividade', 'Nota']],
+                    body: gradeRows,
+                    theme: 'grid',
+                    headStyles: { fillColor: [248, 250, 252], textColor: [71, 85, 105], fontSize: 7, fontStyle: 'bold', lineColor: [226, 232, 240], lineWidth: 0.1 },
+                    bodyStyles: { fontSize: 7, textColor: [51, 65, 85], lineColor: [226, 232, 240] },
+                    styles: { cellPadding: 1.5, halign: 'left', overflow: 'ellipsize' },
+                    columnStyles: { 1: { halign: 'center', fontStyle: 'bold', cellWidth: 12 } },
+                    margin: { left: col.x },
+                    tableWidth: columnWidth
+                });
+                currentY = (doc as any).lastAutoTable.finalY + 8;
+            } else {
+                doc.setFont('helvetica', 'italic');
+                doc.setFontSize(7);
+                doc.setTextColor(148, 163, 184);
+                doc.text('Sem notas.', col.x, currentY + 3);
+                currentY += 10;
+            }
+
+            // 2. OCCURRENCES
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(71, 85, 105);
+            doc.text('Ocorrências', col.x, currentY);
+            currentY += 3;
+
+            const unitOccurrences = studentOccurrences.filter(o => o.unit === unit);
+
+            if (unitOccurrences.length > 0) {
+                // Use simple text for occurrences to save space and control layout better than table in narrow col
+                unitOccurrences.forEach(occ => {
+                    const date = new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+                    // Small dot
+                    doc.setFillColor(occ.type === 'Elogio' ? 34 : 249, occ.type === 'Elogio' ? 197 : 115, occ.type === 'Elogio' ? 94 : 22);
+                    doc.circle(col.x + 2, currentY + 3, 1.5, 'F');
+
+                    doc.setFontSize(7);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(51, 65, 85);
+                    doc.text(`${date} - ${occ.type}`, col.x + 6, currentY + 4);
+
+                    currentY += 4; // Spacing
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(6.5);
+                    doc.setTextColor(100, 116, 139);
+                    const splitDesc = doc.splitTextToSize(occ.description, columnWidth - 6);
+                    doc.text(splitDesc, col.x + 6, currentY + 2);
+
+                    currentY += (splitDesc.length * 3) + 3;
+                });
+
+            } else {
+                doc.setFont('helvetica', 'italic');
+                doc.setFontSize(7);
+                doc.setTextColor(148, 163, 184);
+                doc.text('Sem ocorrências.', col.x, currentY + 3);
+                currentY += 6;
+            }
+
+            if (currentY > maxFinalY) maxFinalY = currentY;
+        });
+
+        // --- FOOTER ---
         const pageCount = (doc as any).internal.getNumberOfPages();
         for (let i = 1; i <= pageCount; i++) {
             doc.setPage(i);
             doc.setFontSize(8);
-            doc.setTextColor(150);
-            doc.text(`Página ${i} de ${pageCount} - Gerado por Prof. Acerta+`, 105, 290, { align: 'center' });
+            doc.setTextColor(148, 163, 184);
+            doc.text(`Página ${i} de ${pageCount} • Gerado por Prof. Acerta+`, 105, 290, { align: 'center' });
         }
 
         try {
-            const fileName = `Relatorio_${student.name}_${activeSeries?.name || ''}`.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf';
+            const fileName = `Relatorio_${student.name}_Completo`.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf';
             doc.save(fileName);
         } catch (error) {
-            console.error('Erro ao gerar PDF do aluno:', error);
+            console.error('Erro ao gerar PDF:', error);
         }
     };
 

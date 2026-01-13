@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useAuth } from '../contexts/AuthContext';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
@@ -362,161 +364,225 @@ export const Grades: React.FC = () => {
         return { text: '-', color: 'text-slate-500', bg: 'bg-slate-100' };
     }
 
+    // Utility to convert tailwind color names or hex to RGB for jsPDF
+    const getThemeRGB = (colorClass: string): [number, number, number] => {
+        const map: Record<string, [number, number, number]> = {
+            'indigo-600': [79, 70, 229],
+            'emerald-600': [5, 150, 105],
+            'rose-600': [225, 29, 72],
+            'amber-600': [217, 119, 6],
+            'slate-600': [71, 85, 105],
+        };
+        return map[colorClass] || [79, 70, 229];
+    };
+
     const exportPDF = () => {
-        const logoText = "CENSC";
-        const logoSub = "CENTRO EDUCACIONAL<br>NOSSA SRA DO CENÁCULO";
+        const doc = new jsPDF();
+        const primaryRGB = getThemeRGB(`${theme.baseColor}-600`);
 
-        const generateReportHTML = () => {
-            let sectionsHTML = '';
-            const keysToCheck = ['1', '2', '3', 'final', 'recovery', 'results'] as const;
+        // --- HELPER: Draw Premium Header ---
+        const drawHeader = () => {
+            doc.setFillColor(...primaryRGB);
+            doc.rect(0, 0, 210, 40, 'F');
 
-            keysToCheck.forEach((key) => {
-                if (!exportConfig.units[key]) return;
+            // Circles
+            doc.setFillColor(255, 255, 255);
+            doc.setGState(new (doc as any).GState({ opacity: 0.1 }));
+            doc.circle(190, 10, 40, 'F');
+            doc.circle(20, 50, 30, 'F');
+            doc.setGState(new (doc as any).GState({ opacity: 1 }));
 
-                const title = key === 'final' ? 'Prova Final' : key === 'recovery' ? 'Recuperação' : key === 'results' ? 'Resultado Final Anual' : `${key}ª Unidade`;
+            // Brand
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(24);
+            doc.setFont('helvetica', 'bold');
+            doc.text('CENSC', 14, 25);
 
-                let headCols = ['Nº', 'Nome'];
-                const config = UNIT_CONFIGS[key as keyof typeof UNIT_CONFIGS];
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Centro Educacional Nossa Sra do Cenáculo', 14, 32);
+
+            // Badge
+            doc.setFillColor(255, 255, 255);
+            doc.roundedRect(135, 10, 60, 20, 3, 3, 'F');
+            doc.setTextColor(...primaryRGB);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.text('RELATÓRIO DE NOTAS', 165, 17, { align: 'center' });
+
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100, 116, 139);
+            doc.text(`${activeSeries?.name} - ${selectedSection}`, 165, 22, { align: 'center' });
+            doc.text(currentUser?.name?.toUpperCase() || '', 165, 26, { align: 'center' });
+        };
+
+        drawHeader();
+
+        let currentY = 50;
+        const keysToCheck = ['1', '2', '3', 'final', 'recovery', 'results'] as const;
+
+        keysToCheck.forEach((key) => {
+            if (!exportConfig.units[key]) return;
+
+            // Filter Students Logic
+            const filtered = students.filter(s => {
+                if (key === '1' || key === '2' || key === '3' || key === 'results') return true;
+                const { baseTotal, status } = calculateAnnualSummary(s);
+                if (key === 'final') return baseTotal >= 8.0 && baseTotal < 18.0;
+                if (key === 'recovery') return status === 'RECOVERY';
+                return true;
+            });
+
+            if (filtered.length === 0 && key !== 'results') return;
+
+            // Title
+            const title = key === 'final' ? 'Prova Final' : key === 'recovery' ? 'Recuperação' : key === 'results' ? 'Resultado Final Anual' : `${key}ª Unidade`;
+
+            doc.setFillColor(30, 41, 59);
+            doc.circle(16, currentY - 2, 2, 'F');
+            doc.setFontSize(12);
+            doc.setTextColor(30, 41, 59);
+            doc.setFont('helvetica', 'bold');
+            doc.text(title.toUpperCase(), 22, currentY);
+
+            // Build Table Data
+            let headCols = ['Nº', 'ALUNO'];
+            const config = UNIT_CONFIGS[key as keyof typeof UNIT_CONFIGS];
+
+            if (key !== 'results' && exportConfig.detailed && config) {
+                headCols = [...headCols, ...config.columns.map((c: any) => c.label.toUpperCase())];
+            }
+
+            if (key === 'results') {
+                headCols.push('TOTAL ANUAL', 'SITUAÇÃO');
+            } else {
+                headCols.push(key === 'final' || key === 'recovery' ? 'STATUS' : 'MÉDIA');
+            }
+
+            const body = filtered.map(s => {
+                const row: any[] = [s.number, s.name];
 
                 if (key !== 'results' && exportConfig.detailed && config) {
-                    headCols = [...headCols, ...config.columns.map((c: any) => c.label)];
+                    config.columns.forEach((col: any) => {
+                        row.push(getGrade(s, col.key) || '-');
+                    });
                 }
 
                 if (key === 'results') {
-                    headCols.push('Total Anual', 'Situação');
-                } else {
-                    headCols.push(key === 'final' || key === 'recovery' ? 'Status' : 'Média');
-                }
-
-                const filtered = students.filter(s => {
-                    if (key === '1' || key === '2' || key === '3' || key === 'results') return true;
-                    const { baseTotal, status } = calculateAnnualSummary(s);
-                    if (key === 'final') return baseTotal >= 8.0 && baseTotal < 18.0;
-                    if (key === 'recovery') return status === 'RECOVERY';
-                    return true;
-                });
-
-                if (filtered.length === 0 && key !== 'results') return;
-
-                const rowsHTML = filtered.map(s => {
                     const { annualTotal } = calculateAnnualSummary(s);
                     const res = getFinalResult(s);
+                    row.push(annualTotal.toFixed(1));
+                    row.push(res.text); // Will be replaced by badge
+                } else if (key === 'final' || key === 'recovery') {
+                    const res = getFinalResult(s);
+                    row.push(res.text); // Will be replaced by badge
+                } else {
+                    const avg = calculateUnitTotal(s, key);
+                    row.push(avg.toFixed(1));
+                }
 
-                    let cells = `
-                        <td style="text-align: center; width: 40px;">${s.number}</td>
-                        <td style="text-align: left; padding-left: 10px;">${s.name}</td>
-                    `;
-
-                    if (key !== 'results' && exportConfig.detailed && config) {
-                        config.columns.forEach((col: any) => {
-                            cells += `<td style="text-align: center;">${getGrade(s, col.key) || '-'}</td>`;
-                        });
-                    }
-
-                    if (key === 'results') {
-                        cells += `
-                            <td style="text-align: center; font-weight: bold;">${annualTotal.toFixed(1)}</td>
-                            <td style="text-align: center;"><span class="status-badge ${res.color}">${res.text}</span></td>
-                        `;
-                    } else if (key === 'final' || key === 'recovery') {
-                        cells += `<td style="text-align: center;"><span class="status-badge ${res.color}">${res.text}</span></td>`;
-                    } else {
-                        cells += `<td style="text-align: center; font-weight: bold;">${calculateUnitTotal(s, key).toFixed(1)}</td>`;
-                    }
-
-                    return `<tr>${cells}</tr>`;
-                }).join('');
-
-                sectionsHTML += `
-                    <div class="report-section">
-                        <h2 class="section-title">${title}</h2>
-                        <table>
-                            <thead>
-                                <tr>${headCols.map(h => `<th>${h}</th>`).join('')}</tr>
-                            </thead>
-                            <tbody>
-                                ${rowsHTML}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
+                return row;
             });
 
-            return sectionsHTML;
-        };
+            autoTable(doc, {
+                startY: currentY + 5,
+                head: [headCols],
+                body: body,
+                theme: 'grid',
+                styles: {
+                    fontSize: 8,
+                    cellPadding: 3,
+                    valign: 'middle',
+                    halign: 'center',
+                    lineColor: [241, 245, 249],
+                    lineWidth: 0.1,
+                    textColor: [71, 85, 105]
+                },
+                headStyles: {
+                    fillColor: [248, 250, 252],
+                    textColor: [71, 85, 105],
+                    fontStyle: 'bold',
+                    lineWidth: 0,
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', cellWidth: 15 },
+                    1: { halign: 'left', cellWidth: 60, fontStyle: 'bold' },
+                    [headCols.length - 1]: { fontStyle: 'bold' }
+                },
+                didParseCell: (data) => {
+                    // Color Low Grades Red
+                    if (data.section === 'body' && data.column.index > 1) {
+                        const val = parseFloat(data.cell.raw as string);
+                        if (!isNaN(val) && val < 6.0) {
+                            data.cell.styles.textColor = [239, 68, 68];
+                        }
+                    }
+                },
+                didDrawCell: (data) => {
+                    // Draw Badges for Status/Result
+                    const isResultCol = (key === 'results' && data.column.index === headCols.length - 1);
+                    const isStatusCol = ((key === 'final' || key === 'recovery') && data.column.index === headCols.length - 1);
 
-        const htmlContent = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <style>
-                    @page { size: portrait; margin: 15mm; }
-                    body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; margin: 0; padding: 0; line-height: 1.5; }
-                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0ea5e9; padding-bottom: 15px; margin-bottom: 30px; }
-                    .school-info { flex: 1; }
-                    .school-name { font-size: 24pt; font-weight: 900; color: #0ea5e9; font-family: 'Arial Black', sans-serif; letter-spacing: -1.5px; margin: 0; line-height: 1; }
-                    .school-sub { font-size: 9pt; color: #0ea5e9; font-weight: bold; text-transform: uppercase; margin-top: 4px; display: block; }
-                    .report-info { text-align: right; }
-                    .report-title { font-size: 14pt; font-weight: bold; color: #64748b; margin: 0; text-transform: uppercase; }
-                    .class-info { font-size: 11pt; color: #334155; font-weight: bold; margin-top: 5px; }
-                    
-                    .report-section { margin-bottom: 40px; break-inside: avoid; }
-                    .section-title { font-size: 12pt; font-weight: 800; color: #1e293b; background: #f1f5f9; padding: 8px 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #0ea5e9; text-transform: uppercase; letter-spacing: 0.5px; }
-                    
-                    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10pt; }
-                    th { background-color: #f8fafc; color: #64748b; font-weight: bold; text-transform: uppercase; font-size: 8pt; padding: 8px; border: 1px solid #e2e8f0; text-align: center; }
-                    td { padding: 8px; border: 1px solid #e2e8f0; color: #334155; }
-                    tr:nth-child(even) { background-color: #fcfcfc; }
-                    
-                    .status-badge { font-weight: bold; padding: 2px 8px; border-radius: 99px; font-size: 8pt; display: inline-block; white-space: nowrap; }
-                    .text-emerald-600 { color: #059669; }
-                    .text-red-600 { color: #dc2626; }
-                    .text-rose-600 { color: #e11d48; }
-                    .text-slate-500 { color: #64748b; }
-                    
-                    .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 8pt; color: #94a3b8; padding: 10px 0; border-top: 1px solid #f1f5f9; }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <div class="school-info">
-                        <h1 class="school-name">CENSC</h1>
-                        <span class="school-sub">CENTRO EDUCACIONAL NOSSA SRA DO CENÁCULO</span>
-                    </div>
-                    <div class="report-info">
-                        <p class="report-title">Relatório de Desempenho Escolar</p>
-                        <p class="class-info">${activeSeries?.name} - Turma ${selectedSection}</p>
-                        <p style="font-size: 9pt; color: #64748b; margin-top: 2px;">Professor: ${currentUser?.name?.toUpperCase()}</p>
-                    </div>
-                </div>
+                    if (data.section === 'body' && (isResultCol || isStatusCol)) {
+                        const text = data.cell.raw as string;
+                        // Hide original text
+                        // Actually autoTable will draw text after this hook if we don't return false or something? 
+                        // Wait, didDrawCell is called AFTER text. 
+                        // Better to clear text in didParseCell if we want to custom draw fully.
 
-                ${generateReportHTML()}
+                        // Let's just draw a colored RECT behind the text? No, text color needs to be white.
 
-                <div class="footer">
-                    Gerado pelo Prof. Acerta+ em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}
-                </div>
-            </body>
-            </html>
-        `;
+                        const x = data.cell.x + 2;
+                        const y = data.cell.y + 2;
+                        const w = data.cell.width - 4;
+                        const h = data.cell.height - 4;
 
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-        const doc = iframe.contentWindow?.document;
-        if (!doc) return;
+                        let color: [number, number, number] = [148, 163, 184]; // Slate
+                        if (text.includes('Aprovado')) color = [34, 197, 94]; // Green
+                        else if (text.includes('Reprovado') || text.includes('Perdeu')) color = [239, 68, 68]; // Red
+                        else if (text.includes('Recuperação') || text.includes('Prova Final')) color = [245, 158, 11]; // Amber
 
-        doc.open();
-        doc.write(htmlContent);
-        doc.close();
+                        doc.setFillColor(...color);
+                        doc.roundedRect(x, y, w, h, 2, 2, 'F');
 
-        setTimeout(() => {
-            iframe.contentWindow?.print();
-            setTimeout(() => {
-                document.body.removeChild(iframe);
-            }, 100);
-        }, 500);
+                        doc.setTextColor(255, 255, 255);
+                        doc.setFontSize(7);
+                        doc.font = "helvetica";
+                        doc.setFont("helvetica", "bold");
+                        doc.text(text, data.cell.x + data.cell.width / 2, data.cell.y + data.cell.height / 2 + 1, { align: 'center' });
+                    }
+                },
+                willDrawCell: (data) => {
+                    // Suppress default text for badge columns
+                    const isResultCol = (key === 'results' && data.column.index === headCols.length - 1);
+                    const isStatusCol = ((key === 'final' || key === 'recovery') && data.column.index === headCols.length - 1);
+                    if (data.section === 'body' && (isResultCol || isStatusCol)) {
+                        data.cell.text = [];
+                    }
+                }
+            });
 
+            currentY = (doc as any).lastAutoTable.finalY + 15;
+
+            // New Page check
+            if (currentY > 250) {
+                doc.addPage();
+                drawHeader();
+                currentY = 50;
+            }
+        });
+
+        // Footer
+        const pageCount = (doc as any).internal.getNumberOfPages();
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.text(`Página ${i} de ${pageCount} • Gerado por Prof. Acerta+`, 105, 290, { align: 'center' });
+        }
+
+        doc.save(`Notas_${activeSeries?.name}_${selectedSection}.pdf`);
         setShowExportModal(false);
     };
 
@@ -614,7 +680,7 @@ export const Grades: React.FC = () => {
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Unidades para Incluir:</label>
                                 <div className="grid grid-cols-2 gap-2">
-                                    {(Object.keys(exportConfig.units) as Array<keyof typeof exportConfig.units>).map(key => (
+                                    {(['1', '2', '3', 'final', 'recovery', 'results'] as const).map(key => (
                                         <label key={key} className="flex items-center space-x-2 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer">
                                             <input
                                                 type="checkbox"
@@ -625,8 +691,15 @@ export const Grades: React.FC = () => {
                                                 }))}
                                                 className="rounded text-indigo-600 focus:ring-indigo-500"
                                             />
-                                            <span className="text-sm text-slate-600 dark:text-slate-300">
-                                                {key === 'final' ? 'Prova Final' : key === 'recovery' ? 'Recuperação' : key === 'results' ? 'Resultado Final' : `${key}ª Unidade`}
+                                            <span className="text-sm text-slate-600 dark:text-slate-300 font-bold">
+                                                {{
+                                                    '1': '1ª Unidade',
+                                                    '2': '2ª Unidade',
+                                                    '3': '3ª Unidade',
+                                                    'final': 'Prova Final',
+                                                    'recovery': 'Recuperação',
+                                                    'results': 'Resultado Final'
+                                                }[key]}
                                             </span>
                                         </label>
                                     ))}

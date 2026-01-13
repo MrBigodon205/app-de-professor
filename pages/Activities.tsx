@@ -10,6 +10,7 @@ import { DatePicker } from '../components/DatePicker';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { useDebounce } from '../hooks/useDebounce';
 import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Fallback types if fetch fails
 const DEFAULT_ACTIVITY_TYPES = ['Prova', 'Trabalho', 'Dever de Casa', 'Seminário', 'Pesquisa', 'Conteúdo', 'Outro'];
@@ -523,111 +524,164 @@ export const Activities: React.FC = () => {
         }
     };
 
+    // Utility to convert tailwind color names or hex to RGB for jsPDF
+    const getThemeRGB = (colorClass: string): [number, number, number] => {
+        const map: Record<string, [number, number, number]> = {
+            'indigo-600': [79, 70, 229],
+            'emerald-600': [5, 150, 105],
+            'rose-600': [225, 29, 72],
+            'amber-600': [217, 119, 6],
+            'slate-600': [71, 85, 105],
+            'blue-500': [59, 130, 246], // Sky/Blue
+        };
+        return map[colorClass] || [59, 130, 246];
+    };
+
     const handleExportPDF = () => {
         if (!currentActivity) return;
 
-        const doc = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4'
-        });
+        const doc = new jsPDF();
+        const primaryRGB = getThemeRGB(`${theme.baseColor}-600`);
 
-        const margin = 20;
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const contentWidth = pageWidth - (margin * 2);
+        // --- HELPER: Draw Premium Header ---
+        const drawHeader = () => {
+            doc.setFillColor(...primaryRGB);
+            doc.rect(0, 0, 210, 40, 'F');
 
-        // Header
-        doc.setFontSize(24);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(14, 165, 233); // #0ea5e9
-        doc.text('CENSC', margin, margin);
+            // Circles
+            doc.setFillColor(255, 255, 255);
+            doc.setGState(new (doc as any).GState({ opacity: 0.1 }));
+            doc.circle(190, 10, 40, 'F');
+            doc.circle(20, 50, 30, 'F');
+            doc.setGState(new (doc as any).GState({ opacity: 1 }));
 
-        doc.setFontSize(9);
-        doc.text('CENTRO EDUCACIONAL NOSSA SRA DO CENÁCULO', margin, margin + 5);
-
-        doc.setDrawColor(226, 232, 240);
-        doc.line(margin, margin + 10, pageWidth - margin, margin + 10);
-
-        // Activity Info
-        doc.setTextColor(30, 41, 59); // slate-800
-        doc.setFontSize(18);
-        doc.text(currentActivity.title, margin, margin + 25);
-
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Tipo:', margin, margin + 35);
-        doc.setFont('helvetica', 'normal');
-        doc.text(currentActivity.type, margin + 12, margin + 35);
-
-        doc.setFont('helvetica', 'bold');
-        doc.text('Data:', margin + 60, margin + 35);
-        doc.setFont('helvetica', 'normal');
-        const dateText = currentActivity.type === 'Conteúdo'
-            ? `${new Date((currentActivity.startDate || currentActivity.date) + 'T12:00:00').toLocaleDateString('pt-BR')} - ${new Date((currentActivity.endDate || currentActivity.date) + 'T12:00:00').toLocaleDateString('pt-BR')}`
-            : new Date(currentActivity.date + 'T12:00:00').toLocaleDateString('pt-BR');
-        doc.text(dateText, margin + 72, margin + 35);
-
-        doc.setFont('helvetica', 'bold');
-        doc.text('Turma:', margin, margin + 42);
-        doc.setFont('helvetica', 'normal');
-        const className = classes.find(c => c.id === currentActivity.seriesId)?.name || '';
-        doc.text(`${className}${currentActivity.section ? ` - Turma ${currentActivity.section}` : ''}`, margin + 15, margin + 42);
-
-        doc.line(margin, margin + 48, pageWidth - margin, margin + 48);
-
-        // Description
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.text('Detalhes da Atividade:', margin, margin + 60);
-
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
-        const descriptionText = currentActivity.description.replace(/<[^>]+>/g, ' ');
-        const splitDescription = doc.splitTextToSize(descriptionText, contentWidth);
-        doc.text(splitDescription, margin, margin + 68);
-
-        // Completion List (if not Content)
-        if (currentActivity.type !== 'Conteúdo') {
-            let yPos = margin + 75 + (splitDescription.length * 5);
-            if (yPos > doc.internal.pageSize.getHeight() - 40) {
-                doc.addPage();
-                yPos = margin;
-            }
-
+            // Brand
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(24);
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(12);
-            doc.text('Lista de Entrega / Realização:', margin, yPos);
+            doc.text('CENSC', 14, 25);
 
-            doc.setFontSize(9);
-            yPos += 8;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Centro Educacional Nossa Sra do Cenáculo', 14, 32);
 
-            students.forEach((s, i) => {
-                if (yPos > doc.internal.pageSize.getHeight() - 20) {
-                    doc.addPage();
-                    yPos = margin;
-                }
-                const isDone = currentActivity.completions?.includes(s.id);
-                doc.setDrawColor(203, 213, 225);
-                doc.rect(margin, yPos - 4, contentWidth, 8);
-                doc.text(`${s.number}. ${s.name}`, margin + 2, yPos + 1);
+            // Badge
+            doc.setFillColor(255, 255, 255);
+            doc.roundedRect(145, 10, 50, 20, 3, 3, 'F');
+            doc.setTextColor(...primaryRGB);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ATIVIDADE', 170, 17, { align: 'center' });
 
-                if (isDone) {
-                    doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(22, 163, 74); // green-600
-                    doc.text('CONCLUÍDO', pageWidth - margin - 20, yPos + 1);
-                    doc.setTextColor(30, 41, 59);
-                    doc.setFont('helvetica', 'normal');
-                } else {
-                    doc.setTextColor(148, 163, 184); // slate-400
-                    doc.text('PENDENTE', pageWidth - margin - 20, yPos + 1);
-                    doc.setTextColor(30, 41, 59);
-                }
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100, 116, 139);
+            doc.text(`${activeSeries?.name} - ${selectedSection}`, 170, 22, { align: 'center' });
+            doc.text(currentActivity.type.toUpperCase(), 170, 26, { align: 'center' });
+        };
 
-                yPos += 8;
-            });
+        drawHeader();
+
+        // --- Activity Details Card ---
+        doc.setFillColor(248, 250, 252); // Slate 50
+        doc.setDrawColor(226, 232, 240); // Slate 200
+        doc.roundedRect(14, 50, 182, 30, 3, 3, 'FD');
+
+        doc.setTextColor(30, 41, 59);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text(currentActivity.title, 20, 60);
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 116, 139);
+
+        const dateText = currentActivity.type === 'Conteúdo'
+            ? `${new Date((currentActivity.startDate || currentActivity.date) + 'T12:00:00').toLocaleDateString('pt-BR')} até ${new Date((currentActivity.endDate || currentActivity.date) + 'T12:00:00').toLocaleDateString('pt-BR')}`
+            : new Date(currentActivity.date + 'T12:00:00').toLocaleDateString('pt-BR');
+
+        doc.text(`Data: ${dateText}  •  Disciplina: ${(currentUser?.subject || 'Geral').toUpperCase()}`, 20, 68);
+
+        let currentY = 90;
+
+        // Description Section
+        if (currentActivity.description) {
+            doc.setFontSize(11);
+            doc.setTextColor(30, 41, 59);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Descrição / Orientações:', 14, currentY);
+
+            currentY += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(51, 65, 85);
+
+            const cleanDesc = currentActivity.description.replace(/<[^>]+>/g, ' '); // Strip HTML tags
+            const splitDesc = doc.splitTextToSize(cleanDesc, 180);
+            doc.text(splitDesc, 14, currentY);
+            currentY += (splitDesc.length * 5) + 10;
         }
 
-        doc.save(`Atividade-${currentActivity.title}.pdf`);
+        // Student List Table
+        if (currentActivity.type !== 'Conteúdo') {
+            doc.setFontSize(11);
+            doc.setTextColor(30, 41, 59);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Lista de Entrega / Realização:', 14, currentY);
+
+            const body = students.map(s => {
+                const isDone = currentActivity.completions?.includes(s.id);
+                return [s.number, s.name, isDone ? 'CONCLUÍDO' : 'PENDENTE'];
+            });
+
+            autoTable(doc, {
+                startY: currentY + 5,
+                head: [['Nº', 'ALUNO', 'STATUS']],
+                body: body,
+                theme: 'grid',
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 3,
+                    valign: 'middle',
+                    lineColor: [241, 245, 249],
+                    lineWidth: 0.1,
+                    textColor: [51, 65, 85]
+                },
+                headStyles: {
+                    fillColor: [248, 250, 252],
+                    textColor: [71, 85, 105],
+                    fontStyle: 'bold',
+                },
+                columnStyles: {
+                    0: { cellWidth: 15, halign: 'center', fontStyle: 'bold' },
+                    1: { cellWidth: 'auto' },
+                    2: { cellWidth: 40, halign: 'center', fontStyle: 'bold' }
+                },
+                didParseCell: (data) => {
+                    if (data.section === 'body' && data.column.index === 2) {
+                        const val = data.cell.raw;
+                        if (val === 'CONCLUÍDO') {
+                            data.cell.styles.textColor = [22, 163, 74];
+                        } else {
+                            data.cell.styles.textColor = [148, 163, 184];
+                        }
+                    }
+                }
+            });
+
+            currentY = (doc as any).lastAutoTable.finalY + 15;
+        }
+
+        // Footer
+        const pageCount = (doc as any).internal.getNumberOfPages();
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.text(`Página ${i} de ${pageCount} • Gerado por Prof. Acerta+`, 105, 290, { align: 'center' });
+        }
+
+        doc.save(`Atividade-${currentActivity.title.replace(/[^a-z0-9]/gi, '_')}.pdf`);
     };
 
     const handlePrint = () => {
@@ -1098,8 +1152,11 @@ export const Activities: React.FC = () => {
                                         <div className="mt-8">
                                             <h3 className="font-bold text-lg border-b border-slate-100 mb-4">Lista de Realização:</h3>
                                             <div className="grid grid-cols-2 gap-x-8 gap-y-2">
-                                                {students.map(s => (
-                                                    <div key={s.id} className="flex items-center justify-between border-b border-slate-100 py-1">
+                                                {students.map((s, idx) => (
+                                                    <div key={s.id}
+                                                        className="flex items-center justify-between border-b border-slate-100 py-1 animate-in slide-in-from-bottom-2 fade-in duration-500 fill-mode-backwards"
+                                                        style={{ animationDelay: `${idx * 50}ms` }}
+                                                    >
                                                         <span className="text-xs">{s.number}. {s.name}</span>
                                                         <div className="size-4 border border-slate-300 flex items-center justify-center">
                                                             {currentActivity.completions?.includes(s.id) && <span className="material-symbols-outlined text-[12px]">check</span>}
@@ -1223,8 +1280,9 @@ export const Activities: React.FC = () => {
                                                     return (
                                                         <div
                                                             key={s.id}
-                                                            className={`p-4 bg-white dark:bg-slate-800 flex items-center justify-between group hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer`}
+                                                            className={`p-4 bg-white dark:bg-slate-800 flex items-center justify-between group hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-backwards`}
                                                             onClick={() => toggleCompletion(s.id)}
+                                                            style={{ animationDelay: `${students.indexOf(s) * 30}ms` }}
                                                         >
                                                             <div className="flex items-center gap-3">
                                                                 <span className="text-xs font-mono text-slate-400 w-5">{s.number}</span>

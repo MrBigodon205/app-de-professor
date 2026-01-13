@@ -250,7 +250,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                                                         if (existingLetters.length > 0) {
                                                                             const sorted = [...new Set(existingLetters)].sort();
                                                                             const lastLetter = sorted[sorted.length - 1];
-                                                                            const lastIndex = alphabet.indexOf(lastLetter);
+                                                                            const lastIndex = alphabet.indexOf(lastLetter as string);
                                                                             if (lastIndex !== -1 && lastIndex < alphabet.length - 1) {
                                                                                 nextLetter = alphabet[lastIndex + 1];
                                                                             }

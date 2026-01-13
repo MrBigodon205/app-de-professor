@@ -127,7 +127,9 @@ export const Attendance: React.FC = () => {
     const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
     const [students, setStudents] = useState<Student[]>([]);
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedUnit, setSelectedUnit] = useState<string>('1');
+    const [viewMode, setViewMode] = useState<'daily' | 'history'>('daily');
     const [attendanceMap, setAttendanceMap] = useState<Record<string, string>>({});
     // State to hold ALL record dates for the calendar indicators
     const [activeDates, setActiveDates] = useState<Set<string>>(new Set());
@@ -157,7 +159,7 @@ export const Attendance: React.FC = () => {
             setAttendanceMap({});
             setLoading(false);
         }
-    }, [date, selectedSeriesId, selectedSection, activeSubject]);
+    }, [selectedDate, selectedSeriesId, selectedSection, activeSubject, selectedUnit]);
 
     const fetchData = async (silent = false) => {
         if (!currentUser || !selectedSeriesId || !selectedSection) return;
@@ -190,8 +192,9 @@ export const Attendance: React.FC = () => {
             const { data: todaysRecords, error: attendanceError } = await supabase
                 .from('attendance')
                 .select('*')
-                .eq('date', date)
+                .eq('date', selectedDate)
                 .eq('subject', activeSubject)
+                .eq('unit', selectedUnit)
                 .eq('user_id', currentUser.id)
                 .in('student_id', formattedStudents.map(s => s.id));
 
@@ -227,14 +230,14 @@ export const Attendance: React.FC = () => {
 
         console.log("Setting up Realtime for Attendance...");
 
-        const channel = supabase.channel(`attendance_sync_${selectedSeriesId}_${selectedSection}`)
+        const channel = supabase.channel(`attendance_sync_${selectedSeriesId}_${selectedSection}_${selectedUnit}`)
             .on(
                 'postgres_changes',
                 {
                     event: '*', // Listen to INSERT, UPDATE, DELETE
                     schema: 'public',
                     table: 'attendance',
-                    filter: `date=eq.${date}` // Only listen for changes on CURRENT date to avoid noise
+                    filter: `date=eq.${selectedDate}` // Only listen for changes on CURRENT date to avoid noise
                 },
                 (payload) => {
                     console.log("Realtime Change Received!", payload);
@@ -252,18 +255,22 @@ export const Attendance: React.FC = () => {
             supabase.removeChannel(channel);
             clearInterval(interval);
         };
-    }, [date, selectedSeriesId, selectedSection, currentUser, activeSubject]);
+    }, [selectedDate, selectedSeriesId, selectedSection, currentUser, activeSubject, selectedUnit]);
     // -----------------------------
 
     const fetchActiveDates = async (studentIds: string[]) => {
         if (!currentUser || studentIds.length === 0) return;
         try {
+            const year = new Date(selectedDate).getFullYear();
             // Fetch dates that have AT LEAST ONE record for these students
             const { data, error } = await supabase
                 .from('attendance')
                 .select('date')
                 .eq('user_id', currentUser.id)
                 .eq('subject', activeSubject)
+                .eq('unit', selectedUnit)
+                .gte('date', `${year}-01-01`)
+                .lte('date', `${year}-12-31`)
                 .in('student_id', studentIds);
 
             if (error) throw error;
@@ -284,8 +291,9 @@ export const Attendance: React.FC = () => {
                     .from('attendance')
                     .delete()
                     .eq('student_id', studentId)
-                    .eq('date', date)
+                    .eq('date', selectedDate)
                     .eq('subject', activeSubject)
+                    .eq('unit', selectedUnit)
                     .eq('user_id', currentUser.id);
 
                 if (error) throw error;
@@ -295,16 +303,17 @@ export const Attendance: React.FC = () => {
                     .from('attendance')
                     .upsert({
                         student_id: studentId,
-                        date,
-                        status,
+                        date: selectedDate,
+                        status: status,
                         series_id: selectedSeriesId,
                         section: selectedSection,
                         user_id: currentUser.id,
-                        subject: activeSubject
-                    }, { onConflict: 'student_id, date, user_id, subject' }); // Updated constraint
+                        subject: activeSubject,
+                        unit: selectedUnit
+                    }, { onConflict: 'student_id, date, user_id, subject, unit' });
 
                 if (error) throw error;
-                setActiveDates(prev => new Set(prev).add(date));
+                setActiveDates(prev => new Set(prev).add(selectedDate));
             }
         } catch (e) {
             console.error(`Failed to update ${studentId}`, e);
@@ -319,7 +328,7 @@ export const Attendance: React.FC = () => {
         const newMap = { ...attendanceMap };
         students.forEach(s => newMap[s.id] = status);
         setAttendanceMap(newMap);
-        if (status !== '') setActiveDates(prev => new Set(prev).add(date));
+        if (status !== '') setActiveDates(prev => new Set(prev).add(selectedDate));
 
         try {
             const promises = students.map(async (s) => {
@@ -327,20 +336,22 @@ export const Attendance: React.FC = () => {
                     return supabase.from('attendance')
                         .delete()
                         .eq('student_id', s.id)
-                        .eq('date', date)
+                        .eq('date', selectedDate)
                         .eq('subject', activeSubject)
+                        .eq('unit', selectedUnit)
                         .eq('user_id', currentUser.id);
                 } else {
                     return supabase.from('attendance')
                         .upsert({
                             student_id: s.id,
-                            date,
-                            status,
+                            date: selectedDate,
+                            status: status,
                             series_id: selectedSeriesId,
                             section: selectedSection,
                             user_id: currentUser.id,
-                            subject: activeSubject
-                        }, { onConflict: 'student_id, date, user_id, subject' });
+                            subject: activeSubject,
+                            unit: selectedUnit
+                        }, { onConflict: 'student_id, date, user_id, subject, unit' });
                 }
             });
 
@@ -365,34 +376,50 @@ export const Attendance: React.FC = () => {
         const doc = new jsPDF({ orientation: 'landscape' });
         const primaryRGB = getThemeRGB(theme.primaryColor);
 
-        // --- 1. MODERN HEADER ---
-        doc.setFillColor(...primaryRGB);
-        doc.rect(0, 0, 297, 40, 'F');
+        // --- HELPER: Draw Premium Header ---
+        const drawHeader = () => {
+            // Background
+            doc.setFillColor(...primaryRGB);
+            doc.rect(0, 0, 297, 40, 'F');
 
-        // Circular Overlay Accents
-        doc.setFillColor(255, 255, 255);
-        doc.setGState(new (doc as any).GState({ opacity: 0.1 }));
-        doc.circle(280, -10, 50, 'F');
-        doc.circle(20, 50, 30, 'F');
-        doc.setGState(new (doc as any).GState({ opacity: 1 }));
+            // Decorative Circles
+            doc.setFillColor(255, 255, 255);
+            doc.setGState(new (doc as any).GState({ opacity: 0.1 }));
+            doc.circle(280, 10, 40, 'F');
+            doc.circle(20, 50, 30, 'F');
+            doc.setGState(new (doc as any).GState({ opacity: 1 }));
 
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(28);
-        doc.setFont('helvetica', 'bold');
-        doc.text("PROF. ACERTA+", 14, 25);
+            // Brand
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(24);
+            doc.setFont('helvetica', 'bold');
+            doc.text('PROF. ACERTA+', 14, 25);
 
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Registro de Frequência - ${activeSeries?.name} ${selectedSection}`, 14, 34);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Sistema de Gestão Escolar Inteligente', 14, 32);
 
-        doc.setFontSize(10);
-        const timestamp = `Emissão: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`;
-        doc.text(timestamp, 283, 34, { align: 'right' });
+            // Report Title Badge
+            doc.setFillColor(255, 255, 255);
+            doc.roundedRect(220, 10, 63, 20, 3, 3, 'F');
+            doc.setTextColor(...primaryRGB);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.text('REGISTRO DE FREQUÊNCIA', 251.5, 17, { align: 'center' });
+
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100, 116, 139);
+            doc.text(`${activeSeries?.name} - ${selectedSection} • Unidade ${selectedUnit}`, 251.5, 22, { align: 'center' });
+            doc.text(new Date().toLocaleDateString('pt-BR'), 251.5, 26, { align: 'center' });
+        };
+
+        drawHeader();
 
         // --- 2. DATA PREPARATION ---
         setLoading(true);
         try {
-            const targetYear = new Date(date).getFullYear();
+            const targetYear = new Date(selectedDate).getFullYear();
 
             // Fetch Full Year Records
             const { data: allRecords, error } = await supabase
@@ -400,6 +427,7 @@ export const Attendance: React.FC = () => {
                 .select('*')
                 .eq('user_id', currentUser.id)
                 .eq('subject', activeSubject)
+                .eq('unit', selectedUnit)
                 .in('student_id', students.map(s => s.id));
 
             if (error) throw error;
@@ -412,13 +440,13 @@ export const Attendance: React.FC = () => {
             // Merge local pending changes
             Object.keys(attendanceMap).forEach(sid => {
                 const pendingStatus = attendanceMap[sid];
-                const existingIndex = yearRecords.findIndex((r: any) => r.student_id.toString() === sid && r.date === date);
+                const existingIndex = yearRecords.findIndex((r: any) => r.student_id.toString() === sid && r.date === selectedDate);
                 if (existingIndex >= 0) {
                     yearRecords[existingIndex].status = pendingStatus;
                 } else if (pendingStatus) {
                     yearRecords.push({
                         student_id: Number(sid),
-                        date: date,
+                        date: selectedDate,
                         status: pendingStatus
                     });
                 }
@@ -430,10 +458,10 @@ export const Attendance: React.FC = () => {
             const sortedDateStrings = Array.from(activeDatesSet).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
             // --- 3. TABLE GENERATION ---
-            const head = [['Nº', 'Nome do Aluno', ...sortedDateStrings.map(ds => {
+            const head = [['Nº', 'ALUNO', ...sortedDateStrings.map(ds => {
                 const d = new Date(ds + 'T12:00:00');
                 return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-            }), 'Presenças %']];
+            }), 'FREQ %']];
 
             const body = students.map(s => {
                 let presenceCount = 0;
@@ -443,14 +471,16 @@ export const Attendance: React.FC = () => {
                 sortedDateStrings.forEach(ds => {
                     const record = yearRecords.find((r: any) => r.student_id.toString() === s.id && r.date === ds);
                     const status = record ? record.status : '-';
+                    // Store bare status char for parsing later
                     row.push(status);
 
                     if (status === 'P') { presenceCount++; validDays++; }
                     else if (status === 'F' || status === 'J') { validDays++; }
                 });
 
-                const percentage = validDays > 0 ? ((presenceCount / validDays) * 100).toFixed(0) + '%' : '-';
-                row.push(percentage);
+                // Calculate % but return formatted string
+                const percentage = validDays > 0 ? (presenceCount / validDays) * 100 : 100;
+                row.push(percentage); // Keep as number for bar drawing
                 return row;
             });
 
@@ -461,40 +491,87 @@ export const Attendance: React.FC = () => {
                 theme: 'grid',
                 styles: {
                     fontSize: 8,
-                    cellPadding: 1.5,
+                    cellPadding: 2,
                     valign: 'middle',
                     halign: 'center',
-                    lineColor: [226, 232, 240],
+                    lineColor: [241, 245, 249],
                     lineWidth: 0.1,
+                    textColor: [71, 85, 105]
                 },
                 headStyles: {
                     fillColor: [248, 250, 252],
-                    textColor: [30, 41, 59],
+                    textColor: [71, 85, 105],
                     fontStyle: 'bold',
-                    lineWidth: 0.1,
+                    lineWidth: 0,
                 },
                 alternateRowStyles: {
-                    fillColor: [252, 253, 255]
+                    fillColor: [255, 255, 255]
                 },
                 columnStyles: {
                     0: { fontStyle: 'bold', cellWidth: 10 },
-                    1: { halign: 'left', cellWidth: 50 },
-                    [head[0].length - 1]: { fontStyle: 'bold', fillColor: [241, 245, 249] }
+                    1: { halign: 'left', cellWidth: 50, fontStyle: 'bold' },
+                    [head[0].length - 1]: { cellWidth: 25 }
                 },
                 didParseCell: (data) => {
+                    // Hide text for status columns (we will draw dots)
                     if (data.section === 'body' && data.column.index > 1 && data.column.index < head[0].length - 1) {
-                        const val = data.cell.raw;
+                        // data.cell.text = []; // Clear text to only show dot? 
+                        // Check if we want to show text AND dot or just dot. 
+                        // "Status Columns: Instead of 'P'/'F', draw Colored Dots" according to plan.
+                        data.cell.styles.textColor = [255, 255, 255]; // Verify invisible text approach
+                    }
+                    if (data.section === 'body' && data.column.index === head[0].length - 1) {
+                        data.cell.styles.textColor = [255, 255, 255]; // Hide percentage number, redraw manually
+                    }
+                },
+                didDrawCell: (data) => {
+                    if (data.section === 'body' && data.column.index > 1 && data.column.index < head[0].length - 1) {
+                        const val = data.cell.raw as string;
+                        const x = data.cell.x + data.cell.width / 2;
+                        const y = data.cell.y + data.cell.height / 2;
+
                         if (val === 'P') {
-                            data.cell.styles.textColor = [22, 163, 74];
-                            data.cell.styles.fontStyle = 'bold';
+                            doc.setFillColor(34, 197, 94); // Green-500
+                            doc.circle(x, y, 1.5, 'F');
                         } else if (val === 'F') {
-                            data.cell.styles.textColor = [225, 29, 72];
-                            data.cell.styles.fontStyle = 'bold';
+                            doc.setFillColor(239, 68, 68); // Red-500
+                            doc.circle(x, y, 1.5, 'F');
                         } else if (val === 'J') {
-                            data.cell.styles.textColor = [217, 119, 6];
+                            doc.setFillColor(245, 158, 11); // Amber-500
+                            doc.circle(x, y, 1.5, 'F');
+                        } else if (val === 'S') {
+                            doc.setFillColor(148, 163, 184); // Slate-400
+                            doc.circle(x, y, 1, 'F');
                         } else {
-                            data.cell.styles.textColor = [148, 163, 184];
+                            doc.setFillColor(226, 232, 240); // Slate-200 (Empty)
+                            doc.circle(x, y, 0.5, 'F');
                         }
+                    }
+
+                    // Progress Bar for Percentage
+                    if (data.section === 'body' && data.column.index === head[0].length - 1) {
+                        const val = data.cell.raw as number; // It's a number now
+                        const x = data.cell.x + 2;
+                        const y = data.cell.y + (data.cell.height / 2) - 1.5;
+                        const w = data.cell.width - 4;
+
+                        // Track
+                        doc.setFillColor(226, 232, 240);
+                        doc.roundedRect(x, y, w, 3, 1, 1, 'F');
+
+                        // Bar
+                        const barW = (val / 100) * w;
+                        if (val >= 70) doc.setFillColor(34, 197, 94);
+                        else if (val >= 50) doc.setFillColor(234, 179, 8);
+                        else doc.setFillColor(239, 68, 68);
+
+                        doc.roundedRect(x, y, barW, 3, 1, 1, 'F');
+
+                        // Text Label next to it? or centered?
+                        // Let's draw text manually centered
+                        doc.setTextColor(71, 85, 105);
+                        doc.setFontSize(6);
+                        doc.text(`${val.toFixed(0)}%`, x + w + 1, y + 2.5, { align: 'left' });
                     }
                 }
             });
@@ -502,13 +579,13 @@ export const Attendance: React.FC = () => {
             // --- 4. FOOTER ---
             const pageCount = (doc as any).internal.getNumberOfPages();
             doc.setFontSize(8);
-            doc.setTextColor(150);
+            doc.setTextColor(148, 163, 184);
             for (let i = 1; i <= pageCount; i++) {
                 doc.setPage(i);
-                doc.text(`Página ${i} de ${pageCount}`, 283, 200, { align: 'right' }); // Landscape A4 height is 210
+                doc.text(`Página ${i} de ${pageCount} • Gerado por Prof. Acerta+`, 148.5, 200, { align: 'center' });
             }
 
-            doc.save(`Frequencia_${activeSeries?.name}_${selectedSection}_${targetYear}.pdf`);
+            doc.save(`Frequencia_${activeSeries?.name}_${selectedSection}_Unidade${selectedUnit}_${targetYear}.pdf`);
 
         } catch (e) {
             console.error("PDF Error", e);
@@ -556,7 +633,7 @@ export const Attendance: React.FC = () => {
                             <div className="flex flex-col items-start leading-none gap-0.5">
                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Data do Registro</span>
                                 <span className="font-bold text-slate-700 dark:text-slate-200">
-                                    {new Date(date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                                    {new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                                 </span>
                             </div>
                             <span className={`material-symbols-outlined text-slate-400 transition-transform ${showCalendar ? 'rotate-180' : ''}`}>expand_more</span>
@@ -564,8 +641,8 @@ export const Attendance: React.FC = () => {
 
                         {showCalendar && (
                             <MiniCalendar
-                                currentDate={date}
-                                onSelectDate={setDate}
+                                currentDate={selectedDate}
+                                onSelectDate={setSelectedDate}
                                 activeDates={activeDates}
                                 onClose={() => setShowCalendar(false)}
                                 theme={theme}
@@ -583,7 +660,22 @@ export const Attendance: React.FC = () => {
 
                     <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
 
-                    <div className={`flex items-center gap-2 px-4 h-11 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-500/20 font-bold text-sm`}>
+                    <div className="flex items-center bg-slate-50 dark:bg-slate-800 rounded-2xl p-1 border border-slate-200 dark:border-slate-700">
+                        {['1', '2', '3'].map((unit) => (
+                            <button
+                                key={unit}
+                                onClick={() => setSelectedUnit(unit)}
+                                className={`h-9 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${selectedUnit === unit
+                                    ? `bg-white dark:bg-slate-700 text-${theme.primaryColor} shadow-sm ring-1 ring-slate-200 dark:ring-slate-600`
+                                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                                    }`}
+                            >
+                                {unit}ª Unid
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className={`flex items-center gap-2 px-4 h-11 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-500/20 font-bold text-sm ml-2`}>
                         <span className="material-symbols-outlined text-lg animate-pulse">cloud_done</span>
                         Auto-salve
                     </div>
@@ -632,6 +724,7 @@ export const Attendance: React.FC = () => {
                                         </td>
                                         <td className="px-8 py-4">
                                             <div className="flex items-center gap-4">
+                                                <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-2"></div>
                                                 <div className={`size-10 rounded-xl bg-gradient-to-br from-${theme.primaryColor}/10 to-${theme.secondaryColor}/10 flex items-center justify-center text-${theme.primaryColor} font-bold text-sm border border-${theme.primaryColor}/10`}>
                                                     {s.name.substring(0, 1)}
                                                 </div>

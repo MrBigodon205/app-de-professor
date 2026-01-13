@@ -13,14 +13,14 @@ export const Observations: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'general' | 'occurrences'>('general');
     const [students, setStudents] = useState<Student[]>([]);
     const [occurrences, setOccurrences] = useState<Occurrence[]>([]);
-    const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+    const [selectedStudentId, setSelectedStudentId] = useState('');
     const [selectedUnit, setSelectedUnit] = useState<string>('1');
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
     // Form States
-    const [occType, setOccType] = useState('Indisciplina');
-    const [occDescription, setOccDescription] = useState('');
+    const [type, setType] = useState<Occurrence['type']>('Alerta');
+    const [description, setDescription] = useState('');
     const [occurrenceDate, setOccurrenceDate] = useState(new Date().toLocaleDateString('sv-SE'));
     const [editingOccId, setEditingOccId] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
@@ -90,6 +90,7 @@ export const Observations: React.FC = () => {
                         type: o.type,
                         description: o.description,
                         date: o.date,
+                        unit: o.unit,
                         userId: o.user_id
                     }));
                 setOccurrences(formattedOcc);
@@ -142,14 +143,15 @@ export const Observations: React.FC = () => {
     );
 
     const handleSaveOccurrence = async () => {
-        if (!selectedStudentId || !occDescription || !currentUser) return;
+        if (!selectedStudentId || !description || !currentUser) return;
         setSaving(true);
 
         const occurrenceData = {
             student_id: selectedStudentId,
-            type: occType,
-            description: occDescription,
             date: occurrenceDate,
+            type,
+            description,
+            unit: selectedUnit,
             user_id: currentUser.id,
             subject: activeSubject
         };
@@ -170,11 +172,14 @@ export const Observations: React.FC = () => {
                         type: data.type,
                         description: data.description,
                         date: data.date,
+                        unit: data.unit,
                         userId: data.user_id
                     };
                     setOccurrences(occurrences.map(o => o.id === editingOccId ? updated : o));
                     setEditingOccId(null);
-                    setOccDescription('');
+                    setDescription('');
+                    setType('Alerta');
+                    setSelectedUnit('1');
                 }
             } else {
                 const { data, error } = await supabase
@@ -190,10 +195,13 @@ export const Observations: React.FC = () => {
                         type: data.type,
                         description: data.description,
                         date: data.date,
+                        unit: data.unit,
                         userId: data.user_id
                     };
                     setOccurrences([...occurrences, savedOcc]);
-                    setOccDescription('');
+                    setDescription('');
+                    setType('Alerta');
+                    setSelectedUnit('1');
                     setOccurrenceDate(new Date().toISOString().split('T')[0]);
                 }
             }
@@ -202,9 +210,10 @@ export const Observations: React.FC = () => {
     }
 
     const handleEditOccurrence = (occ: Occurrence) => {
-        setOccType(occ.type);
-        setOccDescription(occ.description);
+        setType(occ.type);
+        setDescription(occ.description);
         setOccurrenceDate(occ.date);
+        setSelectedUnit(occ.unit);
         setEditingOccId(occ.id);
         setActiveTab('occurrences');
     };
@@ -413,14 +422,16 @@ export const Observations: React.FC = () => {
                                     )}
                                 </label>
                                 <textarea
-                                    value={selectedStudent?.units[selectedUnit]?.observation || ''}
+                                    value={selectedStudent?.units[selectedUnit]?.subjects?.[activeSubject]?.observation || ''}
                                     onChange={(e) => {
                                         const text = e.target.value;
                                         setStudents(students.map(s => {
                                             if (s.id === selectedStudentId) {
                                                 const newUnits = { ...s.units };
                                                 if (!newUnits[selectedUnit]) newUnits[selectedUnit] = {};
-                                                newUnits[selectedUnit].observation = text;
+                                                if (!newUnits[selectedUnit].subjects) newUnits[selectedUnit].subjects = {};
+                                                if (!newUnits[selectedUnit].subjects[activeSubject]) newUnits[selectedUnit].subjects[activeSubject] = {};
+                                                newUnits[selectedUnit].subjects[activeSubject].observation = text;
                                                 return { ...s, units: newUnits };
                                             }
                                             return s;
@@ -459,8 +470,8 @@ export const Observations: React.FC = () => {
                                     <div className="md:col-span-4">
                                         <label className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3 ml-1">Categoria</label>
                                         <select
-                                            value={occType}
-                                            onChange={(e) => setOccType(e.target.value)}
+                                            value={type}
+                                            onChange={(e) => setType(e.target.value as Occurrence['type'])}
                                             className={`w-full h-14 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-sm focus:border-${theme.primaryColor} focus:ring-4 focus:ring-${theme.primaryColor}/10 transition-all cursor-pointer`}
                                         >
                                             <option>Indisciplina</option>
@@ -469,6 +480,7 @@ export const Observations: React.FC = () => {
                                             <option>Elogio</option>
                                             <option>Falta de Material</option>
                                             <option>Uso de Celular</option>
+                                            <option>Alerta</option>
                                         </select>
                                     </div>
                                     <div className="md:col-span-4">
@@ -479,12 +491,29 @@ export const Observations: React.FC = () => {
                                             className="w-full"
                                         />
                                     </div>
+                                    <div className="md:col-span-4">
+                                        <label className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3 ml-1">Unidade</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {['1', '2', '3'].map((u) => (
+                                                <button
+                                                    key={u}
+                                                    onClick={() => setSelectedUnit(u)}
+                                                    className={`h-14 rounded-2xl border-2 font-black text-sm transition-all ${selectedUnit === u
+                                                        ? `border-${theme.primaryColor} bg-${theme.primaryColor}/10 text-${theme.primaryColor}`
+                                                        : 'border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                                                        }`}
+                                                >
+                                                    {u}ª Unid
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                     <div className="md:col-span-12">
                                         <label className="block text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3 ml-1">Descrição Detalhada</label>
                                         <input
                                             type="text"
-                                            value={occDescription}
-                                            onChange={(e) => setOccDescription(e.target.value)}
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
                                             placeholder="Descreva brevemente o ocorrido..."
                                             className={`w-full h-14 px-6 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 font-medium focus:border-${theme.primaryColor} focus:ring-4 focus:ring-${theme.primaryColor}/10 shadow-sm transition-all`}
                                         />
@@ -495,7 +524,7 @@ export const Observations: React.FC = () => {
                                         <button
                                             onClick={() => {
                                                 setEditingOccId(null);
-                                                setOccDescription('');
+                                                setDescription('');
                                                 setOccurrenceDate(new Date().toISOString().split('T')[0]);
                                             }}
                                             className="h-14 px-8 rounded-2xl border border-slate-200 dark:border-slate-800 text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all"
@@ -505,7 +534,7 @@ export const Observations: React.FC = () => {
                                     )}
                                     <button
                                         onClick={handleSaveOccurrence}
-                                        disabled={saving || !occDescription}
+                                        disabled={saving || !description}
                                         className={`${editingOccId ? 'bg-amber-500' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'} font-black h-14 px-8 rounded-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-[10px] shadow-xl disabled:opacity-50`}
                                     >
                                         <span className="material-symbols-outlined text-lg">{editingOccId ? 'save' : 'add_circle'}</span>

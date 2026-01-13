@@ -190,7 +190,8 @@ export const Dashboard: React.FC = () => {
         .select('*')
         .eq('user_id', currentUser.id)
         .eq('subject', activeSubject)
-        .order('date', { ascending: false });
+        .gte('date', new Date().toISOString().split('T')[0]) // Strict date filtering: Only today/future
+        .order('date', { ascending: true }); // Show closest first? Or recent added? Usually future events are ascending.
 
       if (selectedSeriesId) {
         // Optimization: If we can filter by student_id better, great.
@@ -231,6 +232,7 @@ export const Dashboard: React.FC = () => {
         date: o.date,
         type: o.type as any,
         description: o.description,
+        unit: o.unit,
         userId: o.user_id
       })));
 
@@ -250,28 +252,22 @@ export const Dashboard: React.FC = () => {
       let query = supabase.from('plans')
         .select('*')
         .eq('user_id', currentUser.id)
-        .eq('subject', activeSubject)
-        // We need to verify if plans table has subject. 
-        // We migrated classes to have subject.
-        // Plans link to series_id.
-        // So we filter by series that are in this subject.
-        .order('start_date', { ascending: false });
+        .gte('end_date', today) // Strict date filtering: Only plans that end today or in the future
+        .order('start_date', { ascending: true }); // Closest starting plans first
 
-      if (selectedSeriesId) {
+      // Update: Removed subject filter to prevent plans from disappearing (Dashboard should show global overview)
+      /* if (activeSubject) {
+        query = query.eq('subject', activeSubject);
+      } */
+
+      /* if (selectedSeriesId) {
         query = query.eq('series_id', selectedSeriesId);
         if (selectedSection) {
           query = query.or(`section.eq.${selectedSection},section.is.null`);
         }
-      } else {
-        const { data: subjectClasses } = await supabase
-          .from('classes')
-          .select('id')
-          .eq('user_id', currentUser.id)
-          .or(`subject.eq.${activeSubject},subject.is.null`);
-        const classIds = (subjectClasses || []).map(c => c.id);
-        if (classIds.length > 0) query = query.in('series_id', classIds);
-        else query = query.in('series_id', [-1]); // Empty
-      }
+      } */
+      // Removed redundant 'classIds' lookup. If we filter by subject, we trust the subject column on the plan.
+      // This matches Planning.tsx behavior.
 
       const { data } = await query.limit(5);
 
@@ -306,7 +302,8 @@ export const Dashboard: React.FC = () => {
         .select('*')
         .eq('user_id', currentUser.id)
         .eq('subject', activeSubject)
-        .order('date', { ascending: false });
+        .gte('date', new Date().toISOString().split('T')[0]) // Strict date filtering: Only today/future
+        .order('date', { ascending: true }); // Closest upcoming activities FIRST
 
       if (selectedSeriesId) {
         query = query.eq('series_id', selectedSeriesId);
@@ -363,7 +360,7 @@ export const Dashboard: React.FC = () => {
   const contextName = (classes.find(c => c.id === selectedSeriesId)?.name || `Série ${selectedSeriesId}`) + (selectedSection ? ` - Turma ${selectedSection}` : '');
 
   return (
-    <div className="max-w-7xl w-full mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+    <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div data-tour="dashboard-kpi">
         <DashboardHeader
           currentUser={currentUser}

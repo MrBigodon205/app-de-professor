@@ -708,8 +708,13 @@ export const Planning: React.FC = () => {
                     ) : displayedPlans.length === 0 ? (
                         <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 min-h-[200px] flex items-center justify-center">Nenhuma aula encontrada.</div>
                     ) : (
-                        displayedPlans.map(plan => (
-                            <button key={plan.id} onClick={() => handleSelectPlan(plan)} className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}>
+                        displayedPlans.map((plan, idx) => (
+                            <button
+                                key={plan.id}
+                                onClick={() => handleSelectPlan(plan)}
+                                style={{ animationDelay: `${idx * 100}ms` }}
+                                className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm animate-in slide-in-from-left duration-500 fill-mode-backwards ${selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
+                            >
                                 <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
                                 <div className="pl-3">
                                     <div className="flex justify-between items-start mb-2">
@@ -948,6 +953,11 @@ export const Planning: React.FC = () => {
                                             <textarea title="Recursos Utilizados" placeholder="Listar os recursos utilizados..." value={formResources} onChange={e => setFormResources(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-32`} />
                                         </div>
 
+                                        <div>
+                                            <label className="label">Avaliação</label>
+                                            <textarea title="Avaliação" placeholder="Descreva os critérios de avaliação..." value={formAssessment} onChange={e => setFormAssessment(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-32`} />
+                                        </div>
+
                                         <div className="space-y-3">
                                             <label className="label">Anexos</label>
                                             <div className="flex flex-wrap gap-2">
@@ -1106,174 +1116,269 @@ export const Planning: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Print Button (Screen Only) */}
-                                    <div className="flex justify-end print:hidden">
-                                        <button
-                                            onClick={() => {
-                                                const printContent = document.querySelector('.printable-content');
-                                                if (!printContent) return;
-                                                const iframe = document.createElement('iframe');
-                                                iframe.style.position = 'absolute';
-                                                iframe.style.top = '-9999px';
-                                                iframe.style.left = '-9999px';
-                                                document.body.appendChild(iframe);
-                                                const doc = iframe.contentWindow?.document;
-                                                if (!doc) return;
-                                                const styles = document.querySelectorAll('style, link[rel="stylesheet"]');
-                                                styles.forEach(style => doc.head.appendChild(style.cloneNode(true)));
-                                                const printStyle = doc.createElement('style');
-                                                printStyle.textContent = `@page {size: landscape; margin: 0; } body {background: white !important; margin: 0; padding: 10mm !important; } .printable-content {visibility: visible !important; width: 100% !important; margin: 0 !important; }`;
-                                                doc.head.appendChild(printStyle);
-                                                doc.body.innerHTML = printContent.outerHTML;
-                                                setTimeout(() => {
-                                                    iframe.contentWindow?.print();
-                                                    setTimeout(() => document.body.removeChild(iframe), 100);
-                                                }, 500);
-                                            }}
-                                            className="flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl shadow-lg transition-all"
-                                        >
-                                            <span className="material-symbols-outlined">print</span> Imprimir Documento
-                                        </button>
-                                    </div>
+                                    {/* CONTENT PREVIEW CARDS */}
+                                    <div className="px-8 max-w-5xl mx-auto w-full space-y-6">
+                                        {/* Row 1: Objeto & Habilidades */}
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                            <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                                                <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
+                                                    <span className="material-symbols-outlined text-indigo-500">menu_book</span>
+                                                    Conteúdo & Objetivos
+                                                </h3>
 
-                                    {/* ATTACHMENTS VIEW (Screen Only) */}
-                                    {currentPlan.files && currentPlan.files.length > 0 && (
-                                        <div className="print:hidden">
-                                            <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-                                                <span className="material-symbols-outlined">attachment</span> Anexos
-                                            </h3>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                                {currentPlan.files.map((file, index) => (
-                                                    <a
-                                                        key={index}
-                                                        href={file.url}
-                                                        download={file.name}
-                                                        className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group no-underline"
-                                                    >
-                                                        <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">description</span>
-                                                        <div className="min-w-0 flex-1">
-                                                            <div className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{file.name}</div>
-                                                            <div className="text-[10px] text-slate-400 uppercase font-black">{file.size}</div>
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Objeto de Conhecimento</label>
+                                                        <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                                            {currentPlan.title}
                                                         </div>
-                                                        <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">download</span>
-                                                    </a>
-                                                ))}
+                                                    </div>
+
+                                                    {currentPlan.objectives && (
+                                                        <div>
+                                                            <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Objetivos de Aprendizagem</label>
+                                                            <div className="text-sm text-slate-600 dark:text-slate-400 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives) }} />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                                                <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
+                                                    <span className="material-symbols-outlined text-emerald-500">verified</span>
+                                                    BNCC & Habilidades
+                                                </h3>
+
+                                                <div>
+                                                    <div className="flex flex-wrap gap-2 mb-3">
+                                                        {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
+                                                            <span key={i} className="px-2 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 rounded-md text-xs font-bold font-mono border border-emerald-200 dark:border-emerald-500/30">
+                                                                {code}
+                                                            </span>
+                                                        ))}
+                                                        {(!currentPlan.bncc_codes) && <span className="text-slate-400 text-sm italic">Nenhum código informado</span>}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    )}
 
-                                    <div className="border-t border-slate-100 dark:border-slate-800 my-8 print:hidden"></div>
+                                        {/* Row 2: Desenvolvimento (Full Width) */}
+                                        <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                                            <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
+                                                <span className="material-symbols-outlined text-blue-500">play_circle</span>
+                                                Desenvolvimento & Metodologia
+                                            </h3>
 
-                                    {/* PRINTABLE CONTENT (Matches CENSC Layout - Landscape) */}
-                                    <div className="printable-content bg-white p-[10mm] hidden print:block">
-                                        <div className="flex justify-between items-start mb-6">
-                                            <table className="w-full border-collapse border-none">
-                                                <tbody>
-                                                    <tr>
-                                                        <td className="w-[65%] align-top border-none p-0">
-                                                            <table className="w-full border-collapse border-none">
-                                                                <tbody>
-                                                                    <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Turma:</span></td>
-                                                                        <td className="border-b border-black py-1 px-2">
-                                                                            <span className="text-sm font-bold">
-                                                                                {(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
-                                                                                    ? `${activeSeries?.name} - ${currentPlan.section}`
-                                                                                    : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`}
-                                                                            </span>
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Professor:</span></td>
-                                                                        <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentUser?.name}</span></td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Componente:</span></td>
-                                                                        <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold text-[#0369a1]">{currentPlan.subject}</span></td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Período:</span></td>
-                                                                        <td className="border-b border-black py-1 px-2">
-                                                                            <span className="text-sm font-bold">
-                                                                                {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} até {new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                                                            </span>
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Coordenação:</span></td>
-                                                                        <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentPlan.coordinator_name || 'MOISÉS FERREIRA'}</span></td>
-                                                                    </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </td>
-                                                        <td className="w-[1%] border-l border-slate-300"></td>
-                                                        <td className="w-[34%] align-middle text-right">
-                                                            <div className="flex flex-col items-end">
-                                                                <div className="text-[#0ea5e9] text-5xl font-black leading-none">CENSC</div>
-                                                                <div className="text-[#0ea5e9] text-[8px] font-bold uppercase mt-1 leading-tight">CENTRO EDUCACIONAL<br />NOSSA SRA DO CENÁCULO</div>
+                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                                {currentPlan.methodology && (
+                                                    <div>
+                                                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2 block">Metodologia</label>
+                                                        <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line leading-relaxed">
+                                                            {currentPlan.methodology}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {currentPlan.description && (
+                                                    <div>
+                                                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2 block">Roteiro da Aula</label>
+                                                        <div className="text-sm text-slate-600 dark:text-slate-400 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description) }} />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Row 3: Recursos & Avaliação */}
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                            <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                                                <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
+                                                    <span className="material-symbols-outlined text-amber-500">build</span>
+                                                    Recursos
+                                                </h3>
+                                                <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line">
+                                                    {currentPlan.resources || 'Nenhum recurso específico listado.'}
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                                                <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
+                                                    <span className="material-symbols-outlined text-rose-500">assignment_turned_in</span>
+                                                    Avaliação
+                                                </h3>
+                                                <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line">
+                                                    {currentPlan.assessment || 'Nenhuma avaliação específica listada.'}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Print Button (Screen Only) */}
+                                        <div className="flex justify-end print:hidden">
+                                            <button
+                                                onClick={() => {
+                                                    const printContent = document.querySelector('.printable-content');
+                                                    if (!printContent) return;
+                                                    const iframe = document.createElement('iframe');
+                                                    iframe.style.position = 'absolute';
+                                                    iframe.style.top = '-9999px';
+                                                    iframe.style.left = '-9999px';
+                                                    document.body.appendChild(iframe);
+                                                    const doc = iframe.contentWindow?.document;
+                                                    if (!doc) return;
+                                                    const styles = document.querySelectorAll('style, link[rel="stylesheet"]');
+                                                    styles.forEach(style => doc.head.appendChild(style.cloneNode(true)));
+                                                    const printStyle = doc.createElement('style');
+                                                    printStyle.textContent = `@page {size: landscape; margin: 0; } body {background: white !important; margin: 0; padding: 10mm !important; } .printable-content {visibility: visible !important; width: 100% !important; margin: 0 !important; }`;
+                                                    doc.head.appendChild(printStyle);
+                                                    doc.body.innerHTML = printContent.outerHTML;
+                                                    setTimeout(() => {
+                                                        iframe.contentWindow?.print();
+                                                        setTimeout(() => document.body.removeChild(iframe), 100);
+                                                    }, 500);
+                                                }}
+                                                className="flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl shadow-lg transition-all"
+                                            >
+                                                <span className="material-symbols-outlined">print</span> Imprimir Documento
+                                            </button>
+                                        </div>
+
+                                        {/* ATTACHMENTS VIEW (Screen Only) */}
+                                        {currentPlan.files && currentPlan.files.length > 0 && (
+                                            <div className="print:hidden">
+                                                <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+                                                    <span className="material-symbols-outlined">attachment</span> Anexos
+                                                </h3>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                    {currentPlan.files.map((file, index) => (
+                                                        <a
+                                                            key={index}
+                                                            href={file.url}
+                                                            download={file.name}
+                                                            className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group no-underline"
+                                                        >
+                                                            <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">description</span>
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{file.name}</div>
+                                                                <div className="text-[10px] text-slate-400 uppercase font-black">{file.size}</div>
                                                             </div>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <div className="border-b-2 border-black mb-6 w-full"></div>
-                                        <div className="border border-black">
-                                            <table className="w-full border-collapse table-fixed">
-                                                <thead>
-                                                    <tr className="bg-[#d9d9d9]">
-                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[17%] text-center align-middle">HABILIDADE(s)<br />CONTEMPLADA(s)</th>
-                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">OBJETO DE<br />CONHECIMENTO</th>
-                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">RECURSOS<br />UTILIZADOS</th>
-                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[31%] text-center align-middle">DESENVOLVIMENTO</th>
-                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">DURAÇÃO</th>
-                                                        <th className="border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">TIPO DE<br />ATIVIDADE</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td className="border-r border-black p-2 text-[11px] align-top h-[400px]">
-                                                            <ul className="list-disc pl-4 space-y-1">
-                                                                {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
-                                                                    <li key={i}>{code}</li>
-                                                                ))}
-                                                                {currentPlan.objectives && (
-                                                                    <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives).replace(/<[^>]+>/g, ' ') }}></li>
-                                                                )}
-                                                            </ul>
-                                                        </td>
-                                                        <td className="border-r border-black p-2 text-[11px] align-top font-bold">
-                                                            <ul className="list-disc pl-4"><li>{currentPlan.title}</li></ul>
-                                                        </td>
-                                                        <td className="border-r border-black p-2 text-[11px] align-top">
-                                                            <ul className="list-disc pl-4"><li>{currentPlan.resources}</li></ul>
-                                                        </td>
-                                                        <td className="border-r border-black p-2 text-[11px] align-top">
-                                                            <ul className="list-disc pl-4 space-y-2">
-                                                                {currentPlan.methodology && <li>{currentPlan.methodology}</li>}
-                                                                {currentPlan.description && (
-                                                                    <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description).replace(/<[^>]+>/g, ' ') }}></li>
-                                                                )}
-                                                            </ul>
-                                                        </td>
-                                                        <td className="border-r border-black p-2 text-[11px] align-top text-center">
-                                                            <ul className="list-disc pl-4"><li>{currentPlan.duration}</li></ul>
-                                                        </td>
-                                                        <td className="border-black p-2 text-[11px] align-top text-center">
-                                                            <ul className="list-disc pl-4"><li>{currentPlan.activity_type}</li></ul>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <div className="mt-4">
-                                            <div className="font-bold text-xs uppercase mb-1">OBSERVAÇÕES:</div>
-                                            <div className="border border-black p-2 h-20"></div>
+                                                            <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">download</span>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="border-t border-slate-100 dark:border-slate-800 my-8 print:hidden"></div>
+
+                                        {/* PRINTABLE CONTENT (Matches CENSC Layout - Landscape) */}
+                                        <div className="printable-content bg-white p-[10mm] hidden print:block">
+                                            <div className="flex justify-between items-start mb-6">
+                                                <table className="w-full border-collapse border-none">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td className="w-[65%] align-top border-none p-0">
+                                                                <table className="w-full border-collapse border-none">
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td className="w-24 py-1"><span className="text-xs font-bold">Turma:</span></td>
+                                                                            <td className="border-b border-black py-1 px-2">
+                                                                                <span className="text-sm font-bold">
+                                                                                    {(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
+                                                                                        ? `${activeSeries?.name} - ${currentPlan.section}`
+                                                                                        : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`}
+                                                                                </span>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td className="w-24 py-1"><span className="text-xs font-bold">Professor:</span></td>
+                                                                            <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentUser?.name}</span></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td className="w-24 py-1"><span className="text-xs font-bold">Componente:</span></td>
+                                                                            <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold text-[#0369a1]">{currentPlan.subject}</span></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td className="w-24 py-1"><span className="text-xs font-bold">Período:</span></td>
+                                                                            <td className="border-b border-black py-1 px-2">
+                                                                                <span className="text-sm font-bold">
+                                                                                    {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} até {new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                                                                </span>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td className="w-24 py-1"><span className="text-xs font-bold">Coordenação:</span></td>
+                                                                            <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentPlan.coordinator_name || 'MOISÉS FERREIRA'}</span></td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </td>
+                                                            <td className="w-[1%] border-l border-slate-300"></td>
+                                                            <td className="w-[34%] align-middle text-right">
+                                                                <div className="flex flex-col items-end">
+                                                                    <div className="text-[#0ea5e9] text-5xl font-black leading-none">CENSC</div>
+                                                                    <div className="text-[#0ea5e9] text-[8px] font-bold uppercase mt-1 leading-tight">CENTRO EDUCACIONAL<br />NOSSA SRA DO CENÁCULO</div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div className="border-b-2 border-black mb-6 w-full"></div>
+                                            <div className="border border-black">
+                                                <table className="w-full border-collapse table-fixed">
+                                                    <thead>
+                                                        <tr className="bg-[#d9d9d9]">
+                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[17%] text-center align-middle">HABILIDADE(s)<br />CONTEMPLADA(s)</th>
+                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">OBJETO DE<br />CONHECIMENTO</th>
+                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">RECURSOS<br />UTILIZADOS</th>
+                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[31%] text-center align-middle">DESENVOLVIMENTO</th>
+                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">DURAÇÃO</th>
+                                                            <th className="border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">TIPO DE<br />ATIVIDADE</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td className="border-r border-black p-2 text-[11px] align-top h-[400px]">
+                                                                <ul className="list-disc pl-4 space-y-1">
+                                                                    {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
+                                                                        <li key={i}>{code}</li>
+                                                                    ))}
+                                                                    {currentPlan.objectives && (
+                                                                        <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives).replace(/<[^>]+>/g, ' ') }}></li>
+                                                                    )}
+                                                                </ul>
+                                                            </td>
+                                                            <td className="border-r border-black p-2 text-[11px] align-top font-bold">
+                                                                <ul className="list-disc pl-4"><li>{currentPlan.title}</li></ul>
+                                                            </td>
+                                                            <td className="border-r border-black p-2 text-[11px] align-top">
+                                                                <ul className="list-disc pl-4"><li>{currentPlan.resources}</li></ul>
+                                                            </td>
+                                                            <td className="border-r border-black p-2 text-[11px] align-top">
+                                                                <ul className="list-disc pl-4 space-y-2">
+                                                                    {currentPlan.methodology && <li>{currentPlan.methodology}</li>}
+                                                                    {currentPlan.description && (
+                                                                        <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description).replace(/<[^>]+>/g, ' ') }}></li>
+                                                                    )}
+                                                                </ul>
+                                                            </td>
+                                                            <td className="border-r border-black p-2 text-[11px] align-top text-center">
+                                                                <ul className="list-disc pl-4"><li>{currentPlan.duration}</li></ul>
+                                                            </td>
+                                                            <td className="border-black p-2 text-[11px] align-top text-center">
+                                                                <ul className="list-disc pl-4"><li>{currentPlan.activity_type}</li></ul>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div className="mt-4">
+                                                <div className="font-bold text-xs uppercase mb-1">OBSERVAÇÕES:</div>
+                                                <div className="border border-black p-2 h-20"></div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            </div>)}
                     </div>
                 )}
             </div>
