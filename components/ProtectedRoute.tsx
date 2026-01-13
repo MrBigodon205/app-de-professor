@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { SkeletonLayout } from './SkeletonLayout';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -11,14 +12,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const location = useLocation();
 
     if (loading) {
-        return (
-            <div className="flex h-screen w-full items-center justify-center bg-slate-50 dark:bg-slate-900">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="size-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-                    <p className="text-slate-500 font-medium">Autenticando...</p>
-                </div>
-            </div>
-        );
+        return <SkeletonLayout />;
     }
 
     if (!currentUser) {

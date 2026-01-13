@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-            'vendor-utils': ['jspdf', 'jspdf-autotable', 'canvas-confetti', 'dompurify'],
+            'vendor-utils': ['canvas-confetti', 'dompurify'],
             'vendor-ui': ['react-quill-new', 'recharts', 'react-joyride'],
             'vendor-db': ['@supabase/supabase-js']
           }
