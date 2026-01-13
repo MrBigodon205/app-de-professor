@@ -1033,9 +1033,6 @@ export const Planning: React.FC = () => {
                     </div>
                 )}
             </div>
-        </div>
-    )
-}
-</main >
+        </main>
     );
 };
