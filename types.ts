@@ -53,6 +53,7 @@ export interface Activity {
   files: AttachmentFile[];
   completions?: string[];
   userId: string;
+  subject?: string;
 }
 
 export interface Plan {

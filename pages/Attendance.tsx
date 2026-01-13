@@ -124,7 +124,7 @@ const MiniCalendar: React.FC<{
 
 export const Attendance: React.FC = () => {
     const { selectedSeriesId, selectedSection, activeSeries } = useClass();
-    const { currentUser } = useAuth();
+    const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
     const [students, setStudents] = useState<Student[]>([]);
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -157,7 +157,7 @@ export const Attendance: React.FC = () => {
             setAttendanceMap({});
             setLoading(false);
         }
-    }, [date, selectedSeriesId, selectedSection]);
+    }, [date, selectedSeriesId, selectedSection, activeSubject]);
 
     const fetchData = async (silent = false) => {
         if (!currentUser || !selectedSeriesId || !selectedSection) return;
@@ -191,6 +191,7 @@ export const Attendance: React.FC = () => {
                 .from('attendance')
                 .select('*')
                 .eq('date', date)
+                .eq('subject', activeSubject)
                 .eq('user_id', currentUser.id)
                 .in('student_id', formattedStudents.map(s => s.id));
 
@@ -251,7 +252,7 @@ export const Attendance: React.FC = () => {
             supabase.removeChannel(channel);
             clearInterval(interval);
         };
-    }, [date, selectedSeriesId, selectedSection, currentUser]);
+    }, [date, selectedSeriesId, selectedSection, currentUser, activeSubject]);
     // -----------------------------
 
     const fetchActiveDates = async (studentIds: string[]) => {
@@ -262,6 +263,7 @@ export const Attendance: React.FC = () => {
                 .from('attendance')
                 .select('date')
                 .eq('user_id', currentUser.id)
+                .eq('subject', activeSubject)
                 .in('student_id', studentIds);
 
             if (error) throw error;
@@ -283,6 +285,7 @@ export const Attendance: React.FC = () => {
                     .delete()
                     .eq('student_id', studentId)
                     .eq('date', date)
+                    .eq('subject', activeSubject)
                     .eq('user_id', currentUser.id);
 
                 if (error) throw error;
@@ -296,8 +299,9 @@ export const Attendance: React.FC = () => {
                         status,
                         series_id: selectedSeriesId,
                         section: selectedSection,
-                        user_id: currentUser.id
-                    }, { onConflict: 'student_id, date, user_id' }); // Explicit constraint check if needed, mostly auto
+                        user_id: currentUser.id,
+                        subject: activeSubject
+                    }, { onConflict: 'student_id, date, user_id, subject' }); // Updated constraint
 
                 if (error) throw error;
                 setActiveDates(prev => new Set(prev).add(date));
@@ -324,6 +328,7 @@ export const Attendance: React.FC = () => {
                         .delete()
                         .eq('student_id', s.id)
                         .eq('date', date)
+                        .eq('subject', activeSubject)
                         .eq('user_id', currentUser.id);
                 } else {
                     return supabase.from('attendance')
@@ -333,8 +338,9 @@ export const Attendance: React.FC = () => {
                             status,
                             series_id: selectedSeriesId,
                             section: selectedSection,
-                            user_id: currentUser.id
-                        }, { onConflict: 'student_id, date, user_id' });
+                            user_id: currentUser.id,
+                            subject: activeSubject
+                        }, { onConflict: 'student_id, date, user_id, subject' });
                 }
             });
 
@@ -393,6 +399,7 @@ export const Attendance: React.FC = () => {
                 .from('attendance')
                 .select('*')
                 .eq('user_id', currentUser.id)
+                .eq('subject', activeSubject)
                 .in('student_id', students.map(s => s.id));
 
             if (error) throw error;

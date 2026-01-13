@@ -9,10 +9,11 @@ import DOMPurify from 'dompurify';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { DatePicker } from '../components/DatePicker';
 import { useDebounce } from '../hooks/useDebounce';
+import { jsPDF } from 'jspdf';
 
 export const Planning: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
-    const { currentUser } = useAuth();
+    const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -51,7 +52,10 @@ export const Planning: React.FC = () => {
 
     useEffect(() => {
         fetchPlans();
-    }, [selectedSeriesId, currentUser]);
+        setSelectedPlanId(null);
+        setShowForm(false);
+        setViewMode(false);
+    }, [selectedSeriesId, currentUser, activeSubject]);
 
     useEffect(() => {
         if (selectedSeriesId) {
@@ -67,6 +71,9 @@ export const Planning: React.FC = () => {
 
             if (selectedSeriesId) {
                 query = query.eq('series_id', selectedSeriesId);
+            }
+            if (activeSubject) {
+                query = query.eq('subject', activeSubject);
             }
 
             const { data, error } = await query;
@@ -117,7 +124,7 @@ export const Planning: React.FC = () => {
             .on('postgres_changes', { event: '*', schema: 'public', table: 'plans' }, () => { fetchPlans(true); })
             .subscribe();
         return () => { supabase.removeChannel(channel); clearInterval(interval); };
-    }, [selectedSeriesId, currentUser]);
+    }, [selectedSeriesId, currentUser, activeSubject]);
 
     const resetForm = () => {
         setIsEditing(false);
@@ -143,7 +150,7 @@ export const Planning: React.FC = () => {
         setFormThemeArea('');
         setFormCoordinator('');
         setFormActivityType('');
-        setFormSubject(currentUser?.subject || '');
+        setFormSubject(activeSubject || '');
     };
 
     const handleNewPlan = () => {
@@ -318,6 +325,136 @@ export const Planning: React.FC = () => {
             a.target = "_blank";
             a.click();
         }
+    };
+
+    const handleExportPDF = () => {
+        if (!currentPlan) return;
+
+        const doc = new jsPDF({
+            orientation: 'landscape',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        const margin = 10;
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const contentWidth = pageWidth - (margin * 2);
+
+        // Header Section
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Turma:', margin, margin + 5);
+        doc.setFont('helvetica', 'normal');
+        const sectionName = (currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
+            ? `${activeSeries?.name} - ${currentPlan.section}`
+            : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`;
+        doc.text(sectionName, margin + 25, margin + 5);
+        doc.line(margin + 25, margin + 6, margin + 120, margin + 6);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Professor:', margin, margin + 12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(currentUser?.name?.toUpperCase() || '', margin + 25, margin + 12);
+        doc.line(margin + 25, margin + 13, margin + 120, margin + 13);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Componente:', margin, margin + 19);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(3, 105, 161); // #0369a1
+        doc.text(currentPlan.subject || '', margin + 25, margin + 19);
+        doc.line(margin + 25, margin + 20, margin + 120, margin + 20);
+        doc.setTextColor(0, 0, 0);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Período:', margin, margin + 26);
+        doc.setFont('helvetica', 'normal');
+        const periodText = `${new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} até ${new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}`;
+        doc.text(periodText, margin + 25, margin + 26);
+        doc.line(margin + 25, margin + 27, margin + 120, margin + 27);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Coordenação:', margin, margin + 33);
+        doc.setFont('helvetica', 'normal');
+        doc.text(currentPlan.coordinator_name || 'MOISÉS FERREIRA', margin + 25, margin + 33);
+        doc.line(margin + 25, margin + 34, margin + 120, margin + 34);
+
+        // Logo Section
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(28);
+        doc.setTextColor(14, 165, 233); // #0ea5e9
+        doc.text('CENSC', pageWidth - margin - 50, margin + 15);
+        doc.setFontSize(8);
+        doc.text('CENTRO EDUCACIONAL', pageWidth - margin - 50, margin + 22);
+        doc.text('NOSSA SRA DO CENÁCULO', pageWidth - margin - 50, margin + 26);
+        doc.setTextColor(0, 0, 0);
+
+        doc.setLineWidth(0.5);
+        doc.line(margin, margin + 40, pageWidth - margin, margin + 40);
+
+        // Content Table
+        const tableTop = margin + 45;
+        const colWidths = [0.17, 0.16, 0.16, 0.31, 0.10, 0.10].map(w => w * contentWidth);
+        const headers = ['HABILIDADES', 'OBJETO CONH.', 'RECURSOS', 'DESENVOLVIMENTO', 'DURAÇÃO', 'TIPO'];
+
+        doc.setFillColor(217, 217, 217);
+        doc.rect(margin, tableTop, contentWidth, 10, 'F');
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+
+        let currentX = margin;
+        headers.forEach((h, i) => {
+            doc.rect(currentX, tableTop, colWidths[i], 10);
+            doc.text(h, currentX + (colWidths[i] / 2), tableTop + 6, { align: 'center' });
+            currentX += colWidths[i];
+        });
+
+        // Content Data
+        const rowHeight = 80;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        currentX = margin;
+
+        // Habilidades
+        doc.rect(currentX, tableTop + 10, colWidths[0], rowHeight);
+        const habText = [
+            ...(currentPlan.bncc_codes?.split('\n').filter(Boolean) || []),
+            (currentPlan.objectives ? currentPlan.objectives.replace(/<[^>]+>/g, ' ') : '')
+        ].join('\n');
+        doc.text(doc.splitTextToSize(habText, colWidths[0] - 4), currentX + 2, tableTop + 15);
+
+        currentX += colWidths[0];
+        doc.rect(currentX, tableTop + 10, colWidths[1], rowHeight);
+        doc.text(doc.splitTextToSize(currentPlan.title, colWidths[1] - 4), currentX + 2, tableTop + 15);
+
+        currentX += colWidths[1];
+        doc.rect(currentX, tableTop + 10, colWidths[2], rowHeight);
+        doc.text(doc.splitTextToSize(currentPlan.resources || '', colWidths[2] - 4), currentX + 2, tableTop + 15);
+
+        currentX += colWidths[2];
+        doc.rect(currentX, tableTop + 10, colWidths[3], rowHeight);
+        const devText = [
+            currentPlan.methodology || '',
+            (currentPlan.description ? currentPlan.description.replace(/<[^>]+>/g, ' ') : '')
+        ].join('\n\n');
+        doc.text(doc.splitTextToSize(devText, colWidths[3] - 4), currentX + 2, tableTop + 15);
+
+        currentX += colWidths[3];
+        doc.rect(currentX, tableTop + 10, colWidths[4], rowHeight);
+        doc.text(currentPlan.duration || '', currentX + (colWidths[4] / 2), tableTop + 15, { align: 'center' });
+
+        currentX += colWidths[4];
+        doc.rect(currentX, tableTop + 10, colWidths[5], rowHeight);
+        doc.text(currentPlan.activity_type || '', currentX + (colWidths[5] / 2), tableTop + 15, { align: 'center' });
+
+        // Footer
+        const footerTop = tableTop + 10 + rowHeight + 5;
+        doc.setFont('helvetica', 'bold');
+        doc.text('OBSERVAÇÕES:', margin, footerTop);
+        doc.rect(margin, footerTop + 2, contentWidth, 20);
+        doc.line(margin, footerTop + 9, pageWidth - margin, footerTop + 9);
+        doc.line(margin, footerTop + 16, pageWidth - margin, footerTop + 16);
+
+        doc.save(`Planejamento-${currentPlan.title}.pdf`);
     };
 
     const handleExportWord = () => {
@@ -523,24 +660,39 @@ export const Planning: React.FC = () => {
                         </button>
                     </div>
                     <div className="relative">
+                        <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">search</span>
                         <input type="text" placeholder="Buscar..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-sm transition-all focus:bg-white dark:focus:bg-black`} />
                     </div>
-                    {/* Section Filter */}
-                    {activeSeries && activeSeries.sections?.length > 0 && (
-                        <div className="px-1">
-                            <select aria-label="Filtrar por turma" title="Filtrar por turma"
-                                value={filterSection}
-                                onChange={e => setFilterSection(e.target.value)}
-                                className="w-full p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:ring-2 focus:ring-indigo-500/50 outline-none"
-                            >
-                                <option value="">Todas as Turmas</option>
-                                {activeSeries.sections.map(section => (
-                                    <option key={section} value={section}>Turma {section}</option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
                 </div>
+
+                {/* Section Filter Pills */}
+                {activeSeries && activeSeries.sections?.length > 0 && (
+                    <div className="px-1">
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                            <button
+                                onClick={() => setFilterSection('')}
+                                className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all border-2 ${filterSection === ''
+                                    ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-md shadow-${theme.primaryColor}/20`
+                                    : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
+                                    }`}
+                            >
+                                Todas
+                            </button>
+                            {activeSeries.sections.map(sec => (
+                                <button
+                                    key={sec}
+                                    onClick={() => setFilterSection(sec)}
+                                    className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all border-2 ${filterSection === sec
+                                        ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-md shadow-${theme.primaryColor}/20`
+                                        : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
+                                        }`}
+                                >
+                                    Turma {sec}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-[400px]">
                     {loading ? (
@@ -560,41 +712,16 @@ export const Planning: React.FC = () => {
                             <button key={plan.id} onClick={() => handleSelectPlan(plan)} className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}>
                                 <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
                                 <div className="pl-3">
-                                    <div className="flex justify-between items-start mb-1">
+                                    <div className="flex justify-between items-start mb-2">
                                         <h4 className={`font-bold text-base truncate pr-2 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (window.confirm('Tem certeza que deseja excluir este planejamento?')) {
-                                                    // Assuming handleDeletePlan exists or implementing inline
-                                                    const deletePlan = async () => {
-                                                        const { error } = await supabase.from('plans').delete().eq('id', plan.id);
-                                                        if (error) {
-                                                            alert('Erro ao excluir');
-                                                        } else {
-                                                            setPlans(prev => prev.filter(p => p.id !== plan.id));
-                                                            if (selectedPlanId === plan.id) {
-                                                                setSelectedPlanId(null);
-                                                                setShowForm(false);
-                                                                setViewMode(false);
-                                                            }
-                                                        }
-                                                    };
-                                                    deletePlan();
-                                                }
-                                            }}
-                                            className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
-                                            title="Excluir Planejamento"
-                                        >
-                                            <span className="material-symbols-outlined text-[18px]">delete</span>
-                                        </button>
+                                        <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">chevron_right</span>
                                     </div>
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                        <span className="text-xs text-slate-500 font-medium bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md flex items-center gap-1">
-                                            <span className="material-symbols-outlined text-[14px]">event</span> {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                    <div className="flex flex-wrap gap-2">
+                                        <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                            {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                                         </span>
                                         {plan.theme_area && plan.theme_area !== 'Geral' && (
-                                            <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-50 dark:bg-slate-800/50 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-700">
+                                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                                                 {plan.theme_area}
                                             </span>
                                         )}
@@ -858,95 +985,187 @@ export const Planning: React.FC = () => {
                         </div>
                     </div>
                 ) : (
-                    // VIEW MODE (Print / Detailed)
                     <div className="flex-1 overflow-y-auto relative animate-in fade-in h-full custom-scrollbar bg-slate-50 dark:bg-black/20">
                         {currentPlan && (
-                            <div className="landscape-container mx-auto bg-white shadow-lg my-4 md:my-8 print:my-0 print:shadow-none text-black transition-all duration-300 relative">
-                                <div className="p-4 md:p-[10mm] print:p-0 overflow-x-auto">
-                                    {/* Action Buttons */}
-                                    <div className="flex flex-wrap justify-between md:justify-end gap-2 md:gap-3 mb-6 print:hidden sticky top-0 md:relative z-10 bg-white/95 md:bg-transparent backdrop-blur-sm p-2 md:p-0 border-b md:border-none border-slate-100">
-                                        <button onClick={() => { setViewMode(false); setSelectedPlanId(null); setIsEditing(false); setShowForm(false); }} className="md:hidden flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">
+                            <div className="flex flex-col min-h-full">
+                                {/* Premium Header */}
+                                <div className={`h-48 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden shrink-0`}>
+                                    <div className="absolute inset-0 opacity-10 flex flex-wrap gap-8 justify-end p-8 rotate-12 scale-150 pointer-events-none">
+                                        <span className="material-symbols-outlined text-[150px] text-white">{theme.icon}</span>
+                                    </div>
+                                    <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/50 to-transparent">
+                                        <div className="flex gap-2 mb-2">
+                                            <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:bg-white/30 transition-all">
+                                                {activeSeries?.name}
+                                            </span>
+                                            {currentPlan.section && (
+                                                <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:bg-white/30 transition-all">
+                                                    Turma {currentPlan.section}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h1 className="text-3xl md:text-4xl font-bold text-white shadow-sm flex items-center gap-3">
+                                            <span className="material-symbols-outlined text-[32px] md:text-[40px] hidden sm:inline-block">menu_book</span>
+                                            {currentPlan.title}
+                                        </h1>
+                                    </div>
+
+                                    {/* Mobile Back Button */}
+                                    <div className="absolute top-6 left-6 lg:hidden">
+                                        <button
+                                            onClick={() => { setViewMode(false); setSelectedPlanId(null); }}
+                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                            title="Voltar para Lista"
+                                        >
                                             <span className="material-symbols-outlined">arrow_back</span>
                                         </button>
-                                        <div className="flex gap-2">
-                                            <button onClick={() => { setIsEditing(true); setShowForm(true); setViewMode(false); }} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-colors text-sm md:text-base">
-                                                <span className="material-symbols-outlined text-lg">edit</span> <span className="hidden sm:inline">Editar</span>
-                                            </button>
-                                            <button onClick={handleExportWord} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors shadow-lg shadow-blue-500/20 text-sm md:text-base">
-                                                <span className="material-symbols-outlined text-lg">description</span> <span className="hidden sm:inline">Word</span>
-                                            </button>
-                                            <button onClick={() => {
-                                                // IFRAME PRINTING IMPLEMENTATION to keep app background dark
+                                    </div>
+
+                                    {/* Header Action Buttons */}
+                                    <div className="absolute top-6 right-6 flex gap-2">
+                                        <button
+                                            onClick={() => { setIsEditing(true); setShowForm(true); setViewMode(false); }}
+                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hidden sm:flex"
+                                            title="Editar Aula"
+                                        >
+                                            <span className="material-symbols-outlined">edit</span>
+                                        </button>
+                                        <button
+                                            onClick={handleExportWord}
+                                            className="p-2 bg-blue-500/20 hover:bg-blue-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                            title="Exportar Word"
+                                        >
+                                            <span className="material-symbols-outlined text-blue-200">description</span>
+                                        </button>
+                                        <button
+                                            onClick={handleExportPDF}
+                                            className="p-2 bg-indigo-500/20 hover:bg-indigo-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                            title="Exportar PDF"
+                                        >
+                                            <span className="material-symbols-outlined text-indigo-200">picture_as_pdf</span>
+                                        </button>
+                                        <button
+                                            onClick={handleDelete}
+                                            className="p-2 bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                            title="Excluir Aula"
+                                        >
+                                            <span className="material-symbols-outlined text-red-200">delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Metadata Grid */}
+                                <div className="p-8 max-w-5xl mx-auto w-full space-y-8 flex-1">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        <div className="bg-white dark:bg-surface-dark p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                                            <div className="size-11 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                                                <span className="material-symbols-outlined">event</span>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Início / Fim</div>
+                                                <div className="font-bold text-slate-700 dark:text-gray-200 text-sm truncate">
+                                                    {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white dark:bg-surface-dark p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                                            <div className="size-11 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                                                <span className="material-symbols-outlined">school</span>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Disciplina</div>
+                                                <div className="font-bold text-slate-700 dark:text-gray-200 text-sm truncate">
+                                                    {currentPlan.subject || 'Não definida'}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white dark:bg-surface-dark p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                                            <div className="size-11 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                                                <span className="material-symbols-outlined">timer</span>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Duração</div>
+                                                <div className="font-bold text-slate-700 dark:text-gray-200 text-sm truncate">
+                                                    {currentPlan.duration || 'Não definida'}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white dark:bg-surface-dark p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                                            <div className="size-11 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                                <span className="material-symbols-outlined">category</span>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Eixo / Tema</div>
+                                                <div className="font-bold text-slate-700 dark:text-gray-200 text-sm truncate">
+                                                    {currentPlan.theme_area || 'Geral'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Print Button (Screen Only) */}
+                                    <div className="flex justify-end print:hidden">
+                                        <button
+                                            onClick={() => {
                                                 const printContent = document.querySelector('.printable-content');
                                                 if (!printContent) return;
-
                                                 const iframe = document.createElement('iframe');
-                                                iframe.style.display = 'none';
+                                                iframe.style.position = 'absolute';
+                                                iframe.style.top = '-9999px';
+                                                iframe.style.left = '-9999px';
                                                 document.body.appendChild(iframe);
-
                                                 const doc = iframe.contentWindow?.document;
                                                 if (!doc) return;
-
-                                                // Copy styles
                                                 const styles = document.querySelectorAll('style, link[rel="stylesheet"]');
-                                                styles.forEach(style => {
-                                                    doc.head.appendChild(style.cloneNode(true));
-                                                });
-
-                                                // Add print-specific robust styles for iframe
+                                                styles.forEach(style => doc.head.appendChild(style.cloneNode(true)));
                                                 const printStyle = doc.createElement('style');
-                                                printStyle.textContent = `
-                                                    @page { size: landscape; margin: 0; }
-                                                    body { background: white !important; margin: 0; padding: 10mm !important; box-sizing: border-box; }
-                                                    .printable-content { visibility: visible !important; position: static !important; width: 100% !important; margin: 0 !important; }
-                                                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                                                `;
+                                                printStyle.textContent = `@page {size: landscape; margin: 0; } body {background: white !important; margin: 0; padding: 10mm !important; } .printable-content {visibility: visible !important; width: 100% !important; margin: 0 !important; }`;
                                                 doc.head.appendChild(printStyle);
-
-                                                // Copy content
                                                 doc.body.innerHTML = printContent.outerHTML;
-
-                                                // Wait for styles/images then print
                                                 setTimeout(() => {
                                                     iframe.contentWindow?.print();
-                                                    setTimeout(() => {
-                                                        document.body.removeChild(iframe);
-                                                    }, 100);
+                                                    setTimeout(() => document.body.removeChild(iframe), 100);
                                                 }, 500);
-                                            }} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-colors shadow-lg shadow-indigo-500/20 text-sm md:text-base">
-                                                <span className="material-symbols-outlined text-lg">print</span> <span className="hidden sm:inline">PDF</span>
-                                            </button>
-                                        </div>
+                                            }}
+                                            className="flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl shadow-lg transition-all"
+                                        >
+                                            <span className="material-symbols-outlined">print</span> Imprimir Documento
+                                        </button>
                                     </div>
 
                                     {/* ATTACHMENTS VIEW (Screen Only) */}
                                     {currentPlan.files && currentPlan.files.length > 0 && (
-                                        <div className="mb-8 px-4 md:px-[10mm] print:hidden">
-                                            <h3 className="font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+                                        <div className="print:hidden">
+                                            <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
                                                 <span className="material-symbols-outlined">attachment</span> Anexos
                                             </h3>
-                                            <div className="flex flex-wrap gap-3">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                                 {currentPlan.files.map((file, index) => (
                                                     <a
                                                         key={index}
                                                         href={file.url}
                                                         download={file.name}
-                                                        className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group text-decoration-none"
+                                                        className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group no-underline"
                                                     >
-                                                        <span className="material-symbols-outlined text-slate-500 group-hover:text-indigo-500 transition-colors">description</span>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{file.name}</span>
-                                                            <span className="text-[10px] text-slate-500 uppercase">{file.size}</span>
+                                                        <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">description</span>
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{file.name}</div>
+                                                            <div className="text-[10px] text-slate-400 uppercase font-black">{file.size}</div>
                                                         </div>
-                                                        <span className="material-symbols-outlined text-slate-400 group-hover:text-indigo-500 transition-colors text-lg ml-2">download</span>
+                                                        <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">download</span>
                                                     </a>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
 
+                                    <div className="border-t border-slate-100 dark:border-slate-800 my-8 print:hidden"></div>
+
                                     {/* PRINTABLE CONTENT (Matches CENSC Layout - Landscape) */}
-                                    <div className="printable-content bg-white min-w-[700px] md:min-w-0">
+                                    <div className="printable-content bg-white p-[10mm] hidden print:block">
                                         <div className="flex justify-between items-start mb-6">
                                             <table className="w-full border-collapse border-none">
                                                 <tbody>
@@ -955,41 +1174,43 @@ export const Planning: React.FC = () => {
                                                             <table className="w-full border-collapse border-none">
                                                                 <tbody>
                                                                     <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold whitespace-nowrap">Turma:</span></td>
-                                                                        <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold">
-                                                                            {(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
-                                                                                ? `${activeSeries?.name} - ${currentPlan.section}`
-                                                                                : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`}
-                                                                        </span></td>
+                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Turma:</span></td>
+                                                                        <td className="border-b border-black py-1 px-2">
+                                                                            <span className="text-sm font-bold">
+                                                                                {(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
+                                                                                    ? `${activeSeries?.name} - ${currentPlan.section}`
+                                                                                    : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`}
+                                                                            </span>
+                                                                        </td>
                                                                     </tr>
                                                                     <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold whitespace-nowrap">Professor:</span></td>
+                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Professor:</span></td>
                                                                         <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentUser?.name}</span></td>
                                                                     </tr>
                                                                     <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold whitespace-nowrap">Componente:</span></td>
+                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Componente:</span></td>
                                                                         <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold text-[#0369a1]">{currentPlan.subject}</span></td>
                                                                     </tr>
                                                                     <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold whitespace-nowrap">Período:</span></td>
-                                                                        <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold">
-                                                                            {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} até {new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                                                        </span></td>
+                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Período:</span></td>
+                                                                        <td className="border-b border-black py-1 px-2">
+                                                                            <span className="text-sm font-bold">
+                                                                                {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} até {new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                                                            </span>
+                                                                        </td>
                                                                     </tr>
                                                                     <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold whitespace-nowrap">Coordenação:</span></td>
+                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Coordenação:</span></td>
                                                                         <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentPlan.coordinator_name || 'MOISÉS FERREIRA'}</span></td>
                                                                     </tr>
                                                                 </tbody>
                                                             </table>
                                                         </td>
-                                                        <td className="w-[1%] border-l border-slate-300 p-0"></td>
-                                                        <td className="w-[34%] align-middle border-none text-right p-0">
+                                                        <td className="w-[1%] border-l border-slate-300"></td>
+                                                        <td className="w-[34%] align-middle text-right">
                                                             <div className="flex flex-col items-end">
-                                                                <div className="text-[#0ea5e9] text-5xl font-black leading-none font-arial-black">CENSC</div>
-                                                                <div className="text-[#0ea5e9] text-[8px] font-bold uppercase mt-1 text-right leading-tight">
-                                                                    CENTRO EDUCACIONAL<br />NOSSA SRA DO CENÁCULO
-                                                                </div>
+                                                                <div className="text-[#0ea5e9] text-5xl font-black leading-none">CENSC</div>
+                                                                <div className="text-[#0ea5e9] text-[8px] font-bold uppercase mt-1 leading-tight">CENTRO EDUCACIONAL<br />NOSSA SRA DO CENÁCULO</div>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -997,23 +1218,21 @@ export const Planning: React.FC = () => {
                                             </table>
                                         </div>
                                         <div className="border-b-2 border-black mb-6 w-full"></div>
-
-                                        {/* TABLE */}
                                         <div className="border border-black">
                                             <table className="w-full border-collapse table-fixed">
                                                 <thead>
                                                     <tr className="bg-[#d9d9d9]">
-                                                        <th className="border-r border-black p-2 text-[11px] font-bold uppercase w-[17%] text-center align-middle text-black leading-tight">HABILIDADE(s)<br />CONTEMPLADA(s)</th>
-                                                        <th className="border-r border-black p-2 text-[11px] font-bold uppercase w-[16%] text-center align-middle text-black leading-tight">OBJETO DE<br />CONHECIMENTO</th>
-                                                        <th className="border-r border-black p-2 text-[11px] font-bold uppercase w-[16%] text-center align-middle text-black leading-tight">RECURSOS<br />UTILIZADOS</th>
-                                                        <th className="border-r border-black p-2 text-[11px] font-bold uppercase w-[31%] text-center align-middle text-black leading-tight">DESENVOLVIMENTO</th>
-                                                        <th className="border-r border-black p-2 text-[11px] font-bold uppercase w-[10%] text-center align-middle text-black leading-tight">DURAÇÃO</th>
-                                                        <th className="border-black p-2 text-[11px] font-bold uppercase w-[10%] text-center align-middle text-black leading-tight">TIPO DE<br />ATIVIDADE</th>
+                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[17%] text-center align-middle">HABILIDADE(s)<br />CONTEMPLADA(s)</th>
+                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">OBJETO DE<br />CONHECIMENTO</th>
+                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">RECURSOS<br />UTILIZADOS</th>
+                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[31%] text-center align-middle">DESENVOLVIMENTO</th>
+                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">DURAÇÃO</th>
+                                                        <th className="border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">TIPO DE<br />ATIVIDADE</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     <tr>
-                                                        <td className="border-r border-black p-2 text-[12px] align-top h-[400px] break-words whitespace-normal">
+                                                        <td className="border-r border-black p-2 text-[11px] align-top h-[400px]">
                                                             <ul className="list-disc pl-4 space-y-1">
                                                                 {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
                                                                     <li key={i}>{code}</li>
@@ -1023,17 +1242,13 @@ export const Planning: React.FC = () => {
                                                                 )}
                                                             </ul>
                                                         </td>
-                                                        <td className="border-r border-black p-2 text-[12px] align-top font-bold break-words whitespace-normal">
-                                                            <ul className="list-disc pl-4">
-                                                                <li>{currentPlan.title}</li>
-                                                            </ul>
+                                                        <td className="border-r border-black p-2 text-[11px] align-top font-bold">
+                                                            <ul className="list-disc pl-4"><li>{currentPlan.title}</li></ul>
                                                         </td>
-                                                        <td className="border-r border-black p-2 text-[12px] align-top break-words whitespace-normal">
-                                                            <ul className="list-disc pl-4">
-                                                                <li>{currentPlan.resources}</li>
-                                                            </ul>
+                                                        <td className="border-r border-black p-2 text-[11px] align-top">
+                                                            <ul className="list-disc pl-4"><li>{currentPlan.resources}</li></ul>
                                                         </td>
-                                                        <td className="border-r border-black p-2 text-[12px] align-top break-words whitespace-normal">
+                                                        <td className="border-r border-black p-2 text-[11px] align-top">
                                                             <ul className="list-disc pl-4 space-y-2">
                                                                 {currentPlan.methodology && <li>{currentPlan.methodology}</li>}
                                                                 {currentPlan.description && (
@@ -1041,29 +1256,19 @@ export const Planning: React.FC = () => {
                                                                 )}
                                                             </ul>
                                                         </td>
-                                                        <td className="border-r border-black p-2 text-[12px] align-top text-center break-words whitespace-normal">
-                                                            <ul className="list-disc pl-4">
-                                                                <li>{currentPlan.duration}</li>
-                                                            </ul>
+                                                        <td className="border-r border-black p-2 text-[11px] align-top text-center">
+                                                            <ul className="list-disc pl-4"><li>{currentPlan.duration}</li></ul>
                                                         </td>
-                                                        <td className="border-black p-2 text-[12px] align-top text-center break-words whitespace-normal">
-                                                            <ul className="list-disc pl-4">
-                                                                <li>{currentPlan.activity_type}</li>
-                                                            </ul>
+                                                        <td className="border-black p-2 text-[11px] align-top text-center">
+                                                            <ul className="list-disc pl-4"><li>{currentPlan.activity_type}</li></ul>
                                                         </td>
                                                     </tr>
                                                 </tbody>
                                             </table>
                                         </div>
-
-                                        {/* FOOTER / OBS */}
                                         <div className="mt-4">
-                                            <div className="font-bold text-sm uppercase mb-1">OBSERVAÇÕES:</div>
-                                            <div className="border border-black p-2">
-                                                <div className="border-b border-black h-6 mb-1"></div>
-                                                <div className="border-b border-black h-6 mb-1"></div>
-                                                <div className="border-b border-black h-6 mb-1 border-none"></div>
-                                            </div>
+                                            <div className="font-bold text-xs uppercase mb-1">OBSERVAÇÕES:</div>
+                                            <div className="border border-black p-2 h-20"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1072,7 +1277,7 @@ export const Planning: React.FC = () => {
                     </div>
                 )}
             </div>
-        </main>
+        </main >
     );
 };
 // Build trigger: 2026-01-13 00:54

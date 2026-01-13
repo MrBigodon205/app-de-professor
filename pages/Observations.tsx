@@ -8,7 +8,7 @@ import { DatePicker } from '../components/DatePicker';
 
 export const Observations: React.FC = () => {
     const { selectedSeriesId, selectedSection, activeSeries } = useClass();
-    const { currentUser } = useAuth();
+    const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
     const [activeTab, setActiveTab] = useState<'general' | 'occurrences'>('general');
     const [students, setStudents] = useState<Student[]>([]);
@@ -33,7 +33,7 @@ export const Observations: React.FC = () => {
             setOccurrences([]);
             setLoading(false);
         }
-    }, [selectedSeriesId, selectedSection]);
+    }, [selectedSeriesId, selectedSection, activeSubject]);
 
     useEffect(() => {
         // Obsolete effect removed (generalObsText is now derived from student state)
@@ -77,7 +77,8 @@ export const Observations: React.FC = () => {
             const { data: occData, error: occError } = await supabase
                 .from('occurrences')
                 .select('*')
-                .eq('user_id', currentUser.id);
+                .eq('user_id', currentUser.id)
+                .eq('subject', activeSubject);
 
             if (!occError && occData) {
                 const studentIds = new Set(formattedStudents.map(s => s.id));
@@ -131,7 +132,7 @@ export const Observations: React.FC = () => {
             supabase.removeChannel(channel);
             clearInterval(interval);
         };
-    }, [selectedSeriesId, currentUser]);
+    }, [selectedSeriesId, currentUser, activeSubject]);
 
     const selectedStudent = students.find(s => s.id === selectedStudentId);
 
@@ -149,7 +150,8 @@ export const Observations: React.FC = () => {
             type: occType,
             description: occDescription,
             date: occurrenceDate,
-            user_id: currentUser.id
+            user_id: currentUser.id,
+            subject: activeSubject
         };
 
         try {
@@ -231,7 +233,10 @@ export const Observations: React.FC = () => {
 
             const newUnits = { ...student.units };
             if (!newUnits[selectedUnit]) newUnits[selectedUnit] = {};
-            newUnits[selectedUnit].observation = text;
+            // Make observation subject-specific
+            if (!newUnits[selectedUnit].subjects) newUnits[selectedUnit].subjects = {};
+            if (!newUnits[selectedUnit].subjects[activeSubject]) newUnits[selectedUnit].subjects[activeSubject] = {};
+            newUnits[selectedUnit].subjects[activeSubject].observation = text;
 
             const { error } = await supabase
                 .from('students')

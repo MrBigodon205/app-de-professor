@@ -189,8 +189,7 @@ export const Dashboard: React.FC = () => {
       let query = supabase.from('occurrences')
         .select('*')
         .eq('user_id', currentUser.id)
-        // Occurrences don't have subject column usually, they are linked to student.
-        // We might want to filter by students in active classes.
+        .eq('subject', activeSubject)
         .order('date', { ascending: false });
 
       if (selectedSeriesId) {
@@ -251,7 +250,7 @@ export const Dashboard: React.FC = () => {
       let query = supabase.from('plans')
         .select('*')
         .eq('user_id', currentUser.id)
-        // .eq('subject', activeSubject) // Plans use series_id which is filtered below 
+        .eq('subject', activeSubject)
         // We need to verify if plans table has subject. 
         // We migrated classes to have subject.
         // Plans link to series_id.
@@ -306,7 +305,7 @@ export const Dashboard: React.FC = () => {
       let query = supabase.from('activities')
         .select('*')
         .eq('user_id', currentUser.id)
-        // Activities link to series_id too.
+        .eq('subject', activeSubject)
         .order('date', { ascending: false });
 
       if (selectedSeriesId) {

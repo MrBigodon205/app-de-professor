@@ -77,7 +77,7 @@ interface GradeRecord {
 
 export const Grades: React.FC = () => {
     const { selectedSeriesId, selectedSection, activeSeries } = useClass();
-    const { currentUser } = useAuth();
+    const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
     const [students, setStudents] = useState<Student[]>([]);
     const [selectedUnit, setSelectedUnit] = useState<string>('1');
@@ -115,6 +115,7 @@ export const Grades: React.FC = () => {
                 .from('grades')
                 .select('*')
                 .in('student_id', studentIds)
+                .eq('subject', activeSubject)
                 .eq('user_id', currentUser.id); // Security check
 
             if (gradesError) throw gradesError;
@@ -154,7 +155,7 @@ export const Grades: React.FC = () => {
         if (selectedSeriesId && selectedSection) {
             fetchData();
         }
-    }, [selectedSeriesId, selectedSection, currentUser]);
+    }, [selectedSeriesId, selectedSection, currentUser, activeSubject]);
 
     // Save to DB
     const saveToDB = async (studentId: string) => {
@@ -231,12 +232,13 @@ export const Grades: React.FC = () => {
                     data: unitData,
                     user_id: currentUser!.id,
                     series_id: parseInt(selectedSeriesId!),
-                    section: selectedSection
+                    section: selectedSection,
+                    subject: activeSubject
                 };
 
                 const { error } = await supabase
                     .from('grades')
-                    .upsert(payload, { onConflict: 'student_id, unit' });
+                    .upsert(payload, { onConflict: 'student_id, unit, subject' });
 
                 if (error) throw error;
                 console.log("Saved successfully.");

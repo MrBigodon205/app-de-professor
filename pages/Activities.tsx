@@ -9,13 +9,14 @@ import DOMPurify from 'dompurify';
 import { DatePicker } from '../components/DatePicker';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { useDebounce } from '../hooks/useDebounce';
+import { jsPDF } from 'jspdf';
 
 // Fallback types if fetch fails
 const DEFAULT_ACTIVITY_TYPES = ['Prova', 'Trabalho', 'Dever de Casa', 'Seminário', 'Pesquisa', 'Conteúdo', 'Outro'];
 
 export const Activities: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
-    const { currentUser } = useAuth();
+    const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
 
     // UI State
@@ -38,6 +39,7 @@ export const Activities: React.FC = () => {
     const [formFiles, setFormFiles] = useState<AttachmentFile[]>([]);
     const [formSeriesId, setFormSeriesId] = useState('');
     const [formSection, setFormSection] = useState('');
+    const [filterSection, setFilterSection] = useState('');
 
     useEffect(() => {
         fetchActivityTypes();
@@ -45,7 +47,9 @@ export const Activities: React.FC = () => {
 
     useEffect(() => {
         fetchActivities();
-    }, [selectedSeriesId]);
+        setSelectedActivityId(null);
+        setIsEditing(false);
+    }, [selectedSeriesId, activeSubject]);
 
     const fetchActivityTypes = async () => {
         try {
@@ -65,16 +69,32 @@ export const Activities: React.FC = () => {
     };
 
     useEffect(() => {
-        if (selectedSeriesId && selectedSection) {
+        if (selectedSeriesId) {
             setFormSeriesId(selectedSeriesId);
+        }
+        if (selectedSection) {
             setFormSection(selectedSection);
-            fetchStudents();
         }
     }, [selectedSeriesId, selectedSection]);
 
+    // Centralized Student Fetching
+    useEffect(() => {
+        if (!selectedSeriesId || !currentUser) return;
+
+        const currentActivity = activities.find(a => a.id === selectedActivityId);
+
+        if (currentActivity) {
+            // Fetch students based on activity context
+            fetchStudents(currentActivity.seriesId, currentActivity.section);
+        } else {
+            // Fetch students based on global context
+            fetchStudents(selectedSeriesId, selectedSection);
+        }
+    }, [selectedActivityId, selectedSeriesId, selectedSection, currentUser, activities.length]);
+
     const fetchStudents = async (seriesId?: string, section?: string) => {
-        const targetSeries = seriesId || selectedSeriesId;
-        const targetSection = section || selectedSection;
+        const targetSeries = seriesId !== undefined ? seriesId : selectedSeriesId;
+        const targetSection = section !== undefined ? section : selectedSection;
 
         if (!targetSeries || !currentUser) return;
 
@@ -122,6 +142,9 @@ export const Activities: React.FC = () => {
             if (selectedSeriesId) {
                 query = query.eq('series_id', selectedSeriesId);
             }
+            if (activeSubject) {
+                query = query.eq('subject', activeSubject);
+            }
 
             const { data, error } = await query;
             if (error) throw error;
@@ -138,7 +161,8 @@ export const Activities: React.FC = () => {
                 description: a.description,
                 files: a.files || [],
                 completions: a.completions || [],
-                userId: a.user_id
+                userId: a.user_id,
+                subject: a.subject
             }));
 
             formatted.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -188,7 +212,7 @@ export const Activities: React.FC = () => {
             supabase.removeChannel(channel);
             clearInterval(interval);
         };
-    }, [selectedSeriesId, currentUser]);
+    }, [selectedSeriesId, currentUser, activeSubject]);
 
     const handleNewActivity = () => {
         if (!selectedSeriesId) {
@@ -220,9 +244,6 @@ export const Activities: React.FC = () => {
         setFormFiles(act.files);
         setFormSeriesId(act.seriesId);
         setFormSection(act.section || '');
-
-        // Fetch students for THIS activity's context immediately
-        fetchStudents(act.seriesId, act.section);
     };
 
     const handleSave = async () => {
@@ -248,7 +269,8 @@ export const Activities: React.FC = () => {
             series_id: formSeriesId,
             section: formSection || null,
             files: formFiles,
-            user_id: currentUser?.id
+            user_id: currentUser?.id,
+            subject: activeSubject
         };
 
         try {
@@ -501,14 +523,164 @@ export const Activities: React.FC = () => {
         }
     };
 
+    const handleExportPDF = () => {
+        if (!currentActivity) return;
+
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        const margin = 20;
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const contentWidth = pageWidth - (margin * 2);
+
+        // Header
+        doc.setFontSize(24);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(14, 165, 233); // #0ea5e9
+        doc.text('CENSC', margin, margin);
+
+        doc.setFontSize(9);
+        doc.text('CENTRO EDUCACIONAL NOSSA SRA DO CENÁCULO', margin, margin + 5);
+
+        doc.setDrawColor(226, 232, 240);
+        doc.line(margin, margin + 10, pageWidth - margin, margin + 10);
+
+        // Activity Info
+        doc.setTextColor(30, 41, 59); // slate-800
+        doc.setFontSize(18);
+        doc.text(currentActivity.title, margin, margin + 25);
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Tipo:', margin, margin + 35);
+        doc.setFont('helvetica', 'normal');
+        doc.text(currentActivity.type, margin + 12, margin + 35);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Data:', margin + 60, margin + 35);
+        doc.setFont('helvetica', 'normal');
+        const dateText = currentActivity.type === 'Conteúdo'
+            ? `${new Date((currentActivity.startDate || currentActivity.date) + 'T12:00:00').toLocaleDateString('pt-BR')} - ${new Date((currentActivity.endDate || currentActivity.date) + 'T12:00:00').toLocaleDateString('pt-BR')}`
+            : new Date(currentActivity.date + 'T12:00:00').toLocaleDateString('pt-BR');
+        doc.text(dateText, margin + 72, margin + 35);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Turma:', margin, margin + 42);
+        doc.setFont('helvetica', 'normal');
+        const className = classes.find(c => c.id === currentActivity.seriesId)?.name || '';
+        doc.text(`${className}${currentActivity.section ? ` - Turma ${currentActivity.section}` : ''}`, margin + 15, margin + 42);
+
+        doc.line(margin, margin + 48, pageWidth - margin, margin + 48);
+
+        // Description
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.text('Detalhes da Atividade:', margin, margin + 60);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        const descriptionText = currentActivity.description.replace(/<[^>]+>/g, ' ');
+        const splitDescription = doc.splitTextToSize(descriptionText, contentWidth);
+        doc.text(splitDescription, margin, margin + 68);
+
+        // Completion List (if not Content)
+        if (currentActivity.type !== 'Conteúdo') {
+            let yPos = margin + 75 + (splitDescription.length * 5);
+            if (yPos > doc.internal.pageSize.getHeight() - 40) {
+                doc.addPage();
+                yPos = margin;
+            }
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.text('Lista de Entrega / Realização:', margin, yPos);
+
+            doc.setFontSize(9);
+            yPos += 8;
+
+            students.forEach((s, i) => {
+                if (yPos > doc.internal.pageSize.getHeight() - 20) {
+                    doc.addPage();
+                    yPos = margin;
+                }
+                const isDone = currentActivity.completions?.includes(s.id);
+                doc.setDrawColor(203, 213, 225);
+                doc.rect(margin, yPos - 4, contentWidth, 8);
+                doc.text(`${s.number}. ${s.name}`, margin + 2, yPos + 1);
+
+                if (isDone) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(22, 163, 74); // green-600
+                    doc.text('CONCLUÍDO', pageWidth - margin - 20, yPos + 1);
+                    doc.setTextColor(30, 41, 59);
+                    doc.setFont('helvetica', 'normal');
+                } else {
+                    doc.setTextColor(148, 163, 184); // slate-400
+                    doc.text('PENDENTE', pageWidth - margin - 20, yPos + 1);
+                    doc.setTextColor(30, 41, 59);
+                }
+
+                yPos += 8;
+            });
+        }
+
+        doc.save(`Atividade-${currentActivity.title}.pdf`);
+    };
+
+    const handlePrint = () => {
+        const printContent = document.querySelector('.printable-activity-content');
+        if (!printContent) {
+            // If No printable div exists yet, alert or handle
+            alert("Conteúdo para impressão não encontrado.");
+            return;
+        }
+
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow?.document;
+        if (!doc) return;
+
+        // Copy styles
+        const styles = document.querySelectorAll('style, link[rel="stylesheet"]');
+        styles.forEach(style => {
+            doc.head.appendChild(style.cloneNode(true));
+        });
+
+        const printStyle = doc.createElement('style');
+        printStyle.textContent = `
+            @page { size: portrait; margin: 10mm; }
+            body { background: white !important; margin: 0; padding: 0; font-family: sans-serif; }
+            .printable-activity-content { visibility: visible !important; width: 100% !important; margin: 0 !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .no-print { display: none !important; }
+        `;
+        doc.head.appendChild(printStyle);
+
+        doc.body.innerHTML = printContent.outerHTML;
+
+        setTimeout(() => {
+            iframe.contentWindow?.print();
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 100);
+        }, 500);
+    };
+
     const currentActivity = activities.find(a => a.id === selectedActivityId);
 
     const displayedActivities = React.useMemo(() => {
-        return activities.filter(a =>
-            a.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-            a.type.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-        );
-    }, [activities, debouncedSearchTerm]);
+        return activities.filter(a => {
+            const matchesSearch = a.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                a.type.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+            const matchesSection = filterSection === '' || a.section === filterSection;
+            return matchesSearch && matchesSection;
+        });
+    }, [activities, debouncedSearchTerm, filterSection]);
 
     const getIconForType = (type: string) => {
         switch (type) {
@@ -561,6 +733,35 @@ export const Activities: React.FC = () => {
                             className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-sm transition-all focus:bg-white dark:focus:bg-black`}
                         />
                     </div>
+
+                    {/* Section Switcher Tabs */}
+                    {activeSeries && activeSeries.sections?.length > 0 && (
+                        <div className="mt-4 -mx-1 px-1">
+                            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                                <button
+                                    onClick={() => setFilterSection('')}
+                                    className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all border-2 ${filterSection === ''
+                                        ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-md shadow-${theme.primaryColor}/20`
+                                        : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-white/5 text-slate-500 hover:border-slate-200'
+                                        }`}
+                                >
+                                    Todas
+                                </button>
+                                {activeSeries.sections.map(sec => (
+                                    <button
+                                        key={sec}
+                                        onClick={() => setFilterSection(sec)}
+                                        className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all border-2 ${filterSection === sec
+                                            ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-md shadow-${theme.primaryColor}/20`
+                                            : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-white/5 text-slate-500 hover:border-slate-200'
+                                            }`}
+                                    >
+                                        Turma {sec}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* List Items */}
@@ -831,6 +1032,20 @@ export const Activities: React.FC = () => {
                                 </div>
                                 <div className="absolute top-6 right-6 flex gap-2">
                                     <button
+                                        onClick={handleExportPDF}
+                                        className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                        title="Baixar PDF"
+                                    >
+                                        <span className="material-symbols-outlined">picture_as_pdf</span>
+                                    </button>
+                                    <button
+                                        onClick={handlePrint}
+                                        className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                        title="Imprimir"
+                                    >
+                                        <span className="material-symbols-outlined">print</span>
+                                    </button>
+                                    <button
                                         onClick={() => setIsEditing(true)}
                                         className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
                                         title="Editar Atividade"
@@ -844,6 +1059,56 @@ export const Activities: React.FC = () => {
                                     >
                                         <span className="material-symbols-outlined text-red-200">delete</span>
                                     </button>
+                                </div>
+                            </div>
+
+                            {/* HIDDEN PRINTABLE CONTENT */}
+                            <div className="hidden">
+                                <div className="printable-activity-content p-8 space-y-6 text-black bg-white">
+                                    <div className="flex justify-between items-start border-b-2 border-slate-200 pb-4">
+                                        <div>
+                                            <h1 className="text-3xl font-black text-sky-600">CENSC</h1>
+                                            <p className="text-[10px] font-bold uppercase text-slate-500">Centro Educacional Nossa Sra do Cenáculo</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs font-bold uppercase text-slate-400">Atividade Pedagógica</p>
+                                            <p className="text-sm font-black">{currentActivity.title}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                        <div className="space-y-1">
+                                            <p><span className="font-bold">Turma:</span> {classes.find(c => c.id === currentActivity.seriesId)?.name} {currentActivity.section && `- ${currentActivity.section}`}</p>
+                                            <p><span className="font-bold">Professor:</span> {currentUser?.name}</p>
+                                        </div>
+                                        <div className="space-y-1 text-right">
+                                            <p><span className="font-bold">Tipo:</span> {currentActivity.type}</p>
+                                            <p><span className="font-bold">Data:</span> {currentActivity.type === 'Conteúdo'
+                                                ? `${new Date((currentActivity.startDate || currentActivity.date) + 'T12:00:00').toLocaleDateString('pt-BR')} - ${new Date((currentActivity.endDate || currentActivity.date) + 'T12:00:00').toLocaleDateString('pt-BR')}`
+                                                : new Date(currentActivity.date + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="py-4">
+                                        <h3 className="font-bold text-lg border-b border-slate-100 mb-2">Descrição / Orientações:</h3>
+                                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentActivity.description) }} className="text-sm leading-relaxed" />
+                                    </div>
+
+                                    {currentActivity.type !== 'Conteúdo' && (
+                                        <div className="mt-8">
+                                            <h3 className="font-bold text-lg border-b border-slate-100 mb-4">Lista de Realização:</h3>
+                                            <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+                                                {students.map(s => (
+                                                    <div key={s.id} className="flex items-center justify-between border-b border-slate-100 py-1">
+                                                        <span className="text-xs">{s.number}. {s.name}</span>
+                                                        <div className="size-4 border border-slate-300 flex items-center justify-center">
+                                                            {currentActivity.completions?.includes(s.id) && <span className="material-symbols-outlined text-[12px]">check</span>}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

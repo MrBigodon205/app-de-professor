@@ -11,7 +11,7 @@ interface ProfileModalProps {
 type Tab = 'profile' | 'security';
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
-    const { currentUser, updateProfile, logout } = useAuth();
+    const { currentUser, updateProfile, logout, updateActiveSubject } = useAuth();
     const theme = useTheme();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -95,6 +95,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
         setLoading(false);
 
         if (success) {
+            updateActiveSubject(subject);
             alert('Perfil atualizado com sucesso!');
             // Optional: window.location.reload() if theme changes need deep refresh
             // window.location.reload(); -> Removed to avoid re-login feeling as requested
