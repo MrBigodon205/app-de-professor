@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { DashboardHeader } from '../components/DashboardHeader';
 import { DashboardBanner } from '../components/DashboardBanner';
+import { ActivityHeatmap } from '../components/ActivityHeatmap';
 
 export const Dashboard: React.FC = () => {
   const { selectedSeriesId, selectedSection, classes } = useClass();
@@ -350,6 +351,17 @@ export const Dashboard: React.FC = () => {
     }
   };
 
+  const activityPoints = recentOccurrences.reduce((acc: any[], occ) => {
+    const existing = acc.find(p => p.date === occ.date);
+    if (existing) {
+      existing.count++;
+      existing.types.push(occ.type);
+    } else {
+      acc.push({ date: occ.date, count: 1, types: [occ.type] });
+    }
+    return acc;
+  }, []);
+
   const isContextSelected = !!selectedSeriesId;
   const displayCount = isContextSelected ? classCount : globalCount;
   const contextName = (classes.find(c => c.id === selectedSeriesId)?.name || `Série ${selectedSeriesId}`) + (selectedSection ? ` - Turma ${selectedSection}` : '');
@@ -405,30 +417,34 @@ export const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
         {/* Total Students (Large Card) */}
-        <div className="md:col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 relative overflow-hidden group hover:shadow-2xl transition-all duration-500">
+        <div className="md:col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 relative overflow-hidden group hover:shadow-2xl transition-all duration-500 flex flex-col justify-between">
           <div className="absolute top-0 right-0 p-40 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700"></div>
 
-          <div className="relative flex flex-col h-full justify-between">
-            <div className="flex items-start justify-between">
+          <div className="relative flex items-start justify-between">
+            <div className="flex flex-col">
               <div className={`size-16 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/25 group-hover:rotate-6 transition-transform duration-300`}>
                 <span className="material-symbols-outlined text-3xl">groups</span>
               </div>
-              <div className="flex flex-col items-end">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/10">
-                  <span className="size-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                  Ativos
-                </span>
+              <div className="mt-4">
+                {loadingCounts ? (
+                  <div className="h-12 w-24 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse"></div>
+                ) : (
+                  <span className="block text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">{displayCount}</span>
+                )}
+                <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 mt-1">Alunos Matriculados</h2>
               </div>
             </div>
 
-            <div className="mt-6">
-              {loadingCounts ? (
-                <div className="h-16 w-32 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse"></div>
-              ) : (
-                <span className="block text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">{displayCount}</span>
-              )}
-              <h2 className="text-lg font-bold text-slate-500 dark:text-slate-400 mt-2">Alunos Matriculados</h2>
-              <p className="text-xs text-slate-400 font-medium uppercase tracking-widest mt-1">{isContextSelected ? 'Nesta Turma' : 'Total Geral'}</p>
+            <div className="flex-1 flex flex-col items-end pt-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/10 mb-6">
+                <span className="size-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                Atividade Recente
+              </span>
+
+              {/* GITHUB HEATMAP INTEGRATION */}
+              <div className="w-full max-w-[280px]">
+                <ActivityHeatmap data={activityPoints} loading={loadingOccurrences} />
+              </div>
             </div>
           </div>
         </div>

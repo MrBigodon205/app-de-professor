@@ -70,19 +70,30 @@ export const Activities: React.FC = () => {
         }
     }, [selectedSeriesId, selectedSection]);
 
-    const fetchStudents = async () => {
-        if (!selectedSeriesId || !selectedSection || !currentUser) return;
+    const fetchStudents = async (seriesId?: string, section?: string) => {
+        const targetSeries = seriesId || selectedSeriesId;
+        const targetSection = section || selectedSection;
+
+        if (!targetSeries || !currentUser) return;
+
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('students')
                 .select('*')
-                .eq('series_id', selectedSeriesId)
-                .eq('section', selectedSection)
+                .eq('series_id', targetSeries)
                 .eq('user_id', currentUser.id);
+
+            // If a specific section is provided, filter by it. 
+            // If section is empty string or null, it means "All Sections" of that series.
+            if (targetSection && targetSection !== '') {
+                query = query.eq('section', targetSection);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
 
-            const formatted: Student[] = data.map(s => ({
+            const formatted: Student[] = (data || []).map(s => ({
                 id: s.id.toString(),
                 name: s.name,
                 number: s.number,
@@ -96,7 +107,7 @@ export const Activities: React.FC = () => {
             formatted.sort((a, b) => parseInt(a.number) - parseInt(b.number));
             setStudents(formatted);
         } catch (e) {
-            console.error(e);
+            console.error("Error fetching students for activity context:", e);
         }
     }
 
@@ -207,6 +218,9 @@ export const Activities: React.FC = () => {
         setFormFiles(act.files);
         setFormSeriesId(act.seriesId);
         setFormSection(act.section || '');
+
+        // Fetch students for THIS activity's context immediately
+        fetchStudents(act.seriesId, act.section);
     };
 
     const handleSave = async () => {
@@ -306,6 +320,43 @@ export const Activities: React.FC = () => {
         const newCompletions = completions.includes(studentId)
             ? completions.filter(id => id !== studentId)
             : [...completions, studentId];
+
+        try {
+            const { data, error } = await supabase
+                .from('activities')
+                .update({ completions: newCompletions })
+                .eq('id', currentActivity.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            const updated: Activity = {
+                id: data.id.toString(),
+                title: data.title,
+                type: data.type,
+                seriesId: data.series_id.toString(),
+                section: data.section || '',
+                date: data.date,
+                startDate: data.start_date,
+                endDate: data.end_date,
+                description: data.description,
+                files: data.files || [],
+                completions: data.completions || [],
+                userId: data.user_id
+            };
+            setActivities(activities.map(a => a.id === updated.id ? updated : a));
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const selectAllCompletions = async () => {
+        if (!currentActivity || students.length === 0) return;
+
+        const allStudentIds = students.map(s => s.id);
+        const isAllSelected = allStudentIds.every(id => currentActivity.completions?.includes(id));
+        const newCompletions = isAllSelected ? [] : allStudentIds;
 
         try {
             const { data, error } = await supabase
@@ -531,6 +582,12 @@ export const Activities: React.FC = () => {
                                         <div className="flex items-center gap-1 text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
                                             <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold px-2 py-1 rounded-md">{new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                                         </div>
+                                        {act.completions && act.completions.length > 0 && (
+                                            <div className={`flex items-center gap-1 ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/20 text-${theme.primaryColor}` : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'} px-2.5 py-1 rounded-md font-bold`}>
+                                                <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                                                {act.completions.length}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </button>
@@ -844,13 +901,33 @@ export const Activities: React.FC = () => {
                                 {currentActivity.type !== 'Conteúdo' && (
                                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                                         <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <span className={`material-symbols-outlined text-${theme.primaryColor}`}>how_to_reg</span>
-                                                Lista de Entrega / Realização
+                                            <div className="flex flex-col gap-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`material-symbols-outlined text-${theme.primaryColor}`}>how_to_reg</span>
+                                                    Lista de Entrega / Realização
+                                                </div>
+                                                <div className="flex flex-col gap-1 w-full max-w-xs">
+                                                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                        <span>Progresso</span>
+                                                        <span>{currentActivity.completions?.length || 0} / {students.length}</span>
+                                                    </div>
+                                                    <div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                        <div
+                                                            className={`h-full bg-${theme.primaryColor} transition-all duration-500`}
+                                                            style={{ width: `${(currentActivity.completions?.length || 0) / (students.length || 1) * 100}%` }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <span className="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full uppercase">
-                                                {currentActivity.completions?.length || 0} / {students.length} Realizaram
-                                            </span>
+                                            <button
+                                                onClick={selectAllCompletions}
+                                                className={`px-4 py-2 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400 hover:border-${theme.primaryColor} hover:text-${theme.primaryColor} transition-all text-xs font-black uppercase tracking-widest flex items-center gap-2`}
+                                            >
+                                                <span className="material-symbols-outlined text-base">
+                                                    {students.every(s => currentActivity.completions?.includes(s.id)) ? 'deselect' : 'select_all'}
+                                                </span>
+                                                {students.every(s => currentActivity.completions?.includes(s.id)) ? 'Desmarcar Todos' : 'Marcar Todos'}
+                                            </button>
                                         </h3>
 
                                         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
@@ -883,40 +960,6 @@ export const Activities: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* Files */}
-                                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
-                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                                        <span className={`material-symbols-outlined text-${theme.primaryColor}`}>folder</span>
-                                        Materiais Anexados
-                                    </h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                        {(currentActivity.files || []).map(file => (
-                                            <button
-                                                key={file.id}
-                                                onClick={() => handleDownload(file)}
-                                                className={`group block w-full text-left bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-${theme.primaryColor}/50 hover:shadow-md transition-all`}
-                                            >
-                                                <div className="flex items-start gap-4">
-                                                    <div className={`size-12 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
-                                                        <span className="material-symbols-outlined text-2xl">description</span>
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <div className="font-bold text-slate-700 dark:text-slate-200 truncate mb-1">{file.name}</div>
-                                                        <div className="text-xs text-slate-400">{file.size}</div>
-                                                        <div className={`mt-2 text-xs font-bold text-${theme.primaryColor} opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1`}>
-                                                            Baixar Arquivo <span className="material-symbols-outlined text-[14px]">download</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        ))}
-                                        {(currentActivity.files || []).length === 0 && (
-                                            <div className="col-span-full py-8 text-center text-slate-400 italic bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-sm">
-                                                Nenhum material anexado.
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     )
