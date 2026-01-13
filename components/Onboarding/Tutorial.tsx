@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { TutorialDesktop } from './TutorialDesktop';
 import { TutorialMobile } from './TutorialMobile';
 
-const TUTORIAL_KEY = 'tutorial_v6_fun'; // Updated key for new fun tour
+const TUTORIAL_KEY = 'tutorial_v7_cleanup'; // Updated key for cleanup version
 
 export const Tutorial: React.FC = () => {
     const { currentUser } = useAuth();

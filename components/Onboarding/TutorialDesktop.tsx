@@ -74,6 +74,16 @@ export const TutorialDesktop: React.FC<TutorialProps> = ({ onComplete }) => {
         }
     };
 
+    const cleanupTestData = async () => {
+        if (!currentUser) return;
+        try {
+            await supabase.from('plans').delete().eq('user_id', currentUser.id).eq('title', 'Planejamento Exemplo (Tutorial)');
+            await supabase.from('activities').delete().eq('user_id', currentUser.id).eq('title', 'Atividade Teste (Tutorial)');
+        } catch (error) {
+            console.error("Erro ao limpar dados de teste", error);
+        }
+    };
+
     const startTour = () => {
         setShowWelcome(false);
         setTimeout(() => setRun(true), 500);
@@ -84,26 +94,17 @@ export const TutorialDesktop: React.FC<TutorialProps> = ({ onComplete }) => {
 
         // Execute actions based on step index
         if (type === 'step:after') {
-            if (index === 2) { // Step 3: Planning (Index 2 in 0-based array match? Wait, let's verify array)
-                // Steps: 0: Welcome(body), 1: Series([data-tour..]), 2: Menu(aside), 3: Planning, 4: Activity, 5: Theme, 6: End
-                // My previous replace added steps. Let's trace.
-                // Existing: 0: body, 1: class-selector, 2: aside. 
-                // I added Planning at pos 3 (index 3 via push? no I replaced 'aside' block)
-                // Ah, I replaced the 'aside' block with 'aside' + 'planning' + 'activities'.
-                // So new array: 0: body, 1: class-selector, 2: aside, 3: planning, 4: activities, 5: theme...
-                // So if index === 3 (Planning step displayed), and user clicks Next, type is step:after.
-                // Wait, creating it WHEN showing or AFTER leaving? "Vou criar... agora mesmo" suggests creating it immediately or on next.
-                // Let's create it when accessing the step? step:after of index 2 (Aside) -> Entering 3? No.
-                // Let's create it when the user clicks 'Next' on the Planning step (Index 3).
+            if (index === 2) {
                 createTestPlan();
             }
-            if (index === 4) { // Step 4: Activities
+            if (index === 4) {
                 createTestActivity();
             }
         }
 
         if (([STATUS.FINISHED, STATUS.SKIPPED] as string[]).includes(status)) {
             setRun(false);
+            cleanupTestData();
             onComplete();
             if (status === STATUS.FINISHED) {
                 triggerFireworks();
@@ -167,8 +168,14 @@ export const TutorialDesktop: React.FC<TutorialProps> = ({ onComplete }) => {
             target: '[data-tour="sidebar-planning"]',
             content: (
                 <div>
-                    <h3 className="text-xl font-bold mb-2">3. Planejamento</h3>
-                    <p>Aqui você organiza suas aulas. <br /><b>Vou criar um planejamento de teste agora mesmo para você ver!</b> ✨</p>
+                    <h3 className="text-xl font-bold mb-2">3. Planejamento Completo</h3>
+                    <p className="mb-2">Gerei um <b>Planejamento de Exemplo</b> para você ver! ✨</p>
+                    <p className="text-sm opacity-80">
+                        No Prof. Acerta+, você consegue detalhar tudo: <b>Códigos da BNCC, Objetivos, Metodologia e até anexar arquivos.</b>
+                    </p>
+                    <p className="text-xs mt-2 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg">
+                        *Não se preocupe, apagarei este exemplo automaticamente ao final do tour!
+                    </p>
                 </div>
             ),
             placement: 'right',
@@ -177,8 +184,14 @@ export const TutorialDesktop: React.FC<TutorialProps> = ({ onComplete }) => {
             target: '[data-tour="sidebar-activities"]',
             content: (
                 <div>
-                    <h3 className="text-xl font-bold mb-2">4. Atividades</h3>
-                    <p>Gerencie provas e trabalhos. <br /><b>Também criei uma atividade de exemplo lá.</b> Vá conferir depois! 📝</p>
+                    <h3 className="text-xl font-bold mb-2">4. Atividades e Notas</h3>
+                    <p className="mb-2">Também criei uma <b>Prova Teste</b> lá! 📝</p>
+                    <p className="text-sm opacity-80">
+                        Você pode criar provas variadas, definir peso, data e vincular à sua turma. O sistema calcula as médias sozinho!
+                    </p>
+                    <p className="text-xs mt-2 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg">
+                        *Também será limpo ao terminar.
+                    </p>
                 </div>
             ),
             placement: 'right',
