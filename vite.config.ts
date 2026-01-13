@@ -20,7 +20,17 @@ export default defineConfig(({ mode }) => {
       }
     },
     build: {
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit: 2000,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-utils': ['jspdf', 'jspdf-autotable', 'canvas-confetti', 'dompurify'],
+            'vendor-ui': ['react-quill-new', 'recharts', 'react-joyride'],
+            'vendor-db': ['@supabase/supabase-js']
+          }
+        }
+      }
     }
   };
 });
