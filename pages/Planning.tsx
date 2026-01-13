@@ -549,6 +549,32 @@ export const Planning: React.FC = () => {
                                 <div className="pl-3">
                                     <div className="flex justify-between items-start mb-1">
                                         <h4 className={`font-bold text-base truncate pr-2 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (window.confirm('Tem certeza que deseja excluir este planejamento?')) {
+                                                    // Assuming handleDeletePlan exists or implementing inline
+                                                    const deletePlan = async () => {
+                                                        const { error } = await supabase.from('plans').delete().eq('id', plan.id);
+                                                        if (error) {
+                                                            alert('Erro ao excluir');
+                                                        } else {
+                                                            setPlans(prev => prev.filter(p => p.id !== plan.id));
+                                                            if (selectedPlanId === plan.id) {
+                                                                setSelectedPlanId(null);
+                                                                setShowForm(false);
+                                                                setViewMode(false);
+                                                            }
+                                                        }
+                                                    };
+                                                    deletePlan();
+                                                }
+                                            }}
+                                            className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+                                            title="Excluir Planejamento"
+                                        >
+                                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                                        </button>
                                     </div>
                                     <div className="flex flex-wrap gap-2 mt-2">
                                         <span className="text-xs text-slate-500 font-medium bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md flex items-center gap-1">
