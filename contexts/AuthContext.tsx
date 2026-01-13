@@ -48,15 +48,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         try {
-            let sbData = null;
-            let usedFallback = false;
-
-            // 1. Try Standard Fetch (with timeout)
+            let profile = null;
+            // 1. Try SDK (with timeout)
             try {
                 const { data, error } = await withTimeout(
-                    supabase.from('profiles').select('*').eq('id', uid).single() as any,
-                    5000,
-                    "Profile Fetch"
                     supabase.from('profiles').select('*').eq('id', uid).single(),
                     8000,
                     "Busca de Perfil"
