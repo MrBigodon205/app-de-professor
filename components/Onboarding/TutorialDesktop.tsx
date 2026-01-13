@@ -106,22 +106,33 @@ export const TutorialDesktop: React.FC<TutorialProps> = ({ onComplete }) => {
     ];
 
     const CustomTooltip = ({ index, step, backProps, primaryProps, tooltipProps }: TooltipRenderProps) => (
-        <div {...tooltipProps} className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-6 rounded-3xl shadow-2xl border border-white/20 dark:border-slate-700 max-w-sm relative overflow-hidden ring-1 ring-black/5">
+        <div {...tooltipProps} className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-3xl p-6 rounded-[2rem] shadow-2xl border border-white/20 dark:border-slate-700 max-w-sm relative overflow-hidden ring-1 ring-black/5 animate-in zoom-in-95 duration-300">
+            {/* Glossy Effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent dark:from-white/5 pointer-events-none"></div>
+
             <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-${theme.primaryColor} to-${theme.secondaryColor}`} />
+
             <div className="relative z-10 pt-2">
-                <div className="mb-6 leading-relaxed text-slate-600 dark:text-slate-300">{step.content}</div>
+                <div className="mb-6 leading-relaxed text-slate-600 dark:text-slate-300 font-medium text-base">
+                    {step.content}
+                </div>
+
                 <div className="flex justify-between items-center mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
                     <div className="flex gap-1.5">
                         {steps.map((_, i) => (
-                            <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === index ? `bg-${theme.primaryColor} w-6` : 'bg-slate-200 dark:bg-slate-700 w-1.5'}`} />
+                            <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ease-out ${i === index ? `bg-${theme.primaryColor} w-8 shadow-sm shadow-${theme.primaryColor}/50` : 'bg-slate-200 dark:bg-slate-700 w-1.5'}`} />
                         ))}
                     </div>
                     <div className="flex gap-3">
                         {index > 0 && (
-                            <button {...backProps} className="text-xs font-bold text-slate-400 hover:text-slate-600 px-3 py-2">Voltar</button>
+                            <button {...backProps} className="text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-3 py-2 transition-colors">Voltar</button>
                         )}
-                        <button {...primaryProps} className={`px-6 py-2.5 rounded-xl bg-gradient-to-r from-${theme.primaryColor} to-${theme.secondaryColor} text-white font-bold shadow-lg hover:scale-105 transition-all text-xs uppercase`}>
-                            {index === steps.length - 1 ? 'Concluir' : 'Próximo'}
+                        <button
+                            {...primaryProps}
+                            className={`group relative px-6 py-2.5 rounded-xl bg-gradient-to-r from-${theme.primaryColor} to-${theme.secondaryColor} text-white font-bold shadow-lg hover:shadow-${theme.primaryColor}/40 hover:scale-105 active:scale-95 transition-all duration-300 text-xs uppercase tracking-wider overflow-hidden`}
+                        >
+                            <span className="relative z-10">{index === steps.length - 1 ? 'Concluir' : 'Próximo'}</span>
+                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         </button>
                     </div>
                 </div>
@@ -132,14 +143,38 @@ export const TutorialDesktop: React.FC<TutorialProps> = ({ onComplete }) => {
     return (
         <>
             {showWelcome && (
-                <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
-                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl p-12 max-w-lg w-full text-center relative overflow-hidden animate-in zoom-in-95">
-                        <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-${theme.primaryColor} to-${theme.secondaryColor}`}></div>
-                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Olá, {currentUser?.name?.split(' ')[0]}!</h2>
-                        <p className="text-slate-600 dark:text-slate-300 mb-8">Vamos fazer um tour rápido pela versão Desktop?</p>
-                        <div className="flex flex-col gap-3">
-                            <button onClick={startTour} className={`w-full py-4 rounded-xl bg-${theme.primaryColor} text-white font-bold text-lg shadow-xl hover:scale-105 transition-all`}>Começar</button>
-                            <button onClick={() => { setShowWelcome(false); onComplete(); }} className="text-slate-400 hover:text-slate-600 text-sm">Pular Tour</button>
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-500">
+                    <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-[2.5rem] shadow-2xl p-10 max-w-lg w-full text-center relative overflow-hidden animate-in slide-in-from-bottom-8 duration-500 border border-white/20 dark:border-slate-700">
+                        {/* Decorative Background */}
+                        <div className={`absolute -top-20 -right-20 w-64 h-64 bg-${theme.primaryColor}/10 rounded-full blur-3xl`}></div>
+                        <div className={`absolute -bottom-20 -left-20 w-64 h-64 bg-${theme.secondaryColor}/10 rounded-full blur-3xl`}></div>
+
+                        <div className="relative z-10">
+                            <div className={`size-20 mx-auto bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} rounded-3xl flex items-center justify-center shadow-xl shadow-${theme.primaryColor}/30 mb-6 rotate-3 hover:rotate-6 transition-transform duration-500`}>
+                                <span className="material-symbols-outlined text-4xl text-white">rocket_launch</span>
+                            </div>
+
+                            <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
+                                Olá, {currentUser?.name?.split(' ')[0]}! 👋
+                            </h2>
+                            <p className="text-slate-600 dark:text-slate-300 mb-8 text-lg leading-relaxed">
+                                O <b>Prof. Acerta+</b> está de cara nova! Vamos fazer um tour rápido para você dominar todas as ferramentas?
+                            </p>
+
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={startTour}
+                                    className={`w-full py-4 rounded-2xl bg-gradient-to-r from-${theme.primaryColor} to-${theme.secondaryColor} text-white font-bold text-lg shadow-xl shadow-${theme.primaryColor}/25 hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all duration-300`}
+                                >
+                                    Vamos lá! 🚀
+                                </button>
+                                <button
+                                    onClick={() => { setShowWelcome(false); onComplete(); }}
+                                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-sm font-medium py-2 transition-colors"
+                                >
+                                    Pular Tour
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -153,13 +188,16 @@ export const TutorialDesktop: React.FC<TutorialProps> = ({ onComplete }) => {
                 disableOverlayClose
                 tooltipComponent={CustomTooltip}
                 callback={handleJoyrideCallback}
-                floaterProps={{ disableAnimation: true }}
+                floaterProps={{ disableAnimation: false }} // Enable generic animation, we handle modal anim in CSS
                 styles={{
                     options: {
                         zIndex: 10000,
                         primaryColor: theme.primaryColor,
                         textColor: '#334155',
-                        overlayColor: 'rgba(15, 23, 42, 0.85)',
+                        overlayColor: 'rgba(15, 23, 42, 0.6)', // Lighter, blurrier overlay
+                    },
+                    spotlight: {
+                        borderRadius: '16px', // Softer spotlight
                     }
                 }}
             />

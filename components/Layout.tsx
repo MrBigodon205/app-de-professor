@@ -210,17 +210,20 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     to={item.path}
                     onClick={() => setIsMobileMenuOpen(false)}
                     data-tour={`sidebar-${item.path.replace('/', '')}`}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive(item.path)
-                      ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}`
+                    className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group hover:scale-[1.02] active:scale-95 ${isActive(item.path)
+                      ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/30 ring-1 ring-${theme.primaryColor}/20`
                       : 'text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400 hover:text-text-main dark:hover:text-white'
                       }`}
                   >
-                    <span className={`material-symbols-outlined text-2xl ${isActive(item.path) ? 'icon-filled' : ''}`}>
+                    <span className={`material-symbols-outlined text-2xl transition-transform duration-300 group-hover:rotate-12 ${isActive(item.path) ? 'icon-filled scale-110' : 'group-hover:scale-110'}`}>
                       {item.icon}
                     </span>
-                    <span className={`text-sm font-medium ${isActive(item.path) ? 'font-bold' : ''}`}>
+                    <span className={`text-sm font-medium transition-all ${isActive(item.path) ? 'font-bold' : ''}`}>
                       {item.label}
                     </span>
+                    {isActive(item.path) && (
+                      <span className="absolute right-3 w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                    )}
                   </Link>
                 ))
               }
@@ -229,20 +232,21 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
           <div className="p-4 border-t border-border-light dark:border-border-dark flex flex-col gap-2">
             <button
+              data-tour="theme-toggle"
               onClick={() => {
                 document.documentElement.classList.toggle('dark');
                 localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
               }}
-              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 hover:scale-[1.01] group"
             >
-              <span className="material-symbols-outlined text-2xl">dark_mode</span>
+              <span className="material-symbols-outlined text-2xl transition-transform duration-500 group-hover:rotate-[360deg] text-amber-500">dark_mode</span>
               <span className="text-sm font-medium">Alternar Tema</span>
             </button>
             <button
               onClick={logout}
-              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-red-50 hover:text-red-600 transition-colors"
+              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-red-50 hover:text-red-600 transition-all active:scale-95 hover:scale-[1.01] group"
             >
-              <span className="material-symbols-outlined text-2xl">logout</span>
+              <span className="material-symbols-outlined text-2xl transition-transform group-hover:-translate-x-1">logout</span>
               <span className="text-sm font-medium">Sair</span>
             </button>
           </div>
@@ -310,19 +314,19 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <button
                 data-tour="class-selector"
                 onClick={() => setIsClassSelectorOpen(true)}
-                className="flex items-center gap-4 pl-1.5 pr-5 py-2 rounded-2xl bg-slate-50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-800 transition-all group border border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20 shadow-sm hover:shadow-md"
+                className="flex items-center gap-4 pl-1.5 pr-5 py-2 rounded-2xl bg-slate-50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-800 transition-all duration-300 group border border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20 shadow-sm hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
                 title="Gerenciar Turmas"
               >
-                <div className={`size-12 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
+                <div className={`size-12 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/30 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500`}>
                   <span className="material-symbols-outlined text-2xl font-black">{theme.icon}</span>
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
-                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] leading-none">Série</span>
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] leading-none group-hover:text-${theme.primaryColor} transition-colors">Série</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-black text-lg text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-primary transition-colors">
+                    <span className="font-black text-lg text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-${theme.primaryColor} transition-colors">
                       {activeSeries ? activeSeries.name : 'Selecione...'}
                     </span>
-                    <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-sm group-hover:text-primary transition-all">edit_square</span>
+                    <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-sm group-hover:text-${theme.primaryColor} transition-all group-hover:rotate-12">edit_square</span>
                   </div>
                 </div>
               </button>
