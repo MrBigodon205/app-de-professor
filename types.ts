@@ -66,6 +66,17 @@ export interface Plan {
   description: string;
   files: AttachmentFile[];
   userId: string;
+  objectives?: string;
+  bncc_codes?: string;
+  methodology?: string;
+  resources?: string;
+  assessment?: string;
+  duration?: string;
+  theme_area?: string;
+  coordinator_name?: string;
+  activity_type?: string;
+  subject?: string;
+  class_name?: string; // Snapshot of class name
 }
 
 export interface AttendanceRecord {

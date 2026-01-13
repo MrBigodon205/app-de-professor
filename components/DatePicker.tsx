@@ -82,7 +82,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, 
     return (
         <div className={`relative ${className || ''}`} ref={containerRef}>
             {label && (
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="label mb-2">
                     {label}
                 </label>
             )}
@@ -90,10 +90,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, 
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-full flex items-center justify-between bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-left transition-all duration-200 ${isOpen ? `ring-2 ring-${primaryColor}-500 border-transparent` : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                className={`w-full flex items-center justify-between font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-left transition-all duration-200 outline-none ${isOpen ? `ring-2 ring-${primaryColor}-500/50 border-transparent bg-white dark:bg-black` : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
             >
-                <span className={`block truncate ${!value ? 'text-slate-400' : 'text-slate-900 dark:text-white font-medium'}`}>
+                <span className={`block truncate ${!value ? 'text-slate-400' : 'text-slate-900 dark:text-white font-bold'}`}>
                     {value ? formatDateDisplay(value) : (label || 'Selecionar data')}
                 </span>
                 <span className={`material-symbols-outlined text-slate-400 text-xl transition-transform duration-200 ${isOpen ? 'rotate-180 text-' + primaryColor + '-500' : ''}`}>

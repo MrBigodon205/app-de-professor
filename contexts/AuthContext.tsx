@@ -175,6 +175,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     useEffect(() => {
+        // System Dark Mode Detection
+        const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+        const updateTheme = (e: MediaQueryListEvent | MediaQueryList) => {
+            const isDark = e.matches;
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        };
+
+        // Initial check
+        updateTheme(darkModeMediaQuery);
+
+        // Listener for changes
+        darkModeMediaQuery.addEventListener('change', updateTheme);
+
+        return () => darkModeMediaQuery.removeEventListener('change', updateTheme);
+    }, []);
+
+    useEffect(() => {
         if (!userId) {
             if (profileChannel) {
                 supabase.removeChannel(profileChannel);

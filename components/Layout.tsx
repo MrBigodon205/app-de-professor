@@ -67,7 +67,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const handleRemoveSectionOneClick = async (e: React.MouseEvent, section: string) => {
     e.stopPropagation();
     if (window.confirm(`Excluir turma ${section}?`)) {
-      await removeSectionFromSeries(activeSeries!.id, section);
+      await removeSection(activeSeries!.id, section);
     }
   };
 
@@ -76,7 +76,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     const next = String.fromCharCode(activeSeries.sections.length > 0
       ? activeSeries.sections[activeSeries.sections.length - 1].charCodeAt(0) + 1
       : 65);
-    await addSectionToSeries(activeSeries.id, next);
+    await addSection(activeSeries.id, next);
   };
 
   return (
@@ -310,19 +310,19 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <button
                 data-tour="class-selector"
                 onClick={() => setIsClassSelectorOpen(true)}
-                className="flex items-center gap-3 pl-1 pr-4 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all group border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                className="flex items-center gap-4 pl-1.5 pr-5 py-2 rounded-2xl bg-slate-50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-800 transition-all group border border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20 shadow-sm hover:shadow-md"
                 title="Gerenciar Turmas"
               >
-                <div className={`size-11 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20 group-hover:scale-105 group-hover:shadow-${theme.primaryColor}/30 transition-all`}>
-                  <span className="material-symbols-outlined">{theme.icon}</span>
+                <div className={`size-12 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
+                  <span className="material-symbols-outlined text-2xl font-black">{theme.icon}</span>
                 </div>
-                <div className="flex flex-col items-start leading-none gap-0.5">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Série Atual</span>
-                  <div className="flex items-center gap-1">
-                    <span className="font-bold text-lg text-slate-900 dark:text-white whitespace-nowrap">
+                <div className="flex flex-col items-start gap-0.5">
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] leading-none">Série</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-lg text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-primary transition-colors">
                       {activeSeries ? activeSeries.name : 'Selecione...'}
                     </span>
-                    <span className="material-symbols-outlined text-slate-400 text-sm group-hover:text-primary transition-colors duration-300">edit_square</span>
+                    <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-sm group-hover:text-primary transition-all">edit_square</span>
                   </div>
                 </div>
               </button>
@@ -330,60 +330,48 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
             <div className="h-10 w-px bg-gradient-to-b from-transparent via-slate-200 dark:via-slate-700 to-transparent mx-2 hidden md:block"></div>
 
-            {/* 2. Section Selector (Active Tabs) - Hidden on Mobile for now, will replace with Mobile Context Bar */}
+            {/* 2. Section Selector (Active Tabs) - PREMIUM PILLS */}
             <div className="flex-1 min-w-0 mx-2 md:mx-0 overflow-hidden hidden md:block">
-              {/* ... (Existing Desktop Tab implementation) ... */}
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mask-linear-fade py-1 pr-4">
+              <div className="flex items-center gap-3 overflow-x-auto no-scrollbar mask-linear-fade py-1 pr-4">
                 {activeSeries?.sections.map(sec => (
                   <div key={sec} className="relative group/tab shrink-0">
                     <button
                       onClick={() => handleSwitchSection(sec)}
-                      className={`relative min-w-[3rem] h-10 px-4 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center border ${selectedSection === sec
-                        ? `bg-white dark:bg-slate-800 text-${theme.primaryColor} border-${theme.primaryColor} shadow-md shadow-${theme.primaryColor}/10`
-                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                      className={`relative min-w-[3.5rem] h-10 px-5 rounded-full font-black text-sm transition-all duration-500 flex items-center justify-center border-2 active:scale-90 ${selectedSection === sec
+                        ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-[0_0_15px] shadow-${theme.primaryColor}/40 ring-1 ring-${theme.primaryColor}/20`
+                        : 'bg-white dark:bg-slate-900/50 border-slate-100 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-700 dark:hover:text-white'}`}
                     >
                       {sec}
+                      {/* Active Indicator dot */}
+                      {selectedSection === sec && (
+                        <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-${theme.primaryColor} animate-pulse`}></span>
+                      )}
                     </button>
                     {/* Remove Interaction */}
                     <button
                       onClick={(e) => handleRemoveSectionOneClick(e, sec)}
-                      className="absolute -top-1.5 -right-1.5 size-5 bg-white dark:bg-slate-700 text-red-500 rounded-full shadow-md border dark:border-slate-600 flex items-center justify-center opacity-0 group-hover/tab:opacity-100 transition-all transform scale-0 group-hover/tab:scale-100 cursor-pointer z-20 hover:scale-110"
+                      className="absolute -top-1.5 -right-1.5 size-5 bg-white dark:bg-slate-700 text-red-500 rounded-full shadow-md border dark:border-white/10 flex items-center justify-center opacity-0 group-hover/tab:opacity-100 transition-all transform scale-0 group-hover/tab:scale-100 cursor-pointer z-20 hover:scale-110"
                       title="Remover Turma"
                     >
-                      <span className="material-symbols-outlined text-[10px] font-bold">close</span>
+                      <span className="material-symbols-outlined text-[10px] font-black">close</span>
                     </button>
                   </div>
                 ))}
 
-                {/* Add Section Input - Desktop Header Version */}
+                {/* Add Section Button - PREMIUM NOVA PILL (DASHED) */}
                 {activeSeries && (
-                  <div className="h-10 bg-white dark:bg-slate-800 rounded-xl flex items-center px-1 border border-slate-200 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all shadow-sm">
-                    <input
-                      className="w-12 h-full bg-transparent px-2 text-xs font-bold text-center uppercase outline-none placeholder:normal-case placeholder:font-normal text-slate-700 dark:text-slate-300"
-                      placeholder="Nova"
-                      maxLength={3}
-                      value={newSectionName}
-                      onChange={e => setNewSectionName(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' && newSectionName.trim()) {
-                          addSectionToSeries(activeSeries.id, newSectionName.toUpperCase());
-                          setNewSectionName('');
-                        }
-                      }}
-                    />
-                    <button
-                      onClick={async () => {
-                        if (newSectionName.trim()) {
-                          await addSectionToSeries(activeSeries.id, newSectionName.toUpperCase());
-                          setNewSectionName('');
-                        }
-                      }}
-                      disabled={!newSectionName.trim()}
-                      className={`size-8 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-${theme.primaryColor} hover:text-white text-slate-400 flex items-center justify-center transition-colors`}
-                    >
-                      <span className="material-symbols-outlined text-sm">add</span>
-                    </button>
-                  </div>
+                  <button
+                    onClick={async () => {
+                      const existingLetters = activeSeries.sections.filter(s => s.length === 1 && /[A-Z]/.test(s));
+                      const nextLetter = existingLetters.length === 0 ? 'A' : String.fromCharCode([...new Set(existingLetters)].sort().pop()!.charCodeAt(0) + 1);
+                      await addSection(activeSeries.id, nextLetter);
+                    }}
+                    className={`h-10 pl-3 pr-4 rounded-full flex items-center gap-2 border-2 border-dashed border-slate-200 dark:border-white/10 text-slate-400 hover:border-${theme.primaryColor} hover:text-white hover:bg-${theme.primaryColor} transition-all duration-300 hover:scale-105 active:scale-95 group/nova shadow-sm hover:shadow-lg hover:shadow-${theme.primaryColor}/20`}
+                    title="Adicionar Turma (Automático)"
+                  >
+                    <span className="material-symbols-outlined text-sm font-black">add</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Nova</span>
+                  </button>
                 )}
               </div>
             </div>
@@ -466,24 +454,28 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </div>
         </header>
 
-        {/* Mobile Context Bar (Class Switcher & Current Section) - VISIBLE ONLY ON MOBILE */}
-        <div className="md:hidden px-4 pt-2 -mb-2 z-30">
+        {/* Mobile Context Bar (Class Switcher & Current Section) - PREMIUM CARD STYLE */}
+        <div className="md:hidden px-4 pt-4 -mb-1 z-30">
           <button
             onClick={() => setIsClassSelectorOpen(true)}
-            className="w-full bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between"
+            className="w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-4 rounded-3xl border border-white/50 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all"
           >
-            <div className="flex items-center gap-3">
-              <div className={`size-10 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
-                <span className="material-symbols-outlined">school</span>
+            <div className="flex items-center gap-4">
+              <div className={`size-12 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/25`}>
+                <span className="material-symbols-outlined text-2xl font-black">school</span>
               </div>
-              <div className="flex flex-col items-start">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Turma Atual</span>
-                <span className="text-sm font-bold text-slate-900 dark:text-white">
-                  {activeSeries ? activeSeries.name : 'Selecione uma turma'} {selectedSection ? ` - ${selectedSection}` : ''}
+              <div className="flex flex-col items-start gap-0.5">
+                <span className="text-[10px] uppercase font-black tracking-[0.15em] text-slate-400 leading-none">Contexto Atual</span>
+                <span className="text-[15px] font-black text-slate-900 dark:text-white tracking-tight">
+                  {activeSeries ? activeSeries.name : 'Selecione uma turma'}
+                  {selectedSection && <span className={`ml-2 px-2.5 py-0.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs shadow-sm ring-1 ring-${theme.primaryColor}/40`}>{selectedSection}</span>}
                 </span>
               </div>
             </div>
-            <span className="material-symbols-outlined text-slate-400">expand_more</span>
+            <div className="flex items-center gap-1 text-slate-300 dark:text-slate-600">
+              <span className="material-symbols-outlined">swap_horiz</span>
+              <span className="material-symbols-outlined">expand_more</span>
+            </div>
           </button>
         </div>
 

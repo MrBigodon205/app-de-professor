@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -7,10 +8,12 @@ import { supabase } from '../lib/supabase';
 import DOMPurify from 'dompurify';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { DatePicker } from '../components/DatePicker';
+
 export const Planning: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
     const { currentUser } = useAuth();
     const theme = useTheme();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // UI State
     const [plans, setPlans] = useState<Plan[]>([]);
@@ -18,6 +21,9 @@ export const Planning: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [isEditing, setIsEditing] = useState(false);
+    const [activeTab, setActiveTab] = useState<'geral' | 'conteudo' | 'bncc' | 'recursos'>('geral');
+    const [viewMode, setViewMode] = useState(false);
+    const [showForm, setShowForm] = useState(false);
 
     // Form State
     const [formTitle, setFormTitle] = useState('');
@@ -26,7 +32,20 @@ export const Planning: React.FC = () => {
     const [formDescription, setFormDescription] = useState('');
     const [formFiles, setFormFiles] = useState<AttachmentFile[]>([]);
     const [formSeriesId, setFormSeriesId] = useState('');
-    const [formSection, setFormSection] = useState(''); // Optional
+    const [formSection, setFormSection] = useState('');
+
+    // New Fields
+    const [formObjectives, setFormObjectives] = useState('');
+    const [formBncc, setFormBncc] = useState('');
+    const [formMethodology, setFormMethodology] = useState('');
+    const [formResources, setFormResources] = useState('');
+    const [formAssessment, setFormAssessment] = useState('');
+    const [formDuration, setFormDuration] = useState('');
+    const [formThemeArea, setFormThemeArea] = useState('');
+    const [formCoordinator, setFormCoordinator] = useState('');
+    const [formActivityType, setFormActivityType] = useState('');
+    const [formSubject, setFormSubject] = useState('');
+    const [filterSection, setFilterSection] = useState('');
 
     useEffect(() => {
         fetchPlans();
@@ -60,15 +79,24 @@ export const Planning: React.FC = () => {
                 endDate: p.end_date,
                 description: p.description,
                 files: p.files || [],
-                userId: p.user_id
+                userId: p.user_id,
+                objectives: p.objectives || '',
+                bncc_codes: p.bncc_codes || '',
+                methodology: p.methodology || '',
+                resources: p.resources || '',
+                assessment: p.assessment || '',
+                duration: p.duration || '',
+                theme_area: p.theme_area || '',
+                coordinator_name: p.coordinator_name || '',
+                activity_type: p.activity_type || '',
+                subject: p.subject || ''
             }));
 
             formatted.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 
             setPlans(formatted);
-            if (formatted.length > 0 && !selectedPlanId) {
-                // Determine if we should select the first plan or keep current selection
-                // Logic mostly for initial load or series switch
+            setPlans(formatted);
+            if (formatted.length > 0 && !selectedPlanId && window.innerWidth >= 1024) {
                 if (!selectedPlanId) setSelectedPlanId(formatted[0].id);
             } else if (formatted.length === 0) {
                 setSelectedPlanId(null);
@@ -83,43 +111,21 @@ export const Planning: React.FC = () => {
     // --- REALTIME SUBSCRIPTION ---
     useEffect(() => {
         if (!currentUser || !selectedSeriesId) return;
-
-        // Polling Fallback (Every 10s)
-        const interval = setInterval(() => {
-            fetchPlans(true);
-        }, 10000);
-
-        console.log("Setting up Realtime for Planning...");
-
+        const interval = setInterval(() => { fetchPlans(true); }, 10000);
         const channel = supabase.channel(`planning_sync_${selectedSeriesId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'plans'
-                },
-                (payload) => {
-                    console.log("Realtime Plan Change Received!", payload);
-                    fetchPlans(true);
-                }
-            )
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'plans' }, () => { fetchPlans(true); })
             .subscribe();
-
-        return () => {
-            console.log("Cleaning up Planning Realtime...");
-            supabase.removeChannel(channel);
-            clearInterval(interval);
-        };
+        return () => { supabase.removeChannel(channel); clearInterval(interval); };
     }, [selectedSeriesId, currentUser]);
 
-    const handleNewPlan = () => {
-        if (!selectedSeriesId) {
-            alert("Por favor, selecione uma série no menu superior para criar um planejamento.");
-            return;
-        }
-        setIsEditing(true);
+    const resetForm = () => {
+        setIsEditing(false);
         setSelectedPlanId(null);
+        setShowForm(false);
+        setViewMode(false);
+        setActiveTab('geral');
+
+        // Reset Form
         setFormTitle('');
         setFormStartDate(new Date().toLocaleDateString('sv-SE'));
         setFormEndDate(new Date().toLocaleDateString('sv-SE'));
@@ -127,11 +133,36 @@ export const Planning: React.FC = () => {
         setFormFiles([]);
         setFormSeriesId(selectedSeriesId);
         setFormSection(selectedSection || '');
+        setFormObjectives('');
+        setFormBncc('');
+        setFormMethodology('');
+        setFormResources('');
+        setFormAssessment('');
+        setFormDuration('');
+        setFormThemeArea('');
+        setFormCoordinator('');
+        setFormActivityType('');
+        setFormSubject(currentUser?.subject || '');
     };
 
-    const handleSelectPlan = (plan: Plan) => {
-        setIsEditing(false);
+    const handleNewPlan = () => {
+        if (!selectedSeriesId) {
+            alert("Por favor, selecione uma série no menu superior para criar um planejamento.");
+            return;
+        }
+
+        resetForm();
+        setSelectedPlanId(null); // Explicitly clear ID
+        setShowForm(true);
+        setIsEditing(false); // New plans start in "create" mode, not "edit" of existing
+    };
+
+    const handleEdit = (plan: Plan) => {
+        setIsEditing(true);
         setSelectedPlanId(plan.id);
+        setShowForm(true);
+        setViewMode(false);
+
         setFormTitle(plan.title);
         setFormStartDate(plan.startDate);
         setFormEndDate(plan.endDate);
@@ -139,6 +170,27 @@ export const Planning: React.FC = () => {
         setFormFiles(plan.files);
         setFormSeriesId(plan.seriesId);
         setFormSection(plan.section || '');
+        setFormObjectives(plan.objectives || '');
+        setFormBncc(plan.bncc_codes || '');
+        setFormMethodology(plan.methodology || '');
+        setFormResources(plan.resources || '');
+        setFormAssessment(plan.assessment || '');
+        setFormDuration(plan.duration || '');
+        setFormThemeArea(plan.theme_area || '');
+        setFormCoordinator(plan.coordinator_name || '');
+        setFormActivityType(plan.activity_type || '');
+        setFormSubject(plan.subject || currentUser?.subject || '');
+    };
+
+    const handleView = (plan: Plan) => {
+        handleEdit(plan);
+        setViewMode(true);
+        setShowForm(false);
+        setIsEditing(false); // Ensure we are not in editing mode so sidebar logic works
+    };
+
+    const handleSelectPlan = (plan: Plan) => {
+        handleView(plan);
     };
 
     const handleSave = async () => {
@@ -162,490 +214,812 @@ export const Planning: React.FC = () => {
             series_id: formSeriesId,
             section: formSection || null,
             files: formFiles,
-            user_id: currentUser?.id
+            user_id: currentUser?.id,
+            objectives: formObjectives,
+            bncc_codes: formBncc,
+            methodology: formMethodology,
+            resources: formResources,
+            assessment: formAssessment,
+            duration: formDuration,
+            theme_area: formThemeArea,
+            coordinator_name: formCoordinator,
+            activity_type: formActivityType,
+            subject: formSubject
         };
 
         try {
             if (selectedPlanId && isEditing && plans.some(p => p.id === selectedPlanId)) {
                 // Update
-                const { error } = await supabase
-                    .from('plans')
-                    .update(planData)
-                    .eq('id', selectedPlanId);
-
+                const { error } = await supabase.from('plans').update(planData).eq('id', selectedPlanId);
                 if (error) throw error;
-                fetchPlans(true);
-                alert("Plano atualizado!");
+                await fetchPlans(true);
+                setShowForm(false); // Close form
+                setViewMode(true); // Open view
+                setIsEditing(false);
             } else {
                 // Create
-                const { error } = await supabase
-                    .from('plans')
-                    .insert(planData);
-
+                const { data, error } = await supabase.from('plans').insert(planData).select().single();
                 if (error) throw error;
-                fetchPlans(true);
-                alert("Plano criado!");
+                await fetchPlans(true);
+                if (data) {
+                    setSelectedPlanId(data.id.toString());
+                    setShowForm(false); // Close form
+                    setViewMode(true); // Open view
+                    setIsEditing(false);
+                }
             }
-            setIsEditing(false);
         } catch (e: any) {
             console.error(e);
-            alert("Erro ao salvar plano.");
+            alert("Erro ao salvar plano. Verifique se os novos campos do banco foram criados.");
         } finally {
             setLoading(false);
         }
     };
 
     const handleDelete = async () => {
-        if (!selectedPlanId) {
-            console.warn('Nenhuma planejamento selecionado para excluir');
-            return;
-        }
-
-        const confirmed = window.confirm("Tem certeza que deseja apagar este planejamento?");
-        if (!confirmed) {
-            return;
-        }
-
+        if (!selectedPlanId) return;
+        if (!window.confirm("Tem certeza que deseja apagar este planejamento?")) return;
         setLoading(true);
-
         try {
-            const { error } = await supabase
-                .from('plans')
-                .delete()
-                .eq('id', selectedPlanId);
-
+            const { error } = await supabase.from('plans').delete().eq('id', selectedPlanId);
             if (!error) {
-                const updatedPlans = plans.filter(p => p.id !== selectedPlanId);
-                setPlans(updatedPlans);
+                setPlans(plans.filter(p => p.id !== selectedPlanId));
                 setSelectedPlanId(null);
                 setIsEditing(false);
+                setShowForm(false);
+                setViewMode(false);
                 alert("Planejamento excluído com sucesso!");
-            } else {
-                console.error('Erro ao excluir:', error.message);
-                throw error;
-            }
+            } else throw error;
         } catch (e) {
-            console.error('Erro de conexão ao excluir:', e);
-            alert("Erro ao tentar excluir. Por favor, tente novamente.");
+            console.error(e);
+            alert("Erro ao excluir.");
         } finally {
             setLoading(false);
         }
     };
 
-    const fileInputRef = useRef<HTMLInputElement>(null);
+
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
-        if (file.size > 2 * 1024 * 1024) { // 2MB limit
-            alert("O arquivo é muito grande! O limite é de 2MB.");
-            return;
-        }
-
+        if (file.size > 2 * 1024 * 1024) { alert("Limite 2MB"); return; }
         const reader = new FileReader();
-        reader.onload = (event) => {
-            if (event.target?.result) {
-                const newFile: AttachmentFile = {
-                    id: crypto.randomUUID(),
-                    name: file.name,
-                    size: `${(file.size / 1024).toFixed(1)} KB`,
-                    url: event.target.result as string // Base64 Data URL
-                };
-                setFormFiles([...formFiles, newFile]);
+        reader.onload = (ev) => {
+            if (ev.target?.result) {
+                setFormFiles([...formFiles, { id: crypto.randomUUID(), name: file.name, size: `${(file.size / 1024).toFixed(1)} KB`, url: ev.target.result as string }]);
             }
         };
         reader.readAsDataURL(file);
         e.target.value = '';
     };
 
-    const handleRemoveFile = (id: string) => {
-        setFormFiles(formFiles.filter(f => f.id !== id));
-    };
-
     const handleDownload = (file: AttachmentFile) => {
-        try {
-            if (file.url.startsWith('data:')) {
-                const parts = file.url.split(',');
-                const mime = parts[0].match(/:(.*?);/)?.[1];
-                const bstr = atob(parts[1]);
-                let n = bstr.length;
-                const u8arr = new Uint8Array(n);
-                while (n--) {
-                    u8arr[n] = bstr.charCodeAt(n);
-                }
-                const blob = new Blob([u8arr], { type: mime });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = file.name;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            } else {
-                const a = document.createElement('a');
-                a.href = file.url;
-                a.download = file.name;
-                a.target = "_blank";
-                a.click();
-            }
-        } catch (e) {
-            console.error("Download failed:", e);
-            alert("Erro ao baixar arquivo.");
+        if (file.url.startsWith('data:')) {
+            const parts = file.url.split(',');
+            const mime = parts[0].match(/:(.*?);/)?.[1];
+            const bstr = atob(parts[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+            const blob = new Blob([u8arr], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = file.name;
+            document.body.appendChild(a);
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } else {
+            const a = document.createElement('a');
+            a.href = file.url;
+            a.download = file.name;
+            a.target = "_blank";
+            a.click();
         }
     };
 
+    const handleExportWord = () => {
+        if (!currentPlan) return;
+
+        const logoUrl = "https://i.imgur.com/7pZ0s1x.png"; // Placeholder or use text if image not available. 
+        // Since I cannot upload images to the user's public web, I will use a text structure or base64 if available. 
+        // User asked for "Exactly equal", I will try to replicate the CENSC logo with text/css if I can't embed the image easily.
+        // Actually, HTML export to Word supports base64 images often, but sometimes it blocks. Text is safer.
+        // I'll stick to the text-based logo I saw earlier but styled better, or check if there is a logo URL I missed.
+        // For now, I will use a simplified HTML structure that matches the image grid.
+
+        const htmlContent = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset="utf-8">
+                    <title>${currentPlan.title}</title>
+                    <!--[if gte mso 9]>
+                    <xml>
+                    <w:WordDocument>
+                    <w:View>Print</w:View>
+                    <w:Zoom>100</w:Zoom>
+                    <w:DoNotOptimizeForBrowser/>
+                    </w:WordDocument>
+                    </xml>
+                    <![endif]-->
+                    <style>
+                        @page {
+                            size: 29.7cm 21cm;
+                            margin: 1cm;
+                            mso-page-orientation: landscape;
+                        }
+                        @page Section1 {
+                            size: 29.7cm 21cm;
+                            margin: 1cm;
+                            mso-page-orientation: landscape;
+                        }
+                        div.Section1 { page: Section1; }
+                        body { font-family: 'Arial', sans-serif; font-size: 12pt; color: #000; }
+                        .page-container { width: 100%; }
+                        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+                        td, th { border: 1px solid black; padding: 4px; vertical-align: top; word-wrap: break-word; word-break: break-all; font-size: 11pt; }
+                        th { background-color: #d9d9d9; text-align: center; font-weight: bold; font-size: 10pt; vertical-align: middle; }
+                        .header-table td { border: none; padding: 2px; }
+                        .header-label { font-size: 10pt; font-weight: bold; color: #64748b; text-transform: uppercase; }
+                        .header-value { font-size: 11pt; font-weight: bold; color: #334155; border-bottom: 1px solid #000; display: inline-block; width: 100%; min-height: 18px; }
+                        .logo-text { color: #0ea5e9; font-weight: 900; font-size: 28pt; font-family: 'Arial Black', sans-serif; letter-spacing: -2px; }
+                        .logo-sub { font-size: 9pt; color: #0ea5e9; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2; }
+                        .obs-box { border: 1px solid black; padding: 5px; height: 100px; }
+                        .obs-line { border-bottom: 1px solid black; height: 25px; margin-bottom: 5px; }
+                        ul { margin: 0; padding-left: 15px; }
+                        li { margin-bottom: 2px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="Section1">
+                        <!-- HEADER MATCHING PDF -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+                            <table style="width: 100%; border-collapse: collapse; border: none;">
+                                <tr>
+                                    <td style="width: 65%; vertical-align: top; border: none; padding: 0;">
+                                        <div style="margin-bottom: 8px;">
+                                            <span class="header-label">Turma:</span> 
+                                            <span style="font-size: 11pt; font-weight: bold; color: #000; display: inline-block; width: 70%; border-bottom: 1px solid #000;">
+                                                ${(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
+                ? (activeSeries?.name + ' - ' + currentPlan.section)
+                : (activeSeries?.name + ' - ' + (activeSeries?.sections?.join(', ') || 'Todas as Turmas'))}
+                                            </span>
+                                        </div>
+                                        <div style="margin-bottom: 8px;">
+                                            <span class="header-label">Professor:</span> 
+                                            <span style="font-size: 11pt; font-weight: bold; color: #000; display: inline-block; width: 70%; border-bottom: 1px solid #000;">
+                                                ${currentUser?.name?.toUpperCase() || ''}
+                                            </span>
+                                        </div>
+                                        <div style="margin-bottom: 8px;">
+                                            <span class="header-label">Componente:</span> 
+                                            <span style="font-size: 11pt; font-weight: bold; color: #000; display: inline-block; width: 70%; border-bottom: 1px solid #000;">
+                                                ${currentPlan.subject || ''}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span class="header-label">Coordenação:</span> 
+                                            <span style="font-size: 11pt; font-weight: bold; color: #000; display: inline-block; width: 70%;">
+                                                ${currentPlan.coordinator_name || 'MOISÉS FERREIRA'}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td style="width: 5%; border: none; border-left: 1px solid #ccc; padding: 0;"></td>
+                                    <td style="width: 30%; border: none; text-align: right; vertical-align: middle; padding: 0;">
+                                        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                                            <div class="logo-text" style="color: #0ea5e9; font-size: 32pt; font-weight: 900; font-family: 'Arial Black', sans-serif; letter-spacing: -2px; line-height: 1;">CENSC</div>
+                                            <div class="logo-sub" style="color: #0ea5e9; font-size: 9pt; font-weight: bold; text-transform: uppercase;">
+                                                CENTRO EDUCACIONAL<br>NOSSA SRA DO CENÁCULO
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- CONTENT TABLE MATCHING PDF -->
+                        <div style="border: 1px solid #000;">
+                            <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                                <thead>
+                                    <tr style="background-color: #d9d9d9;">
+                                        <th style="width: 17%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">HABILIDADE(s)<br>CONTEMPLADA(s)</th>
+                                        <th style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">OBJETO DE<br>CONHECIMENTO</th>
+                                        <th style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">RECURSOS<br>UTILIZADOS</th>
+                                        <th style="width: 31%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">DESENVOLVIMENTO</th>
+                                        <th style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">DURAÇÃO</th>
+                                        <th style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">TIPO DE<br>ATIVIDADE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="width: 17%; border: 1px solid #000; padding: 8px; font-size: 10pt; vertical-align: top;">
+                                            <ul style="margin: 0; padding-left: 15px;">
+                                                ${(currentPlan.bncc_codes?.split('\n').filter(Boolean).map(c => `<li>${c}</li>`).join('') || '')}
+                                                ${currentPlan.objectives ? `<li>${currentPlan.objectives.replace(/<[^>]+>/g, ' ')}</li>` : ''}
+                                            </ul>
+                                        </td>
+                                        <td style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 10pt; vertical-align: top; font-weight: bold;">
+                                            <ul style="margin: 0; padding-left: 15px;"><li>${currentPlan.title}</li></ul>
+                                        </td>
+                                        <td style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 10pt; vertical-align: top;">
+                                            <ul style="margin: 0; padding-left: 15px;"><li>${currentPlan.resources || ''}</li></ul>
+                                        </td>
+                                        <td style="width: 31%; border: 1px solid #000; padding: 8px; font-size: 10pt; vertical-align: top;">
+                                            <ul style="margin: 0; padding-left: 15px;">
+                                                ${currentPlan.methodology ? `<li>${currentPlan.methodology}</li>` : ''}
+                                                ${currentPlan.description ? `<li>${DOMPurify.sanitize(currentPlan.description).replace(/<[^>]+>/g, ' ')}</li>` : ''}
+                                            </ul>
+                                        </td>
+                                        <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 10pt; vertical-align: top; text-align: center;">
+                                            <ul style="margin: 0; padding-left: 15px;"><li>${currentPlan.duration || ''}</li></ul>
+                                        </td>
+                                        <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 10pt; vertical-align: top; text-align: center;">
+                                            <ul style="margin: 0; padding-left: 15px;"><li>${currentPlan.activity_type || ''}</li></ul>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- FOOTER / OBSERVAÇÕES -->
+                        <div style="margin-top: 20px;">
+                            <strong style="font-size: 10pt; text-transform: uppercase;">OBSERVAÇÕES:</strong>
+                            <div style="border: 1px solid #000; margin-top: 5px; padding: 5px;">
+                                <div style="border-bottom: 1px solid #000; height: 25px; margin-bottom: 5px;"></div>
+                                <div style="border-bottom: 1px solid #000; height: 25px; margin-bottom: 5px;"></div>
+                                <div style="height: 25px; margin-bottom: 5px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+
+        const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Planejamento-${currentPlan.title}.doc`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+
     const currentPlan = plans.find(p => p.id === selectedPlanId);
-    const displayedPlans = plans.filter(p => p.title.toLowerCase().includes(searchTerm.toLowerCase()));
+    const displayedPlans = plans.filter(p =>
+        p.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        (filterSection
+            ? (p.section === filterSection || p.section === 'Todas' || p.section === 'Todas as Turmas' || p.section === 'Única')
+            : true)
+    );
 
     return (
-        <div className="flex h-full gap-6 max-w-[1600px] mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-500">
-            {/* Hidden File Input */}
-            <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="*/*"
-                onChange={handleFileChange}
-            />
+        <main className="flex h-full gap-6 max-w-[1600px] mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-500">
+            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
+
+            {/* AI MODAL */}
+
 
             {/* Sidebar */}
             <div className={`w-full lg:w-80 flex flex-col gap-4 shrink-0 transition-all ${selectedPlanId || isEditing ? 'hidden lg:flex' : 'flex'}`}>
                 <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="font-bold text-slate-900 dark:text-white text-lg">Aulas</h2>
+                        <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                            <button className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 text-${theme.primaryColor} shadow-sm`}>
+                                Aulas
+                            </button>
+                            <Link to="/activities" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all">
+                                Atividades
+                            </Link>
+                        </div>
                         <button onClick={handleNewPlan} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Nova Aula">
                             <span className="material-symbols-outlined text-[20px]">add</span>
                         </button>
                     </div>
                     <div className="relative">
-                        <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">search</span>
-                        <input
-                            type="text"
-                            placeholder="Buscar..."
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-sm transition-all focus:bg-white dark:focus:bg-black`}
-                        />
+                        <input type="text" placeholder="Buscar..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-sm transition-all focus:bg-white dark:focus:bg-black`} />
                     </div>
+                    {/* Section Filter */}
+                    {activeSeries && activeSeries.sections?.length > 0 && (
+                        <div className="px-1">
+                            <select
+                                value={filterSection}
+                                onChange={e => setFilterSection(e.target.value)}
+                                className="w-full p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:ring-2 focus:ring-indigo-500/50 outline-none"
+                            >
+                                <option value="">Todas as Turmas</option>
+                                {activeSeries.sections.map(section => (
+                                    <option key={section} value={section}>Turma {section}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0">
                     {displayedPlans.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                            Nenhuma aula encontrada.
-                        </div>
+                        <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">Nenhuma aula encontrada.</div>
                     ) : (
                         displayedPlans.map(plan => (
-                            <button
-                                key={plan.id}
-                                onClick={() => handleSelectPlan(plan)}
-                                className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${selectedPlanId === plan.id
-                                    ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}`
-                                    : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
-                            >
+                            <button key={plan.id} onClick={() => handleSelectPlan(plan)} className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}>
                                 <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
                                 <div className="pl-3">
-                                    <h4 className={`font-bold text-base truncate pr-2 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
-
-                                    <div className="flex items-center gap-3 mt-2">
-                                        <div className="flex items-center gap-1 text-xs text-slate-500 font-medium bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
-                                            <span className="material-symbols-outlined text-[14px]">event</span>
-                                            {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                        </div>
-                                        {plan.files && plan.files.length > 0 && (
-                                            <div className="flex items-center gap-1 text-xs text-slate-400">
-                                                <span className="material-symbols-outlined text-[14px]">attachment</span>
-                                                {plan.files.length}
-                                            </div>
+                                    <div className="flex justify-between items-start mb-1">
+                                        <h4 className={`font-bold text-base truncate pr-2 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        <span className="text-xs text-slate-500 font-medium bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-[14px]">event</span> {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                        </span>
+                                        {plan.theme_area && plan.theme_area !== 'Geral' && (
+                                            <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-50 dark:bg-slate-800/50 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-700">
+                                                {plan.theme_area}
+                                            </span>
                                         )}
                                     </div>
-                                </div>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-primary transition-colors">
-                                    <span className="material-symbols-outlined">chevron_right</span>
                                 </div>
                             </button>
                         ))
                     )}
                 </div>
-
-                {/* Mobile FAB */}
-                <button
-                    onClick={handleNewPlan}
-                    className={`lg:hidden fixed bottom-24 right-6 size-14 rounded-2xl bg-${theme.primaryColor} text-white shadow-xl shadow-${theme.primaryColor}/30 flex items-center justify-center z-50 active:scale-90 transition-all`}
-                >
-                    <span className="material-symbols-outlined text-3xl">add</span>
-                </button>
             </div>
 
             {/* Main Content */}
-            <div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${selectedPlanId || isEditing ? 'flex' : 'hidden lg:flex'}`}>
-                {(!selectedPlanId && !isEditing) ? (
-                    // --- HERO EMPTY STATE ---
+            <div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${showForm || viewMode ? 'flex' : 'hidden lg:flex'}`}>
+                {(!showForm && !viewMode) ? (
                     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-300">
                         <div className={`size-32 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-8 shadow-sm border border-slate-100 dark:border-slate-700`}>
                             <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600">edit_calendar</span>
                         </div>
                         <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">Planejamento de Aulas</h2>
-                        <p className="text-slate-500 max-w-md mb-8 leading-relaxed">
-                            Organize seus roteiros de aula, anexe materiais e mantenha o registro do conteúdo ministrado.
-                        </p>
-                        <button
-                            onClick={handleNewPlan}
-                            className={`group relative inline-flex items-center justify-center gap-3 bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl shadow-${theme.primaryColor}/20 transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden`}
-                        >
-                            <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">add</span>
-                            Criar Nova Aula
-                            <div className="absolute inset-0 rounded-2xl ring-2 ring-white/20 group-hover:ring-white/40 transition-all"></div>
+                        <p className="text-slate-500 max-w-md mb-8 leading-relaxed">Organize seus roteiros, alinhe com a BNCC e anexe materiais.</p>
+                        <button onClick={handleNewPlan} className={`group relative inline-flex items-center justify-center gap-3 bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl shadow-${theme.primaryColor}/20 transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden`}>
+                            <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">add</span> Criar Nova Aula
                         </button>
                     </div>
-                ) : isEditing ? (
-                    // --- EDIT / CREATE MODE ---
-                    <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                        <div className="max-w-4xl mx-auto flex flex-col gap-8">
-                            <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800">
-                                <div className="flex items-center gap-4">
+                ) : showForm ? (
+                    <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+                        {/* EDITOR HEADER */}
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark z-10">
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                                <button onClick={() => { setIsEditing(false); setShowForm(false); setSelectedPlanId(null); }} className="lg:hidden p-2 -ml-2 text-slate-400"><span className="material-symbols-outlined">arrow_back</span></button>
+                                {selectedPlanId ? 'Editar Aula' : 'Nova Aula'}
+                            </h2>
+                        </div>
+
+                        {/* TABS */}
+                        <div className="px-6 pt-6 pb-2">
+                            <div className="flex p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl overflow-x-auto hide-scrollbar">
+                                {[
+                                    { id: 'geral', label: 'Informações Gerais', icon: 'info' },
+                                    { id: 'conteudo', label: 'Conteúdo & Objetivos', icon: 'menu_book' },
+                                    { id: 'bncc', label: 'BNCC & Metodologia', icon: 'school' },
+                                    { id: 'recursos', label: 'Recursos & Avaliação', icon: 'build' }
+                                ].map(tab => (
                                     <button
-                                        onClick={() => { setSelectedPlanId(null); setIsEditing(false); }}
-                                        className="lg:hidden size-10 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-500 flex items-center justify-center"
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id as any)}
+                                        className={`flex-1 min-w-[160px] flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === tab.id
+                                            ? `bg-white dark:bg-surface-light text-${theme.primaryColor} shadow-md shadow-slate-200/50 dark:shadow-black/50 ring-1 ring-black/5 dark:ring-white/10`
+                                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-white/5'
+                                            }`}
                                     >
-                                        <span className="material-symbols-outlined">arrow_back</span>
+                                        <span className="material-symbols-outlined filled text-[20px]">{tab.icon}</span>
+                                        {tab.label}
                                     </button>
-                                    <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                                        <div className={`size-10 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
-                                            <span className="material-symbols-outlined">{selectedPlanId ? 'edit_document' : 'post_add'}</span>
-                                        </div>
-                                        {selectedPlanId ? 'Editar Aula' : 'Nova Aula'}
-                                    </h2>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4">
-                                <div>
-                                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Tema da Aula</label>
-                                    <input
-                                        type="text"
-                                        value={formTitle}
-                                        onChange={e => setFormTitle(e.target.value)}
-                                        placeholder="Ex: Introdução ao Tópico..."
-                                        className={`w-full text-lg font-bold p-4 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`}
-                                        autoFocus
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <DatePicker
-                                            label="Data Início"
-                                            value={formStartDate}
-                                            onChange={setFormStartDate}
-                                            className="w-full"
-                                        />
-                                    </div>
-                                    <div>
-                                        <DatePicker
-                                            label="Data Fim"
-                                            value={formEndDate}
-                                            onChange={setFormEndDate}
-                                            className="w-full"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col md:flex-row gap-4">
-                                    <div className="flex-1">
-                                        <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Série</label>
-                                        <div className="font-bold text-lg text-slate-700 dark:text-slate-200 flex items-center gap-2 h-[54px] px-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
-                                            <span className="material-symbols-outlined text-slate-400">school</span>
-                                            {activeSeries?.name || formSeriesId}
-                                        </div>
-                                    </div>
-                                    <div className="flex-1">
-                                        <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Turma</label>
-                                        <select
-                                            value={formSection}
-                                            onChange={e => setFormSection(e.target.value)}
-                                            className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 h-[54px]`}
-                                        >
-                                            <option value="">Todas</option>
-                                            {activeSeries?.sections.map(s => <option key={s} value={s}>{s}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Conteúdo e Metodologia</label>
-                                    <RichTextEditor
-                                        value={formDescription}
-                                        onChange={setFormDescription}
-                                        placeholder="Descreva o conteúdo, objetivos e metodologia..."
-                                    />
-                                </div>
-
-                                {/* File Attachments (Mock) */}
-                                <div>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <label className="text-xs font-black uppercase text-slate-400 ml-1 tracking-widest">Anexos</label>
-                                        <button
-                                            onClick={() => fileInputRef.current?.click()}
-                                            type="button"
-                                            className={`flex items-center gap-2 px-5 py-3 bg-${theme.primaryColor}/10 text-${theme.primaryColor} rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-${theme.primaryColor} hover:text-white transition-all active:scale-95 border border-${theme.primaryColor}/20 hover:border-transparent shadow-sm`}
-                                        >
-                                            <span className="material-symbols-outlined text-base">upload_file</span>
-                                            Adicionar Arquivo
-                                        </button>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {formFiles.map(file => (
-                                            <div key={file.id} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 group">
-                                                <div className={`size-10 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0`}>
-                                                    <span className="material-symbols-outlined">description</span>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm font-bold truncate text-slate-700 dark:text-slate-200">{file.name}</div>
-                                                    <div className="text-xs text-slate-400">{file.size}</div>
-                                                </div>
-                                                <button onClick={() => handleRemoveFile(file.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
-                                                    <span className="material-symbols-outlined">close</span>
-                                                </button>
-                                            </div>
-                                        ))}
-                                        {formFiles.length === 0 && (
-                                            <div className="col-span-full border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 flex flex-col items-center justify-center text-slate-400 gap-2">
-                                                <span className="material-symbols-outlined text-3xl">folder_open</span>
-                                                <span className="text-sm">Nenhum arquivo anexado</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                         </div>
 
-                        {/* Sticky Footer Actions */}
-                        <div className="sticky bottom-0 bg-white/80 dark:bg-surface-dark/90 backdrop-blur-sm p-4 -mx-8 -mb-8 mt-8 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 z-10 animate-in slide-in-from-bottom-2">
-                            <button onClick={() => setIsEditing(false)} className="px-6 py-2.5 rounded-xl text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
-                            {selectedPlanId && (
-                                <button onClick={handleDelete} className="px-6 py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors">Excluir</button>
-                            )}
-                            <button onClick={handleSave} className={`px-8 py-2.5 rounded-xl bg-${theme.primaryColor} text-white font-bold shadow-lg shadow-${theme.primaryColor}/20 hover:shadow-xl hover:bg-${theme.secondaryColor} transition-all active:scale-95`}>
-                                Salvar Planejamento
-                            </button>
+                        {/* EDITOR CONTENT */}
+                        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar pb-24">
+                            <div className="max-w-4xl mx-auto space-y-6">
+                                {activeTab === 'geral' && (
+                                    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
+                                        <div className={`${theme.softBg} p-6 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-6`}>
+                                            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-indigo-500">info</span>
+                                                Dados Principais
+                                            </h3>
+
+                                            <div>
+                                                <label className="label">Tema da Aula *</label>
+                                                <input type="text" value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="Ex: Introdução à Fotossíntese..." className={`w-full text-lg font-bold p-4 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} autoFocus />
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <DatePicker label="Data Início" value={formStartDate} onChange={setFormStartDate} className="w-full" />
+                                                <DatePicker label="Data Fim" value={formEndDate} onChange={setFormEndDate} className="w-full" />
+                                            </div>
+                                        </div>
+
+                                        <div className={`${theme.softBg} p-6 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-6`}>
+                                            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-indigo-500">school</span>
+                                                Detalhamento Acadêmico
+                                            </h3>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="label">Série</label>
+                                                    <div className="input-group"><span className="material-symbols-outlined text-slate-400">school</span>{activeSeries?.name || formSeriesId}</div>
+                                                </div>
+                                                <div>
+                                                    <label className="label">Componente Curricular</label>
+                                                    <input type="text" value={formSubject} onChange={e => setFormSubject(e.target.value)} placeholder="Ex: Ciências" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="label">Turma</label>
+                                                    <div className="relative">
+                                                        <select value={formSection} onChange={e => setFormSection(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 appearance-none outline-none`}>
+                                                            <option value="">Selecione...</option>
+                                                            {activeSeries?.sections?.map(section => (
+                                                                <option key={section} value={section}>{section}</option>
+                                                            ))}
+                                                            <option value="Todas as Turmas">Todas as Turmas</option>
+                                                        </select>
+                                                        <span className="material-symbols-outlined absolute right-3 top-3.5 pointer-events-none text-slate-500">expand_more</span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="label">Tipo de Atividade</label>
+                                                    <div className="relative">
+                                                        <select value={formActivityType} onChange={e => setFormActivityType(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 appearance-none outline-none`}>
+                                                            <option value="">Selecione...</option>
+                                                            <option value="Aula Expositiva">Aula Expositiva</option>
+                                                            <option value="Atividade Prática">Atividade Prática</option>
+                                                            <option value="Trabalho em Grupo">Trabalho em Grupo</option>
+                                                            <option value="Avaliação">Avaliação</option>
+                                                            <option value="Outro">Outro</option>
+                                                        </select>
+                                                        <span className="material-symbols-outlined absolute right-3 top-3.5 pointer-events-none text-slate-500">expand_more</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="label">Duração Estimada</label>
+                                                    <input type="text" value={formDuration} onChange={e => setFormDuration(e.target.value)} placeholder="Ex: 2 aulas de 50min" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className={`${theme.softBg} p-6 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-6`}>
+                                            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-indigo-500">manage_accounts</span>
+                                                Responsáveis
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="label">Coordenação Pedagógica</label>
+                                                    <input type="text" value={formCoordinator} onChange={e => setFormCoordinator(e.target.value)} placeholder="Nome do Coodenador(a)" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
+                                                </div>
+                                                <div>
+                                                    <label className="label">Professor(a)</label>
+                                                    <input type="text" value={currentUser?.name} disabled className="input-field opacity-60 cursor-not-allowed" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col-reverse sm:flex-row justify-end pt-4 gap-3">
+                                            <button onClick={() => setActiveTab('conteudo')} className={`btn-primary bg-${theme.primaryColor} flex items-center justify-center gap-2 w-full sm:w-auto`}>
+                                                Próximo: Conteúdo <span className="material-symbols-outlined">arrow_forward</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activeTab === 'conteudo' && (
+                                    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
+                                        <div>
+                                            <label className="label mb-2 flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-indigo-500">target</span>
+                                                Objetivos de Aprendizagem
+                                            </label>
+                                            <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                                                <RichTextEditor value={formObjectives} onChange={setFormObjectives} />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="label mb-2 flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-indigo-500">description</span>
+                                                Descrição / Roteiro da Aula
+                                            </label>
+                                            <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                                                <RichTextEditor value={formDescription} onChange={setFormDescription} />
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col-reverse sm:flex-row justify-between pt-4 gap-3">
+                                            <button onClick={() => setActiveTab('geral')} className="btn-ghost flex items-center justify-center gap-2 w-full sm:w-auto">
+                                                <span className="material-symbols-outlined">arrow_back</span> Voltar
+                                            </button>
+                                            <button onClick={() => setActiveTab('bncc')} className={`btn-primary bg-${theme.primaryColor} flex items-center justify-center gap-2 w-full sm:w-auto`}>
+                                                Próximo: BNCC <span className="material-symbols-outlined">arrow_forward</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activeTab === 'bncc' && (
+                                    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
+                                        <div>
+                                            <label className="label mb-2 flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-indigo-500">verified</span>
+                                                Códigos da BNCC
+                                            </label>
+                                            <textarea value={formBncc} onChange={e => setFormBncc(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-32 font-mono text-sm`} placeholder="Ex: EF06CI01, EF06CI02..." />
+                                            <p className="text-xs text-slate-400 mt-1">Separe os códigos por vírgula ou nova linha.</p>
+                                        </div>
+                                        <div>
+                                            <label className="label mb-2 flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-indigo-500">psychology</span>
+                                                Metodologia de Ensino
+                                            </label>
+                                            <textarea value={formMethodology} onChange={e => setFormMethodology(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-48`} placeholder="Descreva as estratégias metodológicas utilizadas..." />
+                                        </div>
+                                        <div className="flex flex-col-reverse sm:flex-row justify-between pt-4 gap-3">
+                                            <button onClick={() => setActiveTab('conteudo')} className="btn-ghost flex items-center justify-center gap-2 w-full sm:w-auto">
+                                                <span className="material-symbols-outlined">arrow_back</span> Voltar
+                                            </button>
+                                            <button onClick={() => setActiveTab('recursos')} className={`btn-primary bg-${theme.primaryColor} flex items-center justify-center gap-2 w-full sm:w-auto`}>
+                                                Próximo: Recursos <span className="material-symbols-outlined">arrow_forward</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activeTab === 'recursos' && (
+                                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                                        <div>
+                                            <label className="label">Recursos Utilizados</label>
+                                            <textarea value={formResources} onChange={e => setFormResources(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-32`} />
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <label className="label">Anexos</label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {formFiles.map((file, index) => (
+                                                    <div key={index} className="flex items-center gap-2 p-2 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                                                        <span className="text-xs font-bold">{file.name}</span>
+                                                        <span className="text-[10px] text-slate-500">{file.size}</span>
+                                                        <button onClick={() => setFormFiles(prev => prev.filter((_, i) => i !== index))} className="text-red-500 hover:text-red-700"><span className="material-symbols-outlined text-[16px]">close</span></button>
+                                                    </div>
+                                                ))}
+                                                <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1 px-3 py-2 rounded-lg border border-dashed border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all font-bold text-xs uppercase">
+                                                    <span className="material-symbols-outlined text-[18px]">add_circle</span> Adicionar
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col sm:flex-row justify-between pt-4 border-t border-slate-100 dark:border-slate-800 mt-8 gap-4">
+                                            <div className="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
+                                                <button onClick={() => setActiveTab('bncc')} className="btn-ghost flex items-center justify-center gap-2 w-full sm:w-auto">
+                                                    <span className="material-symbols-outlined">arrow_back</span> Voltar
+                                                </button>
+                                                {selectedPlanId && <button onClick={handleDelete} className="btn-danger flex items-center justify-center gap-2 w-full sm:w-auto"><span className="material-symbols-outlined">delete</span> Excluir</button>}
+                                            </div>
+
+                                            <div className="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
+                                                <button onClick={() => setIsEditing(false)} className="btn-ghost w-full sm:w-auto text-center">Cancelar</button>
+                                                <button onClick={handleSave} className={`btn-primary bg-${theme.primaryColor} flex items-center justify-center gap-2 w-full sm:w-auto`}>
+                                                    <span className="material-symbols-outlined">check_circle</span> Salvar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 ) : (
-                    // --- VIEW MODE ---
-                    <div className="flex-1 overflow-y-auto relative animate-in fade-in">
-                        {currentPlan ? (
-                            <>
-                                {/* Large Header Image/Gradient */}
-                                <div className={`h-48 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden`}>
-                                    <div className="absolute inset-0 opacity-10 flex flex-wrap gap-8 justify-end p-8 rotate-12 scale-150 pointer-events-none">
-                                        <span className="material-symbols-outlined text-[150px] text-white">{theme.icon}</span>
-                                    </div>
-                                    <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/50 to-transparent">
-                                        <div className="flex gap-2 mb-2">
-                                            <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-xs font-bold border border-white/20">
-                                                {classes.find(c => c.id === currentPlan.seriesId)?.name}
-                                            </span>
-                                        </div>
-                                        <h1 className="text-3xl md:text-4xl font-bold text-white shadow-sm">{currentPlan.title}</h1>
-                                    </div>
-                                    <div className="absolute top-6 left-6 lg:hidden">
-                                        <button
-                                            onClick={() => setSelectedPlanId(null)}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
-                                            title="Voltar para Lista"
-                                        >
+                    // VIEW MODE (Print / Detailed)
+                    <div className="flex-1 overflow-y-auto relative animate-in fade-in h-full custom-scrollbar bg-slate-50 dark:bg-black/20">
+                        {currentPlan && (
+                            <div className="landscape-container mx-auto bg-white shadow-lg my-4 md:my-8 print:my-0 print:shadow-none text-black transition-all duration-300 relative" style={{ maxWidth: '297mm', minHeight: '210mm' }}>
+                                <div className="p-4 md:p-[10mm] print:p-0 overflow-x-auto">
+                                    {/* Action Buttons */}
+                                    <div className="flex flex-wrap justify-between md:justify-end gap-2 md:gap-3 mb-6 print:hidden sticky top-0 md:relative z-10 bg-white/95 md:bg-transparent backdrop-blur-sm p-2 md:p-0 border-b md:border-none border-slate-100">
+                                        <button onClick={() => { setViewMode(false); setSelectedPlanId(null); setIsEditing(false); setShowForm(false); }} className="md:hidden flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-700 font-bold">
                                             <span className="material-symbols-outlined">arrow_back</span>
                                         </button>
-                                    </div>
-                                    <div className="absolute top-6 right-6 flex gap-2">
-                                        <button
-                                            onClick={() => setIsEditing(true)}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
-                                            title="Editar Planejamento"
-                                        >
-                                            <span className="material-symbols-outlined">edit</span>
-                                        </button>
-                                        <button
-                                            onClick={handleDelete}
-                                            className="p-2 bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
-                                            title="Excluir Planejamento"
-                                        >
-                                            <span className="material-symbols-outlined text-red-200">delete</span>
-                                        </button>
-                                    </div>
-                                </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => { setIsEditing(true); setShowForm(true); setViewMode(false); }} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-colors text-sm md:text-base">
+                                                <span className="material-symbols-outlined text-lg">edit</span> <span className="hidden sm:inline">Editar</span>
+                                            </button>
+                                            <button onClick={handleExportWord} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors shadow-lg shadow-blue-500/20 text-sm md:text-base">
+                                                <span className="material-symbols-outlined text-lg">description</span> <span className="hidden sm:inline">Word</span>
+                                            </button>
+                                            <button onClick={() => {
+                                                // IFRAME PRINTING IMPLEMENTATION to keep app background dark
+                                                const printContent = document.querySelector('.printable-content');
+                                                if (!printContent) return;
 
-                                <div className="p-8 max-w-5xl mx-auto space-y-8">
-                                    {/* Info Cards */}
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
-                                            <div className="size-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
-                                                <span className="material-symbols-outlined">event</span>
-                                            </div>
-                                            <div>
-                                                <div className="text-xs uppercase font-bold text-slate-400">Data</div>
-                                                <div className="font-bold text-slate-700 dark:text-gray-200">
-                                                    {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                                </div>
-                                            </div>
+                                                const iframe = document.createElement('iframe');
+                                                iframe.style.display = 'none';
+                                                document.body.appendChild(iframe);
+
+                                                const doc = iframe.contentWindow?.document;
+                                                if (!doc) return;
+
+                                                // Copy styles
+                                                const styles = document.querySelectorAll('style, link[rel="stylesheet"]');
+                                                styles.forEach(style => {
+                                                    doc.head.appendChild(style.cloneNode(true));
+                                                });
+
+                                                // Add print-specific robust styles for iframe
+                                                const printStyle = doc.createElement('style');
+                                                printStyle.textContent = `
+                                                    @page { size: landscape; margin: 0; }
+                                                    body { background: white !important; margin: 0; padding: 10mm !important; box-sizing: border-box; }
+                                                    .printable-content { visibility: visible !important; position: static !important; width: 100% !important; margin: 0 !important; }
+                                                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                                                `;
+                                                doc.head.appendChild(printStyle);
+
+                                                // Copy content
+                                                doc.body.innerHTML = printContent.outerHTML;
+
+                                                // Wait for styles/images then print
+                                                setTimeout(() => {
+                                                    iframe.contentWindow?.print();
+                                                    setTimeout(() => {
+                                                        document.body.removeChild(iframe);
+                                                    }, 100);
+                                                }, 500);
+                                            }} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-colors shadow-lg shadow-indigo-500/20 text-sm md:text-base">
+                                                <span className="material-symbols-outlined text-lg">print</span> <span className="hidden sm:inline">PDF</span>
+                                            </button>
                                         </div>
                                     </div>
 
-                                    {/* Description */}
-                                    <div className="prose dark:prose-invert max-w-none">
-                                        <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                                            <span className={`material-symbols-outlined text-${theme.primaryColor}`}>subject</span>
-                                            Roteiro da Aula
-                                        </h3>
-                                        <div
-                                            className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 custom-html-content"
-                                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description) }}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Files */}
-                                <div>
-                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                                        <span className={`material-symbols-outlined text-${theme.primaryColor}`}>folder</span>
-                                        Materiais Anexados
-                                    </h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                        {(currentPlan.files || []).map(file => (
-                                            <button
-                                                key={file.id}
-                                                onClick={() => handleDownload(file)}
-                                                className={`group block w-full text-left bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-${theme.primaryColor}/50 hover:shadow-md transition-all`}
-                                            >
-                                                <div className="flex items-start gap-4">
-                                                    <div className={`size-12 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
-                                                        <span className="material-symbols-outlined text-2xl">description</span>
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <div className="font-bold text-slate-700 dark:text-slate-200 truncate mb-1">{file.name}</div>
-                                                        <div className="text-xs text-slate-400">{file.size}</div>
-                                                        <div className={`mt-2 text-xs font-bold text-${theme.primaryColor} opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1`}>
-                                                            Baixar Arquivo <span className="material-symbols-outlined text-[14px]">download</span>
+                                    {/* ATTACHMENTS VIEW (Screen Only) */}
+                                    {currentPlan.files && currentPlan.files.length > 0 && (
+                                        <div className="mb-8 px-4 md:px-[10mm] print:hidden">
+                                            <h3 className="font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+                                                <span className="material-symbols-outlined">attachment</span> Anexos
+                                            </h3>
+                                            <div className="flex flex-wrap gap-3">
+                                                {currentPlan.files.map((file, index) => (
+                                                    <a
+                                                        key={index}
+                                                        href={file.url}
+                                                        download={file.name}
+                                                        className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group text-decoration-none"
+                                                    >
+                                                        <span className="material-symbols-outlined text-slate-500 group-hover:text-indigo-500 transition-colors">description</span>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{file.name}</span>
+                                                            <span className="text-[10px] text-slate-500 uppercase">{file.size}</span>
                                                         </div>
+                                                        <span className="material-symbols-outlined text-slate-400 group-hover:text-indigo-500 transition-colors text-lg ml-2">download</span>
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* PRINTABLE CONTENT (Matches CENSC Layout - Landscape) */}
+                                    <div className="printable-content bg-white min-w-[700px] md:min-w-0">
+                                        {/* HEADER */}
+                                        <div className="flex justify-between items-start mb-6 border-b-2 border-slate-800 pb-2">
+                                            <div className="w-[65%] space-y-2">
+                                                <div className="flex items-end gap-2 mb-1">
+                                                    <span className="font-bold text-sm whitespace-nowrap w-24">Turma:</span>
+                                                    <div className="border-b border-black flex-1 font-bold text-base px-2 leading-none relative top-0.5">
+                                                        {(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
+                                                            ? `${activeSeries?.name} - ${currentPlan.section}`
+                                                            : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`}
                                                     </div>
                                                 </div>
-                                            </button>
-                                        ))}
-                                        {(currentPlan.files || []).length === 0 && (
-                                            <div className="col-span-full py-8 text-center text-slate-400 italic bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-sm">
-                                                Nenhum material anexado.
+                                                <div className="flex items-end gap-2 mb-1">
+                                                    <span className="font-bold text-sm whitespace-nowrap w-24">Professor:</span>
+                                                    <div className="border-b border-black flex-1 font-bold text-base px-2 leading-none relative top-0.5">{currentUser?.name?.toUpperCase()}</div>
+                                                </div>
+                                                <div className="flex items-end gap-2 mb-1">
+                                                    <span className="font-bold text-sm whitespace-nowrap">Componente:</span>
+                                                    <div className="border-b border-black flex-1 font-bold text-base px-2 leading-none relative top-0.5">{currentPlan.subject}</div>
+                                                </div>
+                                                <div className="flex items-end gap-2">
+                                                    <span className="font-bold text-sm whitespace-nowrap">Coordenação:</span>
+                                                    <div className="font-bold text-base px-2 leading-none">{currentPlan.coordinator_name || 'MOISÉS FERREIRA'}</div>
+                                                </div>
                                             </div>
-                                        )}
+
+                                            <div className="w-[5%] border-l border-gray-300 mx-4 self-stretch"></div>
+
+                                            <div className="w-[30%] flex flex-col items-end justify-center pt-2 text-right">
+                                                {/* LOGO */}
+                                                <div className="flex items-center justify-end gap-1 mb-0 w-full">
+                                                    <span className="material-symbols-outlined text-[40px] text-[#0ea5e9]">school</span>
+                                                    <span className="text-4xl font-black text-[#0ea5e9] tracking-tighter" style={{ fontFamily: 'Arial Black, sans-serif' }}>CENSC</span>
+                                                </div>
+                                                <span className="text-[10px] text-[#0ea5e9] font-bold uppercase tracking-wider leading-tight text-right w-full">
+                                                    Centro Educacional<br />Nossa Sra do Cenáculo
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* TABLE */}
+                                        <div className="border border-black">
+                                            <table className="w-full border-collapse table-fixed">
+                                                <thead>
+                                                    <tr className="bg-[#d9d9d9]">
+                                                        <th className="border-r border-black p-2 text-[11px] font-bold uppercase w-[17%] text-center align-middle text-black leading-tight">HABILIDADE(s)<br />CONTEMPLADA(s)</th>
+                                                        <th className="border-r border-black p-2 text-[11px] font-bold uppercase w-[16%] text-center align-middle text-black leading-tight">OBJETO DE<br />CONHECIMENTO</th>
+                                                        <th className="border-r border-black p-2 text-[11px] font-bold uppercase w-[16%] text-center align-middle text-black leading-tight">RECURSOS<br />UTILIZADOS</th>
+                                                        <th className="border-r border-black p-2 text-[11px] font-bold uppercase w-[31%] text-center align-middle text-black leading-tight">DESENVOLVIMENTO</th>
+                                                        <th className="border-r border-black p-2 text-[11px] font-bold uppercase w-[10%] text-center align-middle text-black leading-tight">DURAÇÃO</th>
+                                                        <th className="border-black p-2 text-[11px] font-bold uppercase w-[10%] text-center align-middle text-black leading-tight">TIPO DE<br />ATIVIDADE</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td className="border-r border-black p-2 text-[12px] align-top h-[400px] break-words whitespace-normal">
+                                                            <ul className="list-disc pl-4 space-y-1">
+                                                                {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
+                                                                    <li key={i}>{code}</li>
+                                                                ))}
+                                                                {currentPlan.objectives && (
+                                                                    <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives).replace(/<[^>]+>/g, ' ') }}></li>
+                                                                )}
+                                                            </ul>
+                                                        </td>
+                                                        <td className="border-r border-black p-2 text-[12px] align-top font-bold break-words whitespace-normal">
+                                                            <ul className="list-disc pl-4">
+                                                                <li>{currentPlan.title}</li>
+                                                            </ul>
+                                                        </td>
+                                                        <td className="border-r border-black p-2 text-[12px] align-top break-words whitespace-normal">
+                                                            <ul className="list-disc pl-4">
+                                                                <li>{currentPlan.resources}</li>
+                                                            </ul>
+                                                        </td>
+                                                        <td className="border-r border-black p-2 text-[12px] align-top break-words whitespace-normal">
+                                                            <ul className="list-disc pl-4 space-y-2">
+                                                                {currentPlan.methodology && <li>{currentPlan.methodology}</li>}
+                                                                {currentPlan.description && (
+                                                                    <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description).replace(/<[^>]+>/g, ' ') }}></li>
+                                                                )}
+                                                            </ul>
+                                                        </td>
+                                                        <td className="border-r border-black p-2 text-[12px] align-top text-center break-words whitespace-normal">
+                                                            <ul className="list-disc pl-4">
+                                                                <li>{currentPlan.duration}</li>
+                                                            </ul>
+                                                        </td>
+                                                        <td className="border-black p-2 text-[12px] align-top text-center break-words whitespace-normal">
+                                                            <ul className="list-disc pl-4">
+                                                                <li>{currentPlan.activity_type}</li>
+                                                            </ul>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        {/* FOOTER / OBS */}
+                                        <div className="mt-4">
+                                            <div className="font-bold text-sm uppercase mb-1">OBSERVAÇÕES:</div>
+                                            <div className="border border-black p-2">
+                                                <div className="border-b border-black h-6 mb-1"></div>
+                                                <div className="border-b border-black h-6 mb-1"></div>
+                                                <div className="border-b border-black h-6 mb-1 border-none"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </>
-                        ) : null}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
-        </div>
+        </main>
     );
 };

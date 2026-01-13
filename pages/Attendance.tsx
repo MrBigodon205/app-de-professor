@@ -365,10 +365,10 @@ export const Attendance: React.FC = () => {
 
         // Circular Overlay Accents
         doc.setFillColor(255, 255, 255);
-        doc.setGState(new doc.GState({ opacity: 0.1 }));
+        doc.setGState(new (doc as any).GState({ opacity: 0.1 }));
         doc.circle(280, -10, 50, 'F');
         doc.circle(20, 50, 30, 'F');
-        doc.setGState(new doc.GState({ opacity: 1 }));
+        doc.setGState(new (doc as any).GState({ opacity: 1 }));
 
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(28);

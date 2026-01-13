@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -130,7 +131,8 @@ export const Activities: React.FC = () => {
             formatted.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
             setActivities(formatted);
-            if (formatted.length > 0 && !selectedActivityId) {
+            setActivities(formatted);
+            if (formatted.length > 0 && !selectedActivityId && window.innerWidth >= 1024) {
                 setSelectedActivityId(formatted[0].id);
             } else if (formatted.length === 0) {
                 setSelectedActivityId(null);
@@ -476,7 +478,14 @@ export const Activities: React.FC = () => {
                 {/* Sidebar Header */}
                 <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="font-bold text-slate-900 dark:text-white text-lg">Atividades</h2>
+                        <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                            <Link to="/planning" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all">
+                                Aulas
+                            </Link>
+                            <button className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 text-${theme.primaryColor} shadow-sm`}>
+                                Atividades
+                            </button>
+                        </div>
                         <button onClick={handleNewActivity} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Nova Atividade">
                             <span className="material-symbols-outlined text-[20px]">add</span>
                         </button>
@@ -803,6 +812,33 @@ export const Activities: React.FC = () => {
                                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentActivity.description) }}
                                     />
                                 </div>
+
+                                {/* ATTACHMENTS */}
+                                {currentActivity.files && currentActivity.files.length > 0 && (
+                                    <div className="animate-in fade-in slide-in-from-bottom-3 duration-500 delay-100">
+                                        <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                            <span className={`material-symbols-outlined text-${theme.primaryColor}`}>attachment</span>
+                                            Anexos
+                                        </h3>
+                                        <div className="flex flex-wrap gap-3">
+                                            {currentActivity.files.map((file, index) => (
+                                                <a
+                                                    key={index}
+                                                    href={file.url}
+                                                    download={file.name}
+                                                    className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group text-decoration-none shadow-sm"
+                                                >
+                                                    <span className="material-symbols-outlined text-slate-500 group-hover:text-indigo-500 transition-colors">description</span>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{file.name}</span>
+                                                        <span className="text-[10px] text-slate-500 uppercase">{file.size}</span>
+                                                    </div>
+                                                    <span className="material-symbols-outlined text-slate-400 group-hover:text-indigo-500 transition-colors text-lg ml-2">download</span>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Delivery List / Completion Tracking */}
                                 {currentActivity.type !== 'Conteúdo' && (

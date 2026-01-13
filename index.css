@@ -2,64 +2,177 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+
+  /* FORM ELEMENTS */
+  .label {
+    @apply block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 ml-1;
+  }
+
+  /* Base Input Styles */
+  .input-field {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .input-textarea {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 resize-none;
+  }
+
+  /* BUTTONS */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-indigo-500/30 active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center rounded-xl bg-red-50 px-6 py-3 text-sm font-bold text-red-600 transition-all hover:bg-red-100 hover:text-red-700 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30;
+  }
+
+  /* CARDS */
+  .card {
+    @apply rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900;
+  }
+}
+
+/* FOOLPROOF DARK MODE OVERRIDES */
+/* Using high specificity to ensure these apply when 'dark' class is present on html */
+
+html.dark .input-field,
+.dark .input-field,
+html.dark .input-textarea,
+.dark .input-textarea {
+  background-color: #0f172a !important;
+  /* slate-900 */
+  border-color: #334155 !important;
+  /* slate-700 */
+  color: #ffffff !important;
+}
+
+html.dark .input-field:focus,
+.dark .input-field:focus,
+html.dark .input-textarea:focus,
+.dark .input-textarea:focus {
+  border-color: #818cf8 !important;
+  /* indigo-400 */
+  background-color: #0f172a !important;
+  --tw-ring-color: rgba(129, 140, 248, 0.2) !important;
+}
+
+/* Force dark mode for Selects/Options to match system on Windows */
+html.dark select,
+.dark select {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
+html.dark option,
+.dark option {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
 html,
 body {
   overscroll-behavior-y: contain;
-  /* Disable pull-to-refresh */
   height: 100%;
 }
 
 @media print {
-  .no-print {
+
+  /* HIDE EVERYTHING by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* SHOW ONLY printable content and its children */
+  .printable-content,
+  .printable-content * {
+    visibility: visible;
+  }
+
+  /* Reset body/layout for print */
+  body {
+    background-color: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* POSITION the printable content at top-left */
+  .printable-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background-color: white !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide explicit no-print elements */
+  .no-print,
+  .print\:hidden {
     display: none !important;
   }
 
-  body {
-    background: white !important;
-    padding: 0;
-    margin: 0;
-  }
-
-  /* Optimize layout for print */
+  /* RESET Tailwind utils that might interfere */
   .max-w-\[1400px\] {
-    max-width: 100% !important;
-    width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
+    max-width: none !important;
   }
 
-  .grid {
-    display: block !important;
+  .min-w-\[700px\] {
+    min-width: 0 !important;
   }
 
-  .gap-8 {
-    gap: 0 !important;
+  /* Ensure text is black and readable */
+  /* Force Landscape */
+  @page {
+    size: landscape;
+    margin: 10mm;
   }
 
-  .shadow-sm,
-  .shadow-md,
-  .shadow-lg {
-    box-shadow: none !important;
-    border: 1px solid #e2e8f0 !important;
+  /* Ensure text is black and readable (but allow overrides) */
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  div,
+  td,
+  th,
+  li,
+  span {
+    color: black;
   }
 
-  .rounded-2xl,
-  .rounded-3xl {
-    border-radius: 0 !important;
+  /* Preserve Logo Color */
+  .text-\[\#0ea5e9\] {
+    color: #0ea5e9 !important;
     -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  .bg-slate-50,
-  .dark\:bg-slate-900\/50 {
-    background-color: transparent !important;
+  /* Border Fixes */
+  .border,
+  .border-b,
+  .border-r,
+  .border-t,
+  .border-l {
+    border-color: black !important;
   }
 
-  textarea {
-    border: none !important;
-    padding: 0 !important;
-    height: auto !important;
-    min-height: unset !important;
-    overflow: visible !important;
+  /* Hide scrollbars */
+  ::-webkit-scrollbar {
+    display: none;
   }
 }
 

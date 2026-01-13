@@ -38,10 +38,35 @@ const UNIT_CONFIGS: any = {
             { key: 'exam', label: 'Prova', max: 10.0 },
         ],
     },
+    'final': {
+        columns: [
+            { key: 'final_exam', label: 'Prova Final', max: 10.0 },
+        ],
+    },
+    'recovery': {
+        columns: [
+            { key: 'recovery_exam', label: 'Recuperação', max: 10.0 },
+        ],
+    },
+    'results': {
+        columns: []
+    }
 };
 
 interface GradeData {
     [key: string]: number;
+}
+
+interface ExportConfig {
+    units: {
+        '1': boolean;
+        '2': boolean;
+        '3': boolean;
+        'final': boolean;
+        'recovery': boolean;
+        'results': boolean;
+    };
+    detailed: boolean;
 }
 
 interface GradeRecord {
@@ -60,6 +85,11 @@ export const Grades: React.FC = () => {
     const [selectedUnit, setSelectedUnit] = useState<string>('1');
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [exportConfig, setExportConfig] = useState<ExportConfig>({
+        units: { '1': true, '2': true, '3': true, 'final': true, 'recovery': true, 'results': true },
+        detailed: true
+    });
 
     // Track pending changes: { studentId: { field: value } }
     const pendingChangesRef = useRef<{ [studentId: string]: GradeData }>({});
@@ -132,30 +162,14 @@ export const Grades: React.FC = () => {
     const saveToDB = async (studentId: string) => {
         const changes = pendingChangesRef.current[studentId];
         if (!changes || Object.keys(changes).length === 0) return;
-
-        // Get latest full unit state from React state is risky in timeout?
-        // Actually, we should upsert the MERGED state.
-        // Let's find the student in current state.
-        // We can't access 'students' inside timeout easily without ref.
-        // BUT, since we have 'changes', we can fetch-merge-save OR trust client state?
-        // Trusting client state (optimistic) is standard.
-        // We need the Current Unit Data for this student.
-
-        // Better approach: Pass the "Final Unit Data" to this function.
-        // But debounce makes it hard.
-
-        // Let's rely on pendingChangesRef to accumulate.
-        // And when saving, we need the BASE data.
-
-        // Alternative: The timeout function should read the LATEST students state via a Ref.
     };
 
     const studentsRef = useRef(students);
     useEffect(() => { studentsRef.current = students; }, [students]);
 
     const handleGradeChange = (studentId: string, field: string, value: string) => {
-        const numericValue = value === '' ? 0 : parseFloat(value);
-        if (isNaN(numericValue)) return;
+        const numericValue = value === '' ? null : parseFloat(value);
+        if (value !== '' && (numericValue === null || isNaN(numericValue))) return;
 
         // 1. Optimistic Update
         setStudents(prev => prev.map(s => {
@@ -163,15 +177,37 @@ export const Grades: React.FC = () => {
                 const newUnits = { ...s.units };
                 if (!newUnits[selectedUnit]) newUnits[selectedUnit] = {};
 
-                // Max Value Check
+                // Dynamic Max Calculation
                 const col = UNIT_CONFIGS[selectedUnit as keyof typeof UNIT_CONFIGS]?.columns.find(c => c.key === field);
+                let currentMax = col ? col.max : 10;
+
+                // Unit 3 Special Rule: If Talent Show > 0, Exam Max is 8
+                if (selectedUnit === '3') {
+                    const talentShowVal = field === 'talentShow'
+                        ? numericValue
+                        : (Number(newUnits[selectedUnit]['talentShow']) || 0);
+
+                    if (field === 'exam' && talentShowVal > 0) {
+                        currentMax = 8.0;
+                    }
+                }
+
                 let finalVal = numericValue;
-                if (col && finalVal > col.max) finalVal = col.max;
+                if (finalVal > currentMax) finalVal = currentMax;
 
                 newUnits[selectedUnit] = {
                     ...newUnits[selectedUnit],
-                    [field]: finalVal
+                    [field]: numericValue === null ? '' : finalVal
                 };
+
+                // Side Effect: If updating 'talentShow' in Unit 3, check if 'exam' needs clamping
+                if (selectedUnit === '3' && field === 'talentShow') {
+                    const currentExam = Number(newUnits[selectedUnit]['exam']);
+                    if (numericValue > 0 && !isNaN(currentExam) && currentExam > 8) {
+                        newUnits[selectedUnit]['exam'] = 8.0;
+                    }
+                }
+
                 return { ...s, units: newUnits };
             }
             return s;
@@ -221,14 +257,114 @@ export const Grades: React.FC = () => {
         return student.units?.[selectedUnit]?.[field]?.toString() || '';
     };
 
-    const calculateTotal = (student: Student) => {
-        const grades = student.units?.[selectedUnit] || {};
+    const calculateUnitTotal = (student: Student, unit: string) => {
+        const grades = student.units?.[unit] || {};
         const total = Object.values(grades).reduce((a: number, b: any) => a + (Number(b) || 0), 0);
-        return total / 2;
+        // Average 0-10 only for units 1, 2, 3 (sum of max is 20)
+        if (unit === '1' || unit === '2' || unit === '3') return total / 2;
+        return total; // Final/Recovery sum of max is 10, no division needed
     };
+
+    const calculateTotal = (student: Student) => {
+        // Only used for Unit 1, 2, 3 display
+        return calculateUnitTotal(student, selectedUnit);
+    };
+
+    const calculateAnnualSummary = (student: Student) => {
+        const u1 = calculateUnitTotal(student, '1');
+        const u2 = calculateUnitTotal(student, '2');
+        const u3 = calculateUnitTotal(student, '3');
+        const annualTotal = u1 + u2 + u3; // Max 30
+
+        // Match the UI display exactly (8.0 must be 8.0)
+        const displayTotal = Number(annualTotal.toFixed(1));
+
+        let status: 'APPROVED' | 'FINAL' | 'RECOVERY' | 'FAILED' = 'APPROVED';
+        let needed = 0;
+        let finalNeeded = 0;
+        let finalExamPoints = 0;
+
+        if (displayTotal >= 18.0) {
+            status = 'APPROVED';
+        } else if (displayTotal >= 8.0) {
+            status = 'FINAL';
+            finalNeeded = 18.0 - displayTotal;
+            needed = finalNeeded;
+
+            // Logic: Fail Final -> Go to Recovery (only if a grade is present)
+            const rawFinal = student.units?.['final']?.['final_exam'];
+            if (rawFinal !== undefined && rawFinal !== null && rawFinal !== '') {
+                const finalExam = Number(rawFinal);
+                finalExamPoints = finalExam;
+                if (finalExam < needed) {
+                    status = 'RECOVERY';
+                    needed = 6; // Rule: Previous grade zeroed, needs min 6.0 in Recovery
+                } else {
+                    status = 'APPROVED'; // Passed Final
+                }
+            }
+        } else {
+            status = 'RECOVERY';
+            needed = 6; // Direct to Recovery: Previous grade zeroed, needs 6.0
+            finalNeeded = 0;
+        }
+
+        // Adjust annual total display based on current phase
+        let finalAnnualTotal = displayTotal + finalExamPoints;
+
+        if (status === 'RECOVERY') {
+            const rawRec = student.units?.['recovery']?.['recovery_exam'];
+            // If in recovery, the previous points are "zeroed". We only show the recovery exam grade.
+            if (rawRec !== undefined && rawRec !== null && rawRec !== '') {
+                finalAnnualTotal = Number(rawRec);
+            } else {
+                finalAnnualTotal = 0; // "Zerado"
+            }
+        }
+
+        return { annualTotal: finalAnnualTotal, baseTotal: displayTotal, status, needed, finalNeeded };
+    };
+
+    const getFinalResult = (student: Student) => {
+        const { status, needed, finalNeeded } = calculateAnnualSummary(student);
+
+        if (status === 'APPROVED') {
+            if (finalNeeded > 0) return { text: 'Aprovado por prova final', color: 'text-emerald-600', bg: 'bg-emerald-100' };
+            return { text: 'Aprovado', color: 'text-emerald-600', bg: 'bg-emerald-100' };
+        }
+
+        if (status === 'FINAL' || (selectedUnit === 'final' && status === 'RECOVERY' && finalNeeded > 0)) {
+            const rawFinal = student.units?.['final']?.['final_exam'];
+            const targetScore = selectedUnit === 'final' ? finalNeeded : needed;
+            const needsText = `Prova Final (Precisa: ${targetScore.toFixed(1)})`;
+
+            if (rawFinal !== undefined && rawFinal !== null && rawFinal !== '') {
+                const finalExam = Number(rawFinal);
+                if (finalExam >= targetScore) return { text: 'Aprovado por prova final', color: 'text-emerald-600', bg: 'bg-emerald-100' };
+
+                return { text: 'Perdeu na Prova Final', color: 'text-red-600', bg: 'bg-red-100' };
+            }
+            return { text: needsText, color: 'text-amber-600', bg: 'bg-amber-100' };
+        }
+
+        if (status === 'RECOVERY') {
+            const rawRec = student.units?.['recovery']?.['recovery_exam'];
+            if (rawRec !== undefined && rawRec !== null && rawRec !== '') {
+                const recoveryExam = Number(rawRec);
+                if (recoveryExam >= 6.0) return { text: 'Aprovado (Rec)', color: 'text-emerald-600', bg: 'bg-emerald-100' };
+                return { text: 'Reprovado', color: 'text-red-600', bg: 'bg-red-100' };
+            }
+            return { text: 'Recuperação (Min: 6.0)', color: 'text-rose-600', bg: 'bg-rose-100' };
+        }
+
+
+
+        return { text: '-', color: 'text-slate-500', bg: 'bg-slate-100' };
+    }
 
     const exportPDF = () => {
         const doc = new jsPDF();
+        let yPos = 45;
 
         // --- HEADER ---
         doc.setFillColor(63, 81, 181); // Indigo Primary
@@ -241,43 +377,86 @@ export const Grades: React.FC = () => {
 
         doc.setFontSize(11);
         doc.setFont('helvetica', 'normal');
-        doc.text(`${activeSeries?.name || ''} - Turma ${selectedSection} - ${selectedUnit}ª Unidade`, 14, 23, { align: 'left', baseline: 'top', transform: new DOMMatrix().translate(0, 5) } as any);
-        // Clean text placement without complex transforms if matrix fails
-        doc.text(`${activeSeries?.name || ''} - Turma ${selectedSection} - ${selectedUnit}ª Unidade`, 14, 30);
+        doc.text(`${activeSeries?.name || ''} - Turma ${selectedSection}`, 14, 30);
 
+        const keysToCheck = ['1', '2', '3', 'final', 'recovery', 'results'] as const;
 
-        const config = UNIT_CONFIGS[selectedUnit as keyof typeof UNIT_CONFIGS];
-        if (!config) return;
+        keysToCheck.forEach((key) => {
+            if (!exportConfig.units[key]) return;
 
-        const tableBody = students.map(s => {
-            const row: any[] = [s.number, s.name];
-            config.columns.forEach(col => {
-                row.push(getGrade(s, col.key) || '-');
-            });
-            const avg = calculateTotal(s);
-            row.push({
-                content: avg.toFixed(1),
-                styles: { fontStyle: 'bold', textColor: avg >= 6 ? [22, 163, 74] : [220, 38, 38] }
-            });
-            return row;
-        });
+            if (key === 'results') {
+                const tableBody = students.map(s => {
+                    const res = getFinalResult(s);
+                    const { annualTotal } = calculateAnnualSummary(s);
+                    return [s.number, s.name, `${annualTotal.toFixed(1)} pts`, res.text];
+                });
 
-        autoTable(doc, {
-            head: [['Nº', 'Nome', ...config.columns.map(c => c.label), 'Média']],
-            body: tableBody,
-            startY: 45,
-            theme: 'grid',
-            headStyles: { fillColor: [63, 81, 181], textColor: 255, fontStyle: 'bold' },
-            alternateRowStyles: { fillColor: [248, 250, 252] },
-            styles: { fontSize: 10, cellPadding: 4, valign: 'middle' },
-            columnStyles: {
-                0: { cellWidth: 15, halign: 'center' }, // Number
-                1: { fontStyle: 'bold' }, // Name
-                [config.columns.length + 2]: { halign: 'center', fontStyle: 'bold' } // Media
+                doc.setFontSize(14);
+                doc.setTextColor(0);
+                const currentY = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : yPos;
+                doc.text('Resultado Final Anual', 14, currentY);
+
+                autoTable(doc, {
+                    head: [['Nº', 'Nome', 'Total Anual', 'Situação']],
+                    body: tableBody,
+                    startY: currentY + 5,
+                    theme: 'grid',
+                    headStyles: { fillColor: [63, 81, 181] },
+                });
+            } else {
+                const config = UNIT_CONFIGS[key as keyof typeof UNIT_CONFIGS];
+                if (!config) return;
+
+                const title = key === 'final' ? 'Prova Final' : key === 'recovery' ? 'Recuperação' : `${key}ª Unidade`;
+                doc.setFontSize(14);
+                doc.setTextColor(0);
+                const currentY = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : yPos;
+                doc.text(title, 14, currentY);
+
+                let headCols = ['Nº', 'Nome'];
+                if (exportConfig.detailed) {
+                    headCols = [...headCols, ...config.columns.map((c: any) => c.label)];
+                }
+                headCols.push(key === 'final' || key === 'recovery' ? 'Situação' : 'Média');
+
+                const filtered = students.filter(s => {
+                    if (key === '1' || key === '2' || key === '3') return true;
+                    const { baseTotal, status } = calculateAnnualSummary(s);
+
+                    if (key === 'final') return baseTotal >= 8.0 && baseTotal < 18.0;
+                    if (key === 'recovery') return status === 'RECOVERY';
+                    return true;
+                });
+                if (filtered.length === 0) return;
+
+                const tableBody = filtered.map(s => {
+                    const row: any[] = [s.number, s.name];
+                    if (exportConfig.detailed) {
+                        config.columns.forEach((col: any) => {
+                            row.push(getGrade(s, col.key) || '-');
+                        });
+                    }
+
+                    if (key === 'final' || key === 'recovery') {
+                        const res = getFinalResult(s);
+                        row.push(res.text);
+                    } else {
+                        row.push(calculateUnitTotal(s, key).toFixed(1));
+                    }
+                    return row;
+                });
+
+                autoTable(doc, {
+                    head: [headCols],
+                    body: tableBody,
+                    startY: currentY + 5,
+                    margin: { top: 20 },
+                    styles: { fontSize: 8 },
+                    headStyles: { fillColor: [100, 116, 139] }
+                });
             }
         });
 
-        // Footer
         const pageCount = (doc as any).internal.getNumberOfPages();
         for (let i = 1; i <= pageCount; i++) {
             doc.setPage(i);
@@ -286,39 +465,61 @@ export const Grades: React.FC = () => {
             doc.text(`Página ${i} de ${pageCount} - Gerado em ${new Date().toLocaleDateString('pt-BR')}`, 105, 290, { align: 'center' });
         }
 
-        doc.save(`notas_unidade_${selectedUnit}_${activeSeries?.name}_${selectedSection}.pdf`);
+        doc.save(`relatorio_notas_${activeSeries?.name}_${selectedSection}.pdf`);
+        setShowExportModal(false);
     };
 
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <div className={`animate-spin rounded-full h-8 w-8 border-b-2 border-${theme.primaryColor}-600`}></div>
+                <div className={`animate-spin rounded-full h-8 w-8 border-b-2 border-${theme.baseColor}-600`}></div>
             </div>
         );
     }
 
     const currentConfig = UNIT_CONFIGS[selectedUnit as keyof typeof UNIT_CONFIGS];
 
+    // Filter students for display
+    const visibleStudents = students.filter(s => {
+        if (selectedUnit === '1' || selectedUnit === '2' || selectedUnit === '3' || selectedUnit === 'results') return true;
+
+        const { baseTotal, status } = calculateAnnualSummary(s);
+
+        if (selectedUnit === 'final') {
+            // Show all students who qualify for the Final phase (8.0 to 17.9)
+            // even if they already failed it (so the teacher can fix the grade)
+            return baseTotal >= 8.0 && baseTotal < 18.0;
+        }
+
+        if (selectedUnit === 'recovery') {
+            // Show all who are in Recovery phase (Directly < 8 OR failed Final)
+            return status === 'RECOVERY';
+        }
+
+        return true;
+    });
+
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Header Controls */}
             <div className="glass-panel p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-                    {Object.keys(UNIT_CONFIGS).map((unit) => (
+                <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg overflow-x-auto max-w-full">
+                    {['1', '2', '3', 'final', 'recovery', 'results'].map((unit) => (
                         <button
                             key={unit}
                             onClick={() => setSelectedUnit(unit)}
-                            className={`px-4 py-2 rounded-md text-sm font-bold transition-all duration-200 ${selectedUnit === unit
-                                ? `bg-${theme.primaryColor}-600 dark:bg-${theme.primaryColor}-500 text-white shadow-md transform scale-105`
+                            className={`px-4 py-2 rounded-md text-sm font-bold transition-all duration-200 whitespace-nowrap ${selectedUnit === unit
+                                ? `bg-${theme.baseColor}-600 dark:bg-${theme.baseColor}-500 text-white shadow-md transform scale-105`
                                 : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'
                                 }`}
                         >
-                            {unit}ª Unidade
+                            {unit === 'final' ? 'Prova Final' : unit === 'recovery' ? 'Recuperação' : unit === 'results' ? 'Resultado' : `${unit}ª Unidade`}
                         </button>
                     ))}
                 </div>
 
                 <div className="flex items-center gap-2">
+                    {/* Saving Indicator */}
                     {isSaving ? (
                         <span className="flex items-center text-amber-500 text-sm font-bold bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800 transition-all">
                             <span className="material-symbols-outlined text-sm mr-2 animate-pulse">cloud_upload</span>
@@ -330,9 +531,10 @@ export const Grades: React.FC = () => {
                             Salvo
                         </span>
                     )}
+
                     <button
-                        onClick={exportPDF}
-                        className={`flex items-center space-x-2 px-4 py-2 bg-${theme.primaryColor}-500 hover:bg-${theme.primaryColor}-600 text-white rounded-lg transition-colors shadow-md shadow-${theme.primaryColor}/20`}
+                        onClick={() => setShowExportModal(true)}
+                        className={`flex items-center space-x-2 px-4 py-2 bg-${theme.baseColor}-500 hover:bg-${theme.baseColor}-600 text-white rounded-lg transition-colors shadow-md shadow-${theme.baseColor}-500/20`}
                     >
                         <span className="material-symbols-outlined text-lg">download</span>
                         <span>Exportar PDF</span>
@@ -340,11 +542,75 @@ export const Grades: React.FC = () => {
                 </div>
             </div>
 
+            {/* Export Modal */}
+            {showExportModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 animate-scale-in">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-indigo-600">settings</span>
+                            Configurar Relatório PDF
+                        </h3>
+
+                        <div className="space-y-4 mb-6">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Unidades para Incluir:</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {(Object.keys(exportConfig.units) as Array<keyof typeof exportConfig.units>).map(key => (
+                                        <label key={key} className="flex items-center space-x-2 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={exportConfig.units[key]}
+                                                onChange={e => setExportConfig(prev => ({
+                                                    ...prev,
+                                                    units: { ...prev.units, [key]: e.target.checked }
+                                                }))}
+                                                className="rounded text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <span className="text-sm text-slate-600 dark:text-slate-300">
+                                                {key === 'final' ? 'Prova Final' : key === 'recovery' ? 'Recuperação' : key === 'results' ? 'Resultado Final' : `${key}ª Unidade`}
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={exportConfig.detailed}
+                                        onChange={e => setExportConfig(prev => ({ ...prev, detailed: e.target.checked }))}
+                                        className="rounded text-indigo-600 focus:ring-indigo-500"
+                                    />
+                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Detalhar colunas de notas</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowExportModal(false)}
+                                className="px-4 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={exportPDF}
+                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-md transition-all flex items-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-sm">download</span>
+                                Gerar PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Grades Table */}
             <div className="glass-panel rounded-xl overflow-hidden shadow-lg border border-slate-200/60 dark:border-slate-700/60">
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className={`bg-${theme.primaryColor}-50 dark:bg-slate-800 border-b border-${theme.primaryColor}-100 dark:border-slate-700`}>
+                        <thead className={`bg-${theme.baseColor}-50 dark:bg-slate-800 border-b border-${theme.baseColor}-100 dark:border-slate-700`}>
                             <tr>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-16">
                                     Nº
@@ -352,67 +618,137 @@ export const Grades: React.FC = () => {
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                     Nome
                                 </th>
-                                {currentConfig?.columns.map((col) => (
-                                    <th key={col.key} className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-32">
-                                        <div className="flex flex-col items-center">
-                                            <span>{col.label}</span>
-                                            <span className="text-[10px] opacity-70 font-normal">
-                                                (Max: {col.max})
-                                            </span>
-                                        </div>
-                                    </th>
-                                ))}
-                                <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-24 bg-slate-50/50 dark:bg-slate-800/50">
-                                    Média
-                                </th>
+                                {selectedUnit === 'results' ? (
+                                    <>
+                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                            Total Anual
+                                        </th>
+                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                            Situação Final
+                                        </th>
+                                    </>
+                                ) : (
+                                    <>
+                                        {currentConfig?.columns.map((col) => (
+                                            <th key={col.key} className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-32">
+                                                <div className="flex flex-col items-center">
+                                                    <span>{col.label}</span>
+                                                    <span className="text-[10px] opacity-70 font-normal">
+                                                        (Max: {col.max})
+                                                    </span>
+                                                </div>
+                                            </th>
+                                        ))}
+                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-40 bg-slate-50/50 dark:bg-slate-800/50">
+                                            {(selectedUnit === 'final' || selectedUnit === 'recovery') ? 'Situação' : 'Média'}
+                                        </th>
+                                    </>
+                                )}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                            {students.map((student) => (
-                                <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
-                                        {student.number}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center">
-                                            <div className={`flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br ${student.color} flex items-center justify-center text-white text-xs font-bold shadow-sm mr-3`}>
-                                                {student.initials}
-                                            </div>
-                                            <div className="text-sm font-medium text-slate-900 dark:text-white">
-                                                {student.name}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    {currentConfig?.columns.map((col) => (
-                                        <td key={col.key} className="px-6 py-4 whitespace-nowrap">
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                max={col.max}
-                                                step="0.1"
-                                                className={`w-full text-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-${theme.primaryColor}-500 focus:border-transparent transition-all font-mono text-sm`}
-                                                value={getGrade(student, col.key)}
-                                                onChange={(e) => handleGradeChange(student.id, col.key, e.target.value)}
-                                                placeholder="-"
-                                            />
+                            {visibleStudents.map((student) => {
+                                // RESULTS TAB ROW
+                                if (selectedUnit === 'results') {
+                                    const { annualTotal } = calculateAnnualSummary(student);
+                                    const res = getFinalResult(student);
+                                    return (
+                                        <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
+                                                {student.number}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center">
+                                                    <div className={`flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br ${student.color} flex items-center justify-center text-white text-xs font-bold shadow-sm mr-3`}>
+                                                        {student.initials}
+                                                    </div>
+                                                    <div className="text-sm font-medium text-slate-900 dark:text-white">
+                                                        {student.name}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-center font-bold text-slate-700 dark:text-slate-300">
+                                                {annualTotal.toFixed(1)} <span className="text-[10px] text-slate-400 font-normal">pts</span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${res.bg} ${res.color}`}>
+                                                    {res.text}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                }
+
+                                return (
+                                    <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
+                                            {student.number}
                                         </td>
-                                    ))}
-                                    <td className="px-6 py-4 whitespace-nowrap text-center bg-slate-50/30 dark:bg-slate-800/30">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${calculateTotal(student) >= 6
-                                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                            : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'
-                                            }`}>
-                                            {calculateTotal(student).toFixed(1)}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center">
+                                                <div className={`flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br ${student.color} flex items-center justify-center text-white text-xs font-bold shadow-sm mr-3`}>
+                                                    {student.initials}
+                                                </div>
+                                                <div className="text-sm font-medium text-slate-900 dark:text-white">
+                                                    {student.name}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        {currentConfig?.columns.map((col) => {
+                                            let currentMax = col.max;
+                                            if (selectedUnit === '3' && col.key === 'exam') {
+                                                const talentShowVal = Number(getGrade(student, 'talentShow')) || 0;
+                                                if (talentShowVal > 0) currentMax = 8.0;
+                                            }
+
+                                            return (
+                                                <td key={col.key} className="px-6 py-4 whitespace-nowrap">
+                                                    <input
+                                                        type="number"
+                                                        inputMode="decimal"
+                                                        min="0"
+                                                        max={currentMax}
+                                                        step="0.1"
+                                                        className={`w-full text-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-${theme.baseColor}-500 focus:border-transparent transition-all font-mono text-sm`}
+                                                        value={getGrade(student, col.key)}
+                                                        onChange={(e) => handleGradeChange(student.id, col.key, e.target.value)}
+                                                        placeholder="-"
+                                                    />
+                                                </td>
+                                            );
+                                        })}
+                                        <td className="px-6 py-4 whitespace-nowrap text-center bg-slate-50/30 dark:bg-slate-800/30">
+                                            {(selectedUnit === 'final' || selectedUnit === 'recovery') ? (
+                                                (() => {
+                                                    const res = getFinalResult(student);
+                                                    return (
+                                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${res.bg} ${res.color}`}>
+                                                            {res.text}
+                                                        </span>
+                                                    )
+                                                })()
+                                            ) : (
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${calculateTotal(student) >= 6
+                                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                                    : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'
+                                                    }`}>
+                                                    {calculateTotal(student).toFixed(1)}
+                                                </span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                )
+                            })}
                         </tbody>
                     </table>
 
-                    {students.length === 0 && (
+                    {visibleStudents.length === 0 && (
                         <div className="text-center py-12">
-                            <p className="text-slate-500 dark:text-slate-400">Nenhum aluno encontrado nesta turma.</p>
+                            <p className="text-slate-500 dark:text-slate-400">
+                                {selectedUnit === 'final' ? 'Nenhum aluno em Prova Final.' :
+                                    selectedUnit === 'recovery' ? 'Nenhum aluno em Recuperação.' :
+                                        'Nenhum aluno encontrado nesta turma.'}
+                            </p>
                         </div>
                     )}
                 </div>

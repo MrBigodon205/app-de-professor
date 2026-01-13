@@ -44,7 +44,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     background-color: #f8fafc;
                 }
                 .dark .ql-toolbar {
-                    background-color: #1e293b;
+                    background-color: #1e293b !important;
                     border-color: #334155 !important;
                 }
                 .dark .ql-stroke {
@@ -65,9 +65,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     font-size: 1rem !important;
                 }
                 .dark .ql-container {
-                    background-color: #0f172a; /* slate-900 */
+                    background-color: #0f172a !important; /* slate-900 */
                     border-color: #334155 !important;
-                    color: white;
+                    color: white !important;
                 }
                 .ql-editor {
                     min-height: 150px;
