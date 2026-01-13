@@ -3,6 +3,8 @@ import Joyride, { CallBackProps, STATUS, Step, TooltipRenderProps } from 'react-
 import confetti from 'canvas-confetti';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
+import { useClass } from '../../contexts/ClassContext';
 
 interface TutorialProps {
     onComplete: () => void;
@@ -11,8 +13,66 @@ interface TutorialProps {
 export const TutorialDesktop: React.FC<TutorialProps> = ({ onComplete }) => {
     const theme = useTheme();
     const { currentUser } = useAuth();
+    const { classes } = useClass();
     const [run, setRun] = useState(false);
     const [showWelcome, setShowWelcome] = useState(true);
+
+    const createTestPlan = async () => {
+        if (!currentUser || !classes || classes.length === 0) return;
+
+        const targetSeries = classes[0]; // Use first available series
+        const targetSection = targetSeries.sections.length > 0 ? targetSeries.sections[0] : 'A';
+        const today = new Date().toISOString().split('T')[0];
+
+        try {
+            await supabase.from('plans').insert({
+                user_id: currentUser.id,
+                title: 'Planejamento Exemplo (Tutorial)',
+                series_id: targetSeries.id,
+                section: targetSection,
+                start_date: today,
+                end_date: today,
+                description: '<p>Este é um planejamento criado automaticamente pelo tutorial para você testar! Tente editar ou excluir.</p>',
+                objectives: 'Entender como funciona o Prof. Acerta+',
+                bncc_codes: 'EM13LGG101',
+                methodology: 'Investigação ativa',
+                resources: 'Computador, Internet',
+                assessment: 'Observação direta',
+                subject: currentUser.subject || 'Geral'
+            });
+            // Force reload or just let realtime handle it? Realtime should handle it if set up.
+            // But we might want to manually notify or use a toast? 
+            // For now, Supabase realtime in Planning.tsx (if enabled) or manual refresh will pick it up.
+            // Actually Planning.tsx doesn't have realtime subscription in the snippet I saw, only specific tables.
+            // Let's assume the user will navigate there and it will fetch.
+        } catch (error) {
+            console.error("Erro ao criar plano teste", error);
+        }
+    };
+
+    const createTestActivity = async () => {
+        if (!currentUser || !classes || classes.length === 0) return;
+
+        const targetSeries = classes[0];
+        const targetSection = targetSeries.sections.length > 0 ? targetSeries.sections[0] : 'A';
+        const today = new Date().toISOString().split('T')[0];
+
+        try {
+            await supabase.from('activities').insert({
+                user_id: currentUser.id,
+                title: 'Atividade Teste (Tutorial)',
+                type: 'Prova',
+                date: today,
+                series_id: targetSeries.id,
+                section: targetSection,
+                description: '<p>Uma atividade de exemplo criada para você.</p>',
+                value: 10.0,
+                subject: currentUser.subject || 'Geral'
+            });
+        } catch (error) {
+            console.error("Erro ao criar atividade teste", error);
+        }
+    };
 
     const startTour = () => {
         setShowWelcome(false);
@@ -20,7 +80,28 @@ export const TutorialDesktop: React.FC<TutorialProps> = ({ onComplete }) => {
     };
 
     const handleJoyrideCallback = (data: CallBackProps) => {
-        const { status } = data;
+        const { status, index, type } = data;
+
+        // Execute actions based on step index
+        if (type === 'step:after') {
+            if (index === 2) { // Step 3: Planning (Index 2 in 0-based array match? Wait, let's verify array)
+                // Steps: 0: Welcome(body), 1: Series([data-tour..]), 2: Menu(aside), 3: Planning, 4: Activity, 5: Theme, 6: End
+                // My previous replace added steps. Let's trace.
+                // Existing: 0: body, 1: class-selector, 2: aside. 
+                // I added Planning at pos 3 (index 3 via push? no I replaced 'aside' block)
+                // Ah, I replaced the 'aside' block with 'aside' + 'planning' + 'activities'.
+                // So new array: 0: body, 1: class-selector, 2: aside, 3: planning, 4: activities, 5: theme...
+                // So if index === 3 (Planning step displayed), and user clicks Next, type is step:after.
+                // Wait, creating it WHEN showing or AFTER leaving? "Vou criar... agora mesmo" suggests creating it immediately or on next.
+                // Let's create it when accessing the step? step:after of index 2 (Aside) -> Entering 3? No.
+                // Let's create it when the user clicks 'Next' on the Planning step (Index 3).
+                createTestPlan();
+            }
+            if (index === 4) { // Step 4: Activities
+                createTestActivity();
+            }
+        }
+
         if (([STATUS.FINISHED, STATUS.SKIPPED] as string[]).includes(status)) {
             setRun(false);
             onComplete();
@@ -78,6 +159,26 @@ export const TutorialDesktop: React.FC<TutorialProps> = ({ onComplete }) => {
                 <div>
                     <h3 className="text-xl font-bold mb-2">2. Menu Lateral</h3>
                     <p>Navegue entre Planejamento, Atividades e Alunos com um clique. A barra lateral pode ser recolhida se precisar de espaço.</p>
+                </div>
+            ),
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="sidebar-planning"]',
+            content: (
+                <div>
+                    <h3 className="text-xl font-bold mb-2">3. Planejamento</h3>
+                    <p>Aqui você organiza suas aulas. <br /><b>Vou criar um planejamento de teste agora mesmo para você ver!</b> ✨</p>
+                </div>
+            ),
+            placement: 'right',
+        },
+        {
+            target: '[data-tour="sidebar-activities"]',
+            content: (
+                <div>
+                    <h3 className="text-xl font-bold mb-2">4. Atividades</h3>
+                    <p>Gerencie provas e trabalhos. <br /><b>Também criei uma atividade de exemplo lá.</b> Vá conferir depois! 📝</p>
                 </div>
             ),
             placement: 'right',

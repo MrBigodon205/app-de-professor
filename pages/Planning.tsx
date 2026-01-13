@@ -539,9 +539,19 @@ export const Planning: React.FC = () => {
                     )}
                 </div>
 
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0">
-                    {displayedPlans.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">Nenhuma aula encontrada.</div>
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-[400px]">
+                    {loading ? (
+                        Array.from({ length: 5 }).map((_, i) => (
+                            <div key={i} className="w-full h-24 rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 p-4 animate-pulse">
+                                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-3"></div>
+                                <div className="flex gap-2">
+                                    <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                    <div className="h-6 w-16 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                </div>
+                            </div>
+                        ))
+                    ) : displayedPlans.length === 0 ? (
+                        <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 min-h-[200px] flex items-center justify-center">Nenhuma aula encontrada.</div>
                     ) : (
                         displayedPlans.map(plan => (
                             <button key={plan.id} onClick={() => handleSelectPlan(plan)} className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}>

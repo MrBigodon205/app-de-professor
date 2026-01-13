@@ -554,11 +554,19 @@ export const Activities: React.FC = () => {
                 </div>
 
                 {/* List Items */}
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0">
-                    {displayedActivities.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                            Nenhuma atividade encontrada.
-                        </div>
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-[400px]">
+                    {loading ? (
+                        Array.from({ length: 5 }).map((_, i) => (
+                            <div key={i} className="w-full h-24 rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 p-4 animate-pulse">
+                                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-3"></div>
+                                <div className="flex gap-2">
+                                    <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                    <div className="h-6 w-16 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                </div>
+                            </div>
+                        ))
+                    ) : displayedActivities.length === 0 ? (
+                        <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 min-h-[200px] flex items-center justify-center">Nenhuma atividade encontrada.{searchTerm && ' Tente outro termo.'}</div>
                     ) : (
                         displayedActivities.map(act => (
                             <button
