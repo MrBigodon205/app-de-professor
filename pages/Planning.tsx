@@ -497,7 +497,7 @@ export const Planning: React.FC = () => {
     );
 
     return (
-        <main className="flex h-full gap-6 max-w-[1600px] mx-auto overflow-hidden animate-in fade-in zoom-in-95 duration-500">
+        <main className="flex h-full gap-6 max-w-[1600px] mx-auto overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
             <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} title="Adicionar anexo" aria-label="Adicionar anexo" />
 
             {/* AI MODAL */}

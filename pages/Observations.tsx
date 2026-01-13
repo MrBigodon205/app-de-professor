@@ -265,7 +265,7 @@ export const Observations: React.FC = () => {
     );
 
     return (
-        <div className="flex flex-col lg:flex-row h-[calc(100dvh-7rem)] lg:h-full gap-4 lg:gap-8 max-w-[1700px] mx-auto overflow-hidden animate-in fade-in duration-500 px-2 lg:px-0">
+        <div className="flex flex-col lg:flex-row h-[calc(100dvh-7rem)] lg:h-full gap-4 lg:gap-8 max-w-[1700px] mx-auto overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 px-2 lg:px-0">
             {/* Sidebar List */}
             <div className={`w-full lg:w-96 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden shrink-0 ${selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
                 <div className={`p-6 sm:p-8 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-slate-50 to-white dark:from-slate-950 dark:to-slate-900`}>

@@ -364,7 +364,7 @@ export const Dashboard: React.FC = () => {
   const contextName = (classes.find(c => c.id === selectedSeriesId)?.name || `Série ${selectedSeriesId}`) + (selectedSection ? ` - Turma ${selectedSection}` : '');
 
   return (
-    <div className="max-w-7xl w-full mx-auto flex flex-col gap-8 animate-in fade-in pb-10">
+    <div className="max-w-7xl w-full mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
       <div data-tour="dashboard-kpi">
         <DashboardHeader
           currentUser={currentUser}
