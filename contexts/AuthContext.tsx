@@ -333,64 +333,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         try {
-            // 1. Try Standard Supabase Client Login (Timeout bumped to 30s)
-            // console.log("Tentando login padrão...");
+            // HIGH PERFORMANCE PATH: Direct HTTP Fetch for Token
+            // Bypasses SDK internal overhead during the critical token hand-off
+            let authResult;
             try {
-                const { data, error } = await withTimeout(
-                    supabase.auth.signInWithPassword({ email, password }),
-                    30000,
-                    "Login Padrão"
-                );
+                authResult = await rawLogin();
+            } catch (rawErr: any) {
+                // Propagate credential errors
+                if (rawErr.message === 'Email not confirmed' || rawErr.message === 'Invalid login credentials') {
+                    throw rawErr;
+                }
 
+                // Fallback to standard SDK for generic/network errors
+                console.warn("Raw Login failed, trying SDK fallback:", rawErr.message);
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
-                if (data.user) {
-                    // Try to pre-load from cache for instant navigation
-                    const cached = localStorage.getItem(`cached_profile_${data.user.id}`);
-                    if (cached) {
-                        try {
-                            setCurrentUser(JSON.parse(cached));
-                        } catch (e) { }
-                    }
+                authResult = { user: data.user, session: data.session };
+            }
 
-                    // We don't set loading(false) here because we want ProtectedRoute 
-                    // to show spinner UNTIL we are sure about the profile (or at least have the cache)
-                    // Actually, if we have the cache, we can set loading(false) now!
-                    if (cached) setLoading(false);
-
-                    return { success: true };
+            if (authResult?.user) {
+                // Instant shell loading from cache
+                const cached = localStorage.getItem(`cached_profile_${authResult.user.id}`);
+                if (cached) {
+                    try {
+                        setCurrentUser(JSON.parse(cached));
+                        setLoading(false);
+                    } catch (e) { }
                 }
 
-            } catch (clientError: any) {
-                console.warn("Falha no login padrão, ativando Fallback HTTP:", clientError.message);
-
-                // If it's a CREDENTIAL error, don't retry (it's wrong password)
-                if (clientError.message === 'Email not confirmed' ||
-                    clientError.message === 'Invalid login credentials') {
-                    throw clientError;
+                // Ensure profile is fetched (background if cached, blocking if not)
+                if (!cached) {
+                    await fetchProfile(authResult.user.id);
+                } else {
+                    fetchProfile(authResult.user.id);
                 }
 
-                // 2. FALLBACK: Raw Fetch Login
-                // Only runs if the client crashed vs network or timeout
-                const res = await rawLogin();
-                if (res && res.user) {
-                    const cached = localStorage.getItem(`cached_profile_${res.user.id}`);
-                    if (cached) {
-                        try {
-                            setCurrentUser(JSON.parse(cached));
-                            setLoading(false);
-                        } catch (e) { }
-                    }
-                }
                 return { success: true };
             }
 
-            return { success: false, error: 'Erro desconhecido.' };
+            return { success: false, error: 'Erro ao autenticar.' };
 
         } catch (e: any) {
             console.error("Login final failed:", e);
             let msg = e.message;
             if (msg === 'Email not confirmed') msg = 'Por favor, confirme seu e-mail para entrar.';
-            if (msg === 'Invalid login credentials') msg = 'E-mail ou senha inválidos.';
+            if (msg === 'Invalid login credentials' || msg === 'Erro no login via HTTP') msg = 'E-mail ou senha inválidos.';
             if (msg.includes('timed out')) msg = 'Tempo esgotado. Verifique sua conexão.';
 
             setLoading(false);
