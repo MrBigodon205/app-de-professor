@@ -398,6 +398,12 @@ export const Planning: React.FC = () => {
                                                 ${currentPlan.subject || ''}
                                             </span>
                                         </div>
+                                        <div style="margin-bottom: 8px;">
+                                            <span class="header-label">Período:</span> 
+                                            <span style="font-size: 11pt; font-weight: bold; color: #000; display: inline-block; width: 70%; border-bottom: 1px solid #000;">
+                                                ${new Date(currentPlan.start_date + 'T12:00:00').toLocaleDateString('pt-BR')} até ${new Date(currentPlan.end_date + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                            </span>
+                                        </div>
                                         <div>
                                             <span class="header-label">Coordenação:</span> 
                                             <span style="font-size: 11pt; font-weight: bold; color: #000; display: inline-block; width: 70%;">
@@ -925,6 +931,12 @@ export const Planning: React.FC = () => {
                                                 <div className="flex items-end gap-2 mb-1">
                                                     <span className="font-bold text-sm whitespace-nowrap">Componente:</span>
                                                     <div className="border-b border-black flex-1 font-bold text-base px-2 leading-none relative top-0.5">{currentPlan.subject}</div>
+                                                </div>
+                                                <div className="flex items-end gap-2 mb-1">
+                                                    <span className="font-bold text-sm whitespace-nowrap w-24">Período:</span>
+                                                    <div className="border-b border-black flex-1 font-bold text-base px-2 leading-none relative top-0.5">
+                                                        {new Date(currentPlan.start_date + 'T12:00:00').toLocaleDateString('pt-BR')} até {new Date(currentPlan.end_date + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                                    </div>
                                                 </div>
                                                 <div className="flex items-end gap-2">
                                                     <span className="font-bold text-sm whitespace-nowrap">Coordenação:</span>

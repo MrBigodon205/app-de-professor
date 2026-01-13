@@ -5,9 +5,7 @@ import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
 import { supabase } from '../lib/supabase';
 import { Student, Grades as GradesType } from '../types';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-// import { Save, Download, Calculator, AlertCircle, CheckCircle, Wifi, WifiOff } from 'lucide-react'; // REMOVED
+import DOMPurify from 'dompurify';
 
 const UNIT_CONFIGS: any = {
     '1': {
@@ -363,109 +361,160 @@ export const Grades: React.FC = () => {
     }
 
     const exportPDF = () => {
-        const doc = new jsPDF();
-        let yPos = 45;
+        const logoText = "CENSC";
+        const logoSub = "CENTRO EDUCACIONAL<br>NOSSA SRA DO CENÁCULO";
 
-        // --- HEADER ---
-        doc.setFillColor(63, 81, 181); // Indigo Primary
-        doc.rect(0, 0, 210, 35, 'F');
+        const generateReportHTML = () => {
+            let sectionsHTML = '';
+            const keysToCheck = ['1', '2', '3', 'final', 'recovery', 'results'] as const;
 
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(18);
-        doc.setFont('helvetica', 'bold');
-        doc.text('PROF. ACERTA+ | Relatório de Notas', 14, 23);
+            keysToCheck.forEach((key) => {
+                if (!exportConfig.units[key]) return;
 
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${activeSeries?.name || ''} - Turma ${selectedSection}`, 14, 30);
-
-        const keysToCheck = ['1', '2', '3', 'final', 'recovery', 'results'] as const;
-
-        keysToCheck.forEach((key) => {
-            if (!exportConfig.units[key]) return;
-
-            if (key === 'results') {
-                const tableBody = students.map(s => {
-                    const res = getFinalResult(s);
-                    const { annualTotal } = calculateAnnualSummary(s);
-                    return [s.number, s.name, `${annualTotal.toFixed(1)} pts`, res.text];
-                });
-
-                doc.setFontSize(14);
-                doc.setTextColor(0);
-                const currentY = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : yPos;
-                doc.text('Resultado Final Anual', 14, currentY);
-
-                autoTable(doc, {
-                    head: [['Nº', 'Nome', 'Total Anual', 'Situação']],
-                    body: tableBody,
-                    startY: currentY + 5,
-                    theme: 'grid',
-                    headStyles: { fillColor: [63, 81, 181] },
-                });
-            } else {
-                const config = UNIT_CONFIGS[key as keyof typeof UNIT_CONFIGS];
-                if (!config) return;
-
-                const title = key === 'final' ? 'Prova Final' : key === 'recovery' ? 'Recuperação' : `${key}ª Unidade`;
-                doc.setFontSize(14);
-                doc.setTextColor(0);
-                const currentY = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : yPos;
-                doc.text(title, 14, currentY);
+                const title = key === 'final' ? 'Prova Final' : key === 'recovery' ? 'Recuperação' : key === 'results' ? 'Resultado Final Anual' : `${key}ª Unidade`;
 
                 let headCols = ['Nº', 'Nome'];
-                if (exportConfig.detailed) {
+                const config = UNIT_CONFIGS[key as keyof typeof UNIT_CONFIGS];
+
+                if (key !== 'results' && exportConfig.detailed && config) {
                     headCols = [...headCols, ...config.columns.map((c: any) => c.label)];
                 }
-                headCols.push(key === 'final' || key === 'recovery' ? 'Situação' : 'Média');
+
+                if (key === 'results') {
+                    headCols.push('Total Anual', 'Situação');
+                } else {
+                    headCols.push(key === 'final' || key === 'recovery' ? 'Status' : 'Média');
+                }
 
                 const filtered = students.filter(s => {
-                    if (key === '1' || key === '2' || key === '3') return true;
+                    if (key === '1' || key === '2' || key === '3' || key === 'results') return true;
                     const { baseTotal, status } = calculateAnnualSummary(s);
-
                     if (key === 'final') return baseTotal >= 8.0 && baseTotal < 18.0;
                     if (key === 'recovery') return status === 'RECOVERY';
                     return true;
                 });
-                if (filtered.length === 0) return;
 
-                const tableBody = filtered.map(s => {
-                    const row: any[] = [s.number, s.name];
-                    if (exportConfig.detailed) {
+                if (filtered.length === 0 && key !== 'results') return;
+
+                const rowsHTML = filtered.map(s => {
+                    const { annualTotal } = calculateAnnualSummary(s);
+                    const res = getFinalResult(s);
+
+                    let cells = `
+                        <td style="text-align: center; width: 40px;">${s.number}</td>
+                        <td style="text-align: left; padding-left: 10px;">${s.name}</td>
+                    `;
+
+                    if (key !== 'results' && exportConfig.detailed && config) {
                         config.columns.forEach((col: any) => {
-                            row.push(getGrade(s, col.key) || '-');
+                            cells += `<td style="text-align: center;">${getGrade(s, col.key) || '-'}</td>`;
                         });
                     }
 
-                    if (key === 'final' || key === 'recovery') {
-                        const res = getFinalResult(s);
-                        row.push(res.text);
+                    if (key === 'results') {
+                        cells += `
+                            <td style="text-align: center; font-weight: bold;">${annualTotal.toFixed(1)}</td>
+                            <td style="text-align: center;"><span class="status-badge ${res.color}">${res.text}</span></td>
+                        `;
+                    } else if (key === 'final' || key === 'recovery') {
+                        cells += `<td style="text-align: center;"><span class="status-badge ${res.color}">${res.text}</span></td>`;
                     } else {
-                        row.push(calculateUnitTotal(s, key).toFixed(1));
+                        cells += `<td style="text-align: center; font-weight: bold;">${calculateUnitTotal(s, key).toFixed(1)}</td>`;
                     }
-                    return row;
-                });
 
-                autoTable(doc, {
-                    head: [headCols],
-                    body: tableBody,
-                    startY: currentY + 5,
-                    margin: { top: 20 },
-                    styles: { fontSize: 8 },
-                    headStyles: { fillColor: [100, 116, 139] }
-                });
-            }
-        });
+                    return `<tr>${cells}</tr>`;
+                }).join('');
 
-        const pageCount = (doc as any).internal.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-            doc.setPage(i);
-            doc.setFontSize(8);
-            doc.setTextColor(150);
-            doc.text(`Página ${i} de ${pageCount} - Gerado em ${new Date().toLocaleDateString('pt-BR')}`, 105, 290, { align: 'center' });
-        }
+                sectionsHTML += `
+                    <div class="report-section">
+                        <h2 class="section-title">${title}</h2>
+                        <table>
+                            <thead>
+                                <tr>${headCols.map(h => `<th>${h}</th>`).join('')}</tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHTML}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            });
 
-        doc.save(`relatorio_notas_${activeSeries?.name}_${selectedSection}.pdf`);
+            return sectionsHTML;
+        };
+
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    @page { size: portrait; margin: 15mm; }
+                    body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; margin: 0; padding: 0; line-height: 1.5; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0ea5e9; padding-bottom: 15px; margin-bottom: 30px; }
+                    .school-info { flex: 1; }
+                    .school-name { font-size: 24pt; font-weight: 900; color: #0ea5e9; font-family: 'Arial Black', sans-serif; letter-spacing: -1.5px; margin: 0; line-height: 1; }
+                    .school-sub { font-size: 9pt; color: #0ea5e9; font-weight: bold; text-transform: uppercase; margin-top: 4px; display: block; }
+                    .report-info { text-align: right; }
+                    .report-title { font-size: 14pt; font-weight: bold; color: #64748b; margin: 0; text-transform: uppercase; }
+                    .class-info { font-size: 11pt; color: #334155; font-weight: bold; margin-top: 5px; }
+                    
+                    .report-section { margin-bottom: 40px; break-inside: avoid; }
+                    .section-title { font-size: 12pt; font-weight: 800; color: #1e293b; background: #f1f5f9; padding: 8px 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #0ea5e9; text-transform: uppercase; letter-spacing: 0.5px; }
+                    
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10pt; }
+                    th { background-color: #f8fafc; color: #64748b; font-weight: bold; text-transform: uppercase; font-size: 8pt; padding: 8px; border: 1px solid #e2e8f0; text-align: center; }
+                    td { padding: 8px; border: 1px solid #e2e8f0; color: #334155; }
+                    tr:nth-child(even) { background-color: #fcfcfc; }
+                    
+                    .status-badge { font-weight: bold; padding: 2px 8px; border-radius: 99px; font-size: 8pt; display: inline-block; white-space: nowrap; }
+                    .text-emerald-600 { color: #059669; }
+                    .text-red-600 { color: #dc2626; }
+                    .text-rose-600 { color: #e11d48; }
+                    .text-slate-500 { color: #64748b; }
+                    
+                    .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 8pt; color: #94a3b8; padding: 10px 0; border-top: 1px solid #f1f5f9; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="school-info">
+                        <h1 class="school-name">CENSC</h1>
+                        <span class="school-sub">CENTRO EDUCACIONAL NOSSA SRA DO CENÁCULO</span>
+                    </div>
+                    <div class="report-info">
+                        <p class="report-title">Relatório de Desempenho Escolar</p>
+                        <p class="class-info">${activeSeries?.name} - Turma ${selectedSection}</p>
+                        <p style="font-size: 9pt; color: #64748b; margin-top: 2px;">Professor: ${currentUser?.name?.toUpperCase()}</p>
+                    </div>
+                </div>
+
+                ${generateReportHTML()}
+
+                <div class="footer">
+                    Gerado pelo Prof. Acerta+ em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}
+                </div>
+            </body>
+            </html>
+        `;
+
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+        const doc = iframe.contentWindow?.document;
+        if (!doc) return;
+
+        doc.open();
+        doc.write(htmlContent);
+        doc.close();
+
+        setTimeout(() => {
+            iframe.contentWindow?.print();
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 100);
+        }, 500);
+
         setShowExportModal(false);
     };
 
