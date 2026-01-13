@@ -94,6 +94,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             if (finalUser) {
+                // Cache user profile instantly
+                localStorage.setItem(`cached_profile_${finalUser.id}`, JSON.stringify(finalUser));
+
                 setCurrentUser(finalUser);
                 setUserId(finalUser.id);
                 // Initialize activeSubject if not set or invalid
@@ -138,14 +141,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         }, 4000);
 
+        // Flag to prevent redundant fetches during initial load
+        let initialLoadDone = false;
+
         // Initial session check
         const initSession = async () => {
             try {
+                // Try to restore session from Supabase locally first (very fast)
                 const { data: { session }, error } = await supabase.auth.getSession();
                 if (error) console.error("Session init error:", error);
 
                 if (session?.user) {
+                    setUserId(session.user.id);
+
+                    // INSTANT CACHE LOAD
+                    const cached = localStorage.getItem(`cached_profile_${session.user.id}`);
+                    if (cached) {
+                        try {
+                            const parsed = JSON.parse(cached);
+                            setCurrentUser(parsed);
+                            setLoading(false); // Stop loading spinner ASAP
+                            // console.log("Perfil carregado do cache!");
+                        } catch (e) {
+                            console.error("Erro ao ler cache:", e);
+                        }
+                    }
+
+                    // Background refresh
                     await fetchProfile(session.user.id);
+                    initialLoadDone = true;
                 }
             } catch (err) {
                 console.error("Unexpected auth error:", err);
@@ -158,12 +182,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         initSession();
 
         // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (session?.user) {
-                await fetchProfile(session.user.id);
+                setUserId(session.user.id);
+
+                // If we don't have a user yet, try to load from cache immediately
+                if (!currentUser) {
+                    const cached = localStorage.getItem(`cached_profile_${session.user.id}`);
+                    if (cached) {
+                        try {
+                            setCurrentUser(JSON.parse(cached));
+                            // If we loaded from cache, we can stop the initial loading spinner
+                            setLoading(false);
+                        } catch (e) { }
+                    }
+                }
+
+                // Only fetch if it's not the initial redundant call or if it's a specific event
+                if (!initialLoadDone || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+                    await fetchProfile(session.user.id);
+                    initialLoadDone = true;
+                }
             } else {
                 setCurrentUser(null);
                 setUserId(null);
+                // Clear cache on sign out? Maybe not, keep for next time login?
+                // Actually better to clear to avoid showing previous user data
+                if (event === 'SIGNED_OUT') {
+                    const keys = Object.keys(localStorage);
+                    keys.forEach(k => {
+                        if (k.startsWith('cached_profile_')) localStorage.removeItem(k);
+                    });
+                    setLoading(false);
+                }
             }
         });
 
@@ -292,7 +343,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 );
 
                 if (error) throw error;
-                if (data.user) return { success: true };
+                if (data.user) {
+                    // Try to pre-load from cache for instant navigation
+                    const cached = localStorage.getItem(`cached_profile_${data.user.id}`);
+                    if (cached) {
+                        try {
+                            setCurrentUser(JSON.parse(cached));
+                        } catch (e) { }
+                    }
+
+                    // We don't set loading(false) here because we want ProtectedRoute 
+                    // to show spinner UNTIL we are sure about the profile (or at least have the cache)
+                    // Actually, if we have the cache, we can set loading(false) now!
+                    if (cached) setLoading(false);
+
+                    return { success: true };
+                }
 
             } catch (clientError: any) {
                 console.warn("Falha no login padrão, ativando Fallback HTTP:", clientError.message);
@@ -305,7 +371,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 // 2. FALLBACK: Raw Fetch Login
                 // Only runs if the client crashed vs network or timeout
-                await rawLogin();
+                const res = await rawLogin();
+                if (res && res.user) {
+                    const cached = localStorage.getItem(`cached_profile_${res.user.id}`);
+                    if (cached) {
+                        try {
+                            setCurrentUser(JSON.parse(cached));
+                            setLoading(false);
+                        } catch (e) { }
+                    }
+                }
                 return { success: true };
             }
 
