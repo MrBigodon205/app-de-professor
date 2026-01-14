@@ -494,7 +494,7 @@ export const Dashboard: React.FC = () => {
       </motion.div>
 
       {/* Main KPI Grid - Bento Style */}
-      <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
         {/* Total Students (Large Card) */}
         <motion.div variants={itemVariants} className="col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-4 sm:p-6 md:p-8 shadow-sm border border-white/20 dark:border-slate-800 relative overflow-hidden group hover:shadow-2xl transition-all duration-500 flex flex-col justify-between h-auto min-h-[380px] md:min-h-[240px]">
