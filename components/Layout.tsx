@@ -80,7 +80,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   };
 
   return (
-    <div className="flex h-screen w-full bg-background-light dark:bg-background-dark overflow-hidden">
+    <div className="flex h-dvh w-full bg-background-light dark:bg-background-dark overflow-hidden">
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
@@ -100,10 +100,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       {/* Mobile Sidebar - Drawer */}
       {/* On mobile, this acts as the "More Menu" drawer */}
-      <aside className={`fixed inset-y-0 left-0 z-[60] w-[85vw] max-w-[300px] bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:w-72 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} shadow-2xl md:shadow-none`}>
+      <aside className={`fixed inset-y-0 left-0 z-[60] w-[85vw] max-w-[300px] bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark transform transition-transform duration-300 ease-in-out xl:relative xl:translate-x-0 xl:w-72 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} shadow-2xl xl:shadow-none`}>
         <div className="flex flex-col h-[100dvh] justify-between">
           {/* Close Button for Mobile Drawer */}
-          <div className="md:hidden absolute top-4 right-4 z-50">
+          <div className="xl:hidden absolute top-4 right-4 z-50">
             <button
               onClick={() => setIsMobileMenuOpen(false)}
               className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500"
@@ -112,9 +112,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </button>
           </div>
 
-          <div className="p-4 flex flex-col gap-4">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-4">
             {/* User Profile / Brand - NEW LOGO */}
-            <div className="flex gap-3 items-center px-2 py-4 border-b border-dashed border-slate-200 dark:border-slate-800 mb-2">
+            <div className="flex gap-3 items-center px-2 py-4 border-b border-dashed border-slate-200 dark:border-slate-800 mb-2 shrink-0">
               <div className={`size-10 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
                 <span className="material-symbols-outlined text-2xl">school</span>
               </div >
@@ -125,8 +125,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div >
 
             {/* Mobile Profile & Notification Actions (Visible only on mobile sidebar) */}
-            <div className="md:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
-              {/* ... (existing Mobile Profile UI) ... */}
+            <div className="xl:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 shrink-0">
+              {/* Profile Item */}
               < div
                 className="flex items-center gap-3 cursor-pointer"
                 onClick={() => {
@@ -166,7 +166,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div >
 
             {/* Mobile Subject Switcher (New) */}
-            <div className="md:hidden px-3 mb-2">
+            <div className="xl:hidden px-3 mb-2 shrink-0">
               <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block px-1">Matéria Atual</label>
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden">
                 <button
@@ -201,7 +201,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div>
 
             {/* Nav */}
-            < nav className="flex flex-col gap-1.5 mt-2 overflow-y-auto max-h-[calc(100vh-320px)] custom-scrollbar pr-2" >
+            < nav className="flex flex-col gap-1.5 mt-2 pr-2" >
               {
                 navItems.map((item) => (
                   <Link
@@ -276,7 +276,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         {
           isMobileMenuOpen && (
             <div
-              className="fixed inset-0 bg-black/60 z-[55] md:hidden backdrop-blur-sm transition-all"
+              className="fixed inset-0 bg-black/60 z-[55] xl:hidden backdrop-blur-sm transition-all"
               onClick={() => setIsMobileMenuOpen(false)}
             ></div>
           )
@@ -294,14 +294,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             {/* Sidebar Toggle */}
             <button
               data-tour="mobile-menu"
-              className="md:hidden text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              className="xl:hidden text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
               onClick={() => setIsMobileMenuOpen(true)}
             >
               <span className="material-symbols-outlined">menu</span>
             </button>
 
             {/* Mobile Logo (Visible only on mobile) */}
-            <div className="md:hidden flex items-center gap-2">
+            <div className="xl:hidden flex items-center gap-2">
               <div className={`size-8 rounded-lg bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center`}>
                 <span className="material-symbols-outlined text-lg">school</span>
               </div>
@@ -309,7 +309,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div>
 
             {/* 1. Series Clicker (Desktop) - Opens Class Manager */}
-            <div className="hidden md:block">
+            <div className="hidden xl:block">
               <button
                 data-tour="class-selector"
                 onClick={() => setIsClassSelectorOpen(true)}
@@ -331,10 +331,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </button>
             </div>
 
-            <div className="h-10 w-px bg-gradient-to-b from-transparent via-slate-200 dark:via-slate-700 to-transparent mx-2 hidden md:block"></div>
+            <div className="h-10 w-px bg-gradient-to-b from-transparent via-slate-200 dark:via-slate-700 to-transparent mx-2 hidden xl:block"></div>
 
             {/* 2. Section Selector (Active Tabs) - PREMIUM PILLS */}
-            <div className="flex-1 min-w-0 mx-2 md:mx-0 overflow-hidden hidden md:block">
+            <div className="flex-1 min-w-0 mx-2 md:mx-0 overflow-hidden hidden xl:block">
               <div className="flex items-center gap-3 overflow-x-auto no-scrollbar mask-linear-fade py-1 pr-4">
                 {activeSeries?.sections.map(sec => (
                   <div key={sec} className="relative group/tab shrink-0">
@@ -384,7 +384,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <div className="flex items-center gap-4 pl-4 border-l border-slate-100 dark:border-slate-800">
             {/* Subject Switcher (Desktop) */}
             {currentUser?.subjects && currentUser.subjects.length > 0 && (
-              <div className="relative hidden md:block">
+              <div className="relative hidden xl:block">
                 <button
                   onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -445,7 +445,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </div>
 
               {/* Hidden Name on Mobile */}
-              <div className="hidden md:flex flex-col items-start leading-tight">
+              <div className="hidden xl:flex flex-col items-start leading-tight">
                 <span className="text-[13px] font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors">{currentUser?.name?.split(' ')[0]}</span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activeSubject || theme.subject}</span>
               </div>
@@ -454,7 +454,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </header>
 
         {/* Mobile Context Bar (Class Switcher & Current Section) - PREMIUM CARD STYLE */}
-        <div className="md:hidden px-4 pt-4 -mb-1 z-30">
+        <div className="xl:hidden px-4 pt-4 -mb-1 z-30">
           <button
             onClick={() => setIsClassSelectorOpen(true)}
             className="w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-4 rounded-3xl border border-white/50 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all"
@@ -480,7 +480,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 
         {/* Page Content - Adjust padding for Bottom Nav */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 scroll-smooth custom-scrollbar pb-24 md:pb-8">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 scroll-smooth custom-scrollbar pb-24 xl:pb-8">
           {children}
         </main>
 

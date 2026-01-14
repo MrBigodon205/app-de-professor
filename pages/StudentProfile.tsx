@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Student, Activity, AttendanceRecord, Occurrence, Plan } from '../types';
 import { supabase } from '../lib/supabase';
+import { calculateUnitTotal, calculateAnnualSummary, getStatusResult } from '../utils/gradeCalculations';
 
 
 interface Grades {
@@ -14,7 +15,7 @@ interface Grades {
 
 export const StudentProfile: React.FC = () => {
     const { selectedSeriesId, selectedSection, activeSeries } = useClass();
-    const { currentUser } = useAuth();
+    const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
 
     const [students, setStudents] = useState<Student[]>([]);
@@ -34,7 +35,7 @@ export const StudentProfile: React.FC = () => {
             setOccurrences([]);
             setLoading(false);
         }
-    }, [selectedSeriesId, selectedSection]);
+    }, [selectedSeriesId, selectedSection, activeSubject]);
 
     useEffect(() => {
         if (students.length > 0) {
@@ -84,6 +85,8 @@ export const StudentProfile: React.FC = () => {
                     .from('grades')
                     .select('*')
                     .in('student_id', studentIds)
+                    .in('student_id', studentIds)
+                    .eq('subject', activeSubject)
                     .eq('user_id', currentUser.id);
                 if (!error && data) gradesData = data;
             }
@@ -183,6 +186,7 @@ export const StudentProfile: React.FC = () => {
             .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => fetchData(true))
             .on('postgres_changes', { event: '*', schema: 'public', table: 'occurrences' }, () => fetchData(true))
             .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => fetchData(true))
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'grades' }, () => fetchData(true))
             .subscribe();
 
         return () => {
@@ -190,7 +194,7 @@ export const StudentProfile: React.FC = () => {
             supabase.removeChannel(channel);
             clearInterval(interval);
         };
-    }, [selectedSeriesId, selectedSection, currentUser]);
+    }, [selectedSeriesId, selectedSection, currentUser, activeSubject]);
 
     const handleExportPDF = async () => {
         if (!student) return;
@@ -290,18 +294,21 @@ export const StudentProfile: React.FC = () => {
             drawStatCard(14, 85, 'Frequência Global', `${attendancePercentage}%`, `${presentCount} presenças em ${totalClasses} aulas`, [34, 197, 94] /* Green */);
             drawStatCard(76, 85, 'Total Ocorrências', totalOccurrences.toString(), `${activeAlerts} alertas registrados`, [249, 115, 22] /* Orange */);
 
-            // Calculate Global Grade Average
-            let totalAvg = 0;
-            let unitCount = 0;
-            ['1', '2', '3'].forEach(u => {
-                const avg = calculateUnitAverage(student.units[u]);
-                if (avg > 0) {
-                    totalAvg += avg;
-                    unitCount++;
-                }
-            });
-            const finalAvg = unitCount > 0 ? (totalAvg / unitCount).toFixed(1) : '-';
-            drawStatCard(138, 85, 'Média Geral', finalAvg, 'Baseado nas unidades lançadas', [99, 102, 241] /* Indigo */);
+            // Calculate Global Grade Average using Shared Logic
+            const { annualTotal, status: annualStatus, baseTotal } = calculateAnnualSummary(student);
+
+            // Determine Color based on status
+            const statusColor = annualStatus === 'APPROVED' ? [34, 197, 94] // Green
+                : annualStatus === 'RECOVERY' || annualStatus === 'FAILED' ? [239, 68, 68] // Red
+                    : [249, 115, 22]; // Orange (Final)
+
+            // Label text
+            const statusText = annualStatus === 'APPROVED' ? 'Aprovado'
+                : annualStatus === 'RECOVERY' ? 'Recuperação'
+                    : annualStatus === 'FINAL' ? 'Prova Final'
+                        : 'Reprovado';
+
+            drawStatCard(138, 85, 'Situação Final', annualStatus === 'APPROVED' ? annualTotal.toFixed(1) : statusText, annualStatus === 'APPROVED' ? 'Total Anual' : `Total: ${annualTotal.toFixed(1)}`, statusColor as any);
 
             let startY = 125;
             let maxFinalY = startY;
@@ -329,7 +336,7 @@ export const StudentProfile: React.FC = () => {
                 doc.text(`${unit}ª UNIDADE`, col.x + 4, currentY + 5.5);
 
                 const unitData = student.units[unit] || {};
-                const avg = calculateUnitAverage(unitData);
+                const avg = calculateUnitTotal(student, unit);
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(8);
@@ -443,20 +450,13 @@ export const StudentProfile: React.FC = () => {
     const getStudent = () => students.find(s => s.id === selectedStudentId);
     const student = getStudent();
 
-    const calculateUnitAverage = (unitData: any) => {
-        if (!unitData) return 0;
-        let total = 0;
-        Object.keys(unitData).forEach(key => {
-            if (key !== 'observation') total += (unitData[key] || 0);
-        });
-        return parseFloat((total / 2).toFixed(1));
-    };
+    // calculateUnitAverage removed (imported from utils)
 
     const getChartData = () => {
         if (!student) return [];
         return ['1', '2', '3'].map(unit => ({
             name: `${unit}ª Unid`,
-            nota: calculateUnitAverage(student.units[unit])
+            nota: calculateUnitTotal(student, unit)
         }));
     };
 
@@ -616,7 +616,7 @@ export const StudentProfile: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
                     {/* Left Column: Chart & Unit Reports */}
                     <div className="lg:col-span-2 flex flex-col gap-8">
                         {/* PERFORMANCE CHART */}
@@ -633,7 +633,7 @@ export const StudentProfile: React.FC = () => {
                                 <div className="flex gap-4">
                                     <div className="flex items-center gap-2">
                                         <span className={`size-2 rounded-full bg-${theme.primaryColor}`}></span>
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Média Escolar</span>
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Desempenho por Unidade</span>
                                     </div>
                                 </div>
                             </div>
@@ -682,10 +682,10 @@ export const StudentProfile: React.FC = () => {
                                 .filter(u => selectedUnit === 'all' || selectedUnit === u)
                                 .map(unit => {
                                     const unitData = student.units[unit] || {};
-                                    const avg = calculateUnitAverage(unitData);
+                                    const avg = calculateUnitTotal(student, unit);
 
                                     return (
-                                        <div key={unit} className="bg-white dark:bg-slate-900 p-8 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row gap-8 animate-in fade-in slide-in-from-left duration-500 hover:border-slate-200 dark:hover:border-slate-700 transition-all">
+                                        <div key={unit} className="bg-white dark:bg-slate-900 p-8 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row gap-6 md:gap-8 animate-in fade-in slide-in-from-left duration-500 hover:border-slate-200 dark:hover:border-slate-700 transition-all">
                                             <div className={`w-full md:w-48 flex flex-col items-center justify-center p-8 bg-slate-50 dark:bg-slate-950 rounded-3xl border border-slate-100 dark:border-slate-800 relative overflow-hidden group/unit`}>
                                                 <div className={`absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-${theme.primaryColor}/10 to-transparent rounded-full -mr-8 -mt-8`}></div>
                                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">{unit}ª Unidade</span>

@@ -11,6 +11,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { DashboardHeader } from '../components/DashboardHeader';
 import { DashboardBanner } from '../components/DashboardBanner';
 import { ActivityHeatmap } from '../components/ActivityHeatmap';
+import { calculateUnitTotal } from '../utils/gradeCalculations';
 
 // Create MotionLink for animated router links
 const MotionLink = motion(Link);
@@ -82,6 +83,7 @@ export const Dashboard: React.FC = () => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => refreshRef.current(true))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, () => refreshRef.current(true))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'plans' }, () => refreshRef.current(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'grades' }, () => refreshRef.current(true))
       .subscribe();
 
     return () => {
@@ -148,48 +150,80 @@ export const Dashboard: React.FC = () => {
     if (!currentUser) return;
     if (!silent) setLoadingStats(true);
     try {
-      let studentsQuery = supabase.from('students').select('units, id').eq('user_id', currentUser.id);
+      // 1. Fetch Students IDs relevant to current filter
+      let studentsQuery = supabase.from('students').select('id').eq('user_id', currentUser.id);
       if (selectedSeriesId) studentsQuery = studentsQuery.eq('series_id', selectedSeriesId);
       if (selectedSection) studentsQuery = studentsQuery.eq('section', selectedSection);
 
       const { data: studentsData } = await studentsQuery;
       const relevantIds = (studentsData || []).map(s => s.id);
 
-      // Average calculation (Keep logic but efficient if possible)
-      let totalSum = 0;
-      let totalCount = 0;
-      (studentsData || []).forEach(s => {
-        if (s.units) {
-          Object.values(s.units).forEach((unit: any) => {
-            let uSum = 0;
-            Object.values(unit).forEach((val: any) => {
-              if (typeof val === 'number') uSum += val;
-            });
-            const uAvg = uSum / 2; // Assuming 2 assessments? Logic preserved.
-            if (uAvg > 0) {
-              totalSum += uAvg;
-              totalCount++;
+      if (relevantIds.length > 0) {
+        // 2. Fetch Grades for these students & activeSubject
+        const { data: gradesData } = await supabase
+          .from('grades')
+          .select('*')
+          .in('student_id', relevantIds)
+          .eq('subject', activeSubject)
+          .eq('user_id', currentUser.id);
+
+        let totalAvgSum = 0;
+        let studentsWithGradesCount = 0;
+
+        // Group by student to calculate their individual average first
+        relevantIds.forEach(studentId => {
+          const sGrades = (gradesData || []).filter(g => g.student_id === studentId);
+          if (sGrades.length === 0) return;
+
+          // Reconstruct minimal student object for the utility
+          const mockStudent: any = { units: {} };
+          sGrades.forEach(g => { mockStudent.units[g.unit] = g.data || {}; });
+
+          // Calculate average of units 1, 2, 3 (ignoring final/recovery for class average usually)
+          let sSum = 0;
+          let sCount = 0;
+          ['1', '2', '3'].forEach(u => {
+            if (mockStudent.units[u]) {
+              const uTotal = calculateUnitTotal(mockStudent, u);
+              if (uTotal > 0) { // Only count units that have distinct grades? Or just count strict?
+                // If uTotal is 0 it might be empty. Let's check if the object has keys.
+                if (Object.keys(mockStudent.units[u]).length > 0) {
+                  sSum += uTotal;
+                  sCount++;
+                }
+              }
             }
           });
-        }
-      });
 
-      // Attendance Today
-      const today = new Date().toISOString().split('T')[0];
-      const { data: attData } = await supabase.from('attendance')
-        .select('student_id')
-        .eq('user_id', currentUser.id)
-        .eq('subject', activeSubject)
-        .eq('date', today)
-        .eq('status', 'P');
+          if (sCount > 0) {
+            totalAvgSum += (sSum / sCount);
+            studentsWithGradesCount++;
+          }
+        });
 
-      const presentToday = (attData || []).filter(a => relevantIds.includes(a.student_id)).length;
+        const finalAvg = studentsWithGradesCount > 0 ? (totalAvgSum / studentsWithGradesCount) : 0;
 
-      setStats(prev => ({
-        ...prev,
-        presentToday,
-        gradeAverage: totalCount > 0 ? (totalSum / totalCount) : 0
-      }));
+        // 3. Attendance Today (Preserved)
+        const today = new Date().toLocaleDateString('sv-SE');
+        const { data: attData } = await supabase.from('attendance')
+          .select('student_id')
+          .eq('user_id', currentUser.id)
+          .eq('subject', activeSubject)
+          .eq('date', today)
+          .eq('status', 'P');
+
+        const presentToday = (attData || []).filter(a => relevantIds.includes(a.student_id)).length;
+
+        setStats(prev => ({
+          ...prev,
+          presentToday,
+          gradeAverage: finalAvg
+        }));
+
+      } else {
+        setStats(prev => ({ ...prev, presentToday: 0, gradeAverage: 0 }));
+      }
+
     } catch (e) {
       console.error("Error fetching stats:", e);
     } finally {
@@ -205,7 +239,7 @@ export const Dashboard: React.FC = () => {
         .select('*')
         .eq('user_id', currentUser.id)
         .eq('subject', activeSubject)
-        .gte('date', new Date().toISOString().split('T')[0]) // Strict date filtering: Only today/future
+        .gte('date', new Date().toLocaleDateString('sv-SE')) // Strict date filtering: Only today/future
         .order('date', { ascending: true }); // Show closest first? Or recent added? Usually future events are ascending.
 
       if (selectedSeriesId) {
@@ -263,7 +297,7 @@ export const Dashboard: React.FC = () => {
     if (!currentUser) return;
     if (!silent) setLoadingPlans(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('sv-SE');
       let query = supabase.from('plans')
         .select('*')
         .eq('user_id', currentUser.id)
@@ -317,7 +351,7 @@ export const Dashboard: React.FC = () => {
         .select('*')
         .eq('user_id', currentUser.id)
         .eq('subject', activeSubject)
-        .gte('date', new Date().toISOString().split('T')[0]) // Strict date filtering: Only today/future
+        .gte('date', new Date().toLocaleDateString('sv-SE')) // Strict date filtering: Only today/future
         .order('date', { ascending: true }); // Closest upcoming activities FIRST
 
       if (selectedSeriesId) {
@@ -460,14 +494,14 @@ export const Dashboard: React.FC = () => {
       </motion.div>
 
       {/* Main KPI Grid - Bento Style */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
         {/* Total Students (Large Card) */}
-        <motion.div variants={itemVariants} className="md:col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 relative overflow-hidden group hover:shadow-2xl transition-all duration-500 flex flex-col justify-between min-h-[240px]">
+        <motion.div variants={itemVariants} className="col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 relative overflow-hidden group hover:shadow-2xl transition-all duration-500 flex flex-col justify-between h-auto min-h-[380px] md:min-h-[240px]">
           <div className="absolute top-0 right-0 p-40 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700"></div>
 
-          <div className="relative flex items-start justify-between h-full">
-            <div className="flex flex-col justify-between h-full">
+          <div className="relative flex flex-col md:flex-row items-start justify-between h-auto md:h-full gap-6 md:gap-0">
+            <div className="flex flex-col justify-between h-full w-full md:w-auto">
               <div className={`size-16 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/25 group-hover:rotate-6 transition-transform duration-300`}>
                 <span className="material-symbols-outlined text-3xl">groups</span>
               </div>
@@ -481,26 +515,22 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col items-end pt-2 h-full justify-between">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/10 mb-6">
+            <div className="flex-1 w-full md:w-auto flex flex-col items-start md:items-end pt-2 h-full justify-between">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/10 mb-6 max-w-full whitespace-nowrap overflow-hidden text-ellipsis">
                 <span className="size-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
                 Atividade Recente
               </span>
 
               {/* GITHUB HEATMAP INTEGRATION */}
-              <div className="w-full max-w-[280px]">
+              <div className="w-full max-w-full md:max-w-[280px]">
                 <ActivityHeatmap data={activityPoints} loading={loadingOccurrences} />
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Secondary Cards Grid */}
-
-
-        {/* Grades */}
         {/* Grades (Small Card) */}
-        <MotionLink variants={itemVariants} to="/grades" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between  min-h-[180px]">
+        <MotionLink variants={itemVariants} to="/grades" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[160px] md:min-h-[180px]">
           <div className="flex justify-between items-start">
             <div className={`size-12 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
               <span className="material-symbols-outlined">grade</span>
@@ -520,9 +550,8 @@ export const Dashboard: React.FC = () => {
           </div>
         </MotionLink>
 
-        {/* Attendance */}
         {/* Attendance (Small Card) */}
-        <MotionLink variants={itemVariants} to="/attendance" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px]">
+        <MotionLink variants={itemVariants} to="/attendance" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[160px] md:min-h-[180px]">
           <div className="flex justify-between items-start">
             <div className="size-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <span className="material-symbols-outlined">event_available</span>
@@ -542,35 +571,10 @@ export const Dashboard: React.FC = () => {
           </div>
         </MotionLink>
 
-        {/* Observations */}
-        {/* Observations (Small Card) */}
-        <MotionLink variants={itemVariants} to="/observations" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px]">
-          <div className="flex justify-between items-start">
-            <div className="size-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined">notification_important</span>
-            </div>
-            <span className="material-symbols-outlined text-slate-300">arrow_outward</span>
-          </div>
-          <div>
-            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Ocorrências</h3>
-            {loadingOccurrences ? (
-              <div className="h-9 w-24 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mt-1"></div>
-            ) : (
-              <div className="flex items-baseline gap-1 mt-1">
-                <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.newObservations}</span>
-                <span className="text-xs font-bold text-slate-400">Novas</span>
-              </div>
-            )}
-          </div>
-        </MotionLink>
+        {/* Removed Independent Observations Card */}
 
-      </div>
-
-
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Activities and Plans */}
-        <motion.div variants={itemVariants} className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col h-full" data-tour="dashboard-activities">
+        {/* Activities and Plans (Wide Card) */}
+        <motion.div variants={itemVariants} className="col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col h-full" data-tour="dashboard-activities">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
               <span className={`material-symbols-outlined text-${theme.primaryColor}`}>assignment_turned_in</span>
@@ -589,11 +593,11 @@ export const Dashboard: React.FC = () => {
                 ) : (
                   upcomingActivities.map(act => (
                     <div key={act.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all duration-300 group cursor-default">
-                      <div className="flex items-center gap-3">
-                        <span className="material-symbols-outlined text-emerald-500 group-hover:scale-110 transition-transform duration-300">task_alt</span>
-                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{act.title}</span>
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <span className="material-symbols-outlined text-emerald-500 group-hover:scale-110 transition-transform duration-300 shrink-0">task_alt</span>
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{act.title}</span>
                       </div>
-                      <span className="text-xs text-slate-400 group-hover:text-slate-500 transition-colors">{new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                      <span className="text-xs text-slate-400 group-hover:text-slate-500 transition-colors shrink-0 ml-2">{new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                     </div>
                   ))
                 )}
@@ -623,12 +627,17 @@ export const Dashboard: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Recent Ocurrences */}
-        <motion.div variants={itemVariants} className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col h-full" data-tour="dashboard-occurrences">
+        {/* Recent Ocurrences (Wide Card) */}
+        <motion.div variants={itemVariants} className="col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col h-full" data-tour="dashboard-occurrences">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
               <span className="material-symbols-outlined text-slate-400">history</span>
               Ocorrências Recentes
+              {stats.newObservations > 0 && (
+                <span className="bg-amber-100 text-amber-600 text-[10px] px-2 py-0.5 rounded-full border border-amber-200 font-bold uppercase tracking-wide">
+                  {stats.newObservations} Novas
+                </span>
+              )}
             </h3>
             <Link to="/observations" className={`text-${theme.primaryColor} font-bold text-sm hover:underline`}>Ver Todas</Link>
           </div>
@@ -658,6 +667,7 @@ export const Dashboard: React.FC = () => {
             )}
           </div>
         </motion.div>
+
       </div>
     </motion.div>
   );

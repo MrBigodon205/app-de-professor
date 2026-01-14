@@ -134,6 +134,14 @@ html,
 body {
   overscroll-behavior-y: contain;
   height: 100%;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Dynamic Viewport Height for Mobile */
+.h-dvh {
+  height: 100vh;
+  /* Fallback */
+  height: 100dvh;
 }
 
 @media print {
