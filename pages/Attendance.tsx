@@ -685,20 +685,20 @@ export const Attendance: React.FC = () => {
 
             {/* Quick Actions */}
             <div className="flex flex-wrap gap-2 p-1" data-tour="attendance-quick-actions">
-                <button onClick={() => markAll('P')} className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500 text-white rounded-2xl text-xs font-bold hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-emerald-500/20">
-                    <span className="material-symbols-outlined text-lg">done_all</span>
+                <button onClick={() => markAll('P')} className="flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center gap-2 px-3 sm:px-4 py-3 bg-emerald-500 text-white rounded-2xl text-[10px] sm:text-xs font-bold hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-emerald-500/20">
+                    <span className="material-symbols-outlined text-base sm:text-lg">done_all</span>
                     <span className="whitespace-nowrap">Presença Geral</span>
                 </button>
-                <button onClick={() => markAll('F')} className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-3 bg-rose-50 dark:bg-rose-900/10 text-rose-600 dark:text-rose-400 rounded-2xl text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-900/20 transition-all border border-rose-100 dark:border-rose-900/20">
-                    <span className="material-symbols-outlined text-lg">close</span>
+                <button onClick={() => markAll('F')} className="flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center gap-2 px-3 sm:px-4 py-3 bg-rose-50 dark:bg-rose-900/10 text-rose-600 dark:text-rose-400 rounded-2xl text-[10px] sm:text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-900/20 transition-all border border-rose-100 dark:border-rose-900/20">
+                    <span className="material-symbols-outlined text-base sm:text-lg">close</span>
                     Faltas
                 </button>
-                <button onClick={() => markAll('S')} className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
-                    <span className="material-symbols-outlined text-lg">event_busy</span>
+                <button onClick={() => markAll('S')} className="flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center gap-2 px-3 sm:px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl text-[10px] sm:text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                    <span className="material-symbols-outlined text-base sm:text-lg">event_busy</span>
                     Sem Aula
                 </button>
-                <button onClick={() => markAll('')} className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 rounded-2xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-800">
-                    <span className="material-symbols-outlined text-lg">history</span>
+                <button onClick={() => markAll('')} className="flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center gap-2 px-3 sm:px-4 py-3 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 rounded-2xl text-[10px] sm:text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-800">
+                    <span className="material-symbols-outlined text-base sm:text-lg">history</span>
                     Reiniciar
                 </button>
             </div>
@@ -709,33 +709,33 @@ export const Attendance: React.FC = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                                <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest w-24">Nº</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Aluno</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">Registro de Presença</th>
+                                <th className="px-3 sm:px-8 py-4 sm:py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest w-12 sm:w-24 text-center sm:text-left">Nº</th>
+                                <th className="px-3 sm:px-8 py-4 sm:py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-left">Aluno</th>
+                                <th className="px-3 sm:px-8 py-4 sm:py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">Registro</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                             {students.length > 0 ? (
                                 students.map((s, idx) => (
                                     <tr key={s.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all">
-                                        <td className="px-8 py-4">
-                                            <span className="font-mono text-sm font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">
+                                        <td className="px-3 sm:px-8 py-3 sm:py-4 text-center sm:text-left">
+                                            <span className="font-mono text-xs sm:text-sm font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 sm:px-2 py-1 rounded-lg">
                                                 {s.number.padStart(2, '0')}
                                             </span>
                                         </td>
-                                        <td className="px-8 py-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-2"></div>
-                                                <div className={`size-10 rounded-xl bg-gradient-to-br from-${theme.primaryColor}/10 to-${theme.secondaryColor}/10 flex items-center justify-center text-${theme.primaryColor} font-bold text-sm border border-${theme.primaryColor}/10`}>
+                                        <td className="px-3 sm:px-8 py-3 sm:py-4">
+                                            <div className="flex items-center gap-2 sm:gap-4">
+                                                <div className="h-6 sm:h-8 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block mx-2"></div>
+                                                <div className={`size-8 sm:size-10 rounded-xl bg-gradient-to-br from-${theme.primaryColor}/10 to-${theme.secondaryColor}/10 flex items-center justify-center text-${theme.primaryColor} font-bold text-xs sm:text-sm border border-${theme.primaryColor}/10 shrink-0`}>
                                                     {s.name.substring(0, 1)}
                                                 </div>
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold text-slate-800 dark:text-white group-hover:text-primary transition-colors">{s.name}</span>
-                                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">ID: {s.id.substring(0, 6)}</span>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white group-hover:text-primary transition-colors truncate max-w-[120px] sm:max-w-xs">{s.name}</span>
+                                                    <span className="text-[9px] sm:text-[10px] font-medium text-slate-400 uppercase tracking-tighter">ID: {s.id.substring(0, 6)}</span>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-4">
+                                        <td className="px-3 sm:px-8 py-3 sm:py-4">
                                             <div className="flex justify-center gap-3">
                                                 <AttendanceButton
                                                     active={attendanceMap[s.id] === 'P'}

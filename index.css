@@ -118,6 +118,48 @@
   .mobile-landscape-nav-label {
     display: none !important;
   }
+
+  .mobile-landscape-block {
+    display: block !important;
+  }
+
+  .mobile-landscape-flex-row {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .mobile-landscape-flex-1 {
+    flex: 1 !important;
+    width: auto !important;
+  }
+
+  .mobile-landscape-mb-0 {
+    margin-bottom: 0 !important;
+  }
+
+  .mobile-landscape-gap-2 {
+    gap: 0.5rem !important;
+  }
+
+  .mobile-landscape-top-1\.5 {
+    top: 0.375rem !important;
+  }
+
+  .mobile-landscape-text-sm {
+    font-size: 1.25rem !important;
+  }
+
+  .mobile-landscape-search-compact {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .mobile-landscape-items-center {
+    align-items: center !important;
+  }
 }
 
 /* FOOLPROOF DARK MODE OVERRIDES */

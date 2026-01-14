@@ -763,28 +763,30 @@ export const Activities: React.FC = () => {
             {/* Sidebar with Card List Style */}
             <div className={`w-full lg:w-80 flex flex-col gap-4 shrink-0 transition-all ${selectedActivityId || isEditing ? 'hidden lg:flex' : 'flex'}`} data-tour="activities-sidebar">
                 {/* Sidebar Header */}
-                <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 mobile-landscape-compact">
-                    <div className="flex justify-between items-center mb-4">
+                <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 mobile-landscape-compact flex flex-col mobile-landscape-flex-row mobile-landscape-items-center mobile-landscape-gap-2">
+                    <div className="flex justify-between items-center mb-4 mobile-landscape-mb-0 mobile-landscape-gap-2 shrink-0">
                         <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                            <Link to="/planning" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all">
-                                Aulas
+                            <Link to="/planning" className="px-3 py-1.5 mobile-landscape-compact rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all whitespace-nowrap">
+                                <span className="mobile-landscape-hidden">Aulas</span>
+                                <span className="hidden mobile-landscape-block text-xs">Aulas</span>
                             </Link>
-                            <button className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 text-${theme.primaryColor} shadow-sm`}>
-                                Atividades
+                            <button className={`px-3 py-1.5 mobile-landscape-compact rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 text-${theme.primaryColor} shadow-sm whitespace-nowrap`}>
+                                <span className="mobile-landscape-hidden">Atividades</span>
+                                <span className="hidden mobile-landscape-block text-xs">Ativ.</span>
                             </button>
                         </div>
-                        <button onClick={handleNewActivity} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Nova Atividade" data-tour="activities-new-btn">
+                        <button onClick={handleNewActivity} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0 mobile-landscape-hidden`} title="Nova Atividade" data-tour="activities-new-btn">
                             <span className="material-symbols-outlined text-[20px]">add</span>
                         </button>
                     </div>
-                    <div className="relative">
-                        <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">search</span>
+                    <div className="relative flex-1 mobile-landscape-flex-1">
+                        <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px] mobile-landscape-top-1.5 mobile-landscape-text-sm">search</span>
                         <input
                             type="text"
                             placeholder="Buscar..."
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-sm transition-all focus:bg-white dark:focus:bg-black`}
+                            className={`w-full pl-10 pr-4 py-2.5 mobile-landscape-search-compact rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-sm transition-all focus:bg-white dark:focus:bg-black`}
                         />
                     </div>
 

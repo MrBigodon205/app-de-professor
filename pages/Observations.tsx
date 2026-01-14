@@ -279,15 +279,15 @@ export const Observations: React.FC = () => {
     );
 
     return (
-        <div className="flex flex-col lg:flex-row h-[calc(100dvh-7rem)] lg:h-full gap-4 lg:gap-8 max-w-[1700px] mx-auto overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 px-2 lg:px-0">
+        <div className="flex flex-col lg:flex-row h-[calc(100dvh-7rem)] lg:h-full gap-4 lg:gap-8 max-w-[1700px] mx-auto overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 px-2 lg:px-0 mobile-landscape:h-[calc(100dvh-4rem)]">
             {/* Sidebar List */}
             <div className={`w-full lg:w-96 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden shrink-0 ${selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
-                <div className={`p-6 sm:p-8 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-slate-50 to-white dark:from-slate-950 dark:to-slate-900`}>
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className={`size-10 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
-                            <span className="material-symbols-outlined">badge</span>
+                <div className={`p-4 sm:p-8 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-slate-50 to-white dark:from-slate-950 dark:to-slate-900`}>
+                    <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                        <div className={`size-8 sm:size-10 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
+                            <span className="material-symbols-outlined text-lg sm:text-2xl">badge</span>
                         </div>
-                        <h2 className="font-black text-slate-800 dark:text-white uppercase tracking-widest text-sm">
+                        <h2 className="font-black text-slate-800 dark:text-white uppercase tracking-widest text-xs sm:text-sm">
                             {activeSeries?.name} • {selectedSection}
                         </h2>
                     </div>
@@ -295,10 +295,10 @@ export const Observations: React.FC = () => {
                         <span className={`material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-${theme.primaryColor} transition-colors`}>search</span>
                         <input
                             type="text"
-                            placeholder="Buscar por nome ou número..."
+                            placeholder="Buscar..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className={`w-full h-12 pl-12 pr-4 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 focus:border-${theme.primaryColor} focus:ring-4 focus:ring-${theme.primaryColor}/10 text-sm font-bold transition-all shadow-sm`}
+                            className={`w-full h-10 sm:h-12 pl-10 sm:pl-12 pr-4 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 focus:border-${theme.primaryColor} focus:ring-4 focus:ring-${theme.primaryColor}/10 text-xs sm:text-sm font-bold transition-all shadow-sm`}
                         />
                     </div>
                 </div>
@@ -341,7 +341,7 @@ export const Observations: React.FC = () => {
                 <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-40 -mt-40 blur-3xl`}></div>
 
                 {/* Header */}
-                <div className="p-6 sm:p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-6 sm:gap-8 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10">
+                <div className="p-4 sm:p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4 sm:gap-8 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10 shrink-0">
                     <div className="flex items-center gap-4 sm:gap-6 w-full lg:w-auto mt-8 lg:mt-0">
                         {selectedStudent && (
                             <>
@@ -379,7 +379,7 @@ export const Observations: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
                     {activeTab === 'general' ? (
                         <div className="max-w-4xl mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -438,7 +438,7 @@ export const Observations: React.FC = () => {
                                         }));
                                     }}
                                     onBlur={(e) => handleSaveGeneralObs(e.target.value)}
-                                    className={`w-full h-[500px] p-8 rounded-[32px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 resize-none shadow-sm focus:ring-8 focus:ring-${theme.primaryColor}/5 focus:border-${theme.primaryColor} text-base font-medium leading-relaxed transition-all placeholder:italic custom-scrollbar`}
+                                    className={`w-full min-h-[200px] flex-1 p-6 sm:p-8 rounded-[32px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 resize-none shadow-sm focus:ring-8 focus:ring-${theme.primaryColor}/5 focus:border-${theme.primaryColor} text-sm sm:text-base font-medium leading-relaxed transition-all placeholder:italic custom-scrollbar mobile-landscape:min-h-[150px]`}
                                     placeholder="Inicie aqui suas anotações sobre reuniões com responsáveis, dificuldades específicas observadas em sala ou avanços notáveis..."
                                 ></textarea>
                             </div>

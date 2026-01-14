@@ -543,13 +543,13 @@ export const Grades: React.FC = () => {
             {/* Export Modal */}
             {showExportModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 animate-scale-in">
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 animate-scale-in max-h-[90vh] flex flex-col">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 shrink-0">
                             <span className="material-symbols-outlined text-indigo-600">settings</span>
                             Configurar Relatório PDF
                         </h3>
 
-                        <div className="space-y-4 mb-6">
+                        <div className="space-y-4 mb-6 overflow-y-auto custom-scrollbar flex-1 pr-2">
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Unidades para Incluir:</label>
                                 <div className="grid grid-cols-2 gap-2">
@@ -592,7 +592,7 @@ export const Grades: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-2 shrink-0 pt-4 border-t border-slate-100 dark:border-slate-700">
                             <button
                                 onClick={() => setShowExportModal(false)}
                                 className="px-4 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg transition-colors"

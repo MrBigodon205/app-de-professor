@@ -471,7 +471,7 @@ export const Dashboard: React.FC = () => {
                   <span>{new Date().toLocaleDateString('pt-BR')}</span>
                 </div>
                 <h2 className="text-2xl font-bold mb-2 truncate">{todaysPlan.title}</h2>
-                <p className="text-blue-100 max-w-2xl line-clamp-1">{todaysPlan.description}</p>
+                <p className="text-blue-100 max-w-2xl line-clamp-1">{todaysPlan.description.replace(/<[^>]*>/g, '')}</p>
 
                 <div className="flex items-center gap-4 mt-4">
                   <Link to="/planning" className={`bg-white text-${theme.primaryColor} px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-50 transition-colors`}>
