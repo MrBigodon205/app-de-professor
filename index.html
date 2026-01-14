@@ -3,7 +3,24 @@
 
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta id="viewport" name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <script>
+    function updateViewport() {
+      const viewport = document.getElementById('viewport');
+      if (window.matchMedia("(orientation: landscape) and (max-height: 600px)").matches) {
+        // FORCE PC LAYOUT: width=1366 (Safer for xl breakpoint)
+        viewport.setAttribute('content', 'width=1366, initial-scale=0.5, maximum-scale=5.0, user-scalable=yes');
+      } else {
+        // RESET TO DEVICE WIDTH
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes');
+      }
+    }
+    window.addEventListener('resize', updateViewport);
+    window.addEventListener('orientationchange', updateViewport);
+    document.addEventListener('DOMContentLoaded', updateViewport);
+    updateViewport(); // Initial check
+  </script>
   <meta name="referrer" content="no-referrer" />
   <title>Prof. Acerta+ 3.1</title>
 

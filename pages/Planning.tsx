@@ -651,7 +651,7 @@ export const Planning: React.FC = () => {
 
 
             {/* Sidebar */}
-            <div className={`w-full lg:w-80 flex flex-col gap-4 shrink-0 transition-all ${selectedPlanId || isEditing ? 'hidden lg:flex mobile-landscape-hidden' : 'flex'}`} data-tour="planning-sidebar">
+            <div className={`w-full lg:w-80 flex flex-col gap-4 shrink-0 transition-all ${selectedPlanId || isEditing || showForm ? 'hidden lg:flex' : 'flex'}`} data-tour="planning-sidebar">
                 <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 mobile-landscape-compact">
                     <div className="flex justify-between items-center mb-4 mobile-landscape-mb-0 mobile-landscape-gap-2">
                         <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
@@ -662,15 +662,12 @@ export const Planning: React.FC = () => {
                                 Ativ.
                             </Link>
                         </div>
-                        <button onClick={handleNewPlan} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0 mobile-landscape-hidden`} title="Nova Aula" data-tour="planning-new-btn">
+                        <button onClick={handleNewPlan} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Nova Aula" data-tour="planning-new-btn">
                             <span className="material-symbols-outlined text-[20px]">add</span>
                         </button>
-                        {/* Mobile Landscape ONLY ADD BUTTON */}
-                        <button onClick={handleNewPlan} className="hidden mobile-landscape-block bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm">
-                            + Nova
-                        </button>
+                        {/* Mobile Landscape ONLY ADD BUTTON - Removed as main button is now visible */}
                     </div>
-                    <div className="relative mobile-landscape-hidden">
+                    <div className="relative">
                         <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">search</span>
                         <input type="text" placeholder="Buscar..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-sm transition-all focus:bg-white dark:focus:bg-black`} />
                     </div>
@@ -678,7 +675,7 @@ export const Planning: React.FC = () => {
 
                 {/* Section Filter Pills */}
                 {activeSeries && activeSeries.sections?.length > 0 && (
-                    <div className="px-1 mobile-landscape-hidden">
+                    <div className="px-1">
                         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
                             <button
                                 onClick={() => setFilterSection('')}
@@ -753,10 +750,10 @@ export const Planning: React.FC = () => {
                 </div>
             </div>
 
-            {/* Main Content / Fullscreen Form in Zen Mode */}
-            <div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${showForm || viewMode ? 'flex mobile-landscape-fullscreen' : 'hidden lg:flex'}`}>
+            {/* Main Content */}
+            <div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${showForm || viewMode ? 'flex' : 'hidden lg:flex landscape:flex'}`}>
                 {(!showForm && !viewMode) ? (
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-300 mobile-landscape-hidden">
+                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-300">
                         <div className={`size-32 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-8 shadow-sm border border-slate-100 dark:border-slate-700`}>
                             <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600">edit_calendar</span>
                         </div>

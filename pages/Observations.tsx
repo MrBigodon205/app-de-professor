@@ -329,7 +329,7 @@ export const Observations: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className={`flex-1 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden relative group ${!selectedStudentId ? 'hidden lg:flex' : 'flex mobile-landscape-fullscreen'}`}>
+            <div className={`flex-1 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden relative group ${!selectedStudentId ? 'hidden lg:flex landscape:flex' : 'flex'}`}>
                 {/* Mobile Back Button */}
                 <button
                     onClick={() => setSelectedStudentId(null)}
