@@ -454,7 +454,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </header>
 
         {/* Mobile Context Bar (Class Switcher & Current Section) - PREMIUM CARD STYLE */}
-        <div className="xl:hidden px-3 pt-3 -mb-1 z-30">
+        <div className="xl:hidden px-3 pt-3 -mb-1 z-30 mobile-landscape-hidden">
           <button
             onClick={() => setIsClassSelectorOpen(true)}
             className="w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-3 rounded-3xl border border-white/50 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all"

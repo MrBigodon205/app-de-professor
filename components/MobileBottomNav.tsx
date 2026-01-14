@@ -17,7 +17,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onMoreClick })
     ];
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 h-[72px] bg-white dark:bg-surface-dark border-t border-slate-200 dark:border-slate-800 flex items-center justify-around px-2 z-50 pb-safe xl:hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div className="fixed bottom-0 left-0 right-0 h-[72px] bg-white dark:bg-surface-dark border-t border-slate-200 dark:border-slate-800 flex items-center justify-around px-2 z-50 pb-safe xl:hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] mobile-landscape-nav">
             {navItems.map((item) => (
                 <NavLink
                     key={item.path}
@@ -27,6 +27,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onMoreClick })
                         ${isActive
                             ? `text-${theme.primaryColor}`
                             : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400'}
+                        mobile-landscape-nav-item
                     `}
                 >
                     {({ isActive }) => (
@@ -35,11 +36,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onMoreClick })
                                 flex items-center justify-center rounded-xl transition-all duration-300
                                 ${isActive ? 'bg-primary/10 px-4 py-1.5' : 'bg-transparent'}
                             `}>
-                                <span className={`material-symbols-outlined text-[26px] ${isActive ? 'icon-filled' : ''}`}>
+                                <span className={`material-symbols-outlined text-[26px] ${isActive ? 'icon-filled' : ''} mobile-landscape-nav-icon`}>
                                     {item.icon}
                                 </span>
                             </div>
-                            <span className={`text-[10px] font-medium leading-none ${isActive ? 'font-bold' : ''}`}>
+                            <span className={`text-[10px] font-medium leading-none ${isActive ? 'font-bold' : ''} mobile-landscape-nav-label`}>
                                 {item.label}
                             </span>
                         </>
@@ -50,10 +51,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onMoreClick })
             {/* More Button */}
             <button
                 onClick={onMoreClick}
-                className="flex flex-col items-center justify-center w-full h-full gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 active:scale-95 transition-all"
+                className="flex flex-col items-center justify-center w-full h-full gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 active:scale-95 transition-all mobile-landscape-nav-item"
             >
-                <span className="material-symbols-outlined text-[26px]">menu</span>
-                <span className="text-[10px] font-medium leading-none">Menu</span>
+                <span className="material-symbols-outlined text-[26px] mobile-landscape-nav-icon">menu</span>
+                <span className="text-[10px] font-medium leading-none mobile-landscape-nav-label">Menu</span>
             </button>
         </div>
     );

@@ -88,6 +88,38 @@
   }
 }
 
+
+
+/* MOBILE LANDSCAPE OPTIMIZATIONS */
+@media (orientation: landscape) and (max-height: 500px) {
+  .mobile-landscape-hidden {
+    display: none !important;
+  }
+
+  .mobile-landscape-compact {
+    padding: 0.5rem !important;
+  }
+
+  /* Compact Bottom Nav */
+  .mobile-landscape-nav {
+    height: 48px !important;
+    padding-bottom: env(safe-area-inset-bottom, 0) !important;
+  }
+
+  .mobile-landscape-nav-item {
+    flex-direction: row !important;
+    gap: 8px !important;
+  }
+
+  .mobile-landscape-nav-icon {
+    font-size: 20px !important;
+  }
+
+  .mobile-landscape-nav-label {
+    display: none !important;
+  }
+}
+
 /* FOOLPROOF DARK MODE OVERRIDES */
 /* Using high specificity to ensure these apply when 'dark' class is present on html */
 
