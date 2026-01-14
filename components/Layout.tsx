@@ -282,8 +282,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           )
         }
 
-        {/* Header - HIDDEN on mobile now? Or simplified? Keeping simplified for now as per plan */}
-        <header className="flex items-center justify-between border-b border-white/50 dark:border-slate-800 bg-white/80 dark:bg-surface-dark/90 backdrop-blur-md px-4 md:px-6 py-3 md:py-4 z-[40] shrink-0 gap-4 sticky top-0 transition-all">
+        {/* Header - HIDDEN on mobile landscape */}
+        <header className="mobile-landscape-hidden flex items-center justify-between border-b border-white/50 dark:border-slate-800 bg-white/80 dark:bg-surface-dark/90 backdrop-blur-md px-4 md:px-6 py-3 md:py-4 z-[40] shrink-0 gap-4 sticky top-0 transition-all">
 
           <div className="flex items-center gap-4 flex-1">
             {/* Sidebar Toggle - Hidden on mobile if we use Bottom Nav + Menu Button, BUT we might want a way to access it from header too? 

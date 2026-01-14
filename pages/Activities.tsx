@@ -763,7 +763,7 @@ export const Activities: React.FC = () => {
             {/* Sidebar with Card List Style */}
             <div className={`w-full lg:w-80 flex flex-col gap-4 shrink-0 transition-all ${selectedActivityId || isEditing ? 'hidden lg:flex' : 'flex'}`} data-tour="activities-sidebar">
                 {/* Sidebar Header */}
-                <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4">
+                <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 mobile-landscape-compact">
                     <div className="flex justify-between items-center mb-4">
                         <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
                             <Link to="/planning" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all">
@@ -871,7 +871,7 @@ export const Activities: React.FC = () => {
                 {/* Mobile FAB */}
                 <button
                     onClick={handleNewActivity}
-                    className={`lg:hidden fixed bottom-24 right-6 size-14 rounded-2xl bg-${theme.primaryColor} text-white shadow-xl shadow-${theme.primaryColor}/30 flex items-center justify-center z-50 active:scale-90 transition-all`}
+                    className={`lg:hidden fixed bottom-24 right-6 size-14 rounded-2xl bg-${theme.primaryColor} text-white shadow-xl shadow-${theme.primaryColor}/30 flex items-center justify-center z-50 active:scale-90 transition-all mobile-landscape-hidden`}
                 >
                     <span className="material-symbols-outlined text-3xl">add</span>
                 </button>

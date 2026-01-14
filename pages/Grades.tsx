@@ -415,7 +415,7 @@ export const Grades: React.FC = () => {
 
                         doc.setTextColor(255, 255, 255);
                         doc.setFontSize(7);
-                        doc.font = "helvetica";
+                        doc.setFont("helvetica");
                         doc.setFont("helvetica", "bold");
                         doc.text(text, data.cell.x + data.cell.width / 2, data.cell.y + data.cell.height / 2 + 1, { align: 'center' });
                     }
@@ -500,12 +500,17 @@ export const Grades: React.FC = () => {
                         <button
                             key={unit}
                             onClick={() => setSelectedUnit(unit)}
-                            className={`px-4 py-2 rounded-md text-sm font-bold transition-all duration-200 whitespace-nowrap ${selectedUnit === unit
+                            className={`px-4 py-2 mobile-landscape-compact rounded-md text-sm font-bold transition-all duration-200 whitespace-nowrap ${selectedUnit === unit
                                 ? `bg-${theme.baseColor}-600 dark:bg-${theme.baseColor}-500 text-white shadow-md transform scale-105`
                                 : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'
                                 }`}
                         >
-                            {unit === 'final' ? 'Prova Final' : unit === 'recovery' ? 'Recuperação' : unit === 'results' ? 'Resultado' : `${unit}ª Unidade`}
+                            <span className="mobile-landscape-hidden">
+                                {unit === 'final' ? 'Prova Final' : unit === 'recovery' ? 'Recuperação' : unit === 'results' ? 'Resultado' : `${unit}ª Unidade`}
+                            </span>
+                            <span className="hidden mobile-landscape-block">
+                                {unit === 'final' ? 'Final' : unit === 'recovery' ? 'Recup.' : unit === 'results' ? 'Total' : `${unit}ª`}
+                            </span>
                         </button>
                     ))}
                 </div>
@@ -518,19 +523,19 @@ export const Grades: React.FC = () => {
                             Salvando...
                         </span>
                     ) : (
-                        <span className="flex items-center text-emerald-600 dark:text-emerald-400 text-sm font-bold bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 transition-all">
-                            <span className="material-symbols-outlined text-sm mr-2">check_circle</span>
-                            Salvo
+                        <span className="flex items-center text-emerald-600 dark:text-emerald-400 text-sm font-bold bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 mobile-landscape-compact rounded-full border border-emerald-200 dark:border-emerald-800 transition-all">
+                            <span className="material-symbols-outlined text-sm mr-2 mobile-landscape-mr-0">check_circle</span>
+                            <span className="mobile-landscape-hidden">Salvo</span>
                         </span>
                     )}
 
                     <button
                         onClick={() => setShowExportModal(true)}
-                        className={`flex items-center space-x-2 px-4 py-2 bg-${theme.baseColor}-500 hover:bg-${theme.baseColor}-600 text-white rounded-lg transition-colors shadow-md shadow-${theme.baseColor}-500/20`}
+                        className={`flex items-center space-x-2 px-4 py-2 mobile-landscape-compact bg-${theme.baseColor}-500 hover:bg-${theme.baseColor}-600 text-white rounded-lg transition-colors shadow-md shadow-${theme.baseColor}-500/20`}
                         data-tour="grades-export"
                     >
                         <span className="material-symbols-outlined text-lg">download</span>
-                        <span>Exportar PDF</span>
+                        <span className="mobile-landscape-hidden">Exportar PDF</span>
                     </button>
                 </div>
             </div>
@@ -708,7 +713,6 @@ export const Grades: React.FC = () => {
                                                         inputMode="decimal"
                                                         min="0"
                                                         max={currentMax}
-                                                        step="0.1"
                                                         step="0.1"
                                                         className={`w-full min-w-[60px] text-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-${theme.baseColor}-500 focus:border-transparent transition-all font-mono text-sm`}
                                                         value={getGrade(student, col.key)}
