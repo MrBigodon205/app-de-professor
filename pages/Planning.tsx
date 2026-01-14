@@ -713,7 +713,7 @@ export const Planning: React.FC = () => {
                                 key={plan.id}
                                 onClick={() => handleSelectPlan(plan)}
                                 style={{ animationDelay: `${idx * 100}ms` }}
-                                className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm animate-in slide-in-from-left duration-500 fill-mode-backwards ${selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
+                                className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm animate-in fade-in md:slide-in-from-left duration-500 fill-mode-backwards ${selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
                             >
                                 <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
                                 <div className="pl-3">
@@ -773,13 +773,13 @@ export const Planning: React.FC = () => {
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id as any)}
-                                        className={`flex-1 min-w-[160px] flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === tab.id
+                                        className={`flex-1 min-w-fit md:min-w-[160px] flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-1 py-2 md:px-4 md:py-3 rounded-xl text-[10px] md:text-sm font-bold transition-all ${activeTab === tab.id
                                             ? `bg-white dark:bg-surface-light text-${theme.primaryColor} shadow-md shadow-slate-200/50 dark:shadow-black/50 ring-1 ring-black/5 dark:ring-white/10`
                                             : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-white/5'
                                             }`}
                                     >
-                                        <span className="material-symbols-outlined filled text-[20px]">{tab.icon}</span>
-                                        {tab.label}
+                                        <span className="material-symbols-outlined filled text-[18px] md:text-[20px] mb-0.5 md:mb-0">{tab.icon}</span>
+                                        <span className="whitespace-normal text-center leading-tight max-w-[80px] md:max-w-none">{tab.label}</span>
                                     </button>
                                 ))}
                             </div>
@@ -789,7 +789,7 @@ export const Planning: React.FC = () => {
                         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar pb-24">
                             <div className="max-w-4xl mx-auto space-y-6">
                                 {activeTab === 'geral' && (
-                                    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
+                                    <div className="space-y-6 animate-in fade-in md:slide-in-from-right-8 duration-500">
                                         <div className={`${theme.softBg} p-6 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-6`}>
                                             <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                                                 <span className="material-symbols-outlined text-indigo-500">info</span>
@@ -888,7 +888,7 @@ export const Planning: React.FC = () => {
                                 )}
 
                                 {activeTab === 'conteudo' && (
-                                    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
+                                    <div className="space-y-6 animate-in fade-in md:slide-in-from-right-8 duration-500">
                                         <div>
                                             <label className="label mb-2 flex items-center gap-2">
                                                 <span className="material-symbols-outlined text-indigo-500">target</span>
@@ -1021,10 +1021,10 @@ export const Planning: React.FC = () => {
                                     </div>
 
                                     {/* Mobile Back Button */}
-                                    <div className="absolute top-6 left-6 lg:hidden">
+                                    <div className="absolute top-3 left-3 md:top-6 md:left-6 lg:hidden z-10">
                                         <button
                                             onClick={() => { setViewMode(false); setSelectedPlanId(null); }}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                            className="p-1.5 md:p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
                                             title="Voltar para Lista"
                                         >
                                             <span className="material-symbols-outlined">arrow_back</span>
@@ -1032,31 +1032,31 @@ export const Planning: React.FC = () => {
                                     </div>
 
                                     {/* Header Action Buttons */}
-                                    <div className="absolute top-6 right-6 flex gap-2">
+                                    <div className="absolute top-3 right-3 md:top-6 md:right-6 flex gap-1.5 md:gap-2 z-10">
                                         <button
                                             onClick={handleExportPDF}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
+                                            className="p-1.5 md:p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
                                             title="Baixar PDF"
                                         >
                                             <span className="material-symbols-outlined">picture_as_pdf</span>
                                         </button>
                                         <button
                                             onClick={handleExportWord}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
+                                            className="p-1.5 md:p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
                                             title="Baixar Word"
                                         >
                                             <span className="material-symbols-outlined">description</span>
                                         </button>
                                         <button
                                             onClick={() => setIsEditing(true)}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
+                                            className="p-1.5 md:p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
                                             title="Editar"
                                         >
                                             <span className="material-symbols-outlined">edit</span>
                                         </button>
                                         <button
                                             onClick={handleDelete}
-                                            className="p-2 bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95 group"
+                                            className="p-1.5 md:p-2 bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95 group"
                                             title="Excluir"
                                         >
                                             <span className="material-symbols-outlined text-red-200 group-hover:text-white transition-colors">delete</span>
@@ -1137,7 +1137,7 @@ export const Planning: React.FC = () => {
                                                     {currentPlan.objectives && (
                                                         <div>
                                                             <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Objetivos de Aprendizagem</label>
-                                                            <div className="text-sm text-slate-600 dark:text-slate-400 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives) }} />
+                                                            <div className="text-sm text-slate-600 dark:text-slate-400 prose prose-sm max-w-none break-words" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives) }} />
                                                         </div>
                                                     )}
                                                 </div>
@@ -1173,7 +1173,7 @@ export const Planning: React.FC = () => {
                                                 {currentPlan.methodology && (
                                                     <div>
                                                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2 block">Metodologia</label>
-                                                        <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line leading-relaxed">
+                                                        <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line leading-relaxed break-words">
                                                             {currentPlan.methodology}
                                                         </div>
                                                     </div>
@@ -1182,7 +1182,7 @@ export const Planning: React.FC = () => {
                                                 {currentPlan.description && (
                                                     <div>
                                                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2 block">Roteiro da Aula</label>
-                                                        <div className="text-sm text-slate-600 dark:text-slate-400 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description) }} />
+                                                        <div className="text-sm text-slate-600 dark:text-slate-400 prose prose-sm max-w-none break-words" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description) }} />
                                                     </div>
                                                 )}
                                             </div>
@@ -1195,7 +1195,7 @@ export const Planning: React.FC = () => {
                                                     <span className="material-symbols-outlined text-amber-500">build</span>
                                                     Recursos
                                                 </h3>
-                                                <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line">
+                                                <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line break-words">
                                                     {currentPlan.resources || 'Nenhum recurso específico listado.'}
                                                 </div>
                                             </div>
@@ -1205,7 +1205,7 @@ export const Planning: React.FC = () => {
                                                     <span className="material-symbols-outlined text-rose-500">assignment_turned_in</span>
                                                     Avaliação
                                                 </h3>
-                                                <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line">
+                                                <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line break-words">
                                                     {currentPlan.assessment || 'Nenhuma avaliação específica listada.'}
                                                 </div>
                                             </div>
