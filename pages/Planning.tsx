@@ -1152,7 +1152,7 @@ export const Planning: React.FC = () => {
                                                 <div>
                                                     <div className="flex flex-wrap gap-2 mb-3">
                                                         {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
-                                                            <span key={i} className="px-2 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 rounded-md text-xs font-bold font-mono border border-emerald-200 dark:border-emerald-500/30">
+                                                            <span key={i} className="px-2 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 rounded-md text-xs font-bold font-mono border border-emerald-200 dark:border-emerald-500/30 break-all whitespace-normal h-auto">
                                                                 {code}
                                                             </span>
                                                         ))}
