@@ -497,7 +497,7 @@ export const Dashboard: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
         {/* Total Students (Large Card) */}
-        <motion.div variants={itemVariants} className="col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 relative overflow-hidden group hover:shadow-2xl transition-all duration-500 flex flex-col justify-between h-auto min-h-[380px] md:min-h-[240px]">
+        <motion.div variants={itemVariants} className="col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-4 sm:p-6 md:p-8 shadow-sm border border-white/20 dark:border-slate-800 relative overflow-hidden group hover:shadow-2xl transition-all duration-500 flex flex-col justify-between h-auto min-h-[380px] md:min-h-[240px]">
           <div className="absolute top-0 right-0 p-40 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700"></div>
 
           <div className="relative flex flex-col md:flex-row items-start justify-between h-auto md:h-full gap-6 md:gap-0">
@@ -509,7 +509,7 @@ export const Dashboard: React.FC = () => {
                 {loadingCounts ? (
                   <div className="h-[60px] w-24 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse"></div>
                 ) : (
-                  <span className="block text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">{displayCount}</span>
+                  <span className="block text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">{displayCount}</span>
                 )}
                 <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 mt-1">Alunos Matriculados</h2>
               </div>
