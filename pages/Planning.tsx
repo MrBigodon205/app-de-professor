@@ -27,6 +27,7 @@ export const Planning: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'geral' | 'conteudo' | 'bncc' | 'recursos'>('geral');
     const [viewMode, setViewMode] = useState(false);
     const [showForm, setShowForm] = useState(false);
+    const [showMobileMenu, setShowMobileMenu] = useState(false);
 
     // Form State
     const [formTitle, setFormTitle] = useState('');
@@ -773,13 +774,13 @@ export const Planning: React.FC = () => {
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id as any)}
-                                        className={`flex-1 min-w-fit md:min-w-[160px] flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-1 py-2 md:px-4 md:py-3 rounded-xl text-[10px] md:text-sm font-bold transition-all ${activeTab === tab.id
+                                        className={`flex-1 min-w-[80px] md:min-w-[160px] flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-1 py-2 md:px-4 md:py-3 rounded-xl text-[10px] md:text-sm font-bold transition-all ${activeTab === tab.id
                                             ? `bg-white dark:bg-surface-light text-${theme.primaryColor} shadow-md shadow-slate-200/50 dark:shadow-black/50 ring-1 ring-black/5 dark:ring-white/10`
                                             : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-white/5'
                                             }`}
                                     >
                                         <span className="material-symbols-outlined filled text-[18px] md:text-[20px] mb-0.5 md:mb-0">{tab.icon}</span>
-                                        <span className="whitespace-normal text-center leading-tight max-w-[80px] md:max-w-none">{tab.label}</span>
+                                        <span className="whitespace-normal text-center leading-tight w-full">{tab.label}</span>
                                     </button>
                                 ))}
                             </div>
@@ -1003,19 +1004,19 @@ export const Planning: React.FC = () => {
                                     <div className="absolute inset-0 opacity-10 flex flex-wrap gap-8 justify-end p-8 rotate-12 scale-150 pointer-events-none">
                                         <span className="material-symbols-outlined text-[150px] text-white">{theme.icon}</span>
                                     </div>
-                                    <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/50 to-transparent">
+                                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 bg-gradient-to-t from-black/50 to-transparent">
                                         <div className="flex gap-2 mb-2">
-                                            <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:bg-white/30 transition-all">
+                                            <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-[10px] md:text-xs font-bold border border-white/20 hover:bg-white/30 transition-all">
                                                 {activeSeries?.name}
                                             </span>
                                             {currentPlan.section && (
-                                                <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-xs font-bold border border-white/20 hover:bg-white/30 transition-all">
+                                                <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-[10px] md:text-xs font-bold border border-white/20 hover:bg-white/30 transition-all">
                                                     Turma {currentPlan.section}
                                                 </span>
                                             )}
                                         </div>
-                                        <h1 className="text-3xl md:text-4xl font-bold text-white shadow-sm flex items-center gap-3">
-                                            <span className="material-symbols-outlined text-[32px] md:text-[40px] hidden sm:inline-block">menu_book</span>
+                                        <h1 className="text-2xl md:text-3xl md:text-4xl font-bold text-white shadow-sm flex flex-wrap items-center gap-2 md:gap-3 leading-tight">
+                                            <span className="material-symbols-outlined text-[24px] md:text-[40px] hidden sm:inline-block">menu_book</span>
                                             {currentPlan.title}
                                         </h1>
                                     </div>
@@ -1031,36 +1032,83 @@ export const Planning: React.FC = () => {
                                         </button>
                                     </div>
 
-                                    {/* Header Action Buttons */}
-                                    <div className="absolute top-3 right-3 md:top-6 md:right-6 flex gap-1.5 md:gap-2 z-10">
+                                    {/* Header Action Buttons (Desktop) */}
+                                    <div className="hidden lg:flex absolute top-6 right-6 gap-2 z-10">
                                         <button
                                             onClick={handleExportPDF}
-                                            className="p-1.5 md:p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
+                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
                                             title="Baixar PDF"
                                         >
                                             <span className="material-symbols-outlined">picture_as_pdf</span>
                                         </button>
                                         <button
                                             onClick={handleExportWord}
-                                            className="p-1.5 md:p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
+                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
                                             title="Baixar Word"
                                         >
                                             <span className="material-symbols-outlined">description</span>
                                         </button>
                                         <button
                                             onClick={() => setIsEditing(true)}
-                                            className="p-1.5 md:p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
+                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
                                             title="Editar"
                                         >
                                             <span className="material-symbols-outlined">edit</span>
                                         </button>
                                         <button
                                             onClick={handleDelete}
-                                            className="p-1.5 md:p-2 bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95 group"
+                                            className="p-2 bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95 group"
                                             title="Excluir"
                                         >
                                             <span className="material-symbols-outlined text-red-200 group-hover:text-white transition-colors">delete</span>
                                         </button>
+                                    </div>
+
+                                    {/* Header Action Menu (Mobile) */}
+                                    <div className="lg:hidden absolute top-3 right-3 z-20">
+                                        <button
+                                            onClick={() => setShowMobileMenu(!showMobileMenu)}
+                                            className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                        >
+                                            <span className="material-symbols-outlined">more_vert</span>
+                                        </button>
+
+                                        {showMobileMenu && (
+                                            <>
+                                                <div className="fixed inset-0 z-10" onClick={() => setShowMobileMenu(false)} />
+                                                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-surface-dark rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-20">
+                                                    <button
+                                                        onClick={() => { handleExportPDF(); setShowMobileMenu(false); }}
+                                                        className="w-full text-left px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center gap-2"
+                                                    >
+                                                        <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
+                                                        Baixar PDF
+                                                    </button>
+                                                    <button
+                                                        onClick={() => { handleExportWord(); setShowMobileMenu(false); }}
+                                                        className="w-full text-left px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center gap-2"
+                                                    >
+                                                        <span className="material-symbols-outlined text-lg">description</span>
+                                                        Baixar Word
+                                                    </button>
+                                                    <button
+                                                        onClick={() => { setIsEditing(true); setShowMobileMenu(false); }}
+                                                        className="w-full text-left px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center gap-2"
+                                                    >
+                                                        <span className="material-symbols-outlined text-lg">edit</span>
+                                                        Editar
+                                                    </button>
+                                                    <div className="h-px bg-slate-100 dark:border-slate-800 my-1" />
+                                                    <button
+                                                        onClick={() => { handleDelete(); setShowMobileMenu(false); }}
+                                                        className="w-full text-left px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-2"
+                                                    >
+                                                        <span className="material-symbols-outlined text-lg">delete</span>
+                                                        Excluir
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
 

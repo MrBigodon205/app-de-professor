@@ -454,26 +454,26 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </header>
 
         {/* Mobile Context Bar (Class Switcher & Current Section) - PREMIUM CARD STYLE */}
-        <div className="xl:hidden px-4 pt-4 -mb-1 z-30">
+        <div className="xl:hidden px-3 pt-3 -mb-1 z-30">
           <button
             onClick={() => setIsClassSelectorOpen(true)}
-            className="w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-4 rounded-3xl border border-white/50 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all"
+            className="w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-3 rounded-3xl border border-white/50 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all"
           >
-            <div className="flex items-center gap-4">
-              <div className={`size-12 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/25`}>
-                <span className="material-symbols-outlined text-2xl font-black">school</span>
+            <div className="flex items-center gap-3">
+              <div className={`size-10 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/25`}>
+                <span className="material-symbols-outlined text-xl font-black">school</span>
               </div>
               <div className="flex flex-col items-start gap-0.5">
-                <span className="text-[10px] uppercase font-black tracking-[0.15em] text-slate-400 leading-none">Contexto Atual</span>
-                <span className="text-[15px] font-black text-slate-900 dark:text-white tracking-tight">
-                  {activeSeries ? activeSeries.name : 'Selecione uma turma'}
-                  {selectedSection && <span className={`ml-2 px-2.5 py-0.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs shadow-sm ring-1 ring-${theme.primaryColor}/40`}>{selectedSection}</span>}
+                <span className="text-[9px] uppercase font-black tracking-[0.15em] text-slate-400 leading-none">Contexto Atual</span>
+                <span className="text-[13px] font-black text-slate-900 dark:text-white tracking-tight truncate max-w-[140px] text-left">
+                  {activeSeries ? activeSeries.name : 'Selecione...'}
+                  {selectedSection && <span className={`ml-2 px-2 py-0.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] shadow-sm ring-1 ring-${theme.primaryColor}/40`}>{selectedSection}</span>}
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-1 text-slate-300 dark:text-slate-600">
-              <span className="material-symbols-outlined">swap_horiz</span>
-              <span className="material-symbols-outlined">expand_more</span>
+              <span className="material-symbols-outlined text-lg">swap_horiz</span>
+              <span className="material-symbols-outlined text-lg">expand_more</span>
             </div>
           </button>
         </div>
