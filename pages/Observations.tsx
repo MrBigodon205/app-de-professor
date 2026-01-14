@@ -308,20 +308,20 @@ export const Observations: React.FC = () => {
                         <button
                             key={student.id}
                             onClick={() => setSelectedStudentId(student.id)}
-                            className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 relative group/item ${selectedStudentId === student.id
+                            className={`w-full flex items-center gap-4 p-4 mobile-landscape-p-2 mobile-landscape-compact-row rounded-2xl transition-all duration-300 relative group/item ${selectedStudentId === student.id
                                 ? `bg-${theme.primaryColor}/5 border border-${theme.primaryColor}/10`
                                 : 'hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent'
                                 }`}
                         >
                             {selectedStudentId === student.id && (
-                                <div className={`absolute left-2 w-1 h-6 bg-${theme.primaryColor} rounded-full`}></div>
+                                <div className={`absolute left-2 w-1 h-6 bg-${theme.primaryColor} rounded-full mobile-landscape-hidden`}></div>
                             )}
-                            <div className={`size-11 rounded-2xl bg-gradient-to-br ${student.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-sm font-black text-white shrink-0 shadow-lg shadow-slate-200 dark:shadow-none transition-transform group-hover/item:scale-110`}>
+                            <div className={`size-11 mobile-landscape-size-8 rounded-2xl bg-gradient-to-br ${student.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-sm font-black text-white shrink-0 shadow-lg shadow-slate-200 dark:shadow-none transition-transform group-hover/item:scale-110`}>
                                 {student.initials || student.name.substring(0, 2)}
                             </div>
                             <div className="flex flex-col items-start min-w-0 pr-4">
                                 <span className={`text-sm font-black truncate w-full text-left transition-colors ${selectedStudentId === student.id ? `text-${theme.primaryColor}` : 'text-slate-700 dark:text-slate-200 group-hover/item:text-slate-950 dark:group-hover/item:text-white'}`}>{student.name}</span>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nº {student.number.padStart(2, '0')}</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mobile-landscape-hidden">Nº {student.number.padStart(2, '0')}</span>
                             </div>
                         </button>
                     ))}
@@ -329,7 +329,7 @@ export const Observations: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className={`flex-1 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden relative group ${!selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`flex-1 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden relative group ${!selectedStudentId ? 'hidden lg:flex' : 'flex mobile-landscape-fullscreen'}`}>
                 {/* Mobile Back Button */}
                 <button
                     onClick={() => setSelectedStudentId(null)}

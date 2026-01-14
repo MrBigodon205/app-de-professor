@@ -608,6 +608,36 @@ export const Grades: React.FC = () => {
                             </button>
                         </div>
                     </div>
+
+                    {/* Mobile Landscape Compact Controls */}
+                    <div className="hidden mobile-landscape-flex-row w-full items-center gap-2 justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">{activeSeries?.name || 'Série?'} - {selectedSection}</span>
+                            <span className="text-slate-300">|</span>
+                            <select
+                                value={selectedUnit}
+                                onChange={(e) => setSelectedUnit(Number(e.target.value))}
+                                className="bg-transparent text-xs font-bold text-indigo-600 dark:text-indigo-400 border-none outline-none p-0 cursor-pointer"
+                            >
+                                {[1, 2, 3, 4].map(unit => (
+                                    <option key={unit} value={unit} className="text-slate-800 dark:text-white bg-white dark:bg-slate-800">{unit}ª Un.</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => {
+                                    alert("Use o modo retrato para trocar de turma.");
+                                }}
+                                className="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-lg text-slate-500 dark:text-slate-400"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">tune</span>
+                            </button>
+                            <button onClick={() => setShowExportModal(true)} className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 p-1.5 rounded-lg">
+                                <span className="material-symbols-outlined text-[18px]">download</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 

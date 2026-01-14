@@ -792,7 +792,7 @@ export const Activities: React.FC = () => {
 
                     {/* Section Switcher Tabs */}
                     {activeSeries && activeSeries.sections?.length > 0 && (
-                        <div className="mt-4 -mx-1 px-1">
+                        <div className="mt-4 -mx-1 px-1 mobile-landscape-hidden">
                             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
                                 <button
                                     onClick={() => setFilterSection('')}
@@ -835,38 +835,53 @@ export const Activities: React.FC = () => {
                     ) : displayedActivities.length === 0 ? (
                         <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 min-h-[200px] flex items-center justify-center">Nenhuma atividade encontrada.{searchTerm && ' Tente outro termo.'}</div>
                     ) : (
-                        displayedActivities.map(act => (
-                            <button
-                                key={act.id}
-                                onClick={() => handleSelectActivity(act)}
-                                className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${selectedActivityId === act.id
-                                    ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}`
-                                    : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
-                            >
-                                <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${selectedActivityId === act.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
-                                <div className="pl-3">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h4 className={`font-bold text-base truncate pr-2 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
-                                        <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">chevron_right</span>
-                                    </div>
-
-                                    <div className="flex items-center gap-2 text-xs font-medium">
-                                        <span className={`px-2.5 py-1 rounded-md ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                                            {act.type}
-                                        </span>
-                                        <div className="flex items-center gap-1 text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
-                                            <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold px-2 py-1 rounded-md">{new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
-                                        </div>
-                                        {act.completions && act.completions.length > 0 && (
-                                            <div className={`flex items-center gap-1 ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/20 text-${theme.primaryColor}` : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'} px-2.5 py-1 rounded-md font-bold`}>
-                                                <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                                                {act.completions.length}
+                        displayedActivities.map(act => {
+                            return (
+                                <button
+                                    key={act.id}
+                                    onClick={() => handleSelectActivity(act)}
+                                    className={`w-full text-left p-5 mobile-landscape-compact-row rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${selectedActivityId === act.id
+                                        ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}`
+                                        : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
+                                >
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 mobile-landscape-hidden ${selectedActivityId === act.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
+                                    <div className="pl-3 mobile-landscape-pl-0 w-full">
+                                        {/* Mobile Landscape: Row Layout */}
+                                        <div className="hidden mobile-landscape-flex-row mobile-landscape-items-center w-full justify-between">
+                                            <div className="flex items-center gap-2 flex-1 overflow-hidden">
+                                                <span className="material-symbols-outlined text-[16px] text-slate-400 shrink-0">{getIconForType(act.type)}</span>
+                                                <span className="truncate text-xs font-bold text-slate-700 dark:text-slate-200">{act.title}</span>
                                             </div>
-                                        )}
+                                            <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2">
+                                                {new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                                            </span>
+                                        </div>
+
+                                        {/* Regular Layout */}
+                                        <div className="mobile-landscape-hidden">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h4 className={`font-bold text-base truncate pr-2 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
+                                                <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">chevron_right</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs font-medium">
+                                                <span className={`px-2.5 py-1 rounded-md ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                                    {act.type}
+                                                </span>
+                                                <div className="flex items-center gap-1 text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
+                                                    <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold px-2 py-1 rounded-md">{new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                                                </div>
+                                                {act.completions && act.completions.length > 0 && (
+                                                    <div className={`flex items-center gap-1 ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/20 text-${theme.primaryColor}` : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'} px-2.5 py-1 rounded-md font-bold`}>
+                                                        <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                                                        {act.completions.length}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </button>
-                        ))
+                                </button>
+                            );
+                        })
                     )}
                 </div>
 
@@ -877,10 +892,10 @@ export const Activities: React.FC = () => {
                 >
                     <span className="material-symbols-outlined text-3xl">add</span>
                 </button>
-            </div>
+            </div >
 
             {/* Main Content */}
-            <div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${selectedActivityId || isEditing ? 'flex' : 'hidden lg:flex'}`}>
+            < div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${selectedActivityId || isEditing ? 'flex' : 'hidden lg:flex'}`}>
                 {(!selectedActivityId && !isEditing) ? (
                     // --- HERO EMPTY STATE ---
                     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-300">
@@ -1310,7 +1325,7 @@ export const Activities: React.FC = () => {
                         </div>
                     )
                 )}
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };

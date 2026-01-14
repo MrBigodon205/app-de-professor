@@ -53,6 +53,12 @@ export const Planning: React.FC = () => {
 
     useEffect(() => {
         fetchPlans();
+
+        // Mobile Landscape "Zen Mode" Reset
+        if (window.innerHeight < 500 && window.innerWidth > window.innerHeight) {
+            // Potentially auto-collapse sidebar or similar if needed
+        }
+
         setSelectedPlanId(null);
         setShowForm(false);
         setViewMode(false);
@@ -645,22 +651,26 @@ export const Planning: React.FC = () => {
 
 
             {/* Sidebar */}
-            <div className={`w-full lg:w-80 flex flex-col gap-4 shrink-0 transition-all ${selectedPlanId || isEditing ? 'hidden lg:flex' : 'flex'}`} data-tour="planning-sidebar">
-                <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4">
-                    <div className="flex justify-between items-center mb-4">
+            <div className={`w-full lg:w-80 flex flex-col gap-4 shrink-0 transition-all ${selectedPlanId || isEditing ? 'hidden lg:flex mobile-landscape-hidden' : 'flex'}`} data-tour="planning-sidebar">
+                <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 mobile-landscape-compact">
+                    <div className="flex justify-between items-center mb-4 mobile-landscape-mb-0 mobile-landscape-gap-2">
                         <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                            <button className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 text-${theme.primaryColor} shadow-sm`}>
+                            <button className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 text-${theme.primaryColor} shadow-sm mobile-landscape-compact`}>
                                 Aulas
                             </button>
-                            <Link to="/activities" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all">
-                                Atividades
+                            <Link to="/activities" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all mobile-landscape-compact">
+                                Ativ.
                             </Link>
                         </div>
-                        <button onClick={handleNewPlan} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Nova Aula" data-tour="planning-new-btn">
+                        <button onClick={handleNewPlan} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0 mobile-landscape-hidden`} title="Nova Aula" data-tour="planning-new-btn">
                             <span className="material-symbols-outlined text-[20px]">add</span>
                         </button>
+                        {/* Mobile Landscape ONLY ADD BUTTON */}
+                        <button onClick={handleNewPlan} className="hidden mobile-landscape-block bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm">
+                            + Nova
+                        </button>
                     </div>
-                    <div className="relative">
+                    <div className="relative mobile-landscape-hidden">
                         <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">search</span>
                         <input type="text" placeholder="Buscar..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-sm transition-all focus:bg-white dark:focus:bg-black`} />
                     </div>
@@ -668,7 +678,7 @@ export const Planning: React.FC = () => {
 
                 {/* Section Filter Pills */}
                 {activeSeries && activeSeries.sections?.length > 0 && (
-                    <div className="px-1">
+                    <div className="px-1 mobile-landscape-hidden">
                         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
                             <button
                                 onClick={() => setFilterSection('')}
@@ -695,7 +705,7 @@ export const Planning: React.FC = () => {
                     </div>
                 )}
 
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-[400px]">
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-[400px] mobile-landscape-compact">
                     {loading ? (
                         Array.from({ length: 5 }).map((_, i) => (
                             <div key={i} className="w-full h-24 rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 p-4 animate-pulse">
@@ -714,15 +724,15 @@ export const Planning: React.FC = () => {
                                 key={plan.id}
                                 onClick={() => handleSelectPlan(plan)}
                                 style={{ animationDelay: `${idx * 100}ms` }}
-                                className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm animate-in fade-in md:slide-in-from-left duration-500 fill-mode-backwards ${selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
+                                className={`w-full text-left p-5 mobile-landscape-compact-row rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm animate-in fade-in md:slide-in-from-left duration-500 fill-mode-backwards ${selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
                             >
-                                <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
-                                <div className="pl-3">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h4 className={`font-bold text-base truncate pr-2 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
-                                        <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">chevron_right</span>
+                                <div className={`absolute left-0 top-0 bottom-0 w-1.5 mobile-landscape-hidden ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
+                                <div className="pl-3 mobile-landscape-pl-0 w-full">
+                                    <div className="flex justify-between items-start mb-2 mobile-landscape-mb-0 mobile-landscape-flex-row mobile-landscape-items-center">
+                                        <h4 className={`font-bold text-base mobile-landscape-text-sm truncate pr-2 flex-1 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
+                                        <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
                                     </div>
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className="flex flex-wrap gap-2 mobile-landscape-hidden">
                                         <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                                             {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                                         </span>
@@ -732,6 +742,10 @@ export const Planning: React.FC = () => {
                                             </span>
                                         )}
                                     </div>
+                                    {/* Mobile Landscape Only Date */}
+                                    <div className="hidden mobile-landscape-block text-[10px] text-slate-400 mt-0.5">
+                                        {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                    </div>
                                 </div>
                             </button>
                         ))
@@ -739,10 +753,10 @@ export const Planning: React.FC = () => {
                 </div>
             </div>
 
-            {/* Main Content */}
-            <div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${showForm || viewMode ? 'flex' : 'hidden lg:flex'}`}>
+            {/* Main Content / Fullscreen Form in Zen Mode */}
+            <div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${showForm || viewMode ? 'flex mobile-landscape-fullscreen' : 'hidden lg:flex'}`}>
                 {(!showForm && !viewMode) ? (
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-300">
+                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-300 mobile-landscape-hidden">
                         <div className={`size-32 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-8 shadow-sm border border-slate-100 dark:border-slate-700`}>
                             <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600">edit_calendar</span>
                         </div>
@@ -755,15 +769,26 @@ export const Planning: React.FC = () => {
                 ) : showForm ? (
                     <div className="flex-1 flex flex-col h-full overflow-hidden relative">
                         {/* EDITOR HEADER */}
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark z-10">
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                        <div className="p-6 mobile-landscape-compact border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark z-10 sticky top-0">
+                            <h2 className="text-xl mobile-landscape-text-base font-bold text-slate-900 dark:text-white flex items-center gap-3">
                                 <button onClick={() => { setIsEditing(false); setShowForm(false); setSelectedPlanId(null); }} className="lg:hidden p-2 -ml-2 text-slate-400"><span className="material-symbols-outlined">arrow_back</span></button>
                                 {selectedPlanId ? 'Editar Aula' : 'Nova Aula'}
                             </h2>
+                            {/* Mobile Landscape Tab Switcher (Simple Select) */}
+                            <select
+                                className="hidden mobile-landscape-block text-xs border border-slate-200 rounded p-1"
+                                value={activeTab}
+                                onChange={(e) => setActiveTab(e.target.value as any)}
+                            >
+                                <option value="geral">Geral</option>
+                                <option value="conteudo">Conteúdo</option>
+                                <option value="bncc">BNCC</option>
+                                <option value="recursos">Recursos</option>
+                            </select>
                         </div>
 
-                        {/* TABS */}
-                        <div className="px-6 pt-6 pb-2">
+                        {/* TABS - Hidden in Mobile Landscape (replaced by select above) */}
+                        <div className="px-6 pt-6 pb-2 mobile-landscape-hidden">
                             <div className="flex p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl overflow-x-auto hide-scrollbar">
                                 {[
                                     { id: 'geral', label: 'Informações Gerais', icon: 'info' },
@@ -787,7 +812,7 @@ export const Planning: React.FC = () => {
                         </div>
 
                         {/* EDITOR CONTENT */}
-                        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar pb-24">
+                        <div className="flex-1 overflow-y-auto p-6 mobile-landscape-compact custom-scrollbar pb-24">
                             <div className="max-w-4xl mx-auto space-y-6">
                                 {activeTab === 'geral' && (
                                     <div className="space-y-6 animate-in fade-in md:slide-in-from-right-8 duration-500">
