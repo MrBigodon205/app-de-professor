@@ -15,7 +15,7 @@ export const DashboardBanner: React.FC<DashboardBannerProps> = ({ theme, current
 
             {/* Decorative subject icons */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {theme.illustrations.map((icon: string, idx: number) => (
+                {React.useMemo(() => theme.illustrations.map((icon: string, idx: number) => (
                     <span
                         key={idx}
                         className="material-symbols-outlined absolute opacity-10 text-4xl animate-pulse"
@@ -28,7 +28,7 @@ export const DashboardBanner: React.FC<DashboardBannerProps> = ({ theme, current
                     >
                         {icon}
                     </span>
-                ))}
+                )), [theme.illustrations])}
             </div>
 
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">

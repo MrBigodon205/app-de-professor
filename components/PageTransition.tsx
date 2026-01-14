@@ -8,88 +8,86 @@ interface PageTransitionProps {
     type?: AnimationType;
 }
 
-// "Heavy", Beautiful, and Sophisticated Animations
-// Prioritizing visual "wow" factor over raw DOM performance.
-// Using custom bezier curves for that "Apple/iOS" premium friction feel.
+// OPTIMIZED ANIMATIONS
+// Focus: 60FPS Fluidity, Hardware Acceleration, No Layout Thrashing
+// Technique: Use only opacity and transform (translate, scale, rotate)
 
-const iosEase = [0.25, 0.1, 0.25, 1]; // Smooth iOS-like easing
-const heavyBounce = { type: 'spring', stiffness: 200, damping: 20 }; // Snappy but bouncy
+const iosSpring = { type: 'spring', stiffness: 260, damping: 20 }; // Very responsive, Apple-like
+const smoothEase = [0.4, 0, 0.2, 1]; // Standard Material/iOS easing
 
 const variants = {
     dashboard: {
-        initial: { opacity: 0, y: 40, scale: 0.95, filter: 'blur(10px)' },
+        initial: { opacity: 0, scale: 0.98, y: 10 },
         animate: {
-            opacity: 1, y: 0, scale: 1, filter: 'blur(0px)',
-            transition: { duration: 0.8, ease: iosEase, staggerChildren: 0.1 }
+            opacity: 1, scale: 1, y: 0,
+            transition: { duration: 0.5, ease: smoothEase, staggerChildren: 0.1 }
         },
         exit: {
-            opacity: 0, y: -40, scale: 1.05, filter: 'blur(10px)',
-            transition: { duration: 0.5, ease: 'easeInOut' }
+            opacity: 0, scale: 0.98, y: -10,
+            transition: { duration: 0.3, ease: 'easeIn' }
         }
     },
     planning: {
-        initial: { opacity: 0, x: '100vw', skewX: 5 },
+        initial: { opacity: 0, x: 20 },
         animate: {
-            opacity: 1, x: 0, skewX: 0,
-            transition: { duration: 0.7, type: 'spring', stiffness: 80, damping: 15, mass: 1.2 }
+            opacity: 1, x: 0,
+            transition: iosSpring
         },
         exit: {
-            opacity: 0, x: '-50vw', skewX: -5,
-            transition: { duration: 0.5, ease: 'easeInOut' }
+            opacity: 0, x: -20,
+            transition: { duration: 0.2 }
         }
     },
     activities: {
-        // A sleek 3D "Card Deck" shuffle effect
-        initial: { opacity: 0, scale: 0.8, rotate: -5, y: 100 },
+        initial: { opacity: 0, scale: 0.95, y: 20 },
         animate: {
-            opacity: 1, scale: 1, rotate: 0, y: 0,
-            transition: { duration: 0.6, type: 'spring', stiffness: 150, damping: 15 }
+            opacity: 1, scale: 1, y: 0,
+            transition: { type: 'spring', stiffness: 300, damping: 25 }
         },
         exit: {
-            opacity: 0, scale: 1.1, rotate: 5,
-            transition: { duration: 0.4 }
+            opacity: 0, scale: 1.05,
+            transition: { duration: 0.3 }
         }
     },
     grades: {
-        // Dramatic 3D Flip (Perspective needed on container)
-        initial: { opacity: 0, rotateX: 90, y: 50, transformPerspective: 1000 },
+        initial: { opacity: 0, rotateX: 15, y: 20 },
         animate: {
             opacity: 1, rotateX: 0, y: 0,
-            transition: { duration: 0.8, type: "spring", bounce: 0.3 }
+            transition: { duration: 0.6, ease: smoothEase }
         },
         exit: {
-            opacity: 0, rotateX: -45, scale: 0.9,
-            transition: { duration: 0.5 }
+            opacity: 0, rotateX: -10,
+            transition: { duration: 0.3 }
         }
     },
     attendance: {
-        // Horizontal Slide with a "Stretch" effect
-        initial: { opacity: 0, x: -100, scaleX: 1.2 },
+        initial: { opacity: 0, x: -20 },
         animate: {
-            opacity: 1, x: 0, scaleX: 1,
-            transition: { duration: 0.6, ease: iosEase }
+            opacity: 1, x: 0,
+            transition: iosSpring
         },
         exit: {
-            opacity: 0, x: 100, scaleX: 0.9,
-            transition: { duration: 0.4, ease: 'easeIn' }
+            opacity: 0, x: 20,
+            transition: { duration: 0.2 }
         }
     },
     students: {
-        // Iris / Circular Reveal - Heavy but beautiful
-        initial: { opacity: 0, clipPath: 'circle(0% at 50% 50%)', scale: 1.1 },
+        // Replaced expensive clipPath with optimized Scale/Blur (blur is still heavy but check usage)
+        // Actually, let's stick to pure Scale/Opacity for "100% optimized" request
+        initial: { opacity: 0, scale: 1.05 },
         animate: {
-            opacity: 1, clipPath: 'circle(150% at 50% 50%)', scale: 1,
-            transition: { duration: 0.7, ease: [0.19, 1, 0.22, 1] }
+            opacity: 1, scale: 1,
+            transition: { duration: 0.4, ease: smoothEase }
         },
         exit: {
-            opacity: 0, clipPath: 'circle(0% at 50% 50%)', scale: 1.1,
-            transition: { duration: 0.5, ease: 'easeInOut' }
+            opacity: 0, scale: 0.95,
+            transition: { duration: 0.3 }
         }
     },
     default: {
-        initial: { opacity: 0, scale: 0.95 },
-        animate: { opacity: 1, scale: 1, transition: { duration: 0.4 } },
-        exit: { opacity: 0, scale: 1.05, transition: { duration: 0.3 } }
+        initial: { opacity: 0 },
+        animate: { opacity: 1, transition: { duration: 0.4 } },
+        exit: { opacity: 0, transition: { duration: 0.2 } }
     }
 };
 
@@ -103,12 +101,14 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children, type =
             exit={anim.exit}
             style={{
                 width: '100%',
-                height: '100%',
-                perspective: '1200px', // Enhances 3D effects
-                transformStyle: 'preserve-3d', // Essential for 3D children
+                // Hardware acceleration hints
+                willChange: 'transform, opacity',
+                // Perspective for subtle 3D effects (only if needed by variants like 'grades')
+                perspective: '1200px',
+                transformStyle: 'preserve-3d',
                 backfaceVisibility: 'hidden',
-                overflow: 'hidden' // Keeps clean edges during wild transforms
             }}
+            className="h-full" // Ensure it takes height but doesn't block scroll
         >
             {children}
         </motion.div>

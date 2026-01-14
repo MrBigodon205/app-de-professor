@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion'; // Import motion
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,6 +11,9 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { DashboardHeader } from '../components/DashboardHeader';
 import { DashboardBanner } from '../components/DashboardBanner';
 import { ActivityHeatmap } from '../components/ActivityHeatmap';
+
+// Create MotionLink for animated router links
+const MotionLink = motion(Link);
 
 export const Dashboard: React.FC = () => {
   const { selectedSeriesId, selectedSection, classes } = useClass();
@@ -51,24 +55,33 @@ export const Dashboard: React.FC = () => {
     fetchActivities(silent);
   };
 
+  // --- OPTIMIZATION: Stable Reference for Realtime Callback ---
+  const refreshRef = React.useRef(refreshAll);
+
+  // Update ref on every render so the subscription always calls the latest closure
+  useEffect(() => {
+    refreshRef.current = refreshAll;
+  });
+
   // --- REALTIME SUBSCRIPTION ---
   useEffect(() => {
     if (!currentUser) return;
 
-    // Polling Fallback (Increased to 60s since we have Realtime)
+    // Polling Fallback (60s)
     const interval = setInterval(() => {
-      refreshAll(true);
+      refreshRef.current(true);
     }, 60000);
 
     console.log("Setting up Realtime for Dashboard...");
 
     // Listen to everything relevant for the dashboard
+    // We bind to 'refreshRef.current' to avoid tearing down the channel when state changes
     const channel = supabase.channel(`dashboard_sync_${currentUser.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => refreshAll(true))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'occurrences' }, () => refreshAll(true))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => refreshAll(true))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, () => refreshAll(true))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'plans' }, () => refreshAll(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => refreshRef.current(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'occurrences' }, () => refreshRef.current(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => refreshRef.current(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, () => refreshRef.current(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'plans' }, () => refreshRef.current(true))
       .subscribe();
 
     return () => {
@@ -76,7 +89,9 @@ export const Dashboard: React.FC = () => {
       supabase.removeChannel(channel);
       clearInterval(interval);
     };
-  }, [currentUser, selectedSeriesId, activeSubject]);
+    // ONLY Depend on currentUser.id (and activeSubject if strictly needed for channel segregation, but typically user_id is enough)
+    // We REMOVE selectedSeriesId from dependencies to prevent "freezing" due to channel recreation
+  }, [currentUser?.id]);
 
   const fetchCounts = async (silent = false) => {
     if (!currentUser) return;
@@ -359,9 +374,38 @@ export const Dashboard: React.FC = () => {
   const displayCount = isContextSelected ? classCount : globalCount;
   const contextName = (classes.find(c => c.id === selectedSeriesId)?.name || `Série ${selectedSeriesId}`) + (selectedSection ? ` - Turma ${selectedSection}` : '');
 
+  // ANIMATION VARIANTS
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.05
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1, y: 0,
+      transition: {
+        type: 'spring',
+        stiffness: 100,
+        damping: 15
+      }
+    }
+  };
+
   return (
-    <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div data-tour="dashboard-kpi">
+    <motion.div
+      className="p-8 max-w-[1600px] mx-auto space-y-8"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={itemVariants} data-tour="dashboard-kpi">
         <DashboardHeader
           currentUser={currentUser}
           theme={theme}
@@ -369,12 +413,14 @@ export const Dashboard: React.FC = () => {
           isContextSelected={isContextSelected}
           contextName={contextName}
         />
-      </div>
+      </motion.div>
 
-      <DashboardBanner theme={theme} currentUser={currentUser} />
+      <motion.div variants={itemVariants}>
+        <DashboardBanner theme={theme} currentUser={currentUser} />
+      </motion.div>
 
       {/* PLAN OF THE DAY BANNER */}
-      <div className="min-h-[160px]">
+      <motion.div variants={itemVariants} className="min-h-[160px]">
         {
           loadingPlans ? (
             <div className="h-[160px] rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse"></div>
@@ -411,13 +457,13 @@ export const Dashboard: React.FC = () => {
             </div>
           )
         }
-      </div>
+      </motion.div>
 
       {/* Main KPI Grid - Bento Style */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
         {/* Total Students (Large Card) */}
-        <div className="md:col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 relative overflow-hidden group hover:shadow-2xl transition-all duration-500 flex flex-col justify-between min-h-[240px]">
+        <motion.div variants={itemVariants} className="md:col-span-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 relative overflow-hidden group hover:shadow-2xl transition-all duration-500 flex flex-col justify-between min-h-[240px]">
           <div className="absolute top-0 right-0 p-40 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700"></div>
 
           <div className="relative flex items-start justify-between h-full">
@@ -447,14 +493,14 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Secondary Cards Grid */}
 
 
         {/* Grades */}
         {/* Grades (Small Card) */}
-        <Link to="/grades" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between  min-h-[180px]">
+        <MotionLink variants={itemVariants} to="/grades" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between  min-h-[180px]">
           <div className="flex justify-between items-start">
             <div className={`size-12 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
               <span className="material-symbols-outlined">grade</span>
@@ -472,11 +518,11 @@ export const Dashboard: React.FC = () => {
               </div>
             )}
           </div>
-        </Link>
+        </MotionLink>
 
         {/* Attendance */}
         {/* Attendance (Small Card) */}
-        <Link to="/attendance" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px]">
+        <MotionLink variants={itemVariants} to="/attendance" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px]">
           <div className="flex justify-between items-start">
             <div className="size-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <span className="material-symbols-outlined">event_available</span>
@@ -494,11 +540,11 @@ export const Dashboard: React.FC = () => {
               </div>
             )}
           </div>
-        </Link>
+        </MotionLink>
 
         {/* Observations */}
         {/* Observations (Small Card) */}
-        <Link to="/observations" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px]">
+        <MotionLink variants={itemVariants} to="/observations" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px]">
           <div className="flex justify-between items-start">
             <div className="size-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <span className="material-symbols-outlined">notification_important</span>
@@ -516,7 +562,7 @@ export const Dashboard: React.FC = () => {
               </div>
             )}
           </div>
-        </Link>
+        </MotionLink>
 
       </div>
 
@@ -524,7 +570,7 @@ export const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Activities and Plans */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col h-full" data-tour="dashboard-activities">
+        <motion.div variants={itemVariants} className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col h-full" data-tour="dashboard-activities">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
               <span className={`material-symbols-outlined text-${theme.primaryColor}`}>assignment_turned_in</span>
@@ -575,10 +621,10 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Recent Ocurrences */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col h-full" data-tour="dashboard-occurrences">
+        <motion.div variants={itemVariants} className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[32px] p-8 shadow-sm border border-white/20 dark:border-slate-800 flex flex-col h-full" data-tour="dashboard-occurrences">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
               <span className="material-symbols-outlined text-slate-400">history</span>
@@ -611,8 +657,8 @@ export const Dashboard: React.FC = () => {
               ))
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
-    </div >
+    </motion.div>
   );
 };
