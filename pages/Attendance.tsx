@@ -87,12 +87,12 @@ const MiniCalendar: React.FC<{
                 onClick={onClose}
             />
 
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 sm:p-3 z-50 w-[85%] max-w-[280px] max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 lg:p-6 z-50 w-[85%] max-w-[280px] lg:max-w-[400px] max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between mb-2">
                     <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors">
                         <span className="material-symbols-outlined text-sm">chevron_left</span>
                     </button>
-                    <span className="font-bold text-slate-700 dark:text-slate-200 capitalize text-xs">
+                    <span className="font-bold text-slate-700 dark:text-slate-200 capitalize text-sm lg:text-lg">
                         {viewDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}
                     </span>
                     <button onClick={() => changeMonth(1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors">
@@ -100,11 +100,14 @@ const MiniCalendar: React.FC<{
                     </button>
                 </div>
 
-                <div className="grid grid-cols-7 gap-1 mb-1 text-center text-[9px] font-black text-slate-400 py-1 uppercase tracking-widest">
-                    {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => <div key={i}>{d}</div>)}
+                <div className="grid grid-cols-7 gap-1 lg:gap-2 mb-2">
+                    {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(day => (
+                        <div key={day} className="text-center text-[10px] lg:text-xs font-bold text-slate-400">
+                            {day}
+                        </div>
+                    ))}
                 </div>
-
-                <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+                <div className="grid grid-cols-7 gap-1 lg:gap-2">
                     {days.map((day, i) => {
                         if (!day) return <div key={`empty-${i}`} className="h-7 sm:h-6" />;
                         return (
@@ -117,14 +120,16 @@ const MiniCalendar: React.FC<{
                                         onClose();
                                     }
                                 }}
-                                className={`h-7 sm:h-6 w-full rounded-lg flex flex-col items-center justify-center relative transition-all duration-200
-                                    ${isSelected(day!)
-                                        ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/30 font-bold scale-110 z-10`
-                                        : `text-slate-600 dark:text-slate-300 hover:bg-${theme.primaryColor}/10 hover:text-${theme.primaryColor}`}
-                                    ${isToday(day!) && !isSelected(day!) ? `bg-${theme.primaryColor}/5 text-${theme.primaryColor} font-bold border border-${theme.primaryColor}/20` : ''}
-                                `}
+                                className={`size-8 lg:size-10 flex items-center justify-center rounded-full text-xs lg:text-sm font-medium transition-all ${isSelected(day as number)
+                                    ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/30 scale-110`
+                                    : isToday(day as number)
+                                        ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor} font-bold`
+                                        : hasData(day as number)
+                                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800'
+                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                    }`}
                             >
-                                <span className="text-[10px] sm:text-[9px] leading-none z-10">{day}</span>
+                                <span className="z-10">{day}</span>
                                 {day && hasData(day) && !isSelected(day) && (
                                     <span className={`absolute bottom-0.5 w-1 h-1 rounded-full bg-emerald-500`}></span>
                                 )}
