@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Student } from '../types';
 import { supabase } from '../lib/supabase';
+import { TransferStudentModal } from '../components/TransferStudentModal';
 
 export const StudentsList: React.FC = () => {
     const { selectedSeriesId, selectedSection, activeSeries } = useClass();
@@ -22,6 +23,9 @@ export const StudentsList: React.FC = () => {
     const [importText, setImportText] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Transfer State
+    const [transferringStudent, setTransferringStudent] = useState<Student | null>(null);
 
     // Selection Logic
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -297,7 +301,7 @@ export const StudentsList: React.FC = () => {
     }
 
     return (
-        <div className="max-w-[1200px] mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="max-w-[1200px] mx-auto flex flex-col gap-4 md:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32 lg:pb-12">
             <div className={`bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700`}></div>
 
@@ -537,6 +541,12 @@ export const StudentsList: React.FC = () => {
                                         <td className="px-8 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
                                                 <button
+                                                    onClick={() => setTransferringStudent(student)}
+                                                    className={`p-2.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-xl transition-all`}
+                                                    title="Transferir Aluno">
+                                                    <span className="material-symbols-outlined text-[22px]">move_up</span>
+                                                </button>
+                                                <button
                                                     onClick={() => handleEdit(student)}
                                                     className={`p-2.5 text-slate-400 hover:text-${theme.primaryColor} hover:bg-${theme.primaryColor}/10 rounded-xl transition-all`}
                                                     title="Editar Aluno">
@@ -557,6 +567,18 @@ export const StudentsList: React.FC = () => {
                     </table>
                 </div>
             </div>
+
+            {transferringStudent && (
+                <TransferStudentModal
+                    isOpen={!!transferringStudent}
+                    onClose={() => setTransferringStudent(null)}
+                    student={transferringStudent}
+                    onSuccess={() => {
+                        fetchStudents();
+                        setTransferringStudent(null);
+                    }}
+                />
+            )}
 
             <div className={`flex items-center justify-center gap-4 py-4`}>
                 <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800"></div>

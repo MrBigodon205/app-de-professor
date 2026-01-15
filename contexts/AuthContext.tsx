@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { User, Subject } from '../types';
 import { supabase } from '../lib/supabase';
 import { seedUserData } from '../utils/seeding';
@@ -27,7 +27,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Local API fallback logic removed to ensure Single Source of Truth from Supabase
 
 
-    const fetchProfile = async (uid: string, retryCount = 0) => {
+    // Helper to race a promise against a timeout
+    const withTimeout = useCallback(<T,>(promise: PromiseLike<T>, ms: number, label: string): Promise<T> => {
+        return Promise.race([
+            promise,
+            new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`${label} timed out`)), ms))
+        ]);
+    }, []);
+
+    const fetchProfile = useCallback(async (uid: string, retryCount = 0) => {
         // Raw Fetch Helper for Profile
         const rawProfileFetch = async () => {
             // console.log("Tentando buscar perfil via Raw Fetch...");
@@ -59,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (error) throw error;
                 profile = data;
             } catch (e) {
-                console.warn("SDK Profile fetch failed, trying raw fetch...");
+                // console.debug("SDK Profile fetch failed, trying raw fetch...");
                 profile = await rawProfileFetch();
             }
 
@@ -90,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
             setLoading(false);
         }
-    };
+    }, [withTimeout]);
 
     useEffect(() => {
         let mounted = true;
@@ -222,7 +230,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .on('postgres_changes',
                 { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
                 (payload) => {
-                    console.log("Profile updated externally!", payload);
                     const newProfile = payload.new as any;
                     // Update local state instantly
                     setCurrentUser(prev => {
@@ -252,15 +259,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, [userId]);
 
-    // Helper to race a promise against a timeout
-    const withTimeout = <T,>(promise: PromiseLike<T>, ms: number, label: string): Promise<T> => {
-        return Promise.race([
-            promise,
-            new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`${label} timed out`)), ms))
-        ]);
-    };
 
-    const login = async (email: string, password: string) => {
+
+    const login = useCallback(async (email: string, password: string) => {
         setLoading(true); // Prevent redirect race condition
         // Helper for Raw Fetch Login (Fallback)
         const rawLogin = async () => {
@@ -341,9 +342,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(false);
             return { success: false, error: msg };
         }
-    };
+    }, [currentUser]);
 
-    const register = async (name: string, email: string, password: string, subject: Subject, subjects: Subject[] = []) => {
+    const register = useCallback(async (name: string, email: string, password: string, subject: Subject, subjects: Subject[] = []) => {
         try {
             const { data, error } = await supabase.auth.signUp({
                 email,
@@ -384,11 +385,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error("Registration error:", e);
             return { success: false, error: e.message || "Erro ao realizar o cadastro." };
         }
-    };
+    }, []);
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         try {
-            console.log("Executando Logout Seguro...");
             // 1. Tenta logout no Supabase
             await supabase.auth.signOut();
         } catch (error) {
@@ -405,9 +405,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // 3. Força recarregamento para estado limpo
             window.location.href = '/';
         }
-    };
+    }, []);
 
-    const updateProfile = async (data: Partial<User>) => {
+    const updateProfile = useCallback(async (data: Partial<User>) => {
         if (!userId) {
             console.error("Update profile failed: No userId found");
             return false;
@@ -464,17 +464,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             alert(`Erro ao atualizar perfil: ${e.message || 'Erro desconhecido'}`);
             return false;
         }
-    };
+    }, [userId, currentUser]);
 
-    const updateActiveSubject = (subject: string) => {
+    const updateActiveSubject = useCallback((subject: string) => {
         setActiveSubject(subject);
         if (userId) {
             localStorage.setItem(`activeSubject_${userId}`, subject);
         }
-    };
+    }, [userId]);
+
+    const contextValue = useMemo(() => ({
+        currentUser,
+        userId,
+        login,
+        register,
+        logout,
+        updateProfile,
+        loading,
+        activeSubject,
+        updateActiveSubject
+    }), [currentUser, userId, login, register, logout, updateProfile, loading, activeSubject, updateActiveSubject]);
 
     return (
-        <AuthContext.Provider value={{ currentUser, userId, login, register, logout, updateProfile, loading, activeSubject, updateActiveSubject }}>
+        <AuthContext.Provider value={contextValue}>
             {children}
         </AuthContext.Provider>
     );

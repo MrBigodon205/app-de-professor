@@ -2,545 +2,309 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer components {
-
-  /* FORM ELEMENTS */
-  .label {
-    @apply block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 ml-1;
-  }
-
-  /* Base Input Styles */
-  .input-field {
-    @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:opacity-60;
-  }
-
-  .input-textarea {
-    @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 resize-none;
-  }
-
-  /* Date Input Global Styling */
-  input[type="date"] {
-    @apply min-h-[48px] cursor-pointer appearance-none;
-    position: relative;
-  }
-
-  input[type="date"]::-webkit-calendar-picker-indicator {
-    @apply cursor-pointer p-0 opacity-50 hover:opacity-100 transition-opacity;
-    background: transparent;
-    bottom: 0;
-    color: transparent;
-    left: 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: auto;
-    height: auto;
-  }
-
-
-  /* BUTTONS */
-  .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-indigo-500/30 active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
-  }
-
-  .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 transition-all hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white;
-  }
-
-  .btn-danger {
-    @apply inline-flex items-center justify-center rounded-xl bg-red-50 px-6 py-3 text-sm font-bold text-red-600 transition-all hover:bg-red-100 hover:text-red-700 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30;
-  }
-
-  /* CARDS */
-  .card {
-    @apply rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900;
-  }
-
-  .progress-fill {
-    @apply h-full transition-all duration-500;
-    width: var(--progress-width, 0%);
-  }
-
-  .activity-progress {
-    @apply w-full h-2 rounded-full overflow-hidden appearance-none bg-slate-100 dark:bg-slate-700 block border-none;
-  }
-
-  .activity-progress::-webkit-progress-bar {
-    @apply bg-slate-100 dark:bg-slate-700;
-  }
-
-  .activity-progress::-webkit-progress-value {
-    background-color: currentColor;
-    @apply transition-all duration-500 rounded-full;
-  }
-
-  .activity-progress::-moz-progress-bar {
-    background-color: currentColor;
-    @apply transition-all duration-500 rounded-full;
-  }
-
-  .profile-avatar {
-    @apply size-8 md:size-10 rounded-full border-2 border-white dark:border-slate-700 shadow-md bg-slate-200 overflow-hidden shrink-0 group-hover:scale-110 transition-transform flex items-center justify-center;
-  }
-
-  .landscape-container {
-    max-width: 297mm;
-    min-height: 210mm;
-  }
-
-  .font-arial-black {
-    font-family: 'Arial Black', sans-serif;
-  }
-
-  /* PERFORMANCE OPTIMIZATIONS (90FPS+) */
-  .hardware-accelerated {
-    will-change: transform, opacity;
-    transform: translateZ(0);
-    /* Force GPU Layer */
-    backface-visibility: hidden;
-    perspective: 1000px;
-  }
-
-  .smooth-scroll {
-    -webkit-overflow-scrolling: touch;
-    /* Momentum scrolling on iOS */
-    scroll-behavior: smooth;
-  }
-}
-
-
-
-/* MOBILE LANDSCAPE OPTIMIZATIONS */
-/* MOBILE LANDSCAPE OPTIMIZATIONS (Re-introduced for Native Redesign) */
-@media (orientation: landscape) and (max-height: 600px) {
-  .mobile-landscape-hidden {
-    display: none !important;
-  }
-
-  .mobile-landscape-flex {
-    display: flex !important;
-  }
-
-  .mobile-landscape-block {
-    display: block !important;
-  }
-
-  .mobile-landscape-flex-row {
-    display: flex !important;
-    flex-direction: row !important;
-  }
-
-  .mobile-landscape-items-center {
-    align-items: center !important;
-  }
-
-  .mobile-landscape-flex-1 {
-    flex: 1 1 0% !important;
-  }
-
-  .mobile-landscape-gap-2 {
-    gap: 0.5rem !important;
-  }
-
-  .mobile-landscape-pl-0 {
-    padding-left: 0 !important;
-  }
-
-  .mobile-landscape-mb-0 {
-    margin-bottom: 0 !important;
-  }
-
-  .mobile-landscape-w-64 {
-    width: 16rem !important;
-    /* 256px Standard Sidebar */
-  }
-
-  .mobile-landscape-w-80 {
-    width: 20rem !important;
-    /* 320px Extended Sidebar */
-  }
-
-  /* Force visibility for sidebar in landscape */
-  aside.mobile-landscape-translate-x-0 {
-    transform: translateX(0) !important;
-  }
-
-  .mobile-landscape-pl-64 {
-    padding-left: 16rem !important;
-  }
-
-  .mobile-landscape-pb-4 {
-    padding-bottom: 1rem !important;
-  }
-
-
-  .mobile-landscape-border-r {
-    border-right-width: 1px !important;
-  }
-
-  .dark .mobile-landscape-border-slate-800 {
-    border-color: #1e293b !important;
-    /* slate-800 */
-  }
-
-  /* Interaction & Overlay Fixes */
-  .mobile-landscape-hidden {
-    display: none !important;
-  }
-
-  .mobile-landscape-h-screen {
-    height: 100vh !important;
-    max-height: 100vh !important;
-    overflow: hidden !important;
-  }
-
-  /* SCALING FIX: Global Scale Down for Landscape (800x360) 
-     This addresses "diminuir a escala" request. */
-  @media (orientation: landscape) and (max-height: 500px) {
-    html {
-      font-size: 13px;
-      /* Slightly smaller base font */
-    }
-
-    /* Aggressive padding reduction for the main container */
-    main.mobile-landscape-pl-64 {
-      padding-left: 16rem !important;
-      /* Keep sidebar width */
-      padding-top: 0.5rem !important;
-      padding-right: 0.5rem !important;
-      padding-bottom: 0.5rem !important;
-    }
-  }
-
-  .dark .mobile-landscape-border-slate-800 {
-    border-color: #1e293b !important;
-    /* slate-800 */
-  }
-
-  /* Hide Bottom Nav */
-  .mobile-bottom-nav {
-    display: none !important;
-  }
-
-  /* Compact Mode for Forms (360px Height optimization) */
-  .mobile-landscape-compact {
-    padding: 0.75rem !important;
-    /* p-3 instead of p-6/p-8 */
-  }
-
-  .mobile-landscape-compact .p-6,
-  .mobile-landscape-compact .p-8 {
-    padding: 0.75rem !important;
-  }
-
-  .mobile-landscape-compact .space-y-6> :not([hidden])~ :not([hidden]) {
-    margin-top: 0.5rem !important;
-    /* gap-2 instead of gap-6 */
-  }
-
-  /* Reduced Input Sizing */
-  .mobile-landscape-compact input,
-  .mobile-landscape-compact select,
-  .mobile-landscape-compact .input-field {
-    padding: 0.5rem 0.75rem !important;
-    font-size: 0.875rem !important;
-    /* text-sm */
-    height: auto !important;
-  }
-
-  /* Fix for Search Inputs with Icons (pl-10) */
-  .mobile-landscape-compact input.pl-10 {
-    padding-left: 2.5rem !important;
-  }
-
-  .mobile-landscape-compact .label {
-    margin-bottom: 0.125rem !important;
-    font-size: 0.75rem !important;
-  }
-
-  .mobile-landscape-compact h2,
-  .mobile-landscape-compact h3 {
-    font-size: 1rem !important;
-    margin-bottom: 0.25rem !important;
-  }
-
-  /* NEW UTILITIES FOR OBSERVATIONS */
-  .mobile-landscape-p-2 {
-    padding: 0.5rem !important;
-  }
-
-  .mobile-landscape-p-4 {
-    padding: 1rem !important;
-  }
-
-  .mobile-landscape-mt-0 {
-    margin-top: 0 !important;
-  }
-
-  .mobile-landscape-size-10 {
-    width: 2.5rem !important;
-    height: 2.5rem !important;
-  }
-
-  .mobile-landscape-rounded-xl {
-    border-radius: 0.75rem !important;
-  }
-
-  .mobile-landscape-text-lg {
-    font-size: 1.125rem !important;
-  }
-
-  .mobile-landscape-mb-1 {
-    margin-bottom: 0.25rem !important;
-  }
-
-  .mobile-landscape-ring-2 {
-    box-shadow: 0 0 0 2px var(--tw-ring-color) !important;
-  }
-
-  .mobile-landscape-min-h-\[100px\] {
-    min-height: 100px !important;
-  }
-
-  .mobile-landscape-compact-row {
-    padding: 0.5rem !important;
-    gap: 0.5rem !important;
-  }
-
-  .mobile-landscape-mb-4 {
-    margin-bottom: 1rem !important;
-  }
-
-  .mobile-landscape-h-10 {
-    height: 2.5rem !important;
-  }
-
-  .mobile-landscape-h-12 {
-    height: 3rem !important;
-  }
-
-  .mobile-landscape-px-4 {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-  .mobile-landscape-line-clamp-2 {
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
-  }
-}
-
-/* FOOLPROOF DARK MODE OVERRIDES */
-/* Using high specificity to ensure these apply when 'dark' class is present on html */
-
-html.dark .input-field,
-.dark .input-field,
-html.dark .input-textarea,
-.dark .input-textarea {
-  background-color: #0f172a !important;
-  /* slate-900 */
-  border-color: #334155 !important;
-  /* slate-700 */
-  color: #ffffff !important;
-}
-
-html.dark .input-field:focus,
-.dark .input-field:focus,
-html.dark .input-textarea:focus,
-.dark .input-textarea:focus {
-  border-color: #818cf8 !important;
-  /* indigo-400 */
-  background-color: #0f172a !important;
-  --tw-ring-color: rgba(129, 140, 248, 0.2) !important;
-}
-
-/* Force dark mode for Selects/Options to match system on Windows */
-html.dark select,
-.dark select {
-  background-color: #0f172a !important;
-  color: #ffffff !important;
-  border-color: #334155 !important;
-}
-
-html.dark option,
-.dark option {
-  background-color: #0f172a !important;
-  color: #ffffff !important;
+:root {
+    --primary: 19, 127, 236;
+    /* Fluid scale variables */
+    --fluid-min-width: 320;
+    --fluid-max-width: 1400;
+    --fluid-min-size: 14;
+    --fluid-max-size: 16;
+
+    --fluid-screen: 100vw;
+    --fluid-bp: calc((var(--fluid-screen) - var(--fluid-min-width) * 1px) / (var(--fluid-max-width) - var(--fluid-min-width)));
+    --fluid-res: calc(var(--fluid-min-size) * 1px + (var(--fluid-max-size) - var(--fluid-min-size)) * var(--fluid-bp));
+
+    --space-xs: clamp(0.75rem, 0.7rem + 0.25vw, 1rem);
+    --space-s: clamp(1rem, 0.9rem + 0.5vw, 1.5rem);
+    --space-m: clamp(1.5rem, 1.35rem + 0.75vw, 2.25rem);
+    --space-l: clamp(2.25rem, 2rem + 1.25vw, 3.5rem);
 }
 
 html {
-  scroll-behavior: smooth;
+    font-size: clamp(14px, 0.8rem + 0.5vw, 18px);
+    scroll-behavior: smooth;
 }
 
-html,
 body {
-  overscroll-behavior-y: contain;
-  height: 100%;
-  padding-bottom: env(safe-area-inset-bottom);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: 'Lexend', sans-serif;
+    @apply bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100;
 }
 
-/* Dynamic Viewport Height for Mobile */
-.h-dvh {
-  height: 100vh;
-  /* Fallback */
-  height: 100dvh;
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
-@media print {
-
-  /* HIDE EVERYTHING by default */
-  body * {
-    visibility: hidden;
-  }
-
-  /* SHOW ONLY printable content and its children */
-  .printable-content,
-  .printable-content * {
-    visibility: visible;
-  }
-
-  /* Reset body/layout for print */
-  body {
-    background-color: white !important;
-    color: black !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
-  }
-
-  /* POSITION the printable content at top-left */
-  .printable-content {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: none !important;
-    background-color: white !important;
-    box-shadow: none !important;
-  }
-
-  /* Hide explicit no-print elements */
-  .no-print,
-  .print\:hidden {
-    display: none !important;
-  }
-
-  /* RESET Tailwind utils that might interfere */
-  .max-w-\[1400px\] {
-    max-width: none !important;
-  }
-
-  .min-w-\[700px\] {
-    min-width: 0 !important;
-  }
-
-  /* Ensure text is black and readable */
-  /* Force Landscape */
-  @page {
-    size: landscape;
-    margin: 10mm;
-  }
-
-  /* Ensure text is black and readable (but allow overrides) */
-  p,
-  h1,
-  h2,
-  h3,
-  h4,
-  div,
-  td,
-  th,
-  li,
-  span {
-    color: black;
-  }
-
-  /* Preserve Logo Color */
-  .text-\[\#0ea5e9\] {
-    color: #0ea5e9 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* Border Fixes */
-  .border,
-  .border-b,
-  .border-r,
-  .border-t,
-  .border-l {
-    border-color: black !important;
-  }
-
-  /* Hide scrollbars */
-  ::-webkit-scrollbar {
-    display: none;
-  }
+.icon-filled {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
-/* Fix Date Input Icon Color in Dark Mode */
-.dark ::-webkit-calendar-picker-indicator {
-  filter: invert(1);
+/* Glassmorphism utilities */
+.card {
+    @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-xl rounded-2xl;
 }
 
-/* Animations for smoother feel */
-.animate-enter {
-  animation: enter 0.3s ease-out forwards;
+.glass-card-premium {
+    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/40 dark:border-white/5 rounded-3xl;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
 }
 
-@keyframes enter {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.dark .glass-card-premium {
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
 
-/* Global Transition Fluidity */
-* {
-  @apply transition-colors duration-300;
+.glass-card-soft {
+    @apply bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/10 dark:border-white/5 shadow-sm rounded-xl;
 }
 
-/* Micro-interactions */
-button:active,
-a:active {
-  transform: scale(0.98);
+/* Premium Shadows */
+.shadow-premium {
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
+.dark .shadow-premium {
+    box-shadow:
+        0 10px 30px -10px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
-.animate-pulse {
-  background: linear-gradient(90deg,
-      rgba(226, 232, 240, 0.5) 25%,
-      rgba(241, 245, 249, 0.8) 50%,
-      rgba(226, 232, 240, 0.5) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 2.5s infinite linear;
+.text-shadow-premium {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.dark .animate-pulse {
-  background: linear-gradient(90deg,
-      rgba(30, 41, 59, 0.5) 25%,
-      rgba(51, 65, 85, 0.8) 50%,
-      rgba(30, 41, 59, 0.5) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 2.5s infinite linear;
+/* Profile Avatar constraints */
+.profile-avatar {
+    @apply size-10 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0;
+}
+
+.profile-avatar img {
+    @apply w-full h-full object-cover;
+}
+
+.avatar-dynamic {
+    background-image: var(--avatar-url, none);
+    background-size: cover;
+    background-position: center;
+}
+
+.dynamic-width {
+    width: var(--progress-width, 0%);
+}
+
+.sidebar-toggle-pos {
+    transform: var(--toggle-transform, translateX(0));
+}
+
+@layer utilities {
+    .mask-linear-fade {
+        -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+        mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    }
+}
+
+/* Global Dynamic Icon Sizing for Landscape Mobile */
+@media screen and (orientation: landscape) and (max-height: 600px) {
+
+    /* Scale down all Material Symbols icons globally */
+    .material-symbols-outlined {
+        font-size: 0.85em !important;
+        /* Scale relative to parent font size, but smaller default */
+        /* OR force a max size cap */
+    }
+
+    /* Specific overrides for common icon sizes to be more compact */
+    .text-2xl .material-symbols-outlined,
+    .text-3xl .material-symbols-outlined {
+        font-size: 1.25rem !important;
+        /* Cap large icons */
+    }
+
+    .text-xl .material-symbols-outlined {
+        font-size: 1.1rem !important;
+    }
+
+    /* Reduce global base font size slightly for maximizing content density */
+    html {
+        font-size: 14px;
+    }
+}
+
+/* Animations */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+    animation-delay: var(--float-delay, 0s);
+}
+
+@keyframes blob {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    33% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
+
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+}
+
+.animate-blob {
+    animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+    animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+    animation-delay: 4s;
+}
+
+.delay-0 {
+    animation-delay: 0s;
+}
+
+.delay-1 {
+    animation-delay: 0.8s;
+}
+
+.delay-2 {
+    animation-delay: 1.6s;
+}
+
+.delay-3 {
+    animation-delay: 2.4s;
+}
+
+.delay-4 {
+    animation-delay: 3.2s;
+}
+
+.delay-5 {
+    animation-delay: 4.0s;
+}
+
+.delay-6 {
+    animation-delay: 4.8s;
+}
+
+.delay-7 {
+    animation-delay: 5.6s;
+}
+
+/* Custom transitions */
+.custom-bg-transition {
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* Smooth scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-200 dark:bg-slate-800 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-300 dark:bg-slate-700;
+}
+
+/* Fluid Spacing Utilities */
+.fluid-gap-xs {
+    gap: var(--space-xs);
+}
+
+.fluid-gap-s {
+    gap: var(--space-s);
+}
+
+.fluid-gap-m {
+    gap: var(--space-m);
+}
+
+.fluid-gap-l {
+    gap: var(--space-l);
+}
+
+.fluid-p-xs {
+    padding: var(--space-xs);
+}
+
+.fluid-p-s {
+    padding: var(--space-s);
+}
+
+.fluid-p-m {
+    padding: var(--space-m);
+}
+
+.fluid-p-l {
+    padding: var(--space-l);
+}
+
+.fluid-py-xs {
+    padding-top: var(--space-xs);
+    padding-bottom: var(--space-xs);
+}
+
+.fluid-py-s {
+    padding-top: var(--space-s);
+    padding-bottom: var(--space-s);
+}
+
+.fluid-py-m {
+    padding-top: var(--space-m);
+    padding-bottom: var(--space-m);
+}
+
+.fluid-py-l {
+    padding-top: var(--space-l);
+    padding-bottom: var(--space-l);
+}
+
+.fluid-px-xs {
+    padding-left: var(--space-xs);
+    padding-right: var(--space-xs);
+}
+
+.fluid-px-s {
+    padding-left: var(--space-s);
+    padding-right: var(--space-s);
+}
+
+.fluid-px-m {
+    padding-left: var(--space-m);
+    padding-right: var(--space-m);
+}
+
+.fluid-px-l {
+    padding-left: var(--space-l);
+    padding-right: var(--space-l);
 }

@@ -96,7 +96,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                 relative w-full max-w-2xl bg-white/90 dark:bg-slate-900/95 
                 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] 
                 border-t sm:border border-white/50 dark:border-white/10 
-                flex flex-col max-h-[90vh] sm:max-h-[85vh] 
+                flex flex-col max-h-[90vh] sm:max-h-[85vh] landscape:max-h-[96dvh]
                 animate-in slide-in-from-bottom duration-500 sm:zoom-in-95
                 overflow-hidden backdrop-blur-xl
             `}>

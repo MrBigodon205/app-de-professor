@@ -97,8 +97,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
         if (success) {
             updateActiveSubject(subject);
             alert('Perfil atualizado com sucesso!');
-            // Optional: window.location.reload() if theme changes need deep refresh
-            // window.location.reload(); -> Removed to avoid re-login feeling as requested
         } else {
             alert('Erro ao atualizar perfil.');
         }
@@ -139,7 +137,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                 onClick={onClose}
             ></div>
 
-            <div className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row h-[85vh] md:h-auto md:max-h-[80vh]">
+            <div className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-auto md:max-h-[80vh] landscape:h-[95dvh] landscape:md:h-auto">
 
                 {/* Close Button Mobile */}
                 <button
@@ -150,15 +148,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                 </button>
 
                 {/* Sidebar (Left) */}
-                <div className={`w-full md:w-80 bg-slate-50 dark:bg-slate-800/50 p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 shrink-0`}>
+                <div className="w-full md:w-80 bg-slate-50 dark:bg-slate-800/50 p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 shrink-0 landscape:p-4 landscape:w-64 landscape:md:w-80">
 
                     {/* Avatar Upload */}
                     <div className="relative group mb-4">
-                        <div
-                            className="size-32 rounded-full border-4 border-white dark:border-slate-700 shadow-xl bg-cover bg-center bg-slate-200 dark:bg-slate-700"
-                            style={{ backgroundImage: currentUser.photoUrl ? `url(${currentUser.photoUrl})` : undefined }}
-                        >
-                            {!currentUser.photoUrl && (
+                        <div className="size-32 rounded-full border-4 border-white dark:border-slate-700 shadow-xl bg-slate-200 dark:bg-slate-700 overflow-hidden relative">
+                            {currentUser.photoUrl ? (
+                                <img
+                                    src={currentUser.photoUrl}
+                                    alt={currentUser.name}
+                                    className="size-full object-cover"
+                                />
+                            ) : (
                                 <div className={`size-full flex items-center justify-center text-4xl font-bold text-${theme.primaryColor} bg-white dark:bg-slate-800`}>
                                     {currentUser.name.substring(0, 2).toUpperCase()}
                                 </div>
@@ -173,13 +174,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                                 {uploading ? 'sync' : 'photo_camera'}
                             </span>
                         </button>
-                        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+                        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" title="Upload de foto de perfil" />
                     </div>
 
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-white text-center leading-tight mb-1">
-                        {currentUser.name}
-                    </h2>
-                    <p className="text-sm text-slate-500 font-medium mb-6 text-center">{currentUser.email}</p>
+                    <div className="flex flex-col items-center landscape:flex-row landscape:gap-4 landscape:md:flex-col landscape:md:gap-0">
+                        <div className="flex flex-col items-center">
+                            <h2 className="text-xl font-bold text-slate-800 dark:text-white text-center leading-tight mb-1 landscape:text-lg">
+                                {currentUser.name}
+                            </h2>
+                            <p className="text-sm text-slate-500 font-medium mb-6 text-center landscape:mb-2">{currentUser.email}</p>
+                        </div>
+                    </div>
 
                     <nav className="w-full space-y-2">
                         <button
@@ -240,6 +245,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                                         <input
                                             value={name}
                                             onChange={e => setName(e.target.value)}
+                                            placeholder="Seu nome completo"
+                                            title="Nome Completo"
                                             className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all"
                                         />
                                     </div>
@@ -248,6 +255,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                                         <input
                                             value={email}
                                             onChange={e => setEmail(e.target.value)}
+                                            placeholder="seu@email.com"
+                                            title="Email"
                                             className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all"
                                         />
                                     </div>
@@ -256,6 +265,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                                         <select
                                             value={subject}
                                             onChange={(e) => setSubject(e.target.value)}
+                                            title="Disciplina Principal"
                                             className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all mb-4"
                                         >
                                             {availableSubjects.map(subj => (

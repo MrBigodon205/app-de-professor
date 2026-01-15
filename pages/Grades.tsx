@@ -36,6 +36,110 @@ interface GradeRecord {
     user_id: string;
 }
 
+interface GradeRowProps {
+    student: Student;
+    selectedUnit: string;
+    theme: any;
+    onGradeChange: (studentId: string, field: string, value: string) => void;
+}
+
+const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: GradeRowProps) => {
+    const currentConfig = UNIT_CONFIGS[selectedUnit as keyof typeof UNIT_CONFIGS];
+
+    const getGrade = (field: string) => {
+        return student.units?.[selectedUnit]?.[field]?.toString() || '';
+    };
+
+    const total = calculateUnitTotal(student, selectedUnit);
+    const finalResult = getStatusResult(student, selectedUnit);
+
+    // RESULTS TAB ROW
+    if (selectedUnit === 'results') {
+        const { annualTotal } = calculateAnnualSummary(student);
+        const res = getStatusResult(student, 'results'); // Using standardized helper
+        return (
+            <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
+                    {student.number}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                        <div className={`flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br ${student.color} flex items-center justify-center text-white text-xs font-bold shadow-sm mr-3`}>
+                            {student.initials}
+                        </div>
+                        <div className="text-sm font-medium text-slate-900 dark:text-white">
+                            {student.name}
+                        </div>
+                    </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center font-bold text-slate-700 dark:text-slate-300">
+                    {annualTotal.toFixed(1)} <span className="text-[10px] text-slate-400 font-normal">pts</span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${res.bg} ${res.color}`}>
+                        {res.text}
+                    </span>
+                </td>
+            </tr>
+        );
+    }
+
+    return (
+        <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
+                {student.number}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center">
+                    <div className={`flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br ${student.color} flex items-center justify-center text-white text-xs font-bold shadow-sm mr-3`}>
+                        {student.initials}
+                    </div>
+                    <div className="text-sm font-medium text-slate-900 dark:text-white">
+                        {student.name}
+                    </div>
+                </div>
+            </td>
+            {currentConfig?.columns.map((col: any) => {
+                let currentMax = col.max;
+                if (selectedUnit === '3' && col.key === 'exam') {
+                    const talentShowVal = Number(student.units?.['3']?.['talentShow']) || 0;
+                    if (talentShowVal > 0) currentMax = 8.0;
+                }
+
+                return (
+                    <td key={col.key} className="px-6 py-4 whitespace-nowrap">
+                        <input
+                            type="number"
+                            inputMode="decimal"
+                            min="0"
+                            max={currentMax}
+                            step="0.1"
+                            className={`w-full min-w-[60px] text-center bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-${theme.baseColor}-500 focus:border-transparent transition-all font-mono text-sm shadow-sm`}
+                            value={getGrade(col.key)}
+                            onChange={(e) => onGradeChange(student.id, col.key, e.target.value)}
+                            placeholder="-"
+                        />
+                    </td>
+                );
+            })}
+            <td className="px-6 py-4 whitespace-nowrap text-center bg-slate-50/30 dark:bg-slate-800/30">
+                {(selectedUnit === 'final' || selectedUnit === 'recovery') ? (
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${finalResult.bg} ${finalResult.color}`}>
+                        {finalResult.text}
+                    </span>
+                ) : (
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${total >= 6
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
+                        : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'
+                        }`}>
+                        {total.toFixed(1)}
+                    </span>
+                )}
+            </td>
+        </tr>
+    );
+});
+
 export const Grades: React.FC = () => {
     const { selectedSeriesId, selectedSection, activeSeries } = useClass();
     const { currentUser, activeSubject } = useAuth();
@@ -185,7 +289,7 @@ export const Grades: React.FC = () => {
 
                 const unitData = student.units[selectedUnit] || {};
 
-                console.log(`Saving grades for ${student.name} (Unit ${selectedUnit})...`);
+                // Saving grades...
 
                 const payload = {
                     student_id: parseInt(studentId), // Ensure ID is number if DB expects bigint
@@ -202,7 +306,7 @@ export const Grades: React.FC = () => {
                     .upsert(payload, { onConflict: 'student_id, unit, subject' });
 
                 if (error) throw error;
-                console.log("Saved successfully.");
+                // Saved successfully.
 
             } catch (err: any) {
                 console.error("Save failed:", err);
@@ -492,23 +596,23 @@ export const Grades: React.FC = () => {
     });
 
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32 lg:pb-12">
             {/* Header Controls */}
-            <div className="glass-panel p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="glass-card-soft fluid-p-s flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
                 <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg overflow-x-auto max-w-full" data-tour="grades-units">
                     {['1', '2', '3', 'final', 'recovery', 'results'].map((unit) => (
                         <button
                             key={unit}
                             onClick={() => setSelectedUnit(unit)}
-                            className={`px-4 py-2 mobile-landscape-compact rounded-md text-sm font-bold transition-all duration-200 whitespace-nowrap ${selectedUnit === unit
+                            className={`px-4 py-2 landscape:py-1 landscape:px-2 rounded-md text-sm font-bold transition-all duration-200 whitespace-nowrap ${selectedUnit === unit
                                 ? `bg-${theme.baseColor}-600 dark:bg-${theme.baseColor}-500 text-white shadow-md transform scale-105`
                                 : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'
                                 }`}
                         >
-                            <span className="mobile-landscape-hidden">
+                            <span className="landscape:hidden">
                                 {unit === 'final' ? 'Prova Final' : unit === 'recovery' ? 'Recuperação' : unit === 'results' ? 'Resultado' : `${unit}ª Unidade`}
                             </span>
-                            <span className="hidden mobile-landscape-block">
+                            <span className="hidden landscape:block">
                                 {unit === 'final' ? 'Final' : unit === 'recovery' ? 'Recup.' : unit === 'results' ? 'Total' : `${unit}ª`}
                             </span>
                         </button>
@@ -523,19 +627,19 @@ export const Grades: React.FC = () => {
                             Salvando...
                         </span>
                     ) : (
-                        <span className="flex items-center text-emerald-600 dark:text-emerald-400 text-sm font-bold bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 mobile-landscape-compact rounded-full border border-emerald-200 dark:border-emerald-800 transition-all">
-                            <span className="material-symbols-outlined text-sm mr-2 mobile-landscape-mr-0">check_circle</span>
-                            <span className="mobile-landscape-hidden">Salvo</span>
+                        <span className="flex items-center text-emerald-600 dark:text-emerald-400 text-sm font-bold bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 landscape:py-0.5 landscape:px-2 rounded-full border border-emerald-200 dark:border-emerald-800 transition-all">
+                            <span className="material-symbols-outlined text-sm mr-2 landscape:mr-0">check_circle</span>
+                            <span className="landscape:hidden">Salvo</span>
                         </span>
                     )}
 
                     <button
                         onClick={() => setShowExportModal(true)}
-                        className={`flex items-center space-x-2 px-4 py-2 mobile-landscape-compact bg-${theme.baseColor}-500 hover:bg-${theme.baseColor}-600 text-white rounded-lg transition-colors shadow-md shadow-${theme.baseColor}-500/20`}
+                        className={`flex items-center space-x-2 px-4 py-2 landscape:py-1 landscape:px-3 bg-${theme.baseColor}-500 hover:bg-${theme.baseColor}-600 text-white rounded-lg transition-colors shadow-md shadow-${theme.baseColor}-500/20`}
                         data-tour="grades-export"
                     >
                         <span className="material-symbols-outlined text-lg">download</span>
-                        <span className="mobile-landscape-hidden">Exportar PDF</span>
+                        <span className="landscape:hidden">Exportar PDF</span>
                     </button>
                 </div>
             </div>
@@ -610,7 +714,7 @@ export const Grades: React.FC = () => {
                     </div>
 
                     {/* Mobile Landscape Compact Controls */}
-                    <div className="hidden mobile-landscape-flex-row w-full items-center gap-2 justify-between">
+                    <div className="hidden landscape:flex w-full items-center gap-2 justify-between">
                         <div className="flex items-center gap-2">
                             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">{activeSeries?.name || 'Série?'} - {selectedSection}</span>
                             <span className="text-slate-300">|</span>
@@ -643,10 +747,10 @@ export const Grades: React.FC = () => {
             )}
 
             {/* Grades Table */}
-            <div className="glass-panel rounded-xl overflow-hidden shadow-lg border border-slate-200/60 dark:border-slate-700/60">
+            <div className="card overflow-hidden shadow-premium border-none">
                 <div className="overflow-x-auto">
-                    <table className="w-full min-w-[800px]">
-                        <thead className={`bg-${theme.baseColor}-50 dark:bg-slate-800 border-b border-${theme.baseColor}-100 dark:border-slate-700`}>
+                    <table className="w-full min-w-[800px] border-collapse">
+                        <thead className={`bg-slate-50/50 dark:bg-slate-800/50 backdrop-blur-md border-b border-slate-200 dark:border-slate-700`}>
                             <tr>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-16">
                                     Nº
@@ -683,98 +787,15 @@ export const Grades: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                            {visibleStudents.map((student) => {
-                                // RESULTS TAB ROW
-                                if (selectedUnit === 'results') {
-                                    const { annualTotal } = calculateAnnualSummary(student);
-                                    const res = getFinalResult(student);
-                                    return (
-                                        <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
-                                                {student.number}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center">
-                                                    <div className={`flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br ${student.color} flex items-center justify-center text-white text-xs font-bold shadow-sm mr-3`}>
-                                                        {student.initials}
-                                                    </div>
-                                                    <div className="text-sm font-medium text-slate-900 dark:text-white">
-                                                        {student.name}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center font-bold text-slate-700 dark:text-slate-300">
-                                                {annualTotal.toFixed(1)} <span className="text-[10px] text-slate-400 font-normal">pts</span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${res.bg} ${res.color}`}>
-                                                    {res.text}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    );
-                                }
-
-                                return (
-                                    <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
-                                            {student.number}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <div className={`flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br ${student.color} flex items-center justify-center text-white text-xs font-bold shadow-sm mr-3`}>
-                                                    {student.initials}
-                                                </div>
-                                                <div className="text-sm font-medium text-slate-900 dark:text-white">
-                                                    {student.name}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        {currentConfig?.columns.map((col) => {
-                                            let currentMax = col.max;
-                                            if (selectedUnit === '3' && col.key === 'exam') {
-                                                const talentShowVal = Number(getGrade(student, 'talentShow')) || 0;
-                                                if (talentShowVal > 0) currentMax = 8.0;
-                                            }
-
-                                            return (
-                                                <td key={col.key} className="px-6 py-4 whitespace-nowrap">
-                                                    <input
-                                                        type="number"
-                                                        inputMode="decimal"
-                                                        min="0"
-                                                        max={currentMax}
-                                                        step="0.1"
-                                                        className={`w-full min-w-[60px] text-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-${theme.baseColor}-500 focus:border-transparent transition-all font-mono text-sm`}
-                                                        value={getGrade(student, col.key)}
-                                                        onChange={(e) => handleGradeChange(student.id, col.key, e.target.value)}
-                                                        placeholder="-"
-                                                    />
-                                                </td>
-                                            );
-                                        })}
-                                        <td className="px-6 py-4 whitespace-nowrap text-center bg-slate-50/30 dark:bg-slate-800/30">
-                                            {(selectedUnit === 'final' || selectedUnit === 'recovery') ? (
-                                                (() => {
-                                                    const res = getFinalResult(student);
-                                                    return (
-                                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${res.bg} ${res.color}`}>
-                                                            {res.text}
-                                                        </span>
-                                                    )
-                                                })()
-                                            ) : (
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${calculateTotal(student) >= 6
-                                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                                    : 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400'
-                                                    }`}>
-                                                    {calculateTotal(student).toFixed(1)}
-                                                </span>
-                                            )}
-                                        </td>
-                                    </tr>
-                                )
-                            })}
+                            {visibleStudents.map((student) => (
+                                <GradeRow
+                                    key={student.id}
+                                    student={student}
+                                    selectedUnit={selectedUnit}
+                                    theme={theme}
+                                    onGradeChange={handleGradeChange}
+                                />
+                            ))}
                         </tbody>
                     </table>
 

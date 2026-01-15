@@ -64,7 +64,6 @@ export const Activities: React.FC = () => {
                 setActivityTypes(data.map(t => t.name));
             }
         } catch (error) {
-            console.error('Error fetching activity types:', error);
             // Keep defaults
         }
     };
@@ -132,7 +131,6 @@ export const Activities: React.FC = () => {
             formatted.sort((a, b) => parseInt(a.number) - parseInt(b.number));
             setStudents(formatted);
         } catch (e) {
-            console.error("Error fetching students for activity context:", e);
         }
     }
 
@@ -178,7 +176,6 @@ export const Activities: React.FC = () => {
                 setSelectedActivityId(null);
             }
         } catch (e) {
-            console.error("Failed to load activities", e);
         } finally {
             if (!silent) setLoading(false);
         }
@@ -193,7 +190,7 @@ export const Activities: React.FC = () => {
             fetchActivities(true);
         }, 10000);
 
-        console.log("Setting up Realtime for Activities...");
+        // Realtime setup
 
         const channel = supabase.channel(`activities_sync_${selectedSeriesId}`)
             .on(
@@ -204,14 +201,13 @@ export const Activities: React.FC = () => {
                     table: 'activities'
                 },
                 (payload) => {
-                    console.log("Realtime Activity Change Received!", payload);
                     fetchActivities(true);
                 }
             )
             .subscribe();
 
         return () => {
-            console.log("Cleaning up Activity Realtime...");
+            // Realtime cleanup
             supabase.removeChannel(channel);
             clearInterval(interval);
         };
@@ -334,8 +330,6 @@ export const Activities: React.FC = () => {
             }
             setIsEditing(false);
         } catch (e: any) {
-            console.error(e);
-            alert(`Erro ao salvar: ${e.message || 'Erro desconhecido'}`);
         } finally {
             setLoading(false);
         }
@@ -760,7 +754,7 @@ export const Activities: React.FC = () => {
     }
 
     return (
-        <div className="flex h-full gap-6 max-w-[1600px] mx-auto overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="flex h-full gap-4 md:gap-6 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 p-3 md:p-8 pb-32 lg:pb-8">
             {/* Hidden File Input */}
             <input
                 type="file"
@@ -775,30 +769,30 @@ export const Activities: React.FC = () => {
             {/* Sidebar with Card List Style */}
             <div className={`w-full lg:w-80 h-full flex flex-col gap-4 shrink-0 transition-all ${selectedActivityId || isEditing ? 'hidden lg:flex' : 'flex'}`} data-tour="activities-sidebar">
                 {/* Sidebar Header */}
-                <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 mobile-landscape-compact flex flex-col mobile-landscape-flex-row mobile-landscape-items-center mobile-landscape-gap-2">
-                    <div className="flex justify-between items-center mb-4 mobile-landscape-mb-0 mobile-landscape-gap-2 shrink-0">
-                        <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                            <Link to="/planning" className="px-3 py-1.5 mobile-landscape-compact rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all whitespace-nowrap">
-                                <span className="mobile-landscape-hidden">Aulas</span>
-                                <span className="hidden mobile-landscape-block text-xs">Aulas</span>
+                <div className="glass-card-soft fluid-p-s landscape:p-2 flex flex-col landscape:flex-row landscape:items-center landscape:gap-2">
+                    <div className="flex justify-between items-center mb-4 landscape:mb-0 landscape:gap-2 shrink-0">
+                        <div className="flex gap-2 p-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-xl">
+                            <Link to="/planning" className="px-3 py-1.5 landscape:p-1.5 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all whitespace-nowrap">
+                                <span className="landscape:hidden">Aulas</span>
+                                <span className="hidden landscape:block text-xs">Aulas</span>
                             </Link>
-                            <button className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 text-${theme.primaryColor} shadow-sm mobile-landscape-compact whitespace-nowrap`}>
-                                <span className="mobile-landscape-hidden">Atividades</span>
-                                <span className="hidden mobile-landscape-block text-xs">Ativ.</span>
+                            <button className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 text-${theme.primaryColor} shadow-sm landscape:p-1.5 whitespace-nowrap`}>
+                                <span className="landscape:hidden">Atividades</span>
+                                <span className="hidden landscape:block text-xs">Ativ.</span>
                             </button>
                         </div>
                         <button onClick={handleNewActivity} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Nova Atividade" data-tour="activities-new-btn">
                             <span className="material-symbols-outlined text-[20px]">add</span>
                         </button>
                     </div>
-                    <div className="relative flex-1 mobile-landscape-flex-1">
+                    <div className="relative flex-1 landscape:flex-1">
                         <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">search</span>
                         <input
                             type="text"
                             placeholder="Buscar..."
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-sm transition-all focus:bg-white dark:focus:bg-black`}
+                            className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-sm transition-all focus:bg-white dark:focus:bg-black font-medium`}
                         />
                     </div>
 
@@ -855,17 +849,17 @@ export const Activities: React.FC = () => {
                                 <button
                                     key={act.id}
                                     onClick={() => handleSelectActivity(act)}
-                                    className={`w-full text-left p-5 mobile-landscape-compact-row rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${selectedActivityId === act.id
-                                        ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}`
+                                    className={`w-full text-left p-5 landscape:p-3 landscape:py-2 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${selectedActivityId === act.id
+                                        ? `bg-white/60 dark:bg-surface-dark/60 backdrop-blur-md border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}`
                                         : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
                                 >
-                                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 mobile-landscape-hidden ${selectedActivityId === act.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
-                                    <div className="pl-3 mobile-landscape-pl-0 w-full">
-                                        <div className="flex justify-between items-start mb-2 mobile-landscape-mb-0 mobile-landscape-flex-row mobile-landscape-items-center">
-                                            <h4 className={`font-bold text-base mobile-landscape-text-sm truncate pr-2 flex-1 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedActivityId === act.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
+                                    <div className="pl-3 landscape:pl-0 w-full">
+                                        <div className="flex justify-between items-start mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
+                                            <h4 className={`font-bold text-base landscape:text-sm truncate pr-2 flex-1 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
                                             <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
                                         </div>
-                                        <div className="flex flex-wrap gap-2 mobile-landscape-hidden">
+                                        <div className="flex flex-wrap gap-2 landscape:hidden">
                                             {act.section && (
                                                 <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
                                                     Turma {act.section}
@@ -879,7 +873,7 @@ export const Activities: React.FC = () => {
                                             </span>
                                         </div>
                                         {/* Mobile Landscape Only Date */}
-                                        <div className="hidden mobile-landscape-block text-[10px] text-slate-400 mt-0.5">
+                                        <div className="hidden landscape:block text-[10px] text-slate-400 mt-0.5">
                                             {new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                                         </div>
                                     </div>
@@ -889,17 +883,10 @@ export const Activities: React.FC = () => {
                     )}
                 </div>
 
-                {/* Mobile FAB */}
-                <button
-                    onClick={handleNewActivity}
-                    className={`lg:hidden fixed bottom-24 right-6 size-14 rounded-2xl bg-${theme.primaryColor} text-white shadow-xl shadow-${theme.primaryColor}/30 flex items-center justify-center z-50 active:scale-90 transition-all mobile-landscape-hidden`}
-                >
-                    <span className="material-symbols-outlined text-3xl">add</span>
-                </button>
             </div >
 
             {/* Main Content */}
-            < div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${selectedActivityId || isEditing ? 'flex' : 'hidden lg:flex'}`}>
+            <div className={`flex-1 flex flex-col card shadow-premium overflow-hidden relative transition-all ${selectedActivityId || isEditing ? 'flex' : 'hidden lg:flex'}`}>
                 {(!selectedActivityId && !isEditing) ? (
                     // --- HERO EMPTY STATE ---
                     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-300">
@@ -923,7 +910,7 @@ export const Activities: React.FC = () => {
                     // --- EDIT / CREATE MODE ---
                     <div className="flex-1 flex flex-col h-full overflow-hidden relative">
                         {/* EDITOR HEADER */}
-                        <div className="p-6 mobile-landscape-compact border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark z-20 sticky top-0 shadow-sm">
+                        <div className="p-6 landscape:p-3 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark z-20 sticky top-0 shadow-sm">
                             <div className="flex items-center gap-4">
                                 <button
                                     onClick={() => { setSelectedActivityId(null); setIsEditing(false); }}
@@ -931,8 +918,8 @@ export const Activities: React.FC = () => {
                                 >
                                     <span className="material-symbols-outlined">arrow_back</span>
                                 </button>
-                                <h2 className="text-xl mobile-landscape-text-base font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                                    <div className={`size-8 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center mobile-landscape-hidden`}>
+                                <h2 className="text-xl landscape:text-base font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                                    <div className={`size-8 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center landscape:hidden`}>
                                         <span className="material-symbols-outlined text-lg">{selectedActivityId ? 'edit_document' : 'post_add'}</span>
                                     </div>
                                     {selectedActivityId ? 'Editar Atividade' : 'Nova Atividade'}
@@ -940,8 +927,8 @@ export const Activities: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-8 mobile-landscape-compact custom-scrollbar pb-0">
-                            <div className="max-w-4xl mx-auto flex flex-col gap-8 mobile-landscape-gap-4">
+                        <div className="flex-1 overflow-y-auto p-8 landscape:p-4 custom-scrollbar pb-0">
+                            <div className="max-w-4xl mx-auto flex flex-col gap-8 landscape:gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Título da Atividade</label>
                                     <input
@@ -1097,7 +1084,7 @@ export const Activities: React.FC = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <h1 className="text-3xl md:text-4xl font-bold text-white shadow-sm">{currentActivity.title}</h1>
+                                    <h1 className="text-3xl md:text-4xl font-bold text-white text-shadow-premium">{currentActivity.title}</h1>
                                 </div>
                                 <div className="absolute top-6 left-6 lg:hidden">
                                     <button
@@ -1193,9 +1180,9 @@ export const Activities: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="p-8 mobile-landscape-compact max-w-5xl mx-auto space-y-8 mobile-landscape-compact">
+                            <div className="p-8 landscape:p-4 max-w-5xl mx-auto space-y-8 landscape:space-y-4">
                                 {/* Info Cards */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mobile-landscape-grid-cols-3">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 landscape:grid-cols-3">
                                     <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
                                         <div className="size-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
                                             <span className="material-symbols-outlined">event</span>
@@ -1297,33 +1284,28 @@ export const Activities: React.FC = () => {
                                             </button>
                                         </h3>
 
-                                        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-y-0 md:gap-px bg-slate-100 dark:bg-slate-700">
-                                                {students.map(s => {
-                                                    const isDone = currentActivity.completions?.includes(s.id);
-                                                    return (
-                                                        <div
-                                                            key={s.id}
-                                                            className={`p-4 bg-white dark:bg-slate-800 flex items-center justify-between group hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-backwards`}
-                                                            onClick={() => toggleCompletion(s.id)}
-                                                            style={{ animationDelay: `${students.indexOf(s) * 30}ms` }}
-                                                        >
-                                                            <div className="flex items-center gap-3">
-                                                                <span className="text-xs font-mono text-slate-400 w-5">{s.number}</span>
-                                                                <span className={`text-sm font-bold ${isDone ? `text-${theme.primaryColor}` : 'text-slate-600 dark:text-slate-300'}`}>{s.name}</span>
-                                                            </div>
-                                                            <div className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 ${isDone ? `bg-${theme.primaryColor} border-${theme.primaryColor} text-white scale-110 shadow-sm shadow-${theme.primaryColor}/30` : `border-slate-200 dark:border-slate-700 group-hover:border-${theme.primaryColor}/50 group-hover:scale-110`}`}>
-                                                                {isDone && <span className="material-symbols-outlined text-[16px] font-bold animate-in zoom-in spin-in-180 duration-300">check</span>}
-                                                            </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                            {students.map(s => {
+                                                const isDone = currentActivity.completions?.includes(s.id);
+                                                return (
+                                                    <div
+                                                        key={s.id}
+                                                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-backwards flex items-center justify-between group ${isDone
+                                                            ? `bg-${theme.primaryColor}/5 border-${theme.primaryColor}/20`
+                                                            : 'bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 hover:border-slate-200'}`}
+                                                        onClick={() => toggleCompletion(s.id)}
+                                                        style={{ animationDelay: `${students.indexOf(s) * 30}ms` }}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-xs font-mono text-slate-400 w-5">{s.number}</span>
+                                                            <span className={`text-sm font-bold ${isDone ? `text-${theme.primaryColor}` : 'text-slate-600 dark:text-slate-300'}`}>{s.name}</span>
                                                         </div>
-                                                    );
-                                                })}
-                                            </div>
-                                            {students.length === 0 && (
-                                                <div className="p-8 text-center text-slate-400 italic">
-                                                    Nenhum aluno encontrado para esta turma.
-                                                </div>
-                                            )}
+                                                        <div className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 ${isDone ? `bg-${theme.primaryColor} border-${theme.primaryColor} text-white scale-110 shadow-sm shadow-${theme.primaryColor}/30` : `border-slate-200 dark:border-slate-700 group-hover:border-${theme.primaryColor}/50 group-hover:scale-110`}`}>
+                                                            {isDone && <span className="material-symbols-outlined text-[16px] font-bold animate-in zoom-in spin-in-180 duration-300">check</span>}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 )}

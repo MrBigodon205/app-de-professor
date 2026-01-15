@@ -12,23 +12,30 @@ interface ActivityHeatmapProps {
     loading?: boolean;
 }
 
-export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data, loading }) => {
+const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loading }) => {
     const theme = useTheme();
+    const days = 112;
 
     // Generate last 112 days (16 weeks * 7 days) to fit a nice grid
-    const days = 112;
-    const today = new Date();
-    const heatmapData = Array.from({ length: days }).map((_, i) => {
-        const date = new Date();
-        date.setDate(today.getDate() - (days - 1 - i));
-        const dateStr = date.toISOString().split('T')[0];
-        const dayData = data.find(d => d.date === dateStr);
-        return {
-            date: dateStr,
-            count: dayData?.count || 0,
-            types: dayData?.types || []
-        };
-    });
+    const heatmapData = React.useMemo(() => {
+        const today = new Date();
+
+        // Create a map for O(1) lookup
+        const dataMap = new Map();
+        data.forEach(d => dataMap.set(d.date, d));
+
+        return Array.from({ length: days }).map((_, i) => {
+            const date = new Date();
+            date.setDate(today.getDate() - (days - 1 - i));
+            const dateStr = date.toISOString().split('T')[0];
+            const dayData = dataMap.get(dateStr);
+            return {
+                date: dateStr,
+                count: dayData?.count || 0,
+                types: dayData?.types || []
+            };
+        });
+    }, [data]);
 
     const getColor = (count: number) => {
         if (count === 0) return 'bg-slate-100 dark:bg-slate-800/50';
@@ -36,14 +43,6 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data, loading 
         if (count === 2) return `bg-${theme.primaryColor}/40`;
         if (count <= 4) return `bg-${theme.primaryColor}/70`;
         return `bg-${theme.primaryColor}`;
-    };
-
-    const getMonthLabel = (dateStr: string, index: number) => {
-        const date = new Date(dateStr);
-        if (date.getDate() <= 7 && index % 7 === 0) {
-            return date.toLocaleDateString('pt-BR', { month: 'short' });
-        }
-        return null;
     };
 
     if (loading) {
@@ -75,3 +74,5 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data, loading 
         </div>
     );
 };
+
+export const ActivityHeatmap = React.memo(ActivityHeatmapComponent);

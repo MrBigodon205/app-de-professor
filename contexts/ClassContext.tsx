@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import { ClassConfig } from '../types';
 import { supabase } from '../lib/supabase';
@@ -20,6 +20,7 @@ interface ClassContextType {
     removeClass: (id: string) => Promise<void>;
     addSection: (classId: string, section: string) => Promise<void>;
     removeSection: (classId: string, section: string) => Promise<void>;
+    transferStudent: (studentId: string, targetSeriesId: string, targetSection: string) => Promise<boolean>;
     refreshData: () => Promise<void>;
 }
 
@@ -46,7 +47,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     }, [currentUser, activeSubject]);
 
-    const fetchClasses = async () => {
+    const fetchClasses = useCallback(async () => {
         if (!currentUser) return;
         setLoading(true);
         try {
@@ -54,11 +55,6 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 .from('classes')
                 .select('*')
                 .eq('user_id', currentUser.id);
-
-            // TEMPORARY: Disable subject filter to debug missing data
-            // if (activeSubject) {
-            //    query = query.or(`subject.eq.${activeSubject},subject.is.null`);
-            // }
 
             const { data, error } = await query.order('created_at', { ascending: true });
 
@@ -72,7 +68,6 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 subject: c.subject
             }));
 
-            // Deduplicate only if name AND sections are identical
             const uniqueClasses: ClassConfig[] = [];
             const seenConfigs = new Set();
             formattedClasses.forEach(c => {
@@ -85,7 +80,6 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             setClasses(uniqueClasses);
 
-            // Initial Default Selection if nothing selected
             if (formattedClasses.length > 0 && !selectedSeriesId) {
                 setSelectedSeriesId(formattedClasses[0].id);
                 if (formattedClasses[0].sections.length > 0) {
@@ -93,7 +87,6 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 }
             }
 
-            // Validate Selection: If selectedSeriesId is not in the new list (filtered by subject), clear it!
             if (selectedSeriesId && !uniqueClasses.find(c => c.id === selectedSeriesId)) {
                 setSelectedSeriesId('');
                 setSelectedSection('');
@@ -103,13 +96,12 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentUser, selectedSeriesId]);
 
-    const selectSeries = (id: string) => {
+    const selectSeries = useCallback((id: string) => {
         setSelectedSeriesId(id);
         const target = classes.find(c => c.id === id);
         if (target) {
-            // Try to keep same section or default to first
             if (selectedSection && target.sections.includes(selectedSection)) {
                 // keep
             } else if (target.sections.length > 0) {
@@ -118,17 +110,15 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 setSelectedSection('');
             }
         }
-    };
+    }, [classes, selectedSection]);
 
-    const selectSection = (section: string) => {
+    const selectSection = useCallback((section: string) => {
         setSelectedSection(section);
-    };
+    }, []);
 
-    // CRUD Wrappers
-    const addClass = async (name: string) => {
+    const addClass = useCallback(async (name: string) => {
         if (!currentUser) return;
 
-        // Intelligent Section Mapping
         let sections = ['A'];
         const lowerName = name.toLowerCase();
         if (lowerName.includes('sexto')) {
@@ -140,9 +130,6 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         } else if (lowerName.includes('nono')) {
             sections = ['A', 'B'];
         } else if (lowerName.includes('médio') || lowerName.includes('medio') || lowerName.includes('ensino médio')) {
-            sections = ['A'];
-        } else if (lowerName.includes('primeiro') || lowerName.includes('segundo') || lowerName.includes('terceiro')) {
-            // High school or specific individual series usually have only one section 'A'
             sections = ['A'];
         }
 
@@ -168,12 +155,11 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         };
 
         setClasses(prev => [...prev, saved]);
-        // Auto select
         setSelectedSeriesId(saved.id);
         setSelectedSection('A');
-    };
+    }, [currentUser, activeSubject]);
 
-    const removeClass = async (id: string) => {
+    const removeClass = useCallback(async (id: string) => {
         const { error } = await supabase
             .from('classes')
             .delete()
@@ -184,20 +170,22 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             return;
         }
 
-        const newClasses = classes.filter(c => c.id !== id);
-        setClasses(newClasses);
-        if (selectedSeriesId === id) {
-            if (newClasses.length > 0) {
-                setSelectedSeriesId(newClasses[0].id);
-                setSelectedSection(newClasses[0].sections[0] || '');
-            } else {
-                setSelectedSeriesId('');
-                setSelectedSection('');
+        setClasses(prev => {
+            const newClasses = prev.filter(c => c.id !== id);
+            if (selectedSeriesId === id) {
+                if (newClasses.length > 0) {
+                    setSelectedSeriesId(newClasses[0].id);
+                    setSelectedSection(newClasses[0].sections[0] || '');
+                } else {
+                    setSelectedSeriesId('');
+                    setSelectedSection('');
+                }
             }
-        }
-    };
+            return newClasses;
+        });
+    }, [selectedSeriesId]);
 
-    const addSection = async (classId: string, section: string) => {
+    const addSection = useCallback(async (classId: string, section: string) => {
         const cls = classes.find(c => c.id === classId);
         if (!cls) return;
 
@@ -215,9 +203,9 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         setClasses(prev => prev.map(c => c.id === classId ? { ...c, sections: updatedSections } : c));
         setSelectedSection(section);
-    };
+    }, [classes]);
 
-    const removeSection = async (classId: string, section: string) => {
+    const removeSection = useCallback(async (classId: string, section: string) => {
         const cls = classes.find(c => c.id === classId);
         if (!cls) return;
         const updatedSections = cls.sections.filter(s => s !== section);
@@ -236,27 +224,63 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (selectedSection === section) {
             setSelectedSection(updatedSections.length > 0 ? updatedSections[0] : '');
         }
-    };
+    }, [classes, selectedSection]);
+
+    const transferStudent = useCallback(async (studentId: string, targetSeriesId: string, targetSection: string) => {
+        try {
+            const { error } = await supabase
+                .from('students')
+                .update({
+                    series_id: targetSeriesId,
+                    section: targetSection
+                })
+                .eq('id', studentId);
+
+            if (error) throw error;
+            return true;
+        } catch (e) {
+            console.error("Failed to transfer student", e);
+            throw e;
+        }
+    }, []);
+
+    const contextValue = useMemo(() => ({
+        classes,
+        selectedSeriesId,
+        selectedSection,
+        activeSeries,
+        loading,
+        fetchClasses,
+        selectSeries,
+        selectSection,
+        addClass,
+        removeClass,
+        addSection,
+        removeSection,
+        transferStudent,
+        refreshData: fetchClasses
+    }), [
+        classes,
+        selectedSeriesId,
+        selectedSection,
+        activeSeries,
+        loading,
+        fetchClasses,
+        selectSeries,
+        selectSection,
+        addClass,
+        removeClass,
+        addSection,
+        removeSection,
+        transferStudent
+    ]);
 
     return (
-        <ClassContext.Provider value={{
-            classes,
-            selectedSeriesId,
-            selectedSection,
-            activeSeries,
-            loading,
-            fetchClasses,
-            selectSeries,
-            selectSection,
-            addClass,
-            removeClass,
-            addSection,
-            removeSection,
-            refreshData: fetchClasses
-        }}>
+        <ClassContext.Provider value={contextValue}>
             {children}
         </ClassContext.Provider>
     );
+
 };
 
 export const useClass = () => {

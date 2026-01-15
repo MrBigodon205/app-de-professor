@@ -78,17 +78,17 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({ value, onChange,
                         onClick={() => setIsOpen(false)}
                     />
 
-                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 sm:p-3 z-50 w-[85%] max-w-[280px] animate-in fade-in zoom-in-95 duration-200">
-                        <div className="flex items-center justify-between mb-2 px-1">
-                            <span className="font-black text-slate-800 dark:text-white uppercase tracking-widest text-[9px]">
-                                Categoria
+                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 z-50 w-[90%] max-w-[320px] lg:max-w-[400px] animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between mb-4 px-1">
+                            <span className="font-black text-slate-800 dark:text-white uppercase tracking-widest text-[10px] lg:text-xs">
+                                Selecione uma Categoria
                             </span>
-                            <button type="button" onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600">
-                                <span className="material-symbols-outlined text-base">close</span>
+                            <button type="button" onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                                <span className="material-symbols-outlined text-xl">close</span>
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-1">
+                        <div className="grid grid-cols-1 gap-2">
                             {CATEGORIES.map((cat) => (
                                 <button
                                     key={cat.id}
@@ -97,31 +97,24 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({ value, onChange,
                                         onChange(cat.id);
                                         setIsOpen(false);
                                     }}
-                                    className={`flex items-center gap-2.5 p-1.5 rounded-lg transition-all duration-200 text-left
+                                    className={`flex items-center gap-4 p-3 lg:p-4 rounded-xl transition-all duration-200 text-left
                                         ${value === cat.id
-                                            ? `bg-${cat.color}-50 dark:bg-${cat.color}-500/10 text-${cat.color}-600 dark:text-${cat.color}-400 ring-1 ring-${cat.color}-500/20`
-                                            : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}
-                                    `}
+                                            ? `bg-${cat.color}-500/10 text-${cat.color}-600 dark:text-${cat.color}-400 ring-2 ring-${cat.color}-500/20`
+                                            : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
+                                        }`}
                                 >
-                                    <div className={`size-6 rounded-md bg-${cat.color}-500/10 flex items-center justify-center text-${cat.color}-500 shrink-0`}>
-                                        <span className="material-symbols-outlined text-sm">{cat.icon}</span>
+                                    <div className={`size-10 lg:size-12 rounded-full flex items-center justify-center ${value === cat.id ? `bg-${cat.color}-500 text-white shadow-lg shadow-${cat.color}-500/30` : `bg-slate-100 dark:bg-slate-800 text-${cat.color}-500`}`}>
+                                        <span className="material-symbols-outlined text-xl lg:text-2xl">{cat.icon}</span>
                                     </div>
-                                    <span className="font-bold text-[11px] tracking-tight truncate">{cat.id}</span>
+                                    <span className={`font-bold text-sm lg:text-base ${value === cat.id ? 'translate-x-1' : ''} transition-transform`}>
+                                        {cat.id}
+                                    </span>
                                     {value === cat.id && (
-                                        <span className={`material-symbols-outlined ml-auto text-sm text-${cat.color}-500`}>check_circle</span>
+                                        <span className="material-symbols-outlined ml-auto text-emerald-500">check_circle</span>
                                     )}
                                 </button>
                             ))}
                         </div>
-
-                        {/* Mobile Close Button */}
-                        <button
-                            type="button"
-                            onClick={() => setIsOpen(false)}
-                            className="w-full mt-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg font-bold text-[10px] sm:hidden hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                        >
-                            Fechar
-                        </button>
                     </div>
                 </>
             )}

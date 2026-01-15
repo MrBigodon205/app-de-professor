@@ -112,7 +112,7 @@ export const Observations: React.FC = () => {
             fetchData(true);
         }, 10000);
 
-        console.log("Setting up Realtime for Occurrences...");
+        // Realtime setup
 
         const channel = supabase.channel(`occurrences_sync_${selectedSeriesId}`)
             .on(
@@ -123,14 +123,13 @@ export const Observations: React.FC = () => {
                     table: 'occurrences'
                 },
                 (payload) => {
-                    console.log("Realtime Occurrence Change Received!", payload);
                     fetchData(true);
                 }
             )
             .subscribe();
 
         return () => {
-            console.log("Cleaning up Occurrence Realtime...");
+            // Realtime cleanup
             supabase.removeChannel(channel);
             clearInterval(interval);
         };
@@ -280,7 +279,7 @@ export const Observations: React.FC = () => {
     );
 
     return (
-        <div className="flex flex-col lg:flex-row h-[calc(100dvh-7rem)] lg:h-full gap-4 lg:gap-8 max-w-[1700px] mx-auto overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 px-2 lg:px-0 mobile-landscape:h-[calc(100dvh-4rem)]">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 h-full overflow-y-auto lg:overflow-hidden pb-32 lg:pb-8">
             {/* Sidebar List */}
             <div className={`w-full lg:w-96 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden shrink-0 ${selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
                 <div className={`p-4 sm:p-8 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-slate-50 to-white dark:from-slate-950 dark:to-slate-900`}>
@@ -309,20 +308,20 @@ export const Observations: React.FC = () => {
                         <button
                             key={student.id}
                             onClick={() => setSelectedStudentId(student.id)}
-                            className={`w-full flex items-center gap-4 p-4 mobile-landscape-p-2 mobile-landscape-compact-row rounded-2xl transition-all duration-300 relative group/item ${selectedStudentId === student.id
+                            className={`w-full flex items-center gap-4 p-4 landscape:p-2 rounded-2xl transition-all duration-300 relative group/item ${selectedStudentId === student.id
                                 ? `bg-${theme.primaryColor}/5 border border-${theme.primaryColor}/10`
                                 : 'hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent'
                                 }`}
                         >
                             {selectedStudentId === student.id && (
-                                <div className={`absolute left-2 w-1 h-6 bg-${theme.primaryColor} rounded-full mobile-landscape-hidden`}></div>
+                                <div className={`absolute left-2 w-1 h-6 bg-${theme.primaryColor} rounded-full landscape:hidden`}></div>
                             )}
-                            <div className={`size-11 mobile-landscape-size-8 rounded-2xl bg-gradient-to-br ${student.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-sm font-black text-white shrink-0 shadow-lg shadow-slate-200 dark:shadow-none transition-transform group-hover/item:scale-110`}>
+                            <div className={`size-11 landscape:size-8 rounded-2xl bg-gradient-to-br ${student.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-sm font-black text-white shrink-0 shadow-lg shadow-slate-200 dark:shadow-none transition-transform group-hover/item:scale-110`}>
                                 {student.initials || student.name.substring(0, 2)}
                             </div>
                             <div className="flex flex-col items-start min-w-0 pr-4">
                                 <span className={`text-sm font-black truncate w-full text-left transition-colors ${selectedStudentId === student.id ? `text-${theme.primaryColor}` : 'text-slate-700 dark:text-slate-200 group-hover/item:text-slate-950 dark:group-hover/item:text-white'}`}>{student.name}</span>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mobile-landscape-hidden">Nº {student.number.padStart(2, '0')}</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest landscape:hidden">Nº {student.number.padStart(2, '0')}</span>
                             </div>
                         </button>
                     ))}
@@ -330,7 +329,7 @@ export const Observations: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className={`flex-1 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden relative group ${!selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`flex-1 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] landscape:rounded-none border border-slate-100 dark:border-slate-800 landscape:border-0 shadow-xl shadow-slate-200/50 dark:shadow-none lg:overflow-hidden relative group ${!selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
                 {/* Mobile Back Button */}
                 <button
                     onClick={() => setSelectedStudentId(null)}
@@ -342,16 +341,16 @@ export const Observations: React.FC = () => {
                 <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-40 -mt-40 blur-3xl`}></div>
 
                 {/* Header */}
-                <div className="p-3 sm:p-8 mobile-landscape-p-2 border-b border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4 sm:gap-8 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10 shrink-0">
-                    <div className="flex items-center gap-3 sm:gap-6 w-full lg:w-auto mt-8 lg:mt-0 mobile-landscape-mt-0">
+                <div className="p-3 sm:p-8 landscape:p-2 border-b border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4 sm:gap-8 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10 shrink-0">
+                    <div className="flex items-center gap-3 sm:gap-6 w-full lg:w-auto mt-8 lg:mt-0 landscape:mt-0">
                         {selectedStudent && (
                             <>
-                                <div className={`size-12 sm:size-20 mobile-landscape-size-10 rounded-2xl sm:rounded-[28px] mobile-landscape-rounded-xl bg-gradient-to-br ${selectedStudent.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-xl sm:text-3xl mobile-landscape-text-lg font-black text-white shadow-2xl shadow-slate-200 dark:shadow-none ring-4 sm:ring-8 ring-slate-50 dark:ring-slate-950 shrink-0 mobile-landscape-ring-2`}>
+                                <div className={`size-12 sm:size-20 landscape:size-10 rounded-2xl sm:rounded-[28px] landscape:rounded-xl bg-gradient-to-br ${selectedStudent.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-xl sm:text-3xl landscape:text-lg font-black text-white shadow-2xl shadow-slate-200 dark:shadow-none ring-4 sm:ring-8 ring-slate-50 dark:ring-slate-950 shrink-0 landscape:ring-2`}>
                                     {selectedStudent.initials}
                                 </div>
                                 <div className="flex flex-col min-w-0">
-                                    <h1 className="text-lg sm:text-3xl mobile-landscape-text-lg font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1 sm:mb-2 mobile-landscape-mb-1 truncate">{selectedStudent.name}</h1>
-                                    <div className="flex items-center gap-2 sm:gap-3 text-[9px] sm:text-sm font-bold text-slate-400">
+                                    <h1 className="text-lg sm:text-3xl landscape:text-base font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1 sm:mb-2 landscape:mb-0 truncate">{selectedStudent.name}</h1>
+                                    <div className="flex items-center gap-2 sm:gap-3 text-[9px] sm:text-sm font-bold text-slate-400 landscape:hidden">
                                         <span className="bg-slate-100 dark:bg-slate-800 px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl font-mono text-slate-500">#{selectedStudent.number.padStart(2, '0')}</span>
                                         <span>•</span>
                                         <span className={`text-${theme.primaryColor} truncate`}>{activeSeries?.name} • Turma {selectedSection}</span>
@@ -365,14 +364,14 @@ export const Observations: React.FC = () => {
                     <div className="flex p-1 bg-slate-100 dark:bg-slate-950/50 rounded-2xl shadow-inner border border-slate-200 dark:border-slate-800 w-full lg:w-auto overflow-x-auto">
                         <button
                             onClick={() => setActiveTab('general')}
-                            className={`flex-1 sm:flex-none px-3 sm:px-8 py-2 sm:py-3 rounded-xl sm:rounded-[14px] text-[9px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === 'general' ? `bg-white dark:bg-slate-800 text-${theme.primaryColor} shadow-md` : 'text-slate-400'}`}
+                            className={`flex-1 sm:flex-none px-3 sm:px-8 py-2 sm:py-3 landscape:py-1.5 rounded-xl sm:rounded-[14px] text-[9px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === 'general' ? `bg-white dark:bg-slate-800 text-${theme.primaryColor} shadow-md` : 'text-slate-400'}`}
                         >
                             <span className="material-symbols-outlined text-base sm:text-lg">description</span>
                             Geral
                         </button>
                         <button
                             onClick={() => setActiveTab('occurrences')}
-                            className={`flex-1 sm:flex-none px-3 sm:px-8 py-2 sm:py-3 rounded-xl sm:rounded-[14px] text-[9px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === 'occurrences' ? `bg-white dark:bg-slate-800 text-${theme.primaryColor} shadow-md` : 'text-slate-400'}`}
+                            className={`flex-1 sm:flex-none px-3 sm:px-8 py-2 sm:py-3 landscape:py-1.5 rounded-xl sm:rounded-[14px] text-[9px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === 'occurrences' ? `bg-white dark:bg-slate-800 text-${theme.primaryColor} shadow-md` : 'text-slate-400'}`}
                         >
                             <span className="material-symbols-outlined text-base sm:text-lg">history_edu</span>
                             Ocorrências
@@ -384,14 +383,14 @@ export const Observations: React.FC = () => {
                     {activeTab === 'general' ? (
                         <div className="max-w-4xl mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-                                <div className={`bg-gradient-to-r from-${theme.primaryColor}/5 to-transparent border-l-4 border-${theme.primaryColor} p-3 sm:p-6 rounded-2xl flex flex-1 gap-3 sm:gap-4 text-slate-600 dark:text-slate-400`}>
+                                <div className={`bg-gradient-to-r from-${theme.primaryColor}/5 to-transparent border-l-4 border-${theme.primaryColor} p-3 sm:p-6 rounded-2xl flex flex-1 gap-3 sm:gap-4 text-slate-600 dark:text-slate-400 landscape:hidden`}>
                                     <span className={`material-symbols-outlined text-${theme.primaryColor} text-2xl sm:text-3xl`}>auto_awesome</span>
                                     <div className="flex flex-col gap-0.5 sm:gap-1">
                                         <h4 className="font-black uppercase tracking-widest text-[9px] sm:text-[10px] text-slate-500">Dica Pedagógica</h4>
                                         <p className="text-xs sm:text-sm font-medium leading-relaxed">Registro analítico da evolução psicossocial e acadêmica.</p>
                                     </div>
                                 </div>
-                                <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-xl shadow-inner border border-slate-200 dark:border-slate-800 shrink-0 w-full sm:w-auto">
+                                <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-xl shadow-inner border border-slate-200 dark:border-slate-800 shrink-0 w-full sm:w-auto landscape:w-full landscape:justify-center">
                                     {['1', '2', '3'].map(u => (
                                         <button
                                             key={u}
@@ -439,7 +438,7 @@ export const Observations: React.FC = () => {
                                         }));
                                     }}
                                     onBlur={(e) => handleSaveGeneralObs(e.target.value)}
-                                    className={`w-full min-h-[150px] flex-1 p-4 sm:p-8 rounded-[32px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 resize-none shadow-sm focus:ring-8 focus:ring-${theme.primaryColor}/5 focus:border-${theme.primaryColor} text-sm sm:text-base font-medium leading-relaxed transition-all placeholder:italic custom-scrollbar mobile-landscape-min-h-[100px]`}
+                                    className={`w-full min-h-[150px] flex-1 p-4 sm:p-8 rounded-[32px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 resize-none shadow-sm focus:ring-8 focus:ring-${theme.primaryColor}/5 focus:border-${theme.primaryColor} text-sm sm:text-base font-medium leading-relaxed transition-all placeholder:italic custom-scrollbar landscape:min-h-[100px]`}
                                     placeholder="Inicie aqui suas anotações sobre reuniões com responsáveis, dificuldades específicas observadas em sala ou avanços notáveis..."
                                 ></textarea>
                             </div>
@@ -454,21 +453,21 @@ export const Observations: React.FC = () => {
                     ) : (
                         <div className="max-w-4xl mx-auto flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* Premium Form */}
-                            <div className="bg-slate-50 dark:bg-slate-950/50 rounded-[32px] border-2 border-dashed border-slate-200 dark:border-slate-800 p-4 sm:p-8 mobile-landscape-p-4 relative group/form" data-tour="obs-form">
+                            <div className="bg-slate-50 dark:bg-slate-950/50 rounded-[32px] border-2 border-dashed border-slate-200 dark:border-slate-800 p-4 sm:p-8 landscape:p-4 relative group/form" data-tour="obs-form">
                                 {/* Decorative Background - Clipped for rounded corners */}
                                 <div className="absolute inset-0 rounded-[30px] overflow-hidden pointer-events-none">
                                     <div className={`absolute top-0 left-0 w-2 h-full bg-${theme.primaryColor} opacity-20`}></div>
                                 </div>
 
-                                <h3 className="font-black text-base sm:text-lg text-slate-800 dark:text-white mb-4 sm:mb-8 mobile-landscape-mb-4 flex items-center gap-3 sm:gap-4 relative z-10">
-                                    <div className={`hidden sm:flex size-11 rounded-1.5xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} items-center justify-center mobile-landscape-hidden`}>
+                                <h3 className="font-black text-base sm:text-lg text-slate-800 dark:text-white mb-4 sm:mb-8 landscape:mb-4 flex items-center gap-3 sm:gap-4 relative z-10">
+                                    <div className={`hidden sm:flex size-11 rounded-1.5xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} items-center justify-center landscape:hidden`}>
                                         <span className="material-symbols-outlined text-2xl">{editingOccId ? 'edit_note' : 'add_moderator'}</span>
                                     </div>
                                     {editingOccId ? 'Editar Registro' : 'Registrar Novo Ponto de Atenção'}
                                 </h3>
 
-                                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 mobile-landscape-gap-2">
-                                    <div className="md:col-span-4 mobile-landscape-flex-1">
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 landscape:gap-2">
+                                    <div className="md:col-span-4 landscape:flex-1">
                                         <CategorySelect
                                             label="Categoria"
                                             value={type}
@@ -485,14 +484,14 @@ export const Observations: React.FC = () => {
                                             compact
                                         />
                                     </div>
-                                    <div className="md:col-span-4 mobile-landscape-flex-1">
-                                        <label className="block text-[9px] sm:text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1.5 sm:mb-3 mobile-landscape-mb-1 ml-1">Unidade</label>
+                                    <div className="md:col-span-4 landscape:flex-1">
+                                        <label className="block text-[9px] sm:text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1.5 sm:mb-3 landscape:mb-1 ml-1">Unidade</label>
                                         <div className="grid grid-cols-3 gap-2">
                                             {['1', '2', '3'].map((u) => (
                                                 <button
                                                     key={u}
                                                     onClick={() => setSelectedUnit(u)}
-                                                    className={`h-11 sm:h-14 mobile-landscape-h-10 rounded-2xl border-2 font-black text-sm transition-all ${selectedUnit === u
+                                                    className={`h-11 sm:h-14 landscape:h-10 rounded-2xl border-2 font-black text-sm transition-all ${selectedUnit === u
                                                         ? `border-${theme.primaryColor} bg-${theme.primaryColor}/10 text-${theme.primaryColor}`
                                                         : 'border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                                                         }`}
@@ -503,13 +502,13 @@ export const Observations: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="md:col-span-12">
-                                        <label className="block text-[9px] sm:text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1.5 sm:mb-3 mobile-landscape-mb-1 ml-1">Descrição</label>
+                                        <label className="block text-[9px] sm:text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1.5 sm:mb-3 landscape:mb-1 ml-1">Descrição</label>
                                         <input
                                             type="text"
                                             value={description}
                                             onChange={(e) => setDescription(e.target.value)}
                                             placeholder="Descreva brevemente..."
-                                            className={`w-full h-11 sm:h-14 mobile-landscape-h-10 px-6 mobile-landscape-px-4 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 font-medium focus:border-${theme.primaryColor} focus:ring-4 focus:ring-${theme.primaryColor}/10 shadow-sm transition-all`}
+                                            className={`w-full h-11 sm:h-14 landscape:h-10 px-6 landscape:px-4 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 font-medium focus:border-${theme.primaryColor} focus:ring-4 focus:ring-${theme.primaryColor}/10 shadow-sm transition-all`}
                                         />
                                     </div>
                                 </div>
@@ -537,7 +536,7 @@ export const Observations: React.FC = () => {
                                     <button
                                         onClick={handleSaveOccurrence}
                                         disabled={saving || !description}
-                                        className={`${editingOccId ? 'bg-amber-500' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'} font-black h-11 sm:h-14 mobile-landscape-h-12 px-8 rounded-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-[10px] shadow-xl disabled:opacity-50`}
+                                        className={`${editingOccId ? 'bg-amber-500' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'} font-black h-11 sm:h-14 landscape:h-12 px-8 rounded-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-[10px] shadow-xl disabled:opacity-50`}
                                     >
                                         <span className="material-symbols-outlined text-lg">{editingOccId ? 'save' : 'add_circle'}</span>
                                         {editingOccId ? 'Salvar' : 'Adicionar'}
@@ -592,7 +591,7 @@ export const Observations: React.FC = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed italic pr-4 mobile-landscape-line-clamp-2">"{occ.description}"</p>
+                                                <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed italic pr-4 landscape:line-clamp-2">"{occ.description}"</p>
                                             </div>
                                         </div>
                                     ))}

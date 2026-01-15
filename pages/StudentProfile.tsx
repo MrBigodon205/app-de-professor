@@ -6,6 +6,7 @@ import { useTheme } from '../hooks/useTheme';
 import { Student, Activity, AttendanceRecord, Occurrence, Plan } from '../types';
 import { supabase } from '../lib/supabase';
 import { calculateUnitTotal, calculateAnnualSummary, getStatusResult } from '../utils/gradeCalculations';
+import { TransferStudentModal } from '../components/TransferStudentModal';
 
 
 interface Grades {
@@ -26,6 +27,7 @@ export const StudentProfile: React.FC = () => {
     const [activities, setActivities] = useState<Activity[]>([]);
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
     useEffect(() => {
         if (selectedSeriesId && selectedSection) {
@@ -84,7 +86,6 @@ export const StudentProfile: React.FC = () => {
                 const { data, error } = await supabase
                     .from('grades')
                     .select('*')
-                    .in('student_id', studentIds)
                     .in('student_id', studentIds)
                     .eq('subject', activeSubject)
                     .eq('user_id', currentUser.id);
@@ -179,7 +180,6 @@ export const StudentProfile: React.FC = () => {
             fetchData(true);
         }, 10000);
 
-        console.log("Setting up Realtime for StudentProfile...");
 
         // Listen to changes in related tables
         const channel = supabase.channel(`profile_sync_${selectedSeriesId}`)
@@ -190,7 +190,6 @@ export const StudentProfile: React.FC = () => {
             .subscribe();
 
         return () => {
-            console.log("Cleaning up StudentProfile Realtime...");
             supabase.removeChannel(channel);
             clearInterval(interval);
         };
@@ -299,7 +298,7 @@ export const StudentProfile: React.FC = () => {
 
             // Determine Color based on status
             const statusColor = annualStatus === 'APPROVED' ? [34, 197, 94] // Green
-                : annualStatus === 'RECOVERY' || annualStatus === 'FAILED' ? [239, 68, 68] // Red
+                : (annualStatus === 'RECOVERY' || (annualStatus as string) === 'FAILED') ? [239, 68, 68] // Red
                     : [249, 115, 22]; // Orange (Final)
 
             // Label text
@@ -590,6 +589,13 @@ export const StudentProfile: React.FC = () => {
                             </select>
                         </div>
                         <button
+                            onClick={() => setIsTransferModalOpen(true)}
+                            className={`h-14 px-8 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-black flex items-center justify-center gap-3 transition-all hover:border-${theme.primaryColor} hover:text-${theme.primaryColor} self-end active:scale-95 uppercase tracking-widest text-xs`}
+                        >
+                            <span className="material-symbols-outlined text-xl text-amber-500">move_up</span>
+                            Trocar de Turma
+                        </button>
+                        <button
                             onClick={handleExportPDF}
                             data-tour="reports-export-btn"
                             className={`h-14 px-8 rounded-2xl bg-${theme.primaryColor} hover:opacity-90 text-white font-black flex items-center justify-center gap-3 transition-all shadow-xl shadow-${theme.primaryColor}/20 self-end active:scale-95 uppercase tracking-widest text-xs`}
@@ -599,6 +605,14 @@ export const StudentProfile: React.FC = () => {
                         </button>
                     </div>
                 </div>
+            )}
+
+            {student && (
+                <TransferStudentModal
+                    isOpen={isTransferModalOpen}
+                    onClose={() => setIsTransferModalOpen(false)}
+                    student={student}
+                />
             )}
 
             {loading ? (
@@ -694,7 +708,7 @@ export const StudentProfile: React.FC = () => {
                                                 </div>
                                                 <div className="mt-6 flex flex-col items-center gap-1">
                                                     <div className={`h-1.5 w-16 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden`}>
-                                                        <div className={`h-full ${avg >= 6 ? 'bg-emerald-500' : 'bg-rose-500'}`} style={{ width: `${avg * 10}%` }}></div>
+                                                        <div className={`h-full ${avg >= 6 ? 'bg-emerald-500' : 'bg-rose-500'} dynamic-width`} style={{ '--progress-width': `${avg * 10}%` } as React.CSSProperties}></div>
                                                     </div>
                                                     <span className="text-[10px] font-black text-slate-400 mt-2 uppercase">Status: {avg >= 6 ? 'Aprovado' : 'Abaixo'}</span>
                                                 </div>
@@ -782,8 +796,8 @@ export const StudentProfile: React.FC = () => {
                                     </div>
                                     <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden mb-4 relative z-10">
                                         <div
-                                            className="h-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]"
-                                            style={{ width: `${getAttendanceStats().percentage}%` }}
+                                            className="h-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)] dynamic-width"
+                                            style={{ '--progress-width': `${getAttendanceStats().percentage}%` } as React.CSSProperties}
                                         ></div>
                                     </div>
                                     <div className="flex items-center justify-between relative z-10">

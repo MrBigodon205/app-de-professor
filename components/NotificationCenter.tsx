@@ -42,7 +42,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
         }
 
         const handleRefresh = () => {
-            console.log('Refreshing notifications due to delete event');
             fetchNotifications();
         };
 

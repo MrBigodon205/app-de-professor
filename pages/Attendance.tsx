@@ -87,55 +87,59 @@ const MiniCalendar: React.FC<{
                 onClick={onClose}
             />
 
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 lg:p-6 z-50 w-[85%] max-w-[280px] lg:max-w-[400px] max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-                <div className="flex items-center justify-between mb-2">
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 lg:p-6 landscape:p-2 z-50 w-[85%] max-w-[280px] lg:max-w-[400px] max-h-[90vh] landscape:max-h-[95vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 landscape:flex landscape:flex-row landscape:items-start landscape:gap-4 landscape:w-auto landscape:max-w-none">
+                <div className="flex items-center justify-between mb-2 landscape:mb-0 landscape:flex-col landscape:gap-2 landscape:justify-center landscape:w-32 landscape:border-r landscape:border-slate-100 landscape:dark:border-slate-800 landscape:pr-2">
                     <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors">
-                        <span className="material-symbols-outlined text-sm">chevron_left</span>
+                        <span className="material-symbols-outlined text-sm">expand_less</span>
                     </button>
-                    <span className="font-bold text-slate-700 dark:text-slate-200 capitalize text-sm lg:text-lg">
-                        {viewDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}
+                    <span className="font-bold text-slate-700 dark:text-slate-200 capitalize text-sm lg:text-lg text-center leading-tight">
+                        {viewDate.toLocaleString('pt-BR', { month: 'long' })}<br />
+                        <span className="text-xs text-slate-400">{viewDate.getFullYear()}</span>
                     </span>
                     <button onClick={() => changeMonth(1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors">
-                        <span className="material-symbols-outlined text-sm">chevron_right</span>
+                        <span className="material-symbols-outlined text-sm">expand_more</span>
                     </button>
                 </div>
 
-                <div className="grid grid-cols-7 gap-1 lg:gap-2 mb-2">
-                    {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(day => (
-                        <div key={day} className="text-center text-[10px] lg:text-xs font-bold text-slate-400">
-                            {day}
-                        </div>
-                    ))}
-                </div>
-                <div className="grid grid-cols-7 gap-1 lg:gap-2">
-                    {days.map((day, i) => {
-                        if (!day) return <div key={`empty-${i}`} className="h-7 sm:h-6" />;
-                        return (
-                            <button
-                                key={day || `empty-${i}`}
-                                onClick={() => {
-                                    if (day) {
-                                        const newDateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-                                        onSelectDate(newDateStr);
-                                        onClose();
-                                    }
-                                }}
-                                className={`size-8 lg:size-10 flex items-center justify-center rounded-full text-xs lg:text-sm font-medium transition-all ${isSelected(day as number)
-                                    ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/30 scale-110`
-                                    : isToday(day as number)
-                                        ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor} font-bold`
-                                        : hasData(day as number)
-                                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800'
-                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-                                    }`}
-                            >
-                                <span className="z-10">{day}</span>
-                                {day && hasData(day) && !isSelected(day) && (
-                                    <span className={`absolute bottom-0.5 w-1 h-1 rounded-full bg-emerald-500`}></span>
-                                )}
-                            </button>
-                        );
-                    })}
+                <div className="landscape:flex-1">
+
+                    <div className="grid grid-cols-7 gap-1 lg:gap-2 mb-2">
+                        {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(day => (
+                            <div key={day} className="text-center text-[10px] lg:text-xs font-bold text-slate-400">
+                                {day}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 lg:gap-2">
+                        {days.map((day, i) => {
+                            if (!day) return <div key={`empty-${i}`} className="h-7 sm:h-6" />;
+                            return (
+                                <button
+                                    key={day || `empty-${i}`}
+                                    onClick={() => {
+                                        if (day) {
+                                            const newDateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                                            onSelectDate(newDateStr);
+                                            onClose();
+                                        }
+                                    }}
+                                    className={`size-8 lg:size-10 landscape:size-7 flex items-center justify-center rounded-full text-xs lg:text-sm font-medium transition-all ${isSelected(day as number)
+                                        ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/30 scale-110`
+                                        : isToday(day as number)
+                                            ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor} font-bold`
+                                            : hasData(day as number)
+                                                ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800'
+                                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                        }`}
+                                >
+                                    <span className="z-10">{day}</span>
+                                    {day && hasData(day) && !isSelected(day) && (
+                                        <span className={`absolute bottom-0.5 w-1 h-1 rounded-full bg-emerald-500`}></span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Mobile Close Button */}
@@ -257,7 +261,7 @@ export const Attendance: React.FC = () => {
             if (!isSaving) fetchData(true);
         }, 10000);
 
-        console.log("Setting up Realtime for Attendance...");
+        // Realtime setup
 
         const channel = supabase.channel(`attendance_sync_${selectedSeriesId}_${selectedSection}_${selectedUnit}`)
             .on(
@@ -269,7 +273,7 @@ export const Attendance: React.FC = () => {
                     filter: `date=eq.${selectedDate}` // Only listen for changes on CURRENT date to avoid noise
                 },
                 (payload) => {
-                    console.log("Realtime Change Received!", payload);
+                    // Realtime Change Received!
                     // Filter by user_id to ensure we only get our own updates (or shared if intended)
                     // The 'filter' in subscription handles date.
                     // We should verify userID if multiple teachers share db but row level security usually handles this.
@@ -280,7 +284,7 @@ export const Attendance: React.FC = () => {
             .subscribe();
 
         return () => {
-            console.log("Cleaning up Realtime...");
+            // Realtime cleanup
             supabase.removeChannel(channel);
             clearInterval(interval);
         };
@@ -637,9 +641,9 @@ export const Attendance: React.FC = () => {
     }
 
     return (
-        <div className="max-w-[1400px] mx-auto flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32 lg:pb-12">
             {/* Header Control */}
-            <div className={`bg-white dark:bg-slate-900 p-4 sm:p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-8 relative z-30 group mobile-landscape-compact`}>
+            <div className={`bg-white dark:bg-slate-900 p-4 sm:p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-8 relative z-30 group landscape:p-2`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700`}></div>
 
                 <div className="flex items-center gap-4 sm:gap-6 relative z-10 w-full lg:w-auto">
@@ -745,58 +749,14 @@ export const Attendance: React.FC = () => {
                         </thead>
                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                             {students.length > 0 ? (
-                                students.map((s, idx) => (
-                                    <tr key={s.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all">
-                                        <td className="px-3 sm:px-8 py-3 sm:py-4 text-center sm:text-left">
-                                            <span className="font-mono text-xs sm:text-sm font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 sm:px-2 py-1 rounded-lg">
-                                                {s.number.padStart(2, '0')}
-                                            </span>
-                                        </td>
-                                        <td className="px-3 sm:px-8 py-3 sm:py-4">
-                                            <div className="flex items-center gap-2 sm:gap-4">
-                                                <div className="h-6 sm:h-8 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block mx-2"></div>
-                                                <div className={`size-8 sm:size-10 rounded-xl bg-gradient-to-br from-${theme.primaryColor}/10 to-${theme.secondaryColor}/10 flex items-center justify-center text-${theme.primaryColor} font-bold text-xs sm:text-sm border border-${theme.primaryColor}/10 shrink-0`}>
-                                                    {s.name.substring(0, 1)}
-                                                </div>
-                                                <div className="flex flex-col min-w-0">
-                                                    <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white group-hover:text-primary transition-colors truncate max-w-[120px] sm:max-w-xs">{s.name}</span>
-                                                    <span className="text-[9px] sm:text-[10px] font-medium text-slate-400 uppercase tracking-tighter">ID: {s.id.substring(0, 6)}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-3 sm:px-8 py-3 sm:py-4">
-                                            <div className="flex justify-center gap-3">
-                                                <AttendanceButton
-                                                    active={attendanceMap[s.id] === 'P'}
-                                                    onClick={() => handleStatusChange(s.id, 'P')}
-                                                    icon="check_circle"
-                                                    label="Presente"
-                                                    color="emerald"
-                                                />
-                                                <AttendanceButton
-                                                    active={attendanceMap[s.id] === 'F'}
-                                                    onClick={() => handleStatusChange(s.id, 'F')}
-                                                    icon="cancel"
-                                                    label="Falta"
-                                                    color="rose"
-                                                />
-                                                <AttendanceButton
-                                                    active={attendanceMap[s.id] === 'J'}
-                                                    onClick={() => handleStatusChange(s.id, 'J')}
-                                                    icon="assignment_late"
-                                                    label="Justificada"
-                                                    color="amber"
-                                                />
-                                                <AttendanceButton
-                                                    active={attendanceMap[s.id] === 'S'}
-                                                    onClick={() => handleStatusChange(s.id, 'S')}
-                                                    icon="event_busy"
-                                                    label="Sem Aula"
-                                                    color="slate"
-                                                />
-                                            </div>
-                                        </td>
-                                    </tr>
+                                students.map((s) => (
+                                    <AttendanceRow
+                                        key={s.id}
+                                        student={s}
+                                        status={attendanceMap[s.id]}
+                                        onStatusChange={handleStatusChange}
+                                        theme={theme}
+                                    />
                                 ))
                             ) : (
                                 <tr>
@@ -842,11 +802,11 @@ const AttendanceButton: React.FC<{
             title={label}
             className={`flex flex-col items-center gap-1 group/btn transition-all duration-300`}
         >
-            <div className={`size-12 rounded-2xl flex items-center justify-center transition-all duration-300 relative ${active
+            <div className={`size-12 landscape:size-9 rounded-2xl flex items-center justify-center transition-all duration-300 relative ${active
                 ? `bg-${c}-500 text-white shadow-lg shadow-${c}-500/30 scale-110 ring-4 ring-${c}-500/10`
                 : `bg-slate-50 dark:bg-slate-800 text-slate-300 dark:text-slate-600 hover:bg-${c}-50 dark:hover:bg-${c}-900/20 hover:text-${c}-500 border border-transparent`
                 }`}>
-                <span className={`material-symbols-outlined ${active ? 'icon-filled' : ''} text-2xl`}>{icon}</span>
+                <span className={`material-symbols-outlined ${active ? 'icon-filled' : ''} text-2xl landscape:text-xl`}>{icon}</span>
             </div>
             <span className={`text-[9px] font-bold uppercase tracking-tighter transition-colors ${active ? `text-${c}-500` : 'text-transparent group-hover/btn:text-slate-400'}`}>
                 {label}
@@ -854,3 +814,66 @@ const AttendanceButton: React.FC<{
         </button>
     );
 };
+
+interface AttendanceRowProps {
+    student: Student;
+    status: string;
+    onStatusChange: (studentId: string, status: string) => void;
+    theme: any;
+}
+
+const AttendanceRow = React.memo(({ student: s, status, onStatusChange, theme }: AttendanceRowProps) => {
+    return (
+        <tr className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all">
+            <td className="px-3 sm:px-8 py-3 sm:py-4 landscape:py-1.5 landscape:px-2 text-center sm:text-left">
+                <span className="font-mono text-xs sm:text-sm font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 sm:px-2 py-1 rounded-lg">
+                    {s.number.padStart(2, '0')}
+                </span>
+            </td>
+            <td className="px-3 sm:px-8 py-3 sm:py-4 landscape:py-1.5 landscape:px-2">
+                <div className="flex items-center gap-2 sm:gap-4">
+                    <div className="h-6 sm:h-8 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block mx-2 landscape:hidden"></div>
+                    <div className={`size-8 sm:size-10 landscape:size-8 rounded-xl bg-gradient-to-br from-${theme.primaryColor}/10 to-${theme.secondaryColor}/10 flex items-center justify-center text-${theme.primaryColor} font-bold text-xs sm:text-sm border border-${theme.primaryColor}/10 shrink-0`}>
+                        {s.name.substring(0, 1)}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                        <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white group-hover:text-primary transition-colors truncate max-w-[120px] sm:max-w-xs">{s.name}</span>
+                        <span className="text-[9px] sm:text-[10px] font-medium text-slate-400 uppercase tracking-tighter">ID: {s.id.substring(0, 6)}</span>
+                    </div>
+                </div>
+            </td>
+            <td className="px-3 sm:px-8 py-3 sm:py-4 landscape:py-1.5 landscape:px-2">
+                <div className="flex justify-center gap-3 landscape:gap-1.5">
+                    <AttendanceButton
+                        active={status === 'P'}
+                        onClick={() => onStatusChange(s.id, 'P')}
+                        icon="check_circle"
+                        label="Presente"
+                        color="emerald"
+                    />
+                    <AttendanceButton
+                        active={status === 'F'}
+                        onClick={() => onStatusChange(s.id, 'F')}
+                        icon="cancel"
+                        label="Falta"
+                        color="rose"
+                    />
+                    <AttendanceButton
+                        active={status === 'J'}
+                        onClick={() => onStatusChange(s.id, 'J')}
+                        icon="assignment_late"
+                        label="Justificada"
+                        color="amber"
+                    />
+                    <AttendanceButton
+                        active={status === 'S'}
+                        onClick={() => onStatusChange(s.id, 'S')}
+                        icon="event_busy"
+                        label="Sem Aula"
+                        color="slate"
+                    />
+                </div>
+            </td>
+        </tr>
+    );
+});

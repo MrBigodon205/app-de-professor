@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../hooks/useTheme';
+import { BackgroundPattern } from '../components/BackgroundPattern';
 import { Subject } from '../types';
 
 const SUBJECTS: Subject[] = [
@@ -12,6 +14,7 @@ const SUBJECTS: Subject[] = [
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login, register } = useAuth();
+  const theme = useTheme();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
 
   // State for forms
@@ -70,15 +73,17 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex w-full h-screen font-display bg-background-light dark:bg-background-dark overflow-hidden">
+    <div className="flex w-full h-screen font-display bg-background-light dark:bg-background-dark overflow-hidden relative">
+      <BackgroundPattern theme={theme} />
+
       {/* Left Side - Form */}
-      <div className="flex w-full flex-col bg-white dark:bg-slate-900 lg:w-1/2 overflow-y-auto relative z-10 shadow-xl h-full">
+      <div className="flex w-full flex-col bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl lg:w-1/2 overflow-y-auto relative z-10 shadow-premium h-full custom-scrollbar">
         {/* ... Header ... */}
         <div className="relative bg-header-dark w-full pt-16 pb-12 flex flex-col items-center justify-center shrink-0 rounded-b-[2rem] shadow-2xl overflow-hidden z-20">
           {/* ... header content ... */}
-          <div className="absolute inset-0 opacity-50 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-          <div className="relative z-10 bg-primary p-4 rounded-2xl mb-5 shadow-lg shadow-green-900/30 transform transition-transform hover:scale-105 duration-300">
-            <span className="material-symbols-outlined text-white text-[40px]">school</span>
+          <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] animate-pulse"></div>
+          <div className={`relative z-10 bg-${theme.primaryColor} p-4 rounded-2xl mb-5 shadow-lg shadow-${theme.primaryColor}/30 transform transition-transform hover:rotate-6 duration-300`}>
+            <span className="material-symbols-outlined text-white text-[40px]">{theme.illustrations[0]}</span>
           </div>
           <h1 className="relative z-10 text-3xl md:text-4xl font-bold text-white tracking-tight text-center">
             Prof. Acerta<span className="text-primary">+ 3.1</span>
@@ -88,7 +93,7 @@ export const Login: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-1 flex-col px-6 lg:px-20 xl:px-28 pt-10 pb-6">
+        <div className="flex flex-1 flex-col fluid-px-m pt-10 pb-6">
           <div className="mx-auto w-full max-w-md animate-in fade-in zoom-in-95 duration-500 slide-in-from-bottom-4">
             {/* ... Form Content ... */}
             <div className="mb-8 text-center md:text-left">
@@ -111,7 +116,7 @@ export const Login: React.FC = () => {
                   {activeTab === 'login' && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                      className={`absolute bottom-0 left-0 right-0 h-0.5 bg-${theme.primaryColor}`}
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -124,7 +129,7 @@ export const Login: React.FC = () => {
                   {activeTab === 'register' && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                      className={`absolute bottom-0 left-0 right-0 h-0.5 bg-${theme.primaryColor}`}
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -163,7 +168,7 @@ export const Login: React.FC = () => {
                         transition={{ delay: 0.1 }}
                       >
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 ml-1" htmlFor="name">Nome Completo</label>
-                        <input className="block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800 py-4 px-5 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6" id="name" placeholder="Seu nome" value={name} onChange={e => setName(e.target.value)} required />
+                        <input className={`block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800/50 py-4 px-5 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-${theme.primaryColor} focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6`} id="name" placeholder="Seu nome" value={name} onChange={e => setName(e.target.value)} required />
                       </motion.div>
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
@@ -184,7 +189,7 @@ export const Login: React.FC = () => {
                                 }
                               }}
                               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedSubjects.includes(s)
-                                ? 'bg-primary text-white shadow-md'
+                                ? `bg-${theme.primaryColor} text-white shadow-md`
                                 : 'bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
                                 }`}
                             >
@@ -207,14 +212,14 @@ export const Login: React.FC = () => {
                   <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 ml-1" htmlFor="email">E-mail Institucional</label>
                     <div className="relative">
-                      <input className="block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800 py-4 px-5 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6" id="email" name="email" placeholder="seuemail@escola.com" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+                      <input className={`block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800/50 py-4 px-5 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-${theme.primaryColor} focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6`} id="email" name="email" placeholder="seuemail@escola.com" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
                     </div>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 ml-1" htmlFor="password">Senha</label>
                     <div className="relative">
                       <input
-                        className="block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800 py-4 pl-5 pr-12 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6"
+                        className={`block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800/50 py-4 pl-5 pr-12 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-${theme.primaryColor} focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6`}
                         id="password"
                         name="password"
                         placeholder="••••••••"
@@ -227,7 +232,7 @@ export const Login: React.FC = () => {
                         className="absolute inset-y-0 right-0 flex items-center pr-4 cursor-pointer group"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-[20px]">
+                        <span className={`material-symbols-outlined text-slate-400 group-hover:text-${theme.primaryColor} transition-colors text-[20px]`}>
                           {showPassword ? "visibility" : "visibility_off"}
                         </span>
                       </div>
@@ -242,7 +247,7 @@ export const Login: React.FC = () => {
                       <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 ml-1" htmlFor="confirm-password">Confirmar Senha</label>
                       <div className="relative">
                         <input
-                          className="block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800 py-4 pl-5 pr-12 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6"
+                          className={`block w-full rounded-xl border-0 bg-input-bg dark:bg-slate-800/50 py-4 pl-5 pr-12 text-slate-700 dark:text-white shadow-sm ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-${theme.primaryColor} focus:bg-white dark:focus:bg-slate-800 transition-all sm:text-sm sm:leading-6`}
                           id="confirm-password"
                           name="confirm-password"
                           placeholder="••••••••"
@@ -255,7 +260,7 @@ export const Login: React.FC = () => {
                           className="absolute inset-y-0 right-0 flex items-center pr-4 cursor-pointer group"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         >
-                          <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-[20px]">
+                          <span className={`material-symbols-outlined text-slate-400 group-hover:text-${theme.primaryColor} transition-colors text-[20px]`}>
                             {showConfirmPassword ? "visibility" : "visibility_off"}
                           </span>
                         </div>
@@ -270,7 +275,7 @@ export const Login: React.FC = () => {
                   <input className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-600 dark:bg-slate-700" id="terms" name="terms" type="checkbox" />
                 </div>
                 <div className="ml-3 text-sm leading-6">
-                  <label className="font-medium text-slate-600 dark:text-slate-400" htmlFor="terms">Aceito os <a className="font-semibold text-primary hover:text-green-600" href="#">Termos de Uso</a> e <a className="font-semibold text-primary hover:text-green-600" href="#">Política</a>.</label>
+                  <label className="font-medium text-slate-600 dark:text-slate-400" htmlFor="terms">Aceito os <a className={`font-semibold text-${theme.primaryColor} hover:text-${theme.secondaryColor}`} href="#">Termos de Uso</a> e <a className={`font-semibold text-${theme.primaryColor} hover:text-${theme.secondaryColor}`} href="#">Política</a>.</label>
                 </div>
               </div>
 
@@ -280,7 +285,7 @@ export const Login: React.FC = () => {
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex w-full justify-center items-center gap-2 rounded-xl bg-primary px-3 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-green-500/30 hover:bg-primary-hover hover:shadow-green-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all duration-200"
+                  className={`flex w-full justify-center items-center gap-2 rounded-xl bg-${theme.primaryColor} px-3 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-${theme.primaryColor}/30 hover:bg-${theme.primaryColor}-hover hover:shadow-${theme.primaryColor}/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-${theme.primaryColor} transition-all duration-200`}
                 >
                   {isSubmitting ? 'Processando...' : (activeTab === 'login' ? 'Entrar Agora' : 'Cadastrar')}
                   {!isSubmitting && <span className="material-symbols-outlined text-lg">arrow_forward</span>}
@@ -303,8 +308,8 @@ export const Login: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/90 to-primary/40 mix-blend-multiply"></div>
         <div className="absolute inset-0 flex flex-col justify-end p-20 z-20">
           <div className="max-w-xl">
-            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white shadow-lg">
-              <span className="material-symbols-outlined text-3xl">school</span>
+            <div className={`mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white shadow-lg`}>
+              <span className="material-symbols-outlined text-3xl">{theme.illustrations[1]}</span>
             </div>
             <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl drop-shadow-md">
               Educação organizada, futuro garantido.
