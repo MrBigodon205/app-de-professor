@@ -76,6 +76,8 @@ export const Activities: React.FC = () => {
         if (selectedSection) {
             setFormSection(selectedSection);
         }
+        // Reset filter when series changes
+        setFilterSection('');
     }, [selectedSeriesId, selectedSection]);
 
     // Centralized Student Fetching
@@ -230,7 +232,8 @@ export const Activities: React.FC = () => {
         setFormDescription('');
         setFormFiles([]);
         setFormSeriesId(selectedSeriesId);
-        setFormSection(selectedSection || '');
+        // Smart Default: Use filterSection if global section is not set
+        setFormSection(selectedSection || filterSection || '');
     };
 
     const handleSelectActivity = (act: Activity) => {
@@ -576,7 +579,12 @@ export const Activities: React.FC = () => {
             doc.setFontSize(7);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(100, 116, 139);
-            doc.text(`${activeSeries?.name} - ${selectedSection}`, 170, 22, { align: 'center' });
+
+            const sectionName = currentActivity.section
+                ? `${activeSeries?.name} - ${currentActivity.section}`
+                : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas'}`;
+
+            doc.text(sectionName, 170, 22, { align: 'center' });
             doc.text(currentActivity.type.toUpperCase(), 170, 26, { align: 'center' });
         };
 
@@ -731,7 +739,11 @@ export const Activities: React.FC = () => {
         return activities.filter(a => {
             const matchesSearch = a.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                 a.type.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
-            const matchesSection = filterSection === '' || a.section === filterSection;
+            // Updated filtering logic: Include specific match OR "All Classes" options
+            const matchesSection = filterSection === '' ||
+                a.section === filterSection ||
+                a.section === 'Todas as Turmas' ||
+                !a.section;
             return matchesSearch && matchesSection;
         });
     }, [activities, debouncedSearchTerm, filterSection]);
@@ -761,7 +773,7 @@ export const Activities: React.FC = () => {
             />
 
             {/* Sidebar with Card List Style */}
-            <div className={`w-full lg:w-80 flex flex-col gap-4 shrink-0 transition-all ${selectedActivityId || isEditing ? 'hidden lg:flex' : 'flex'}`} data-tour="activities-sidebar">
+            <div className={`w-full lg:w-80 h-full flex flex-col gap-4 shrink-0 transition-all ${selectedActivityId || isEditing ? 'hidden lg:flex' : 'flex'}`} data-tour="activities-sidebar">
                 {/* Sidebar Header */}
                 <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 mobile-landscape-compact flex flex-col mobile-landscape-flex-row mobile-landscape-items-center mobile-landscape-gap-2">
                     <div className="flex justify-between items-center mb-4 mobile-landscape-mb-0 mobile-landscape-gap-2 shrink-0">
@@ -770,58 +782,61 @@ export const Activities: React.FC = () => {
                                 <span className="mobile-landscape-hidden">Aulas</span>
                                 <span className="hidden mobile-landscape-block text-xs">Aulas</span>
                             </Link>
-                            <button className={`px-3 py-1.5 mobile-landscape-compact rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 text-${theme.primaryColor} shadow-sm whitespace-nowrap`}>
+                            <button className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 text-${theme.primaryColor} shadow-sm mobile-landscape-compact whitespace-nowrap`}>
                                 <span className="mobile-landscape-hidden">Atividades</span>
                                 <span className="hidden mobile-landscape-block text-xs">Ativ.</span>
                             </button>
                         </div>
-                        <button onClick={handleNewActivity} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0 mobile-landscape-hidden`} title="Nova Atividade" data-tour="activities-new-btn">
+                        <button onClick={handleNewActivity} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Nova Atividade" data-tour="activities-new-btn">
                             <span className="material-symbols-outlined text-[20px]">add</span>
                         </button>
                     </div>
                     <div className="relative flex-1 mobile-landscape-flex-1">
-                        <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px] mobile-landscape-top-1.5 mobile-landscape-text-sm">search</span>
+                        <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">search</span>
                         <input
                             type="text"
                             placeholder="Buscar..."
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className={`w-full pl-10 pr-4 py-2.5 mobile-landscape-search-compact rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-sm transition-all focus:bg-white dark:focus:bg-black`}
+                            className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-sm transition-all focus:bg-white dark:focus:bg-black`}
                         />
                     </div>
 
-                    {/* Section Switcher Tabs */}
-                    {activeSeries && activeSeries.sections?.length > 0 && (
-                        <div className="mt-4 -mx-1 px-1 mobile-landscape-hidden">
-                            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-                                <button
-                                    onClick={() => setFilterSection('')}
-                                    className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all border-2 ${filterSection === ''
-                                        ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-md shadow-${theme.primaryColor}/20`
-                                        : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-white/5 text-slate-500 hover:border-slate-200'
-                                        }`}
-                                >
-                                    Todas
-                                </button>
-                                {activeSeries.sections.map(sec => (
-                                    <button
-                                        key={sec}
-                                        onClick={() => setFilterSection(sec)}
-                                        className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all border-2 ${filterSection === sec
-                                            ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-md shadow-${theme.primaryColor}/20`
-                                            : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-white/5 text-slate-500 hover:border-slate-200'
-                                            }`}
-                                    >
-                                        Turma {sec}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+
+
                 </div>
 
+                {/* Section Switcher Tabs - Matching Planning.tsx */}
+                {activeSeries && activeSeries.sections?.length > 0 && (
+                    <div className="px-1">
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                            <button
+                                onClick={() => setFilterSection('')}
+                                className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all border-2 ${filterSection === ''
+                                    ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-md shadow-${theme.primaryColor}/20`
+                                    : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
+                                    }`}
+                            >
+                                Todas
+                            </button>
+                            {activeSeries.sections.map(sec => (
+                                <button
+                                    key={sec}
+                                    onClick={() => setFilterSection(sec)}
+                                    className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all border-2 ${filterSection === sec
+                                        ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-md shadow-${theme.primaryColor}/20`
+                                        : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
+                                        }`}
+                                >
+                                    Turma {sec}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* List Items */}
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-[400px]">
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-0">
                     {loading ? (
                         Array.from({ length: 5 }).map((_, i) => (
                             <div key={i} className="w-full h-24 rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 p-4 animate-pulse">
@@ -846,37 +861,26 @@ export const Activities: React.FC = () => {
                                 >
                                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 mobile-landscape-hidden ${selectedActivityId === act.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
                                     <div className="pl-3 mobile-landscape-pl-0 w-full">
-                                        {/* Mobile Landscape: Row Layout */}
-                                        <div className="hidden mobile-landscape-flex-row mobile-landscape-items-center w-full justify-between">
-                                            <div className="flex items-center gap-2 flex-1 overflow-hidden">
-                                                <span className="material-symbols-outlined text-[16px] text-slate-400 shrink-0">{getIconForType(act.type)}</span>
-                                                <span className="truncate text-xs font-bold text-slate-700 dark:text-slate-200">{act.title}</span>
-                                            </div>
-                                            <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2">
-                                                {new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                                        <div className="flex justify-between items-start mb-2 mobile-landscape-mb-0 mobile-landscape-flex-row mobile-landscape-items-center">
+                                            <h4 className={`font-bold text-base mobile-landscape-text-sm truncate pr-2 flex-1 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
+                                            <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 mobile-landscape-hidden">
+                                            {act.section && (
+                                                <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
+                                                    Turma {act.section}
+                                                </span>
+                                            )}
+                                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                                {act.type}
+                                            </span>
+                                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                                {new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                                             </span>
                                         </div>
-
-                                        {/* Regular Layout */}
-                                        <div className="mobile-landscape-hidden">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <h4 className={`font-bold text-base truncate pr-2 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
-                                                <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">chevron_right</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs font-medium">
-                                                <span className={`px-2.5 py-1 rounded-md ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                                                    {act.type}
-                                                </span>
-                                                <div className="flex items-center gap-1 text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
-                                                    <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold px-2 py-1 rounded-md">{new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
-                                                </div>
-                                                {act.completions && act.completions.length > 0 && (
-                                                    <div className={`flex items-center gap-1 ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/20 text-${theme.primaryColor}` : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'} px-2.5 py-1 rounded-md font-bold`}>
-                                                        <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                                                        {act.completions.length}
-                                                    </div>
-                                                )}
-                                            </div>
+                                        {/* Mobile Landscape Only Date */}
+                                        <div className="hidden mobile-landscape-block text-[10px] text-slate-400 mt-0.5">
+                                            {new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                                         </div>
                                     </div>
                                 </button>
@@ -895,7 +899,7 @@ export const Activities: React.FC = () => {
             </div >
 
             {/* Main Content */}
-            < div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${selectedActivityId || isEditing ? 'flex' : 'hidden lg:flex landscape:flex'}`}>
+            < div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${selectedActivityId || isEditing ? 'flex' : 'hidden lg:flex'}`}>
                 {(!selectedActivityId && !isEditing) ? (
                     // --- HERO EMPTY STATE ---
                     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-300">
@@ -917,26 +921,27 @@ export const Activities: React.FC = () => {
                     </div>
                 ) : isEditing ? (
                     // --- EDIT / CREATE MODE ---
-                    <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                        <div className="max-w-4xl mx-auto flex flex-col gap-8">
-                            <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800">
-                                <div className="flex items-center gap-4">
-                                    <button
-                                        onClick={() => { setSelectedActivityId(null); setIsEditing(false); }}
-                                        className="lg:hidden size-10 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-500 flex items-center justify-center"
-                                    >
-                                        <span className="material-symbols-outlined">arrow_back</span>
-                                    </button>
-                                    <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                                        <div className={`size-10 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
-                                            <span className="material-symbols-outlined">{selectedActivityId ? 'edit_document' : 'post_add'}</span>
-                                        </div>
-                                        {selectedActivityId ? 'Editar Atividade' : 'Nova Atividade'}
-                                    </h2>
-                                </div>
+                    <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+                        {/* EDITOR HEADER */}
+                        <div className="p-6 mobile-landscape-compact border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark z-20 sticky top-0 shadow-sm">
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={() => { setSelectedActivityId(null); setIsEditing(false); }}
+                                    className="lg:hidden p-2 -ml-2 text-slate-400"
+                                >
+                                    <span className="material-symbols-outlined">arrow_back</span>
+                                </button>
+                                <h2 className="text-xl mobile-landscape-text-base font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                                    <div className={`size-8 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center mobile-landscape-hidden`}>
+                                        <span className="material-symbols-outlined text-lg">{selectedActivityId ? 'edit_document' : 'post_add'}</span>
+                                    </div>
+                                    {selectedActivityId ? 'Editar Atividade' : 'Nova Atividade'}
+                                </h2>
                             </div>
+                        </div>
 
-                            <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4">
+                        <div className="flex-1 overflow-y-auto p-8 mobile-landscape-compact custom-scrollbar pb-0">
+                            <div className="max-w-4xl mx-auto flex flex-col gap-8 mobile-landscape-gap-4">
                                 <div>
                                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Título da Atividade</label>
                                     <input
@@ -1057,19 +1062,21 @@ export const Activities: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Sticky Footer Actions */}
-                        <div className="sticky bottom-0 bg-white/80 dark:bg-surface-dark/90 backdrop-blur-sm p-4 -mx-8 -mb-8 mt-8 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 z-10 animate-in slide-in-from-bottom-2">
-                            <button onClick={() => setIsEditing(false)} className="px-6 py-2.5 rounded-xl text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
-                            {selectedActivityId && (
-                                <button onClick={handleDelete} className="px-6 py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors">Excluir</button>
-                            )}
-                            <button onClick={handleSave} className={`px-8 py-2.5 rounded-xl bg-${theme.primaryColor} text-white font-bold shadow-lg shadow-${theme.primaryColor}/20 hover:shadow-xl hover:bg-${theme.secondaryColor} transition-all active:scale-95`}>
-                                Salvar Atividade
-                            </button>
+                            {/* Static Footer Actions - Part of the scrollable flow */}
+                            <div className="max-w-4xl mx-auto mt-8 mb-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+                                <button onClick={() => setIsEditing(false)} className="px-6 py-2.5 rounded-xl text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+                                {selectedActivityId && (
+                                    <button onClick={handleDelete} className="px-6 py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors">Excluir</button>
+                                )}
+                                <button onClick={handleSave} className={`px-8 py-2.5 rounded-xl bg-${theme.primaryColor} text-white font-bold shadow-lg shadow-${theme.primaryColor}/20 hover:shadow-xl hover:bg-${theme.secondaryColor} transition-all active:scale-95`}>
+                                    Salvar Atividade
+                                </button>
+                            </div>
                         </div>
                     </div>
+
+
                 ) : (
                     // --- VIEW MODE ---
                     currentActivity && (
@@ -1186,9 +1193,9 @@ export const Activities: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="p-8 max-w-5xl mx-auto space-y-8">
+                            <div className="p-8 mobile-landscape-compact max-w-5xl mx-auto space-y-8 mobile-landscape-compact">
                                 {/* Info Cards */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mobile-landscape-grid-cols-3">
                                     <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
                                         <div className="size-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
                                             <span className="material-symbols-outlined">event</span>
@@ -1320,12 +1327,10 @@ export const Activities: React.FC = () => {
                                         </div>
                                     </div>
                                 )}
-
                             </div>
                         </div>
-                    )
-                )}
-            </div >
+                    ))}
+            </div>
         </div >
     );
 };

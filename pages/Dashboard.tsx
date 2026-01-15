@@ -533,7 +533,7 @@ export const Dashboard: React.FC = () => {
         <MotionLink variants={itemVariants} to="/grades" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[160px] md:min-h-[180px]">
           <div className="flex justify-between items-start">
             <div className={`size-12 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-              <span className="material-symbols-outlined">grade</span>
+              <span className="material-symbols-outlined text-2xl">grade</span>
             </div>
             <span className="material-symbols-outlined text-slate-300">arrow_outward</span>
           </div>
@@ -554,7 +554,7 @@ export const Dashboard: React.FC = () => {
         <MotionLink variants={itemVariants} to="/attendance" className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 rounded-[32px] shadow-sm border border-white/20 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[160px] md:min-h-[180px]">
           <div className="flex justify-between items-start">
             <div className="size-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined">event_available</span>
+              <span className="material-symbols-outlined text-2xl">event_available</span>
             </div>
             <span className="material-symbols-outlined text-slate-300">arrow_outward</span>
           </div>

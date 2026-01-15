@@ -39,6 +39,13 @@ const MiniCalendar: React.FC<{
 }> = ({ currentDate, onSelectDate, activeDates, onClose, theme }) => {
     const [viewDate, setViewDate] = useState(new Date(currentDate + 'T12:00:00'));
 
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
+
     const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
     const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
 
@@ -73,52 +80,69 @@ const MiniCalendar: React.FC<{
     };
 
     return (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 z-50 w-[300px] sm:w-[320px] animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between mb-4">
-                <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 transition-colors">
-                    <span className="material-symbols-outlined text-sm">chevron_left</span>
-                </button>
-                <span className="font-bold text-slate-700 dark:text-slate-200 capitalize">
-                    {viewDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}
-                </span>
-                <button onClick={() => changeMonth(1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 transition-colors">
-                    <span className="material-symbols-outlined text-sm">chevron_right</span>
-                </button>
-            </div>
+        <>
+            {/* Backdrop */}
+            <div
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-in fade-in duration-300"
+                onClick={onClose}
+            />
 
-            <div className="grid grid-cols-7 gap-1 mb-2">
-                {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => (
-                    <div key={i} className="text-center text-[10px] font-black text-slate-400 py-1 uppercase tracking-widest">{d}</div>
-                ))}
-            </div>
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 sm:p-3 z-50 w-[85%] max-w-[280px] max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex items-center justify-between mb-2">
+                    <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors">
+                        <span className="material-symbols-outlined text-sm">chevron_left</span>
+                    </button>
+                    <span className="font-bold text-slate-700 dark:text-slate-200 capitalize text-xs">
+                        {viewDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}
+                    </span>
+                    <button onClick={() => changeMonth(1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors">
+                        <span className="material-symbols-outlined text-sm">chevron_right</span>
+                    </button>
+                </div>
 
-            <div className="grid grid-cols-7 gap-1">
-                {days.map((day, i) => {
-                    if (!day) return <div key={`empty-${i}`} className="h-9" />;
-                    return (
-                        <button
-                            key={day}
-                            onClick={() => {
-                                const newDateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-                                onSelectDate(newDateStr);
-                                onClose();
-                            }}
-                            className={`h-9 w-9 rounded-xl flex flex-col items-center justify-center relative transition-all duration-200
-                                ${isSelected(day)
-                                    ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/30 font-bold scale-110 z-10`
-                                    : `text-slate-600 dark:text-slate-300 hover:bg-${theme.primaryColor}/10 hover:text-${theme.primaryColor}`}
-                                ${isToday(day) && !isSelected(day) ? `bg-${theme.primaryColor}/5 text-${theme.primaryColor} font-bold border border-${theme.primaryColor}/20` : ''}
-                            `}
-                        >
-                            <span className="text-sm leading-none z-10">{day}</span>
-                            {hasData(day) && !isSelected(day) && (
-                                <span className={`absolute bottom-1.5 w-1 h-1 rounded-full bg-emerald-500`}></span>
-                            )}
-                        </button>
-                    );
-                })}
+                <div className="grid grid-cols-7 gap-1 mb-1 text-center text-[9px] font-black text-slate-400 py-1 uppercase tracking-widest">
+                    {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => <div key={i}>{d}</div>)}
+                </div>
+
+                <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+                    {days.map((day, i) => {
+                        if (!day) return <div key={`empty-${i}`} className="h-7 sm:h-6" />;
+                        return (
+                            <button
+                                key={day || `empty-${i}`}
+                                onClick={() => {
+                                    if (day) {
+                                        const newDateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                                        onSelectDate(newDateStr);
+                                        onClose();
+                                    }
+                                }}
+                                className={`h-7 sm:h-6 w-full rounded-lg flex flex-col items-center justify-center relative transition-all duration-200
+                                    ${isSelected(day!)
+                                        ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/30 font-bold scale-110 z-10`
+                                        : `text-slate-600 dark:text-slate-300 hover:bg-${theme.primaryColor}/10 hover:text-${theme.primaryColor}`}
+                                    ${isToday(day!) && !isSelected(day!) ? `bg-${theme.primaryColor}/5 text-${theme.primaryColor} font-bold border border-${theme.primaryColor}/20` : ''}
+                                `}
+                            >
+                                <span className="text-[10px] sm:text-[9px] leading-none z-10">{day}</span>
+                                {day && hasData(day) && !isSelected(day) && (
+                                    <span className={`absolute bottom-0.5 w-1 h-1 rounded-full bg-emerald-500`}></span>
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Mobile Close Button */}
+                <button
+                    onClick={onClose}
+                    className="w-full mt-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg font-bold text-[10px] sm:hidden hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                >
+                    Fechar
+                </button>
             </div>
-        </div>
+        </>
+
     );
 };
 
@@ -610,16 +634,16 @@ export const Attendance: React.FC = () => {
     return (
         <div className="max-w-[1400px] mx-auto flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Control */}
-            <div className={`bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-center justify-between gap-8 relative z-30 group mobile-landscape-compact`}>
+            <div className={`bg-white dark:bg-slate-900 p-4 sm:p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-8 relative z-30 group mobile-landscape-compact`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700`}></div>
 
-                <div className="flex items-center gap-6 relative z-10 w-full lg:w-auto">
-                    <div className={`hidden sm:flex size-16 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
-                        <span className="material-symbols-outlined text-3xl">check_circle</span>
+                <div className="flex items-center gap-4 sm:gap-6 relative z-10 w-full lg:w-auto">
+                    <div className={`hidden sm:flex size-14 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
+                        <span className="material-symbols-outlined text-2xl">check_circle</span>
                     </div>
                     <div className="flex flex-col">
-                        <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Presenças</h1>
-                        <p className="text-slate-400 dark:text-slate-500 font-medium text-sm md:text-base">Controle de frequência para <span className={`text-${theme.primaryColor} font-bold`}>{activeSeries?.name} • {selectedSection}</span></p>
+                        <h1 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1">Presenças</h1>
+                        <p className="text-slate-400 dark:text-slate-500 font-medium text-xs md:text-base">Frequência para <span className={`text-${theme.primaryColor} font-bold`}>{activeSeries?.name} • {selectedSection}</span></p>
                     </div>
                 </div>
 
@@ -628,16 +652,16 @@ export const Attendance: React.FC = () => {
                         <button
                             data-tour="attendance-date"
                             onClick={() => setShowCalendar(!showCalendar)}
-                            className={`flex items-center gap-4 px-5 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl hover:border-${theme.primaryColor} hover:bg-white dark:hover:bg-slate-800 transition-all group/cal shadow-sm`}
+                            className={`flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl hover:border-${theme.primaryColor} hover:bg-white dark:hover:bg-slate-800 transition-all group/cal shadow-sm`}
                         >
-                            <span className={`material-symbols-outlined text-${theme.primaryColor} group-hover/cal:scale-110 transition-transform`}>calendar_month</span>
-                            <div className="flex flex-col items-start leading-none gap-0.5">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Data do Registro</span>
-                                <span className="font-bold text-slate-700 dark:text-slate-200">
+                            <span className={`material-symbols-outlined text-${theme.primaryColor} group-hover/cal:scale-110 transition-transform text-xl sm:text-2xl`}>calendar_month</span>
+                            <div className="flex flex-col items-start leading-none gap-0.5 sm:gap-1">
+                                <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Data</span>
+                                <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200">
                                     {new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                                 </span>
                             </div>
-                            <span className={`material-symbols-outlined text-slate-400 transition-transform ${showCalendar ? 'rotate-180' : ''}`}>expand_more</span>
+                            <span className={`material-symbols-outlined text-slate-400 transition-transform text-lg sm:text-xl ${showCalendar ? 'rotate-180' : ''}`}>expand_more</span>
                         </button>
 
                         {showCalendar && (
@@ -684,21 +708,21 @@ export const Attendance: React.FC = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="flex flex-wrap gap-2 p-1" data-tour="attendance-quick-actions">
-                <button onClick={() => markAll('P')} className="flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center gap-2 px-3 sm:px-4 py-3 bg-emerald-500 text-white rounded-2xl text-[10px] sm:text-xs font-bold hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-emerald-500/20">
-                    <span className="material-symbols-outlined text-base sm:text-lg">done_all</span>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 p-1" data-tour="attendance-quick-actions">
+                <button onClick={() => markAll('P')} className="flex-1 min-w-[90px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 bg-emerald-500 text-white rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-emerald-500/20">
+                    <span className="material-symbols-outlined text-sm sm:text-lg">done_all</span>
                     <span className="whitespace-nowrap">Presença Geral</span>
                 </button>
-                <button onClick={() => markAll('F')} className="flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center gap-2 px-3 sm:px-4 py-3 bg-rose-50 dark:bg-rose-900/10 text-rose-600 dark:text-rose-400 rounded-2xl text-[10px] sm:text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-900/20 transition-all border border-rose-100 dark:border-rose-900/20">
-                    <span className="material-symbols-outlined text-base sm:text-lg">close</span>
+                <button onClick={() => markAll('F')} className="flex-1 min-w-[90px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 bg-rose-50 dark:bg-rose-900/10 text-rose-600 dark:text-rose-400 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-900/20 transition-all border border-rose-100 dark:border-rose-900/20">
+                    <span className="material-symbols-outlined text-sm sm:text-lg">close</span>
                     Faltas
                 </button>
-                <button onClick={() => markAll('S')} className="flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center gap-2 px-3 sm:px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl text-[10px] sm:text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
-                    <span className="material-symbols-outlined text-base sm:text-lg">event_busy</span>
+                <button onClick={() => markAll('S')} className="flex-1 min-w-[90px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                    <span className="material-symbols-outlined text-sm sm:text-lg">event_busy</span>
                     Sem Aula
                 </button>
-                <button onClick={() => markAll('')} className="flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center gap-2 px-3 sm:px-4 py-3 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 rounded-2xl text-[10px] sm:text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-800">
-                    <span className="material-symbols-outlined text-base sm:text-lg">history</span>
+                <button onClick={() => markAll('')} className="flex-1 min-w-[90px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-800">
+                    <span className="material-symbols-outlined text-sm sm:text-lg">history</span>
                     Reiniciar
                 </button>
             </div>

@@ -618,6 +618,7 @@ export const Grades: React.FC = () => {
                                 value={selectedUnit}
                                 onChange={(e) => setSelectedUnit(Number(e.target.value))}
                                 className="bg-transparent text-xs font-bold text-indigo-600 dark:text-indigo-400 border-none outline-none p-0 cursor-pointer"
+                                aria-label="Seletor de Unidade"
                             >
                                 {[1, 2, 3, 4].map(unit => (
                                     <option key={unit} value={unit} className="text-slate-800 dark:text-white bg-white dark:bg-slate-800">{unit}ª Un.</option>

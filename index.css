@@ -18,6 +18,26 @@
     @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 resize-none;
   }
 
+  /* Date Input Global Styling */
+  input[type="date"] {
+    @apply min-h-[48px] cursor-pointer appearance-none;
+    position: relative;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    @apply cursor-pointer p-0 opacity-50 hover:opacity-100 transition-opacity;
+    background: transparent;
+    bottom: 0;
+    color: transparent;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: auto;
+    height: auto;
+  }
+
+
   /* BUTTONS */
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-indigo-500/30 active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
@@ -91,7 +111,227 @@
 
 
 /* MOBILE LANDSCAPE OPTIMIZATIONS */
-/* MOBILE LANDSCAPE OPTIMIZATIONS - REMOVED FOR PC LAYOUT */
+/* MOBILE LANDSCAPE OPTIMIZATIONS (Re-introduced for Native Redesign) */
+@media (orientation: landscape) and (max-height: 600px) {
+  .mobile-landscape-hidden {
+    display: none !important;
+  }
+
+  .mobile-landscape-flex {
+    display: flex !important;
+  }
+
+  .mobile-landscape-block {
+    display: block !important;
+  }
+
+  .mobile-landscape-flex-row {
+    display: flex !important;
+    flex-direction: row !important;
+  }
+
+  .mobile-landscape-items-center {
+    align-items: center !important;
+  }
+
+  .mobile-landscape-flex-1 {
+    flex: 1 1 0% !important;
+  }
+
+  .mobile-landscape-gap-2 {
+    gap: 0.5rem !important;
+  }
+
+  .mobile-landscape-pl-0 {
+    padding-left: 0 !important;
+  }
+
+  .mobile-landscape-mb-0 {
+    margin-bottom: 0 !important;
+  }
+
+  .mobile-landscape-w-64 {
+    width: 16rem !important;
+    /* 256px Standard Sidebar */
+  }
+
+  .mobile-landscape-w-80 {
+    width: 20rem !important;
+    /* 320px Extended Sidebar */
+  }
+
+  /* Force visibility for sidebar in landscape */
+  aside.mobile-landscape-translate-x-0 {
+    transform: translateX(0) !important;
+  }
+
+  .mobile-landscape-pl-64 {
+    padding-left: 16rem !important;
+  }
+
+  .mobile-landscape-pb-4 {
+    padding-bottom: 1rem !important;
+  }
+
+
+  .mobile-landscape-border-r {
+    border-right-width: 1px !important;
+  }
+
+  .dark .mobile-landscape-border-slate-800 {
+    border-color: #1e293b !important;
+    /* slate-800 */
+  }
+
+  /* Interaction & Overlay Fixes */
+  .mobile-landscape-hidden {
+    display: none !important;
+  }
+
+  .mobile-landscape-h-screen {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+  }
+
+  /* SCALING FIX: Global Scale Down for Landscape (800x360) 
+     This addresses "diminuir a escala" request. */
+  @media (orientation: landscape) and (max-height: 500px) {
+    html {
+      font-size: 13px;
+      /* Slightly smaller base font */
+    }
+
+    /* Aggressive padding reduction for the main container */
+    main.mobile-landscape-pl-64 {
+      padding-left: 16rem !important;
+      /* Keep sidebar width */
+      padding-top: 0.5rem !important;
+      padding-right: 0.5rem !important;
+      padding-bottom: 0.5rem !important;
+    }
+  }
+
+  .dark .mobile-landscape-border-slate-800 {
+    border-color: #1e293b !important;
+    /* slate-800 */
+  }
+
+  /* Hide Bottom Nav */
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+
+  /* Compact Mode for Forms (360px Height optimization) */
+  .mobile-landscape-compact {
+    padding: 0.75rem !important;
+    /* p-3 instead of p-6/p-8 */
+  }
+
+  .mobile-landscape-compact .p-6,
+  .mobile-landscape-compact .p-8 {
+    padding: 0.75rem !important;
+  }
+
+  .mobile-landscape-compact .space-y-6> :not([hidden])~ :not([hidden]) {
+    margin-top: 0.5rem !important;
+    /* gap-2 instead of gap-6 */
+  }
+
+  /* Reduced Input Sizing */
+  .mobile-landscape-compact input,
+  .mobile-landscape-compact select,
+  .mobile-landscape-compact .input-field {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    /* text-sm */
+    height: auto !important;
+  }
+
+  /* Fix for Search Inputs with Icons (pl-10) */
+  .mobile-landscape-compact input.pl-10 {
+    padding-left: 2.5rem !important;
+  }
+
+  .mobile-landscape-compact .label {
+    margin-bottom: 0.125rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .mobile-landscape-compact h2,
+  .mobile-landscape-compact h3 {
+    font-size: 1rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  /* NEW UTILITIES FOR OBSERVATIONS */
+  .mobile-landscape-p-2 {
+    padding: 0.5rem !important;
+  }
+
+  .mobile-landscape-p-4 {
+    padding: 1rem !important;
+  }
+
+  .mobile-landscape-mt-0 {
+    margin-top: 0 !important;
+  }
+
+  .mobile-landscape-size-10 {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+  }
+
+  .mobile-landscape-rounded-xl {
+    border-radius: 0.75rem !important;
+  }
+
+  .mobile-landscape-text-lg {
+    font-size: 1.125rem !important;
+  }
+
+  .mobile-landscape-mb-1 {
+    margin-bottom: 0.25rem !important;
+  }
+
+  .mobile-landscape-ring-2 {
+    box-shadow: 0 0 0 2px var(--tw-ring-color) !important;
+  }
+
+  .mobile-landscape-min-h-\[100px\] {
+    min-height: 100px !important;
+  }
+
+  .mobile-landscape-compact-row {
+    padding: 0.5rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .mobile-landscape-mb-4 {
+    margin-bottom: 1rem !important;
+  }
+
+  .mobile-landscape-h-10 {
+    height: 2.5rem !important;
+  }
+
+  .mobile-landscape-h-12 {
+    height: 3rem !important;
+  }
+
+  .mobile-landscape-px-4 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .mobile-landscape-line-clamp-2 {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+}
 
 /* FOOLPROOF DARK MODE OVERRIDES */
 /* Using high specificity to ensure these apply when 'dark' class is present on html */
@@ -268,7 +508,7 @@ body {
 
 /* Global Transition Fluidity */
 * {
-  @apply transition-colors duration-100;
+  @apply transition-colors duration-300;
 }
 
 /* Micro-interactions */

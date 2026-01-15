@@ -7,6 +7,7 @@ import { ProfileModal } from './ProfileModal';
 
 import { NotificationCenter } from './NotificationCenter';
 import { MobileBottomNav } from './MobileBottomNav';
+
 import { MobileClassSelector } from './MobileClassSelector';
 import { ClassManager } from './ClassManager';
 
@@ -24,6 +25,13 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isClassSelectorOpen, setIsClassSelectorOpen] = useState(false);
   const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebar_collapsed') === 'true');
+
+  const toggleSidebar = () => {
+    const newState = !isSidebarCollapsed;
+    setIsSidebarCollapsed(newState);
+    localStorage.setItem('sidebar_collapsed', String(newState));
+  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -100,10 +108,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       {/* Mobile Sidebar - Drawer */}
       {/* On mobile, this acts as the "More Menu" drawer */}
-      <aside className={`fixed inset-y-0 left-0 z-[60] w-[85vw] max-w-[300px] bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark transform transition-transform duration-300 ease-in-out xl:relative xl:translate-x-0 xl:w-72 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} shadow-2xl xl:shadow-none`}>
+      {/* On mobile, this acts as the "More Menu" drawer. In Landscape, it becomes a fixed Sidebar (Desktop style). */}
+      {/* Mobile Sidebar - Drawer */}
+      {/* On mobile, this acts as the "More Menu" drawer. In Landscape, it becomes a fixed Sidebar (Desktop style). */}
+      {/* Sidebar - Persistent from md+ (Collapsible), Drawer on Mobile (Slide-in) */}
+      <aside className={`fixed inset-y-0 left-0 z-[60] w-[85vw] max-w-[300px] bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark transform transition-all duration-300 ease-in-out flex flex-col md:translate-x-0 ${isSidebarCollapsed ? 'md:relative md:w-20' : 'md:fixed md:w-72 xl:relative'} ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} shadow-2xl md:shadow-none shrink-0 group/sidebar`}>
         <div className="flex flex-col h-[100dvh] justify-between">
           {/* Close Button for Mobile Drawer */}
-          <div className="xl:hidden absolute top-4 right-4 z-50">
+          <div className="md:hidden absolute top-4 right-4 z-50">
             <button
               onClick={() => setIsMobileMenuOpen(false)}
               className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500"
@@ -112,22 +124,34 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-4">
+          {/* New "Floating Edge" Sidebar Toggle (Desktop/Tablet) */}
+          <button
+            onClick={toggleSidebar}
+            className={`hidden md:flex absolute -right-4 top-9 z-50 size-8 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-full items-center justify-center shadow-lg shadow-${theme.primaryColor}/10 hover:shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-all duration-300 hover:scale-110 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10`}
+            title={isSidebarCollapsed ? "Expandir" : "Recolher"}
+          >
+            <span className={`material-symbols-outlined text-lg font-bold transition-transform duration-300 ${isSidebarCollapsed ? '' : 'rotate-180'}`}>chevron_right</span>
+          </button>
+
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 landscape:p-2 flex flex-col gap-4 landscape:gap-2">
             {/* User Profile / Brand - NEW LOGO */}
-            <div className="flex gap-3 items-center px-2 py-4 border-b border-dashed border-slate-200 dark:border-slate-800 mb-2 shrink-0">
-              <div className={`size-10 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
+            <div className={`flex gap-3 items-center px-2 py-4 landscape:py-2 border-b border-dashed border-slate-200 dark:border-slate-800 mb-2 shrink-0 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+              <div className={`size-10 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20 shrink-0`}>
                 <span className="material-symbols-outlined text-2xl">school</span>
-              </div >
-              <div className="flex flex-col">
-                <h1 className="text-text-main dark:text-white text-lg font-black leading-none tracking-tight">Prof. Acerta<span className={`text-${theme.primaryColor}`}>+</span></h1>
-                <p className="text-text-secondary dark:text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">Gestão Inteligente</p>
               </div>
-            </div >
+              {!isSidebarCollapsed && (
+                <div className="flex flex-col animate-in fade-in duration-300 min-w-0">
+                  <h1 className="text-text-main dark:text-white text-lg font-black leading-none tracking-tight truncate">Prof. Acerta<span className={`text-${theme.primaryColor}`}>+</span></h1>
+                  <p className="text-text-secondary dark:text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-0.5 truncate">Gestão Inteligente</p>
+                </div>
+              )}
+              {/* Collapse Toggle Removed from here */}
+            </div>
 
             {/* Mobile Profile & Notification Actions (Visible only on mobile sidebar) */}
-            <div className="xl:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 shrink-0">
+            <div className="md:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 shrink-0">
               {/* Profile Item */}
-              < div
+              <div
                 className="flex items-center gap-3 cursor-pointer"
                 onClick={() => {
                   setIsProfileModalOpen(true);
@@ -148,10 +172,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   <span className="text-[9px] uppercase tracking-widest text-slate-400">Meu Perfil</span>
                 </div>
                 <span className="material-symbols-outlined text-slate-400 ml-auto">settings</span>
-              </div >
+              </div>
 
               {/* Mobile Notification Link */}
-              < div
+              <div
                 className="flex items-center gap-3 mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 cursor-pointer"
                 onClick={() => {
                   setIsNotificationModalOpen(true);
@@ -162,11 +186,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   <span className="material-symbols-outlined text-sm text-slate-600 dark:text-slate-300">notifications</span>
                 </span>
                 <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Notificações</span>
-              </div >
-            </div >
+              </div>
+            </div>
 
             {/* Mobile Subject Switcher (New) */}
-            <div className="xl:hidden px-3 mb-2 shrink-0">
+            <div className="md:hidden px-3 mb-2 shrink-0">
               <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block px-1">Matéria Atual</label>
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden">
                 <button
@@ -201,7 +225,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div>
 
             {/* Nav */}
-            < nav className="flex flex-col gap-1.5 mt-2 pr-2" >
+            <nav className="flex flex-col gap-1.5 landscape:gap-1 mt-2 pr-2">
               {
                 navItems.map((item) => (
                   <Link
@@ -212,22 +236,25 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group hover:scale-[1.02] active:scale-95 ${isActive(item.path)
                       ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/30 ring-1 ring-${theme.primaryColor}/20`
                       : 'text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400 hover:text-text-main dark:hover:text-white'
-                      }`}
+                      } ${isSidebarCollapsed && !isMobileMenuOpen ? 'justify-center px-0' : ''}`}
+                    title={isSidebarCollapsed && !isMobileMenuOpen ? item.label : ''}
                   >
                     <span className={`material-symbols-outlined text-2xl transition-transform duration-300 group-hover:rotate-12 ${isActive(item.path) ? 'icon-filled scale-110' : 'group-hover:scale-110'}`}>
                       {item.icon}
                     </span>
-                    <span className={`text-sm font-medium transition-all ${isActive(item.path) ? 'font-bold' : ''}`}>
-                      {item.label}
-                    </span>
-                    {isActive(item.path) && (
+                    {(!isSidebarCollapsed || isMobileMenuOpen) && (
+                      <span className={`text-sm font-medium transition-all animate-in fade-in duration-300 ${isActive(item.path) ? 'font-bold' : ''}`}>
+                        {item.label}
+                      </span>
+                    )}
+                    {isActive(item.path) && (!isSidebarCollapsed || isMobileMenuOpen) && (
                       <span className="absolute right-3 w-1.5 h-1.5 bg-white rounded-full animate-ping" />
                     )}
                   </Link>
                 ))
               }
             </nav>
-          </div >
+          </div>
 
           <div className="p-4 border-t border-border-light dark:border-border-dark flex flex-col gap-2">
             <button
@@ -236,20 +263,20 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 document.documentElement.classList.toggle('dark');
                 localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
               }}
-              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 hover:scale-[1.01] group"
+              className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 hover:scale-[1.01] group ${isSidebarCollapsed ? 'justify-center' : ''}`}
             >
-              <span className="material-symbols-outlined text-2xl transition-transform duration-500 group-hover:rotate-[360deg] text-amber-500">dark_mode</span>
-              <span className="text-sm font-medium">Alternar Tema</span>
+              <span className="material-symbols-outlined text-[24px] font-medium transition-transform duration-500 group-hover:rotate-[360deg] text-amber-500">dark_mode</span>
+              {!isSidebarCollapsed && <span className="text-sm font-medium animate-in fade-in duration-300">Alternar Tema</span>}
             </button>
             <button
               onClick={logout}
-              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-red-50 hover:text-red-600 transition-all active:scale-95 hover:scale-[1.01] group"
+              className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-red-50 hover:text-red-600 transition-all active:scale-95 hover:scale-[1.01] group ${isSidebarCollapsed ? 'justify-center' : ''}`}
             >
-              <span className="material-symbols-outlined text-2xl transition-transform group-hover:-translate-x-1">logout</span>
-              <span className="text-sm font-medium">Sair</span>
+              <span className="material-symbols-outlined text-[24px] font-medium transition-transform group-hover:-translate-x-1">logout</span>
+              {!isSidebarCollapsed && <span className="text-sm font-medium animate-in fade-in duration-300">Sair</span>}
             </button>
           </div>
-        </div >
+        </div>
       </aside>
 
       {/* Main Content */}
@@ -276,32 +303,33 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         {
           isMobileMenuOpen && (
             <div
-              className="fixed inset-0 bg-black/60 z-[55] xl:hidden backdrop-blur-sm transition-all"
+              className="fixed inset-0 bg-black/60 z-[55] md:hidden backdrop-blur-sm transition-all"
               onClick={() => setIsMobileMenuOpen(false)}
             ></div>
           )
         }
 
-        {/* Header - HIDDEN on mobile landscape */}
-        <header className="mobile-landscape-hidden flex items-center justify-between border-b border-white/50 dark:border-slate-800 bg-white/80 dark:bg-surface-dark/90 backdrop-blur-md px-4 md:px-6 py-3 md:py-4 z-[40] shrink-0 gap-4 sticky top-0 transition-all">
+        {/* Header */}
+        <header className="flex items-center justify-between border-b border-white/50 dark:border-slate-800 bg-white/80 dark:bg-surface-dark/90 backdrop-blur-md px-4 md:px-6 py-3 md:py-4 z-[40] shrink-0 gap-4 sticky top-0 transition-all">
 
           <div className="flex items-center gap-4 flex-1">
             {/* Sidebar Toggle - Hidden on mobile if we use Bottom Nav + Menu Button, BUT we might want a way to access it from header too? 
-                 Plan says: "Simplified Mobile Header: Logo (Left) + Profile (Right)." and "Class Switcher... Below header"
-                 For now, keeping toggle but perhaps it should be redundant if bottom nav has 'Menu'. 
-                 Actually, let's HIDE the hamburger on mobile since BottomNav has 'Menu'. 
-             */}
+                     Plan says: "Simplified Mobile Header: Logo (Left) + Profile (Right)." and "Class Switcher... Below header"
+                     For now, keeping toggle but perhaps it should be redundant if bottom nav has 'Menu'. 
+                     Actually, let's HIDE the hamburger on mobile since BottomNav has 'Menu'. 
+                 */}
+            {/* Sidebar Toggle */}
             {/* Sidebar Toggle */}
             <button
               data-tour="mobile-menu"
-              className="xl:hidden text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              className="md:hidden text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
               onClick={() => setIsMobileMenuOpen(true)}
             >
               <span className="material-symbols-outlined">menu</span>
             </button>
 
             {/* Mobile Logo (Visible only on mobile) */}
-            <div className="xl:hidden flex items-center gap-2">
+            <div className="md:hidden flex items-center gap-2">
               <div className={`size-8 rounded-lg bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center`}>
                 <span className="material-symbols-outlined text-lg">school</span>
               </div>
@@ -309,32 +337,32 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div>
 
             {/* 1. Series Clicker (Desktop) - Opens Class Manager */}
-            <div className="hidden xl:block">
+            <div className="hidden md:block ml-4">
               <button
                 data-tour="class-selector"
                 onClick={() => setIsClassSelectorOpen(true)}
-                className="flex items-center gap-4 pl-1.5 pr-5 py-2 rounded-2xl bg-slate-50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-800 transition-all duration-300 group border border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20 shadow-sm hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+                className="flex items-center gap-2.5 pl-1 pr-3 py-1 rounded-2xl bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-300 group border border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20 shadow-sm hover:shadow-md active:scale-95"
                 title="Gerenciar Turmas"
               >
-                <div className={`size-12 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/30 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500`}>
-                  <span className="material-symbols-outlined text-2xl font-black">{theme.icon}</span>
+                <div className={`size-8 rounded-lg bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-md shadow-${theme.primaryColor}/10 group-hover:scale-105 transition-all duration-500`}>
+                  <span className="material-symbols-outlined text-base font-black">{theme.icon}</span>
                 </div>
-                <div className="flex flex-col items-start gap-0.5">
-                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] leading-none group-hover:text-${theme.primaryColor} transition-colors">Série</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-black text-lg text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-${theme.primaryColor} transition-colors">
+                <div className="flex flex-col items-start gap-0">
+                  <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">Série</span>
+                  <div className="flex items-center gap-1">
+                    <span className="font-black text-sm text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-${theme.primaryColor} transition-colors">
                       {activeSeries ? activeSeries.name : 'Selecione...'}
                     </span>
-                    <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-sm group-hover:text-${theme.primaryColor} transition-all group-hover:rotate-12">edit_square</span>
+                    <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-[10px] group-hover:text-${theme.primaryColor} transition-all">expand_more</span>
                   </div>
                 </div>
               </button>
             </div>
 
-            <div className="h-10 w-px bg-gradient-to-b from-transparent via-slate-200 dark:via-slate-700 to-transparent mx-2 hidden xl:block"></div>
+            <div className="h-10 w-px bg-gradient-to-b from-transparent via-slate-200 dark:via-slate-700 to-transparent mx-2 hidden md:block"></div>
 
             {/* 2. Section Selector (Active Tabs) - PREMIUM PILLS */}
-            <div className="flex-1 min-w-0 mx-2 md:mx-0 overflow-hidden hidden xl:block">
+            <div className="flex-1 min-w-0 mx-2 md:mx-0 overflow-hidden hidden md:block">
               <div className="flex items-center gap-3 overflow-x-auto no-scrollbar mask-linear-fade py-1 pr-4">
                 {activeSeries?.sections.map(sec => (
                   <div key={sec} className="relative group/tab shrink-0">
@@ -384,7 +412,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <div className="flex items-center gap-4 pl-4 border-l border-slate-100 dark:border-slate-800">
             {/* Subject Switcher (Desktop) */}
             {currentUser?.subjects && currentUser.subjects.length > 0 && (
-              <div className="relative hidden xl:block">
+              <div className="relative hidden md:block">
                 <button
                   onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -445,7 +473,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </div>
 
               {/* Hidden Name on Mobile */}
-              <div className="hidden xl:flex flex-col items-start leading-tight">
+              <div className="hidden md:flex flex-col items-start leading-tight">
                 <span className="text-[13px] font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors">{currentUser?.name?.split(' ')[0]}</span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activeSubject || theme.subject}</span>
               </div>
@@ -454,39 +482,41 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </header>
 
         {/* Mobile Context Bar (Class Switcher & Current Section) - PREMIUM CARD STYLE */}
-        <div className="xl:hidden px-3 pt-3 -mb-1 z-30 mobile-landscape-hidden">
+        <div className="xl:hidden px-3 pt-2.5 -mb-0.5 z-30 mobile-landscape-hidden">
           <button
             onClick={() => setIsClassSelectorOpen(true)}
-            className="w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-3 rounded-3xl border border-white/50 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all"
+            className="w-full bg-white/90 dark:bg-slate-900/95 backdrop-blur-md p-2.5 rounded-2xl border border-slate-200 dark:border-white/5 shadow-lg dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all"
           >
-            <div className="flex items-center gap-3">
-              <div className={`size-10 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/25`}>
-                <span className="material-symbols-outlined text-xl font-black">school</span>
+            <div className="flex items-center gap-2.5">
+              <div className={`size-9 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
+                <span className="material-symbols-outlined text-lg font-black">school</span>
               </div>
-              <div className="flex flex-col items-start gap-0.5">
-                <span className="text-[9px] uppercase font-black tracking-[0.15em] text-slate-400 leading-none">Contexto Atual</span>
-                <span className="text-[13px] font-black text-slate-900 dark:text-white tracking-tight truncate max-w-[140px] text-left">
+              <div className="flex flex-col items-start gap-0">
+                <span className="text-[8px] uppercase font-black tracking-widest text-slate-400 leading-none mb-0.5">Contexto</span>
+                <span className="text-[12px] font-black text-slate-900 dark:text-white tracking-tight truncate max-w-[120px] xs:max-w-none text-left flex items-center gap-1.5">
                   {activeSeries ? activeSeries.name : 'Selecione...'}
-                  {selectedSection && <span className={`ml-2 px-2 py-0.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] shadow-sm ring-1 ring-${theme.primaryColor}/40`}>{selectedSection}</span>}
+                  {selectedSection && <span className={`px-1.5 py-0.5 rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[9px] font-black shadow-sm`}>{selectedSection}</span>}
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-1 text-slate-300 dark:text-slate-600">
-              <span className="material-symbols-outlined text-lg">swap_horiz</span>
-              <span className="material-symbols-outlined text-lg">expand_more</span>
+              <span className="material-symbols-outlined text-base">swap_horiz</span>
+              <span className="material-symbols-outlined text-base">expand_more</span>
             </div>
           </button>
         </div>
 
 
-        {/* Page Content - Adjust padding for Bottom Nav */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 scroll-smooth custom-scrollbar pb-24 xl:pb-8">
+        {/* Page Content - Adjust padding for Bottom Nav and Landscape Sidebar */}
+        <main className={`flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 scroll-smooth custom-scrollbar pb-24 xl:pb-8 ${isSidebarCollapsed ? 'mobile-landscape-pl-20' : 'mobile-landscape-pl-64'} mobile-landscape-pb-4`}>
           {children}
         </main>
 
-        {/* Mobile Bottom Navigation */}
-        <MobileBottomNav onMoreClick={() => setIsMobileMenuOpen(true)} />
-      </div >
-    </div >
+        {/* Mobile Bottom Navigation - Hide in Landscape */}
+        <div className="mobile-landscape-hidden">
+          <MobileBottomNav onMoreClick={() => setIsMobileMenuOpen(true)} />
+        </div>
+      </div>
+    </div>
   );
 };

@@ -651,7 +651,7 @@ export const Planning: React.FC = () => {
 
 
             {/* Sidebar */}
-            <div className={`w-full lg:w-80 flex flex-col gap-4 shrink-0 transition-all ${selectedPlanId || isEditing || showForm ? 'hidden lg:flex' : 'flex'}`} data-tour="planning-sidebar">
+            <div className={`w-full lg:w-80 h-full flex flex-col gap-4 shrink-0 transition-all ${selectedPlanId || isEditing || showForm ? 'hidden lg:flex' : 'flex'}`} data-tour="planning-sidebar">
                 <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 mobile-landscape-compact">
                     <div className="flex justify-between items-center mb-4 mobile-landscape-mb-0 mobile-landscape-gap-2">
                         <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
@@ -665,7 +665,6 @@ export const Planning: React.FC = () => {
                         <button onClick={handleNewPlan} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Nova Aula" data-tour="planning-new-btn">
                             <span className="material-symbols-outlined text-[20px]">add</span>
                         </button>
-                        {/* Mobile Landscape ONLY ADD BUTTON - Removed as main button is now visible */}
                     </div>
                     <div className="relative">
                         <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">search</span>
@@ -702,7 +701,7 @@ export const Planning: React.FC = () => {
                     </div>
                 )}
 
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-[400px] mobile-landscape-compact">
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-0 mobile-landscape-compact">
                     {loading ? (
                         Array.from({ length: 5 }).map((_, i) => (
                             <div key={i} className="w-full h-24 rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 p-4 animate-pulse">
@@ -720,8 +719,8 @@ export const Planning: React.FC = () => {
                             <button
                                 key={plan.id}
                                 onClick={() => handleSelectPlan(plan)}
-                                style={{ animationDelay: `${idx * 100}ms` }}
-                                className={`w-full text-left p-5 mobile-landscape-compact-row rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm animate-in fade-in md:slide-in-from-left duration-500 fill-mode-backwards ${selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
+                                style={{ '--delay': `${idx * 100}ms` } as React.CSSProperties}
+                                className={`w-full text-left p-5 mobile-landscape-compact-row rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm animate-in fade-in md:slide-in-from-left duration-500 fill-mode-backwards animate-delay-[var(--delay)] ${selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
                             >
                                 <div className={`absolute left-0 top-0 bottom-0 w-1.5 mobile-landscape-hidden ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
                                 <div className="pl-3 mobile-landscape-pl-0 w-full">
@@ -730,14 +729,31 @@ export const Planning: React.FC = () => {
                                         <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
                                     </div>
                                     <div className="flex flex-wrap gap-2 mobile-landscape-hidden">
-                                        <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                                            {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                        </span>
+                                        {plan.section && (
+                                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
+                                                Turma {plan.section}
+                                            </span>
+                                        )}
+                                        {plan.activity_type && (
+                                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold flex items-center gap-1 ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                                <span className="material-symbols-outlined text-[12px]">
+                                                    {plan.activity_type.includes('Expositiva') ? 'school' :
+                                                        plan.activity_type.includes('Prática') ? 'science' :
+                                                            plan.activity_type.includes('Grupo') ? 'groups' :
+                                                                plan.activity_type.includes('Avaliação') ? 'assignment_turned_in' :
+                                                                    'category'}
+                                                </span>
+                                                {plan.activity_type}
+                                            </span>
+                                        )}
                                         {plan.theme_area && plan.theme_area !== 'Geral' && (
                                             <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                                                 {plan.theme_area}
                                             </span>
                                         )}
+                                        <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                            {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                        </span>
                                     </div>
                                     {/* Mobile Landscape Only Date */}
                                     <div className="hidden mobile-landscape-block text-[10px] text-slate-400 mt-0.5">
@@ -751,7 +767,7 @@ export const Planning: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${showForm || viewMode ? 'flex' : 'hidden lg:flex landscape:flex'}`}>
+            <div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${showForm || viewMode ? 'flex' : 'hidden lg:flex'}`}>
                 {(!showForm && !viewMode) ? (
                     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-300">
                         <div className={`size-32 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-8 shadow-sm border border-slate-100 dark:border-slate-700`}>
@@ -766,257 +782,187 @@ export const Planning: React.FC = () => {
                 ) : showForm ? (
                     <div className="flex-1 flex flex-col h-full overflow-hidden relative">
                         {/* EDITOR HEADER */}
-                        <div className="p-6 mobile-landscape-compact border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark z-10 sticky top-0">
-                            <h2 className="text-xl mobile-landscape-text-base font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                                <button onClick={() => { setIsEditing(false); setShowForm(false); setSelectedPlanId(null); }} className="lg:hidden p-2 -ml-2 text-slate-400"><span className="material-symbols-outlined">arrow_back</span></button>
-                                {selectedPlanId ? 'Editar Aula' : 'Nova Aula'}
-                            </h2>
-                            {/* Mobile Landscape Tab Switcher (Simple Select) */}
-                            <select
-                                className="hidden mobile-landscape-block text-xs border border-slate-200 rounded p-1"
-                                value={activeTab}
-                                onChange={(e) => setActiveTab(e.target.value as any)}
-                            >
-                                <option value="geral">Geral</option>
-                                <option value="conteudo">Conteúdo</option>
-                                <option value="bncc">BNCC</option>
-                                <option value="recursos">Recursos</option>
-                            </select>
-                        </div>
-
-                        {/* TABS - Hidden in Mobile Landscape (replaced by select above) */}
-                        <div className="px-6 pt-6 pb-2 mobile-landscape-hidden">
-                            <div className="flex p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl overflow-x-auto hide-scrollbar">
-                                {[
-                                    { id: 'geral', label: 'Informações Gerais', icon: 'info' },
-                                    { id: 'conteudo', label: 'Conteúdo & Objetivos', icon: 'menu_book' },
-                                    { id: 'bncc', label: 'BNCC & Metodologia', icon: 'school' },
-                                    { id: 'recursos', label: 'Recursos & Avaliação', icon: 'build' }
-                                ].map(tab => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => setActiveTab(tab.id as any)}
-                                        className={`flex-1 min-w-[80px] md:min-w-[160px] flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-1 py-2 md:px-4 md:py-3 rounded-xl text-[10px] md:text-sm font-bold transition-all ${activeTab === tab.id
-                                            ? `bg-white dark:bg-surface-light text-${theme.primaryColor} shadow-md shadow-slate-200/50 dark:shadow-black/50 ring-1 ring-black/5 dark:ring-white/10`
-                                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-white/5'
-                                            }`}
-                                    >
-                                        <span className="material-symbols-outlined filled text-[18px] md:text-[20px] mb-0.5 md:mb-0">{tab.icon}</span>
-                                        <span className="whitespace-normal text-center leading-tight w-full">{tab.label}</span>
-                                    </button>
-                                ))}
+                        <div className="p-6 mobile-landscape-compact border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark z-20 sticky top-0 shadow-sm">
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={() => { setSelectedPlanId(null); setIsEditing(false); setShowForm(false); }}
+                                    className="lg:hidden p-2 -ml-2 text-slate-400"
+                                >
+                                    <span className="material-symbols-outlined">arrow_back</span>
+                                </button>
+                                <h2 className="text-xl mobile-landscape-text-base font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                                    <div className={`size-8 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center mobile-landscape-hidden`}>
+                                        <span className="material-symbols-outlined text-lg">{selectedPlanId ? 'edit_document' : 'post_add'}</span>
+                                    </div>
+                                    {selectedPlanId ? 'Editar Aula' : 'Nova Aula'}
+                                </h2>
                             </div>
                         </div>
 
-                        {/* EDITOR CONTENT */}
-                        <div className="flex-1 overflow-y-auto p-6 mobile-landscape-compact custom-scrollbar pb-24">
-                            <div className="max-w-4xl mx-auto space-y-6">
-                                {activeTab === 'geral' && (
-                                    <div className="space-y-6 animate-in fade-in md:slide-in-from-right-8 duration-500">
-                                        <div className={`${theme.softBg} p-6 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-6`}>
-                                            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-indigo-500">info</span>
-                                                Dados Principais
-                                            </h3>
+                        <div className="flex-1 overflow-y-auto p-8 mobile-landscape-compact custom-scrollbar pb-0">
+                            <div className="max-w-4xl mx-auto flex flex-col gap-8 mobile-landscape-gap-4">
 
-                                            <div>
-                                                <label className="label">Tema da Aula *</label>
-                                                <input type="text" value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="Ex: Introdução à Fotossíntese..." className={`w-full text-lg font-bold p-4 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} autoFocus />
-                                            </div>
+                                {/* 1. GERAL */}
+                                <div className="space-y-6">
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Título da Aula</label>
+                                        <input type="text" value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="Ex: Introdução à Célula" className={`w-full text-lg font-bold p-4 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
+                                    </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <DatePicker label="Data Início" value={formStartDate} onChange={setFormStartDate} className="w-full" />
-                                                <DatePicker label="Data Fim" value={formEndDate} onChange={setFormEndDate} className="w-full" />
-                                            </div>
-                                        </div>
-
-                                        <div className={`${theme.softBg} p-6 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-6`}>
-                                            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-indigo-500">school</span>
-                                                Detalhamento Acadêmico
-                                            </h3>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <label className="label">Série</label>
-                                                    <div className="input-group"><span className="material-symbols-outlined text-slate-400">school</span>{activeSeries?.name || formSeriesId}</div>
-                                                </div>
-                                                <div>
-                                                    <label className="label">Componente Curricular</label>
-                                                    <input type="text" value={formSubject} onChange={e => setFormSubject(e.target.value)} placeholder="Ex: Ciências" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <label className="label">Turma</label>
-                                                    <div className="relative">
-                                                        <select aria-label="Turma" title="Turma" value={formSection} onChange={e => setFormSection(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 appearance-none outline-none`}>
-                                                            <option value="">Selecione...</option>
-                                                            {activeSeries?.sections?.map(section => (
-                                                                <option key={section} value={section}>{section}</option>
-                                                            ))}
-                                                            <option value="Todas as Turmas">Todas as Turmas</option>
-                                                        </select>
-                                                        <span className="material-symbols-outlined absolute right-3 top-3.5 pointer-events-none text-slate-500">expand_more</span>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <label className="label">Tipo de Atividade</label>
-                                                    <div className="relative">
-                                                        <select value={formActivityType} onChange={e => setFormActivityType(e.target.value)} title="Tipo de Atividade" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 appearance-none outline-none`}>
-                                                            <option value="">Selecione...</option>
-                                                            <option value="Aula Expositiva">Aula Expositiva</option>
-                                                            <option value="Atividade Prática">Atividade Prática</option>
-                                                            <option value="Trabalho em Grupo">Trabalho em Grupo</option>
-                                                            <option value="Avaliação">Avaliação</option>
-                                                            <option value="Outro">Outro</option>
-                                                        </select>
-                                                        <span className="material-symbols-outlined absolute right-3 top-3.5 pointer-events-none text-slate-500">expand_more</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <label className="label">Duração Estimada</label>
-                                                    <input type="text" value={formDuration} onChange={e => setFormDuration(e.target.value)} placeholder="Ex: 2 aulas de 50min" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
-                                                </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="label">Turma</label>
+                                            <div className="relative">
+                                                <select aria-label="Turma" title="Turma" value={formSection} onChange={e => setFormSection(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 appearance-none outline-none`}>
+                                                    <option value="">Selecione...</option>
+                                                    {activeSeries?.sections?.map(section => (
+                                                        <option key={section} value={section}>{section}</option>
+                                                    ))}
+                                                    <option value="Todas as Turmas">Todas as Turmas</option>
+                                                </select>
+                                                <span className="material-symbols-outlined absolute right-3 top-3.5 pointer-events-none text-slate-500">expand_more</span>
                                             </div>
                                         </div>
-
-                                        <div className={`${theme.softBg} p-6 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-6`}>
-                                            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-indigo-500">manage_accounts</span>
-                                                Responsáveis
-                                            </h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <label className="label">Coordenação Pedagógica</label>
-                                                    <input type="text" value={formCoordinator} onChange={e => setFormCoordinator(e.target.value)} placeholder="Nome do Coodenador(a)" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
-                                                </div>
-                                                <div>
-                                                    <label className="label">Professor(a)</label>
-                                                    <input type="text" value={currentUser?.name} disabled className="input-field opacity-60 cursor-not-allowed" title="Professor" />
-                                                </div>
+                                        <div>
+                                            <label className="label">Tipo de Atividade</label>
+                                            <div className="relative">
+                                                <select value={formActivityType} onChange={e => setFormActivityType(e.target.value)} title="Tipo de Atividade" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 appearance-none outline-none`}>
+                                                    <option value="">Selecione...</option>
+                                                    <option value="Aula Expositiva">Aula Expositiva</option>
+                                                    <option value="Atividade Prática">Atividade Prática</option>
+                                                    <option value="Trabalho em Grupo">Trabalho em Grupo</option>
+                                                    <option value="Avaliação">Avaliação</option>
+                                                    <option value="Outro">Outro</option>
+                                                </select>
+                                                <span className="material-symbols-outlined absolute right-3 top-3.5 pointer-events-none text-slate-500">expand_more</span>
                                             </div>
-                                        </div>
-
-                                        <div className="flex flex-col-reverse sm:flex-row justify-end pt-4 gap-3">
-                                            <button onClick={() => setActiveTab('conteudo')} className={`btn-primary bg-${theme.primaryColor} flex items-center justify-center gap-2 w-full sm:w-auto`}>
-                                                Próximo: Conteúdo <span className="material-symbols-outlined">arrow_forward</span>
-                                            </button>
                                         </div>
                                     </div>
-                                )}
 
-                                {activeTab === 'conteudo' && (
-                                    <div className="space-y-6 animate-in fade-in md:slide-in-from-right-8 duration-500">
-                                        <div>
-                                            <label className="label mb-2 flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-indigo-500">target</span>
-                                                Objetivos de Aprendizagem
-                                            </label>
-                                            <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
-                                                <RichTextEditor value={formObjectives} onChange={setFormObjectives} />
-                                            </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <DatePicker label="Início" value={formStartDate} onChange={setFormStartDate} />
+                                            <DatePicker label="Fim" value={formEndDate} onChange={setFormEndDate} />
                                         </div>
                                         <div>
-                                            <label className="label mb-2 flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-indigo-500">description</span>
-                                                Descrição / Roteiro da Aula
-                                            </label>
-                                            <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
-                                                <RichTextEditor value={formDescription} onChange={setFormDescription} />
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col-reverse sm:flex-row justify-between pt-4 gap-3">
-                                            <button onClick={() => setActiveTab('geral')} className="btn-ghost flex items-center justify-center gap-2 w-full sm:w-auto">
-                                                <span className="material-symbols-outlined">arrow_back</span> Voltar
-                                            </button>
-                                            <button onClick={() => setActiveTab('bncc')} className={`btn-primary bg-${theme.primaryColor} flex items-center justify-center gap-2 w-full sm:w-auto`}>
-                                                Próximo: BNCC <span className="material-symbols-outlined">arrow_forward</span>
-                                            </button>
+                                            <label className="label">Duração Estimada</label>
+                                            <input type="text" value={formDuration} onChange={e => setFormDuration(e.target.value)} placeholder="Ex: 2 aulas de 50min" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
                                         </div>
                                     </div>
-                                )}
+                                </div>
 
-                                {activeTab === 'bncc' && (
-                                    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
+                                {/* 2. CONTEÚDO */}
+                                <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-indigo-500">menu_book</span>
+                                        Conteúdo
+                                    </h3>
+                                    <div>
+                                        <label className="label mb-2 flex items-center gap-2">Objetivos de Aprendizagem</label>
+                                        <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                                            <RichTextEditor value={formObjectives} onChange={setFormObjectives} placeholder="Quais os objetivos desta aula?" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="label mb-2 flex items-center gap-2">Descrição / Roteiro</label>
+                                        <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                                            <RichTextEditor value={formDescription} onChange={setFormDescription} placeholder="Detalhamento do roteiro da aula..." />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 3. BNCC */}
+                                <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-emerald-500">verified</span>
+                                        BNCC & Metodologia
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
-                                            <label className="label mb-2 flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-indigo-500">verified</span>
-                                                Códigos da BNCC
-                                            </label>
+                                            <label className="label mb-2">Códigos da BNCC</label>
                                             <textarea value={formBncc} onChange={e => setFormBncc(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-32 font-mono text-sm`} placeholder="Ex: EF06CI01, EF06CI02..." />
-                                            <p className="text-xs text-slate-400 mt-1">Separe os códigos por vírgula ou nova linha.</p>
                                         </div>
                                         <div>
-                                            <label className="label mb-2 flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-indigo-500">psychology</span>
-                                                Metodologia de Ensino
-                                            </label>
-                                            <textarea value={formMethodology} onChange={e => setFormMethodology(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-48`} placeholder="Descreva as estratégias metodológicas utilizadas..." />
-                                        </div>
-                                        <div className="flex flex-col-reverse sm:flex-row justify-between pt-4 gap-3">
-                                            <button onClick={() => setActiveTab('conteudo')} className="btn-ghost flex items-center justify-center gap-2 w-full sm:w-auto">
-                                                <span className="material-symbols-outlined">arrow_back</span> Voltar
-                                            </button>
-                                            <button onClick={() => setActiveTab('recursos')} className={`btn-primary bg-${theme.primaryColor} flex items-center justify-center gap-2 w-full sm:w-auto`}>
-                                                Próximo: Recursos <span className="material-symbols-outlined">arrow_forward</span>
-                                            </button>
+                                            <label className="label mb-2">Metodologia</label>
+                                            <textarea value={formMethodology} onChange={e => setFormMethodology(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-32`} placeholder="Estratégias utilizadas..." />
                                         </div>
                                     </div>
-                                )}
+                                </div>
 
-                                {activeTab === 'recursos' && (
-                                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                                {/* 4. RECURSOS */}
+                                <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-amber-500">build</span>
+                                        Recursos & Avaliação
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
-                                            <label className="label">Recursos Utilizados</label>
-                                            <textarea title="Recursos Utilizados" placeholder="Listar os recursos utilizados..." value={formResources} onChange={e => setFormResources(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-32`} />
+                                            <label className="label">Recursos</label>
+                                            <textarea value={formResources} onChange={e => setFormResources(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-24`} placeholder="Recursos necessários..." />
                                         </div>
-
                                         <div>
                                             <label className="label">Avaliação</label>
-                                            <textarea title="Avaliação" placeholder="Descreva os critérios de avaliação..." value={formAssessment} onChange={e => setFormAssessment(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-32`} />
-                                        </div>
-
-                                        <div className="space-y-3">
-                                            <label className="label">Anexos</label>
-                                            <div className="flex flex-wrap gap-2">
-                                                {formFiles.map((file, index) => (
-                                                    <div key={index} className="flex items-center gap-2 p-2 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                                                        <span className="text-xs font-bold">{file.name}</span>
-                                                        <span className="text-[10px] text-slate-500">{file.size}</span>
-                                                        <button onClick={() => setFormFiles(prev => prev.filter((_, i) => i !== index))} className="text-red-500 hover:text-red-700"><span className="material-symbols-outlined text-[16px]">close</span></button>
-                                                    </div>
-                                                ))}
-                                                <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1 px-3 py-2 rounded-lg border border-dashed border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all font-bold text-xs uppercase">
-                                                    <span className="material-symbols-outlined text-[18px]">add_circle</span> Adicionar
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-col sm:flex-row justify-between pt-4 border-t border-slate-100 dark:border-slate-800 mt-8 gap-4">
-                                            <div className="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
-                                                <button onClick={() => setActiveTab('bncc')} className="btn-ghost flex items-center justify-center gap-2 w-full sm:w-auto">
-                                                    <span className="material-symbols-outlined">arrow_back</span> Voltar
-                                                </button>
-                                                {selectedPlanId && <button onClick={handleDelete} className="btn-danger flex items-center justify-center gap-2 w-full sm:w-auto"><span className="material-symbols-outlined">delete</span> Excluir</button>}
-                                            </div>
-
-                                            <div className="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
-                                                <button onClick={() => setIsEditing(false)} className="btn-ghost w-full sm:w-auto text-center">Cancelar</button>
-                                                <button onClick={handleSave} className={`btn-primary bg-${theme.primaryColor} flex items-center justify-center gap-2 w-full sm:w-auto`}>
-                                                    <span className="material-symbols-outlined">check_circle</span> Salvar
-                                                </button>
-                                            </div>
+                                            <textarea value={formAssessment} onChange={e => setFormAssessment(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-24`} placeholder="Critérios avaliativos..." />
                                         </div>
                                     </div>
-                                )}
+                                </div>
+
+                                {/* 5. ANEXOS (FILES) */}
+                                <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="text-xs font-black uppercase text-slate-400 ml-1 tracking-widest">Materiais de Apoio</div>
+                                        <button
+                                            onClick={() => fileInputRef.current?.click()}
+                                            type="button"
+                                            className={`flex items-center gap-2 px-5 py-3 bg-${theme.primaryColor}/10 text-${theme.primaryColor} rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-${theme.primaryColor} hover:text-white transition-all active:scale-95 border border-${theme.primaryColor}/20 hover:border-transparent shadow-sm`}
+                                        >
+                                            <span className="material-symbols-outlined text-base">upload_file</span>
+                                            Adicionar Arquivo
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {formFiles.map((file, index) => (
+                                            <div key={index} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 group shadow-sm">
+                                                <div className={`size-10 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0`}>
+                                                    <span className="material-symbols-outlined">description</span>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-sm font-bold truncate text-slate-700 dark:text-slate-200">{file.name}</div>
+                                                    <div className="text-xs text-slate-400">{file.size}</div>
+                                                </div>
+                                                <button
+                                                    onClick={() => setFormFiles(prev => prev.filter((_, i) => i !== index))}
+                                                    className="p-2 text-slate-300 hover:text-red-500 transition-colors"
+                                                    title="Remover arquivo"
+                                                >
+                                                    <span className="material-symbols-outlined">close</span>
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {formFiles.length === 0 && (
+                                            <div className="col-span-full border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 flex flex-col items-center justify-center text-slate-400 gap-2">
+                                                <span className="material-symbols-outlined text-3xl">folder_open</span>
+                                                <span className="text-sm">Nenhum arquivo anexado</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* FOOTER ACTIONS */}
+                                <div className="max-w-4xl mx-auto mt-8 mb-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+                                    <button onClick={() => { setIsEditing(false); setShowForm(false); }} className="px-6 py-2.5 rounded-xl text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+                                    {selectedPlanId && (
+                                        <button onClick={handleDelete} className="px-6 py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors">Excluir</button>
+                                    )}
+                                    <button onClick={handleSave} className={`px-8 py-2.5 rounded-xl bg-${theme.primaryColor} text-white font-bold shadow-lg shadow-${theme.primaryColor}/20 hover:shadow-xl hover:bg-${theme.secondaryColor} transition-all active:scale-95`}>
+                                        Salvar Aula
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+
                 ) : (
                     <div className="flex-1 overflow-y-auto relative animate-in fade-in h-full custom-scrollbar bg-slate-50 dark:bg-black/20">
                         {currentPlan && (
@@ -1043,114 +989,65 @@ export const Planning: React.FC = () => {
                                         </h1>
                                     </div>
 
-                                    {/* Mobile Back Button */}
-                                    <div className="absolute top-3 left-3 md:top-6 md:left-6 lg:hidden z-10">
+
+                                    <div className="absolute top-6 left-6 lg:hidden">
                                         <button
-                                            onClick={() => { setViewMode(false); setSelectedPlanId(null); }}
-                                            className="p-1.5 md:p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                            onClick={() => { setSelectedPlanId(null); setIsEditing(false); setShowForm(false); }}
+                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
                                             title="Voltar para Lista"
                                         >
                                             <span className="material-symbols-outlined">arrow_back</span>
                                         </button>
                                     </div>
-
-                                    {/* Header Action Buttons (Desktop) */}
-                                    <div className="hidden lg:flex absolute top-6 right-6 gap-2 z-10">
+                                    <div className="absolute top-6 right-6 flex gap-2">
                                         <button
                                             onClick={handleExportPDF}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
+                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
                                             title="Baixar PDF"
                                         >
                                             <span className="material-symbols-outlined">picture_as_pdf</span>
                                         </button>
                                         <button
                                             onClick={handleExportWord}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
+                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
                                             title="Baixar Word"
                                         >
                                             <span className="material-symbols-outlined">description</span>
                                         </button>
                                         <button
-                                            onClick={() => setIsEditing(true)}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95"
-                                            title="Editar"
+                                            onClick={() => { setIsEditing(true); setShowForm(true); }}
+                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                            title="Editar Aula"
                                         >
                                             <span className="material-symbols-outlined">edit</span>
                                         </button>
                                         <button
                                             onClick={handleDelete}
-                                            className="p-2 bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg hover:scale-105 active:scale-95 group"
-                                            title="Excluir"
+                                            className="p-2 bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                            title="Excluir Aula"
                                         >
-                                            <span className="material-symbols-outlined text-red-200 group-hover:text-white transition-colors">delete</span>
+                                            <span className="material-symbols-outlined text-red-200">delete</span>
                                         </button>
-                                    </div>
-
-                                    {/* Header Action Menu (Mobile) */}
-                                    <div className="lg:hidden absolute top-3 right-3 z-20">
-                                        <button
-                                            onClick={() => setShowMobileMenu(!showMobileMenu)}
-                                            className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
-                                        >
-                                            <span className="material-symbols-outlined">more_vert</span>
-                                        </button>
-
-                                        {showMobileMenu && (
-                                            <>
-                                                <div className="fixed inset-0 z-10" onClick={() => setShowMobileMenu(false)} />
-                                                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-surface-dark rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-20">
-                                                    <button
-                                                        onClick={() => { handleExportPDF(); setShowMobileMenu(false); }}
-                                                        className="w-full text-left px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center gap-2"
-                                                    >
-                                                        <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
-                                                        Baixar PDF
-                                                    </button>
-                                                    <button
-                                                        onClick={() => { handleExportWord(); setShowMobileMenu(false); }}
-                                                        className="w-full text-left px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center gap-2"
-                                                    >
-                                                        <span className="material-symbols-outlined text-lg">description</span>
-                                                        Baixar Word
-                                                    </button>
-                                                    <button
-                                                        onClick={() => { setIsEditing(true); setShowMobileMenu(false); }}
-                                                        className="w-full text-left px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center gap-2"
-                                                    >
-                                                        <span className="material-symbols-outlined text-lg">edit</span>
-                                                        Editar
-                                                    </button>
-                                                    <div className="h-px bg-slate-100 dark:border-slate-800 my-1" />
-                                                    <button
-                                                        onClick={() => { handleDelete(); setShowMobileMenu(false); }}
-                                                        className="w-full text-left px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-2"
-                                                    >
-                                                        <span className="material-symbols-outlined text-lg">delete</span>
-                                                        Excluir
-                                                    </button>
-                                                </div>
-                                            </>
-                                        )}
                                     </div>
                                 </div>
 
                                 {/* Metadata Grid */}
                                 <div className="p-8 max-w-5xl mx-auto w-full space-y-8 flex-1">
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <div className="bg-white dark:bg-surface-dark p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
-                                            <div className="size-11 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+                                            <div className="size-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
                                                 <span className="material-symbols-outlined">event</span>
                                             </div>
                                             <div className="min-w-0">
-                                                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Início / Fim</div>
+                                                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Data</div>
                                                 <div className="font-bold text-slate-700 dark:text-gray-200 text-sm truncate">
                                                     {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="bg-white dark:bg-surface-dark p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
-                                            <div className="size-11 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+                                            <div className="size-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                                                 <span className="material-symbols-outlined">school</span>
                                             </div>
                                             <div className="min-w-0">
@@ -1161,8 +1058,8 @@ export const Planning: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        <div className="bg-white dark:bg-surface-dark p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
-                                            <div className="size-11 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+                                            <div className="size-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
                                                 <span className="material-symbols-outlined">timer</span>
                                             </div>
                                             <div className="min-w-0">
@@ -1173,8 +1070,8 @@ export const Planning: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        <div className="bg-white dark:bg-surface-dark p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
-                                            <div className="size-11 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+                                            <div className="size-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                                                 <span className="material-symbols-outlined">category</span>
                                             </div>
                                             <div className="min-w-0">
@@ -1187,7 +1084,7 @@ export const Planning: React.FC = () => {
                                     </div>
 
                                     {/* CONTENT PREVIEW CARDS */}
-                                    <div className="px-8 max-w-5xl mx-auto w-full space-y-6">
+                                    <div className="px-8 max-w-5xl mx-auto w-full space-y-6 flex-1">
                                         {/* Row 1: Objeto & Habilidades */}
                                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                             <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
@@ -1197,17 +1094,12 @@ export const Planning: React.FC = () => {
                                                 </h3>
 
                                                 <div className="space-y-4">
-                                                    <div>
-                                                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Objeto de Conhecimento</label>
-                                                        <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                                            {currentPlan.title}
-                                                        </div>
-                                                    </div>
+
 
                                                     {currentPlan.objectives && (
                                                         <div>
                                                             <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Objetivos de Aprendizagem</label>
-                                                            <div className="text-sm text-slate-600 dark:text-slate-400 prose prose-sm max-w-none break-words" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives) }} />
+                                                            <div className="text-sm text-slate-600 dark:text-slate-300 client-rendered-html leading-relaxed break-words" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives) }} />
                                                         </div>
                                                     )}
                                                 </div>
@@ -1243,7 +1135,7 @@ export const Planning: React.FC = () => {
                                                 {currentPlan.methodology && (
                                                     <div>
                                                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2 block">Metodologia</label>
-                                                        <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line leading-relaxed break-words">
+                                                        <div className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed break-words">
                                                             {currentPlan.methodology}
                                                         </div>
                                                     </div>
@@ -1252,7 +1144,7 @@ export const Planning: React.FC = () => {
                                                 {currentPlan.description && (
                                                     <div>
                                                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2 block">Roteiro da Aula</label>
-                                                        <div className="text-sm text-slate-600 dark:text-slate-400 prose prose-sm max-w-none break-words" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description) }} />
+                                                        <div className="text-sm text-slate-600 dark:text-slate-300 client-rendered-html leading-relaxed break-words" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description) }} />
                                                     </div>
                                                 )}
                                             </div>
@@ -1265,7 +1157,7 @@ export const Planning: React.FC = () => {
                                                     <span className="material-symbols-outlined text-amber-500">build</span>
                                                     Recursos
                                                 </h3>
-                                                <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line break-words">
+                                                <div className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line break-words">
                                                     {currentPlan.resources || 'Nenhum recurso específico listado.'}
                                                 </div>
                                             </div>
@@ -1275,7 +1167,7 @@ export const Planning: React.FC = () => {
                                                     <span className="material-symbols-outlined text-rose-500">assignment_turned_in</span>
                                                     Avaliação
                                                 </h3>
-                                                <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line break-words">
+                                                <div className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line break-words">
                                                     {currentPlan.assessment || 'Nenhuma avaliação específica listada.'}
                                                 </div>
                                             </div>
@@ -1313,24 +1205,25 @@ export const Planning: React.FC = () => {
 
                                         {/* ATTACHMENTS VIEW (Screen Only) */}
                                         {currentPlan.files && currentPlan.files.length > 0 && (
-                                            <div className="print:hidden">
-                                                <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-                                                    <span className="material-symbols-outlined">attachment</span> Anexos
+                                            <div className="animate-in fade-in slide-in-from-bottom-3 duration-500 delay-100 print:hidden">
+                                                <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                                    <span className={`material-symbols-outlined text-${theme.primaryColor}`}>attachment</span>
+                                                    Anexos
                                                 </h3>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                <div className="flex flex-wrap gap-3">
                                                     {currentPlan.files.map((file, index) => (
                                                         <a
                                                             key={index}
                                                             href={file.url}
                                                             download={file.name}
-                                                            className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group no-underline"
+                                                            className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group text-decoration-none shadow-sm"
                                                         >
-                                                            <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">description</span>
-                                                            <div className="min-w-0 flex-1">
-                                                                <div className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{file.name}</div>
-                                                                <div className="text-[10px] text-slate-400 uppercase font-black">{file.size}</div>
+                                                            <span className="material-symbols-outlined text-slate-500 group-hover:text-indigo-500 transition-colors">description</span>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{file.name}</span>
+                                                                <span className="text-[10px] text-slate-500 uppercase">{file.size}</span>
                                                             </div>
-                                                            <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">download</span>
+                                                            <span className="material-symbols-outlined text-slate-400 group-hover:text-indigo-500 transition-colors text-lg ml-2">download</span>
                                                         </a>
                                                     ))}
                                                 </div>
