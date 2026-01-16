@@ -391,6 +391,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </button>
         </div>
 
+        {/* Main Content Area - Fixed Scrolling */}
         <main className={`flex-1 overflow-y-auto overflow-x-hidden scroll-smooth custom-scrollbar relative px-1`}>
           {children}
         </main>
