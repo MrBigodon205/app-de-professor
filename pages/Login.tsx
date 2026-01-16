@@ -83,7 +83,7 @@ export const Login: React.FC = () => {
           {/* ... header content ... */}
           <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] animate-pulse"></div>
           <div className={`relative z-10 bg-${theme.primaryColor} p-4 rounded-2xl mb-5 shadow-lg shadow-${theme.primaryColor}/30 transform transition-transform hover:rotate-6 duration-300`}>
-            <span className="material-symbols-outlined text-white text-[40px]">{theme.illustrations[0]}</span>
+            <span className="material-symbols-outlined text-white text-[40px]">school</span>
           </div>
           <h1 className="relative z-10 text-3xl md:text-4xl font-bold text-white tracking-tight text-center">
             Prof. Acerta<span className="text-primary">+ 3.1</span>
@@ -309,7 +309,7 @@ export const Login: React.FC = () => {
         <div className="absolute inset-0 flex flex-col justify-end p-20 z-20">
           <div className="max-w-xl">
             <div className={`mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white shadow-lg`}>
-              <span className="material-symbols-outlined text-3xl">{theme.illustrations[1]}</span>
+              <span className="material-symbols-outlined text-3xl">domain</span>
             </div>
             <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl drop-shadow-md">
               Educação organizada, futuro garantido.

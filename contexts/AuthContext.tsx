@@ -90,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (storedSubject && (finalUser.subject === storedSubject || finalUser.subjects?.includes(storedSubject))) {
                     setActiveSubject(storedSubject);
                 } else {
-                    setActiveSubject(finalUser.subject || 'Matemática');
+                    setActiveSubject(finalUser.subject || 'Geral');
                 }
             }
         } catch (err: any) {

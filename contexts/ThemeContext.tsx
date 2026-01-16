@@ -16,15 +16,15 @@ interface ThemeConfig {
 
 const THEME_MAP: Record<string, ThemeConfig> = {
     'Geral': {
-        baseColor: 'slate',
-        primaryColor: 'slate-600',
-        secondaryColor: 'slate-700',
-        accentColor: 'slate-400',
-        bgGradient: 'from-slate-600 to-slate-800',
+        baseColor: 'blue',
+        primaryColor: 'blue-600',
+        secondaryColor: 'blue-700',
+        accentColor: 'blue-400',
+        bgGradient: 'from-blue-600 to-indigo-700',
         icon: 'school',
         description: 'Visão geral da escola.',
         illustrations: ['school', 'domain', 'location_city', 'apartment'],
-        softBg: 'bg-slate-50 dark:bg-slate-900/10'
+        softBg: 'bg-blue-50 dark:bg-blue-900/10'
     },
     'Filosofia': {
         baseColor: 'indigo',
@@ -203,8 +203,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const { currentUser, activeSubject } = useAuth();
 
     const themeValue = useMemo(() => {
-        const subject = activeSubject || currentUser?.subject || 'Matemática';
-        const config = THEME_MAP[subject] || THEME_MAP['Matemática'];
+        const subject = activeSubject || currentUser?.subject || 'Geral';
+        const config = THEME_MAP[subject] || THEME_MAP['Geral'];
         return {
             subject,
             ...config
