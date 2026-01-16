@@ -108,30 +108,49 @@ body {
     }
 }
 
-/* Global Dynamic Icon Sizing for Landscape Mobile */
-@media screen and (orientation: landscape) and (max-height: 600px) {
+@media screen and (orientation: landscape) and (max-height: 500px) {
 
-    /* Scale down all Material Symbols icons globally */
-    .material-symbols-outlined {
-        font-size: 0.85em !important;
-        /* Scale relative to parent font size, but smaller default */
-        /* OR force a max size cap */
-    }
-
-    /* Specific overrides for common icon sizes to be more compact */
-    .text-2xl .material-symbols-outlined,
-    .text-3xl .material-symbols-outlined {
-        font-size: 1.25rem !important;
-        /* Cap large icons */
-    }
-
-    .text-xl .material-symbols-outlined {
-        font-size: 1.1rem !important;
-    }
-
-    /* Reduce global base font size slightly for maximizing content density */
+    /* Balanced Vertical & Horizontal Scaling for Mobile Landscape */
+    /* Raise floor to 11px for better readability while keeping vmin for responsiveness */
     html {
-        font-size: 14px;
+        font-size: clamp(11px, 2.2vmin, 13px) !important;
+    }
+
+    /* Standardize and Cap Large Elements in Landscape */
+    h1,
+    .text-3xl {
+        font-size: 1.5rem !important;
+        line-height: 1.1 !important;
+    }
+
+    h2,
+    .text-2xl {
+        font-size: 1.25rem !important;
+        line-height: 1.1 !important;
+    }
+
+    h3,
+    .text-xl {
+        font-size: 1.1rem !important;
+        line-height: 1.1 !important;
+    }
+
+    /* Standardize Material Symbols globally in landscape */
+    .material-symbols-outlined {
+        font-size: 1.2rem !important;
+        vertical-align: middle;
+    }
+
+    /* Small Icon Overrides */
+    .text-sm .material-symbols-outlined,
+    .text-xs .material-symbols-outlined {
+        font-size: 1em !important;
+    }
+
+    /* Compact scrollbars for landscape to avoid wasting space */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
     }
 }
 

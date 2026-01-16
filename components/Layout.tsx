@@ -160,9 +160,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       />
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-[60] w-72 bg-white dark:bg-slate-900 border-r border-border-light dark:border-border-dark transform transition-transform duration-200 ease-out will-change-transform flex flex-col shadow-2xl lg:shadow-none shrink-0 group/sidebar overflow-hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} ${isSidebarCollapsed ? 'lg:-translate-x-full' : 'lg:translate-x-0'} `}>
+      <aside className={`fixed inset-y-0 left-0 z-[60] w-72 bg-white dark:bg-slate-900 border-r border-border-light dark:border-border-dark transform transition-transform duration-200 ease-out will-change-transform flex flex-col shadow-2xl lg:shadow-none landscape:shadow-none shrink-0 group/sidebar overflow-hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} ${isSidebarCollapsed ? 'lg:-translate-x-full landscape:-translate-x-full' : 'lg:translate-x-0 landscape:translate-x-0'} `}>
         <div className="flex flex-col h-[100dvh] justify-between">
-          <div className="lg:hidden absolute top-4 right-4 z-50">
+          <div className="lg:hidden landscape:hidden absolute top-4 right-4 z-50">
             <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500">
               <span className="material-symbols-outlined">close</span>
             </button>
@@ -181,7 +181,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               )}
             </div>
 
-            <div className="lg:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 shrink-0">
+            <div className="lg:hidden landscape:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 shrink-0">
               <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setIsProfileModalOpen(true); setIsMobileMenuOpen(false); }}>
                 <div className="size-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0 border border-white dark:border-slate-600">
                   {currentUser?.photoUrl ? (
@@ -207,7 +207,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </div>
             </div>
 
-            <div className="lg:hidden px-3 mb-2 shrink-0">
+            <div className="lg:hidden landscape:hidden px-3 mb-2 shrink-0">
               <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block px-1">Matéria Atual</label>
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden">
                 <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="w-full flex items-center justify-between p-3">
@@ -255,7 +255,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       <button
         onClick={toggleSidebar}
-        className={`hidden lg:flex fixed z-[70] top-8 size-12 bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'}`}
+        className={`hidden lg:flex landscape:flex fixed z-[70] top-8 size-12 bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'}`}
         title={isSidebarCollapsed ? "Expandir" : "Recolher"}
       >
         <span className={`material-symbols-outlined text-3xl font-bold transition-transform duration-150 ease-out ${isSidebarCollapsed ? '' : 'rotate-180'}`}>chevron_right</span>
@@ -267,104 +267,107 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <div className="fixed inset-0 bg-black/60 z-[55] lg:hidden backdrop-blur-sm transition-all" onClick={() => setIsMobileMenuOpen(false)}></div>
         )}
 
-        <header className="flex items-center justify-between border-b border-white/50 dark:border-slate-800 bg-white/80 dark:bg-slate-900/90 backdrop-blur-md px-4 md:px-6 py-2 md:py-4 z-[40] shrink-0 gap-4 sticky top-0 transition-all duration-300 landscape:py-1.5 landscape:px-2">
-          <div className="flex items-center gap-4 flex-1">
-            <button className="lg:hidden text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" onClick={() => setIsMobileMenuOpen(true)}>
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-            <div className="lg:hidden flex items-center gap-2">
-              <div className={`size-8 rounded-lg bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
-                <span className="material-symbols-outlined text-lg">school</span>
+        <header className="flex items-center justify-between border-b border-white/50 dark:border-slate-800 bg-white/80 dark:bg-slate-900/90 backdrop-blur-md px-4 md:px-6 py-2 md:py-4 z-[40] shrink-0 gap-4 sticky top-0 transition-all duration-300 landscape:py-1.5 landscape:px-[max(env(safe-area-inset-right),0.5rem)] landscape:pl-[max(env(safe-area-inset-left),0.5rem)] landscape:justify-center">
+          {/* Centered Container for Landscape */}
+          <div className="contents landscape:flex landscape:w-full landscape:max-w-5xl landscape:items-center landscape:justify-between landscape:mx-auto">
+            <div className="flex items-center gap-4 flex-1">
+              <button className="lg:hidden landscape:hidden text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" onClick={() => setIsMobileMenuOpen(true)}>
+                <span className="material-symbols-outlined">menu</span>
+              </button>
+              <div className="lg:hidden landscape:hidden flex items-center gap-2">
+                <div className={`size-8 rounded-lg bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
+                  <span className="material-symbols-outlined text-lg">school</span>
+                </div>
+                <span className="font-bold text-slate-800 dark:text-white text-xs landscape:hidden">Prof. Acerta+</span>
               </div>
-              <span className="font-bold text-slate-800 dark:text-white text-xs landscape:hidden">Prof. Acerta+</span>
+
+              <div className={`hidden md:block landscape:block transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'ml-24 landscape:ml-12' : 'ml-4'} landscape:ml-4`}>
+                <button onClick={() => setIsClassSelectorOpen(true)} className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 rounded-2xl bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-300 group border border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20 shadow-sm hover:shadow-md active:scale-95" title="Gerenciar Turmas">
+                  <div className={`size-10 rounded-lg bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-md shadow-${theme.primaryColor}/10 group-hover:scale-105 transition-all duration-500`}>
+                    <span className="material-symbols-outlined text-lg font-black">{theme.icon}</span>
+                  </div>
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">Série</span>
+                    <div className="flex items-center gap-1">
+                      <span className="font-black text-base text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-${theme.primaryColor} transition-colors">{activeSeries?.name || 'Selecione...'}</span>
+                      <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-[10px] group-hover:text-${theme.primaryColor} transition-all">expand_more</span>
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              <div className="h-10 w-px bg-gradient-to-b from-transparent via-slate-200 dark:via-slate-700 to-transparent mx-2 hidden md:block landscape:block"></div>
+
+              <div className="flex-1 min-w-0 mx-2 md:mx-0 overflow-hidden hidden md:block landscape:block">
+                <div className="flex items-center gap-3 overflow-x-auto no-scrollbar mask-linear-fade py-1 pr-4">
+                  {activeSeries?.sections.map(sec => (
+                    <div key={sec} className="relative group/tab shrink-0">
+                      <button onClick={() => handleSwitchSection(sec)} className={`relative min-w-[3.5rem] h-10 px-5 rounded-full font-black text-sm transition-all duration-500 flex items-center justify-center border-2 active:scale-90 ${selectedSection === sec ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-[0_0_15px] shadow-${theme.primaryColor}/40 ring-1 ring-${theme.primaryColor}/20` : 'bg-white dark:bg-slate-900/50 border-slate-100 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-700 dark:hover:text-white'}`}>
+                        {sec}
+                        {selectedSection === sec && <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-${theme.primaryColor} animate-pulse`}></span>}
+                      </button>
+                      <button onClick={(e) => handleRemoveSectionOneClick(e, sec)} className="absolute -top-1.5 -right-1.5 size-5 bg-white dark:bg-slate-700 text-red-500 rounded-full shadow-md border dark:border-white/10 flex items-center justify-center opacity-0 group-hover/tab:opacity-100 transition-all transform scale-0 group-hover/tab:scale-100 cursor-pointer z-20 hover:scale-110" title="Remover Turma">
+                        <span className="material-symbols-outlined text-[10px] font-black">close</span>
+                      </button>
+                    </div>
+                  ))}
+                  {activeSeries && (
+                    <button onClick={handleAddSectionOneClick} className={`h-10 pl-3 pr-4 rounded-full flex items-center gap-2 border-2 border-dashed border-slate-200 dark:border-white/10 text-slate-400 hover:border-${theme.primaryColor} hover:text-white hover:bg-${theme.primaryColor} transition-all duration-300 hover:scale-105 active:scale-95 group/nova shadow-sm hover:shadow-lg hover:shadow-${theme.primaryColor}/20`} title="Adicionar Turma">
+                      <span className="material-symbols-outlined text-sm font-black">add</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">Nova</span>
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className={`hidden md:block transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'ml-24' : 'ml-4'}`}>
-              <button onClick={() => setIsClassSelectorOpen(true)} className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 rounded-2xl bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-300 group border border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/20 shadow-sm hover:shadow-md active:scale-95" title="Gerenciar Turmas">
-                <div className={`size-10 rounded-lg bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-md shadow-${theme.primaryColor}/10 group-hover:scale-105 transition-all duration-500`}>
-                  <span className="material-symbols-outlined text-lg font-black">{theme.icon}</span>
+            <div className="flex items-center gap-4 pl-4 border-l border-slate-100 dark:border-slate-800">
+              {currentUser?.subjects && currentUser.subjects.length > 0 && (
+                <div className="relative hidden md:block landscape:block">
+                  <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <span className={`size-2 rounded-full bg-${theme.primaryColor}`}></span>
+                    {activeSubject}
+                    <span className="material-symbols-outlined text-xs">expand_more</span>
+                  </button>
+                  {isSubjectDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-[60]" onClick={() => setIsSubjectDropdownOpen(false)}></div>
+                      <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[61] animate-in fade-in zoom-in-95 duration-200">
+                        <div className="p-2 space-y-1">
+                          {Array.from(new Set([currentUser.subject, ...(currentUser.subjects || [])])).map(subj => (
+                            <button key={subj} onClick={() => { updateActiveSubject(subj); setIsSubjectDropdownOpen(false); }} className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeSubject === subj ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+                              {subj}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="flex flex-col items-start gap-0.5">
-                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">Série</span>
-                  <div className="flex items-center gap-1">
-                    <span className="font-black text-base text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-${theme.primaryColor} transition-colors">{activeSeries?.name || 'Selecione...'}</span>
-                    <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-[10px] group-hover:text-${theme.primaryColor} transition-all">expand_more</span>
+              )}
+              <div className="hidden md:block landscape:block">
+                <NotificationCenter />
+              </div>
+              <button onClick={() => setIsProfileModalOpen(true)} className="flex items-center gap-3 bg-white dark:bg-slate-800/50 pl-1.5 pr-4 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-primary transition-all group active:scale-95">
+                <div className="relative">
+                  <div className="size-10 rounded-xl bg-slate-200 dark:bg-slate-700 overflow-hidden border border-white dark:border-slate-600 shadow-sm group-hover:scale-105 transition-transform duration-300">
+                    {currentUser?.photoUrl ? (
+                      <img src={currentUser.photoUrl} alt="Profile" className="size-full object-cover" />
+                    ) : (
+                      <div className={`size-full flex items-center justify-center bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white font-bold text-sm tracking-tighter`}>
+                        {(currentUser?.name || '??').substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
                   </div>
+                  <div className="absolute -bottom-0.5 -right-0.5 size-3 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full shadow-sm"></div>
+                </div>
+                <div className="hidden md:flex landscape:flex flex-col items-start leading-tight">
+                  <span className="text-[13px] font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors">{currentUser?.name?.split(' ')[0]}</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activeSubject || theme.subject}</span>
                 </div>
               </button>
             </div>
-
-            <div className="h-10 w-px bg-gradient-to-b from-transparent via-slate-200 dark:via-slate-700 to-transparent mx-2 hidden md:block"></div>
-
-            <div className="flex-1 min-w-0 mx-2 md:mx-0 overflow-hidden hidden md:block">
-              <div className="flex items-center gap-3 overflow-x-auto no-scrollbar mask-linear-fade py-1 pr-4">
-                {activeSeries?.sections.map(sec => (
-                  <div key={sec} className="relative group/tab shrink-0">
-                    <button onClick={() => handleSwitchSection(sec)} className={`relative min-w-[3.5rem] h-10 px-5 rounded-full font-black text-sm transition-all duration-500 flex items-center justify-center border-2 active:scale-90 ${selectedSection === sec ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-[0_0_15px] shadow-${theme.primaryColor}/40 ring-1 ring-${theme.primaryColor}/20` : 'bg-white dark:bg-slate-900/50 border-slate-100 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-700 dark:hover:text-white'}`}>
-                      {sec}
-                      {selectedSection === sec && <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-${theme.primaryColor} animate-pulse`}></span>}
-                    </button>
-                    <button onClick={(e) => handleRemoveSectionOneClick(e, sec)} className="absolute -top-1.5 -right-1.5 size-5 bg-white dark:bg-slate-700 text-red-500 rounded-full shadow-md border dark:border-white/10 flex items-center justify-center opacity-0 group-hover/tab:opacity-100 transition-all transform scale-0 group-hover/tab:scale-100 cursor-pointer z-20 hover:scale-110" title="Remover Turma">
-                      <span className="material-symbols-outlined text-[10px] font-black">close</span>
-                    </button>
-                  </div>
-                ))}
-                {activeSeries && (
-                  <button onClick={handleAddSectionOneClick} className={`h-10 pl-3 pr-4 rounded-full flex items-center gap-2 border-2 border-dashed border-slate-200 dark:border-white/10 text-slate-400 hover:border-${theme.primaryColor} hover:text-white hover:bg-${theme.primaryColor} transition-all duration-300 hover:scale-105 active:scale-95 group/nova shadow-sm hover:shadow-lg hover:shadow-${theme.primaryColor}/20`} title="Adicionar Turma">
-                    <span className="material-symbols-outlined text-sm font-black">add</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest">Nova</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 pl-4 border-l border-slate-100 dark:border-slate-800">
-            {currentUser?.subjects && currentUser.subjects.length > 0 && (
-              <div className="relative hidden md:block">
-                <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                  <span className={`size-2 rounded-full bg-${theme.primaryColor}`}></span>
-                  {activeSubject}
-                  <span className="material-symbols-outlined text-xs">expand_more</span>
-                </button>
-                {isSubjectDropdownOpen && (
-                  <>
-                    <div className="fixed inset-0 z-[60]" onClick={() => setIsSubjectDropdownOpen(false)}></div>
-                    <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[61] animate-in fade-in zoom-in-95 duration-200">
-                      <div className="p-2 space-y-1">
-                        {Array.from(new Set([currentUser.subject, ...(currentUser.subjects || [])])).map(subj => (
-                          <button key={subj} onClick={() => { updateActiveSubject(subj); setIsSubjectDropdownOpen(false); }} className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeSubject === subj ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
-                            {subj}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-            <div className="hidden md:block">
-              <NotificationCenter />
-            </div>
-            <button onClick={() => setIsProfileModalOpen(true)} className="flex items-center gap-3 bg-white dark:bg-slate-800/50 pl-1.5 pr-4 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-primary transition-all group active:scale-95">
-              <div className="relative">
-                <div className="size-10 rounded-xl bg-slate-200 dark:bg-slate-700 overflow-hidden border border-white dark:border-slate-600 shadow-sm group-hover:scale-105 transition-transform duration-300">
-                  {currentUser?.photoUrl ? (
-                    <img src={currentUser.photoUrl} alt="Profile" className="size-full object-cover" />
-                  ) : (
-                    <div className={`size-full flex items-center justify-center bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white font-bold text-sm tracking-tighter`}>
-                      {(currentUser?.name || '??').substring(0, 2).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div className="absolute -bottom-0.5 -right-0.5 size-3 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full shadow-sm"></div>
-              </div>
-              <div className="hidden md:flex flex-col items-start leading-tight">
-                <span className="text-[13px] font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors">{currentUser?.name?.split(' ')[0]}</span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activeSubject || theme.subject}</span>
-              </div>
-            </button>
-          </div>
+          </div> {/* End of Centered Container */}
         </header>
 
         <div className="xl:hidden px-3 pt-2.5 -mb-0.5 z-30 landscape:pt-1 landscape:px-2">

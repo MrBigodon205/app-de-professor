@@ -10,6 +10,7 @@ import { RichTextEditor } from '../components/RichTextEditor';
 import { DatePicker } from '../components/DatePicker';
 import { useDebounce } from '../hooks/useDebounce';
 import { jsPDF } from 'jspdf';
+import { DynamicSelect } from '../components/DynamicSelect';
 
 export const Planning: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
@@ -644,7 +645,15 @@ export const Planning: React.FC = () => {
     }, [plans, debouncedSearchTerm, filterSection]);
 
     return (
-        <main className="flex h-full gap-4 md:gap-6 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 p-3 md:p-8 pb-32 lg:pb-8">
+        <main className="flex h-full gap-4 md:gap-6 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden landscape:overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 p-3 md:p-8 pb-32 lg:pb-8 landscape:pb-0 relative">
+            {/* Landscape FAB for New Plan */}
+            <button
+                onClick={handleNewPlan}
+                className="hidden landscape:flex fixed bottom-6 right-6 z-50 bg-indigo-600 hover:bg-indigo-700 text-white size-12 rounded-2xl shadow-xl border border-white/20 items-center justify-center transition-all hover:scale-110 active:scale-95 lg:hidden"
+                title="Nova Aula"
+            >
+                <span className="material-symbols-outlined text-3xl">add</span>
+            </button>
             <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} title="Adicionar anexo" aria-label="Adicionar anexo" />
 
             {/* AI MODAL */}
@@ -730,13 +739,13 @@ export const Planning: React.FC = () => {
                                     </div>
                                     <div className="flex flex-wrap gap-2 landscape:hidden">
                                         {plan.section && (
-                                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
+                                            <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
                                                 Turma {plan.section}
                                             </span>
                                         )}
                                         {plan.activity_type && (
-                                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold flex items-center gap-1 ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                                                <span className="material-symbols-outlined text-[12px]">
+                                            <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold flex items-center gap-1 ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                                <span className="material-symbols-outlined text-[0.7rem]">
                                                     {plan.activity_type.includes('Expositiva') ? 'school' :
                                                         plan.activity_type.includes('Prática') ? 'science' :
                                                             plan.activity_type.includes('Grupo') ? 'groups' :
@@ -747,11 +756,11 @@ export const Planning: React.FC = () => {
                                             </span>
                                         )}
                                         {plan.theme_area && plan.theme_area !== 'Geral' && (
-                                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                            <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                                                 {plan.theme_area}
                                             </span>
                                         )}
-                                        <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                        <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                                             {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                                         </span>
                                     </div>
@@ -811,31 +820,31 @@ export const Planning: React.FC = () => {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
-                                            <label className="label">Turma</label>
-                                            <div className="relative">
-                                                <select aria-label="Turma" title="Turma" value={formSection} onChange={e => setFormSection(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 appearance-none outline-none`}>
-                                                    <option value="">Selecione...</option>
-                                                    {activeSeries?.sections?.map(section => (
-                                                        <option key={section} value={section}>{section}</option>
-                                                    ))}
-                                                    <option value="Todas as Turmas">Todas as Turmas</option>
-                                                </select>
-                                                <span className="material-symbols-outlined absolute right-3 top-3.5 pointer-events-none text-slate-500">expand_more</span>
-                                            </div>
+                                            <DynamicSelect
+                                                label="Turma"
+                                                value={formSection}
+                                                onChange={setFormSection}
+                                                options={[
+                                                    ...(activeSeries?.sections?.map(s => ({ value: s, label: s, icon: 'groups' })) || []),
+                                                    { value: 'Todas as Turmas', label: 'Todas as Turmas', icon: 'domain' }
+                                                ]}
+                                                placeholder="Selecione..."
+                                            />
                                         </div>
                                         <div>
-                                            <label className="label">Tipo de Atividade</label>
-                                            <div className="relative">
-                                                <select value={formActivityType} onChange={e => setFormActivityType(e.target.value)} title="Tipo de Atividade" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 appearance-none outline-none`}>
-                                                    <option value="">Selecione...</option>
-                                                    <option value="Aula Expositiva">Aula Expositiva</option>
-                                                    <option value="Atividade Prática">Atividade Prática</option>
-                                                    <option value="Trabalho em Grupo">Trabalho em Grupo</option>
-                                                    <option value="Avaliação">Avaliação</option>
-                                                    <option value="Outro">Outro</option>
-                                                </select>
-                                                <span className="material-symbols-outlined absolute right-3 top-3.5 pointer-events-none text-slate-500">expand_more</span>
-                                            </div>
+                                            <DynamicSelect
+                                                label="Tipo de Atividade"
+                                                value={formActivityType}
+                                                onChange={setFormActivityType}
+                                                options={[
+                                                    { value: 'Aula Expositiva', label: 'Aula Expositiva', icon: 'school', color: 'blue' },
+                                                    { value: 'Atividade Prática', label: 'Atividade Prática', icon: 'science', color: 'indigo' },
+                                                    { value: 'Trabalho em Grupo', label: 'Trabalho em Grupo', icon: 'groups', color: 'violet' },
+                                                    { value: 'Avaliação', label: 'Avaliação', icon: 'assignment_turned_in', color: 'rose' },
+                                                    { value: 'Outro', label: 'Outro', icon: 'category', color: 'slate' }
+                                                ]}
+                                                placeholder="Selecione..."
+                                            />
                                         </div>
                                     </div>
 
@@ -1002,31 +1011,31 @@ export const Planning: React.FC = () => {
                                     <div className="absolute top-6 right-6 flex gap-2">
                                         <button
                                             onClick={handleExportPDF}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
                                             title="Baixar PDF"
                                         >
-                                            <span className="material-symbols-outlined">picture_as_pdf</span>
+                                            <span className="material-symbols-outlined landscape:text-2xl">picture_as_pdf</span>
                                         </button>
                                         <button
                                             onClick={handleExportWord}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
                                             title="Baixar Word"
                                         >
-                                            <span className="material-symbols-outlined">description</span>
+                                            <span className="material-symbols-outlined landscape:text-2xl">description</span>
                                         </button>
                                         <button
                                             onClick={() => { setIsEditing(true); setShowForm(true); }}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
                                             title="Editar Aula"
                                         >
-                                            <span className="material-symbols-outlined">edit</span>
+                                            <span className="material-symbols-outlined landscape:text-2xl">edit</span>
                                         </button>
                                         <button
                                             onClick={handleDelete}
-                                            className="p-2 bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
                                             title="Excluir Aula"
                                         >
-                                            <span className="material-symbols-outlined text-red-200">delete</span>
+                                            <span className="material-symbols-outlined text-red-200 landscape:text-2xl text-lg">delete</span>
                                         </button>
                                     </div>
                                 </div>

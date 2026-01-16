@@ -11,6 +11,7 @@ import { RichTextEditor } from '../components/RichTextEditor';
 import { useDebounce } from '../hooks/useDebounce';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { DynamicSelect } from '../components/DynamicSelect';
 
 // Fallback types if fetch fails
 const DEFAULT_ACTIVITY_TYPES = ['Prova', 'Trabalho', 'Dever de Casa', 'Seminário', 'Pesquisa', 'Conteúdo', 'Outro'];
@@ -38,6 +39,8 @@ export const Activities: React.FC = () => {
     const [formEndDate, setFormEndDate] = useState('');
     const [formDescription, setFormDescription] = useState('');
     const [formFiles, setFormFiles] = useState<AttachmentFile[]>([]);
+    const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+    const [isPresentationOpen, setIsPresentationOpen] = useState(false); // State for presentation mode
     const [formSeriesId, setFormSeriesId] = useState('');
     const [formSection, setFormSection] = useState('');
     const [filterSection, setFilterSection] = useState('');
@@ -51,6 +54,13 @@ export const Activities: React.FC = () => {
         setSelectedActivityId(null);
         setIsEditing(false);
     }, [selectedSeriesId, activeSubject]);
+
+    useEffect(() => {
+        if (!selectedActivityId) {
+            setIsEditing(false);
+            setIsPresentationOpen(false);
+        }
+    }, [selectedActivityId]);
 
     const fetchActivityTypes = async () => {
         try {
@@ -754,7 +764,15 @@ export const Activities: React.FC = () => {
     }
 
     return (
-        <div className="flex h-full gap-4 md:gap-6 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 p-3 md:p-8 pb-32 lg:pb-8">
+        <div className="flex h-full gap-4 md:gap-6 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden landscape:overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 p-3 md:p-8 pb-32 lg:pb-8 landscape:pb-0 relative">
+            {/* Landscape FAB for New Activity */}
+            <button
+                onClick={handleNewActivity}
+                className="hidden landscape:flex fixed bottom-6 right-6 z-50 bg-indigo-600 hover:bg-indigo-700 text-white size-12 rounded-2xl shadow-xl border border-white/20 items-center justify-center transition-all hover:scale-110 active:scale-95 lg:hidden"
+                title="Nova Atividade"
+            >
+                <span className="material-symbols-outlined text-3xl">add</span>
+            </button>
             {/* Hidden File Input */}
             <input
                 type="file"
@@ -861,19 +879,19 @@ export const Activities: React.FC = () => {
                                         </div>
                                         <div className="flex flex-wrap gap-2 landscape:hidden">
                                             {act.section && (
-                                                <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
+                                                <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
                                                     Turma {act.section}
                                                 </span>
                                             )}
-                                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                            <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                                                 {act.type}
                                             </span>
-                                            <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                            <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                                                 {new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                                             </span>
                                         </div>
                                         {/* Mobile Landscape Only Date */}
-                                        <div className="hidden landscape:block text-[10px] text-slate-400 mt-0.5">
+                                        <div className="hidden landscape:block text-[0.65rem] text-slate-400 mt-0.5">
                                             {new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                                         </div>
                                     </div>
@@ -964,18 +982,16 @@ export const Activities: React.FC = () => {
 
                                     <div>
                                         <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Tipo de Atividade</label>
-                                        <div className="relative">
-                                            <select
-                                                value={formType}
-                                                onChange={e => setFormType(e.target.value as any)}
-                                                title="Tipo de Atividade"
-                                                aria-label="Tipo de Atividade"
-                                                className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-lg appearance-none outline-none`}
-                                            >
-                                                {activityTypes.map(t => <option key={t} value={t}>{t}</option>)}
-                                            </select>
-                                            <span className="material-symbols-outlined absolute right-3 top-3.5 pointer-events-none text-slate-500">expand_more</span>
-                                        </div>
+                                        <DynamicSelect
+                                            value={formType}
+                                            onChange={(val) => setFormType(val)}
+                                            options={activityTypes.map(t => ({
+                                                value: t,
+                                                label: t,
+                                                icon: getIconForType(t)
+                                            }))}
+                                            placeholder="Selecione..."
+                                        />
                                     </div>
                                 </div>
 
@@ -989,17 +1005,16 @@ export const Activities: React.FC = () => {
                                     </div>
                                     <div className="w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
                                     <div className="flex-1">
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Turma (Opcional)</label>
-                                        <select
+                                        <DynamicSelect
+                                            label="Turma (Opcional)"
                                             value={formSection}
-                                            onChange={e => setFormSection(e.target.value)}
-                                            title="Selecionar Turma"
-                                            aria-label="Selecionar Turma"
-                                            className={`block w-full md:w-48 text-sm font-bold rounded-xl border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-${theme.primaryColor} focus:border-${theme.primaryColor} p-2.5 transition-shadow`}
-                                        >
-                                            <option value="">Todas as Turmas</option>
-                                            {activeSeries?.sections.map(s => <option key={s} value={s}>Turma {s}</option>)}
-                                        </select>
+                                            onChange={setFormSection}
+                                            options={[
+                                                { value: '', label: 'Todas as Turmas', icon: 'domain' },
+                                                ...(activeSeries?.sections.map(s => ({ value: s, label: `Turma ${s}`, icon: 'groups' })) || [])
+                                            ]}
+                                            placeholder="Selecione..."
+                                        />
                                     </div>
                                 </div>
 
@@ -1098,31 +1113,40 @@ export const Activities: React.FC = () => {
                                 <div className="absolute top-6 right-6 flex gap-2">
                                     <button
                                         onClick={handleExportPDF}
-                                        className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                        className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
                                         title="Baixar PDF"
                                     >
-                                        <span className="material-symbols-outlined">picture_as_pdf</span>
+                                        <span className="material-symbols-outlined landscape:text-2xl">picture_as_pdf</span>
                                     </button>
+                                    {currentActivity?.files?.find(f => f.name.match(/\.(ppt|pptx)$/i)) && (
+                                        <button
+                                            onClick={() => setIsPresentationOpen(true)}
+                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-xl backdrop-blur-md border border-orange-500/20 transition-all shadow-lg flex items-center justify-center"
+                                            title="Apresentar Slide"
+                                        >
+                                            <span className="material-symbols-outlined landscape:text-2xl">slideshow</span>
+                                        </button>
+                                    )}
                                     <button
                                         onClick={handlePrint}
-                                        className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                        className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
                                         title="Imprimir"
                                     >
-                                        <span className="material-symbols-outlined">print</span>
+                                        <span className="material-symbols-outlined landscape:text-2xl">print</span>
                                     </button>
                                     <button
                                         onClick={() => setIsEditing(true)}
-                                        className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                        className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
                                         title="Editar Atividade"
                                     >
-                                        <span className="material-symbols-outlined">edit</span>
+                                        <span className="material-symbols-outlined landscape:text-2xl">edit</span>
                                     </button>
                                     <button
                                         onClick={handleDelete}
-                                        className="p-2 bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                        className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
                                         title="Excluir Atividade"
                                     >
-                                        <span className="material-symbols-outlined text-red-200">delete</span>
+                                        <span className="material-symbols-outlined text-red-200 landscape:text-2xl text-lg">delete</span>
                                     </button>
                                 </div>
                             </div>
@@ -1313,6 +1337,30 @@ export const Activities: React.FC = () => {
                         </div>
                     ))}
             </div>
-        </div >
+            {/* Presentation Modal */}
+            {isPresentationOpen && currentActivity && (
+                <div className="fixed inset-0 z-[100] bg-black animate-in fade-in duration-300">
+                    <button
+                        onClick={() => setIsPresentationOpen(false)}
+                        className="absolute top-4 right-4 z-[101] size-12 rounded-full bg-slate-800 text-white flex items-center justify-center hover:bg-slate-700 transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-2xl">close</span>
+                    </button>
+                    {(() => {
+                        const pptFile = currentActivity.files.find(f => f.name.match(/\.(ppt|pptx)$/i));
+                        if (pptFile) {
+                            return (
+                                <iframe
+                                    src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(pptFile.url)}`}
+                                    className="w-full h-full border-0"
+                                    title="Apresentação"
+                                />
+                            );
+                        }
+                        return null;
+                    })()}
+                </div>
+            )}
+        </div>
     );
 };

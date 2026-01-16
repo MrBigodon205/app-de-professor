@@ -203,13 +203,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
         <div className="relative" ref={notificationsRef}>
             <button
                 onClick={() => setInternalIsOpen(!internalIsOpen)}
-                className={`relative p-2.5 rounded-xl transition-all duration-300 group ${internalIsOpen ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary'}`}
+                className={`relative p-2.5 landscape:p-3 landscape:size-14 landscape:rounded-2xl rounded-xl transition-all duration-300 group flex items-center justify-center ${internalIsOpen ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary'}`}
             >
-                <span className={`material-symbols-outlined ${internalIsOpen ? 'icon-filled animate-none' : 'group-hover:animate-pulse'}`}>notifications</span>
+                <span className={`material-symbols-outlined landscape:text-3xl ${internalIsOpen ? 'icon-filled animate-none' : 'group-hover:animate-pulse'}`}>notifications</span>
                 {notifications.length > 0 && (
-                    <span className="absolute top-2 right-2 flex h-4 w-4">
+                    <span className="absolute top-2 right-2 flex h-4 w-4 landscape:top-1 landscape:right-1 landscape:h-5 landscape:w-5">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-white dark:border-surface-dark text-[8px] text-white items-center justify-center font-bold">
+                        <span className="relative inline-flex rounded-full h-4 w-4 landscape:h-5 landscape:w-5 bg-red-500 border-2 border-white dark:border-surface-dark text-[8px] landscape:text-[10px] text-white items-center justify-center font-bold">
                             {notifications.length}
                         </span>
                     </span>

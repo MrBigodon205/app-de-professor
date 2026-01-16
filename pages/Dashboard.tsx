@@ -446,8 +446,8 @@ export const Dashboard: React.FC = () => {
           ) : todaysPlan ? (
             <div className="h-[160px] landscape:h-[100px] bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 landscape:p-4 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden flex flex-col justify-center">
               {/* ... Plan content ... */}
-              <div className="absolute right-0 top-0 p-4 opacity-10">
-                <span className="material-symbols-outlined text-[150px]">calendar_month</span>
+              <div className="absolute right-0 top-0 p-4 opacity-10 landscape:opacity-5">
+                <span className="material-symbols-outlined text-[150px] landscape:text-[80px]">calendar_month</span>
               </div>
               <div className="relative z-10 w-full">
                 <div className="flex items-center gap-2 mb-2 text-blue-100 font-bold uppercase text-xs tracking-wider">
@@ -501,7 +501,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div className="flex-1 w-full md:w-auto flex flex-col items-start md:items-end pt-2 h-full justify-between landscape:items-end">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/10 mb-6 max-w-full whitespace-nowrap overflow-hidden text-ellipsis landscape:mb-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/10 mb-6 max-w-full whitespace-nowrap overflow-hidden text-ellipsis landscape:mb-1">
                 <span className="size-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
                 Atividade Recente
               </span>

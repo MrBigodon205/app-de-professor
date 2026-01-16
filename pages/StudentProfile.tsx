@@ -7,6 +7,7 @@ import { Student, Activity, AttendanceRecord, Occurrence, Plan } from '../types'
 import { supabase } from '../lib/supabase';
 import { calculateUnitTotal, calculateAnnualSummary, getStatusResult } from '../utils/gradeCalculations';
 import { TransferStudentModal } from '../components/TransferStudentModal';
+import { DynamicSelect } from '../components/DynamicSelect';
 
 
 interface Grades {
@@ -564,29 +565,30 @@ export const StudentProfile: React.FC = () => {
 
                     <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto relative z-10 no-print">
                         <div className="flex-1 min-w-[180px]">
-                            <label className="text-[10px] font-black uppercase text-slate-400 ml-1 mb-2 block tracking-widest leading-none">Filtrar Período</label>
-                            <select
+                            <DynamicSelect
+                                label="Filtrar Período"
                                 value={selectedUnit}
-                                onChange={(e) => setSelectedUnit(e.target.value)}
-                                className={`w-full h-14 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-black text-slate-700 dark:text-slate-200 focus:border-${theme.primaryColor} focus:ring-4 focus:ring-${theme.primaryColor}/10 transition-all cursor-pointer`}
-                            >
-                                <option value="all">Ciclo Completo</option>
-                                <option value="1">1ª Unidade</option>
-                                <option value="2">2ª Unidade</option>
-                                <option value="3">3ª Unidade</option>
-                            </select>
+                                onChange={setSelectedUnit}
+                                options={[
+                                    { value: 'all', label: 'Ciclo Completo', icon: 'restart_alt' },
+                                    { value: '1', label: '1ª Unidade', icon: 'looks_one' },
+                                    { value: '2', label: '2ª Unidade', icon: 'looks_two' },
+                                    { value: '3', label: '3ª Unidade', icon: 'looks_3' }
+                                ]}
+                            />
                         </div>
                         <div className="flex-1 min-w-[240px]">
-                            <label className="text-[10px] font-black uppercase text-slate-400 ml-1 mb-2 block tracking-widest leading-none">Trocar Aluno</label>
-                            <select
+                            <DynamicSelect
+                                label="Trocar Aluno"
                                 value={selectedStudentId}
-                                onChange={(e) => setSelectedStudentId(e.target.value)}
-                                className={`w-full h-14 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-black text-slate-700 dark:text-slate-200 focus:border-${theme.primaryColor} focus:ring-4 focus:ring-${theme.primaryColor}/10 transition-all cursor-pointer`}
-                            >
-                                {students.map(s => (
-                                    <option key={s.id} value={s.id}>{s.number.padStart(2, '0')} - {s.name}</option>
-                                ))}
-                            </select>
+                                onChange={setSelectedStudentId}
+                                options={students.map(s => ({
+                                    value: s.id,
+                                    label: `${s.number.padStart(2, '0')} - ${s.name}`,
+                                    icon: 'person'
+                                }))}
+                                placeholder="Selecione..."
+                            />
                         </div>
                         <button
                             onClick={() => setIsTransferModalOpen(true)}

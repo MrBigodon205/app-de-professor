@@ -21,6 +21,7 @@ interface ClassContextType {
     addSection: (classId: string, section: string) => Promise<void>;
     removeSection: (classId: string, section: string) => Promise<void>;
     transferStudent: (studentId: string, targetSeriesId: string, targetSection: string) => Promise<boolean>;
+    bulkTransferStudents: (studentIds: string[], targetSeriesId: string, targetSection: string) => Promise<boolean>;
     refreshData: () => Promise<void>;
 }
 
@@ -244,6 +245,24 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     }, []);
 
+    const bulkTransferStudents = useCallback(async (studentIds: string[], targetSeriesId: string, targetSection: string) => {
+        try {
+            const { error } = await supabase
+                .from('students')
+                .update({
+                    series_id: targetSeriesId,
+                    section: targetSection
+                })
+                .in('id', studentIds);
+
+            if (error) throw error;
+            return true;
+        } catch (e) {
+            console.error("Failed to bulk transfer students", e);
+            throw e;
+        }
+    }, []);
+
     const contextValue = useMemo(() => ({
         classes,
         selectedSeriesId,
@@ -258,6 +277,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addSection,
         removeSection,
         transferStudent,
+        bulkTransferStudents,
         refreshData: fetchClasses
     }), [
         classes,
@@ -272,7 +292,8 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         removeClass,
         addSection,
         removeSection,
-        transferStudent
+        transferStudent,
+        bulkTransferStudents
     ]);
 
     return (

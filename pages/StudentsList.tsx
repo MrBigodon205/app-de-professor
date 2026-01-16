@@ -5,6 +5,7 @@ import { useTheme } from '../hooks/useTheme';
 import { Student } from '../types';
 import { supabase } from '../lib/supabase';
 import { TransferStudentModal } from '../components/TransferStudentModal';
+import { BulkTransferModal } from '../components/BulkTransferModal';
 
 export const StudentsList: React.FC = () => {
     const { selectedSeriesId, selectedSection, activeSeries } = useClass();
@@ -26,6 +27,7 @@ export const StudentsList: React.FC = () => {
 
     // Transfer State
     const [transferringStudent, setTransferringStudent] = useState<Student | null>(null);
+    const [isBulkTransferring, setIsBulkTransferring] = useState(false);
 
     // Selection Logic
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -317,13 +319,22 @@ export const StudentsList: React.FC = () => {
 
                 <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto relative z-10">
                     {selectedIds.length > 0 ? (
-                        <button
-                            onClick={handleBulkDelete}
-                            className="flex items-center gap-3 bg-red-100 hover:bg-red-200 text-red-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95 animate-in fade-in zoom-in"
-                        >
-                            <span className="material-symbols-outlined text-xl">delete</span>
-                            Remover ({selectedIds.length})
-                        </button>
+                        <div className="flex items-center gap-3 animate-in fade-in zoom-in">
+                            <button
+                                onClick={() => setIsBulkTransferring(true)}
+                                className="flex items-center gap-3 bg-amber-100 hover:bg-amber-200 text-amber-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
+                            >
+                                <span className="material-symbols-outlined text-xl">move_up</span>
+                                Transferir ({selectedIds.length})
+                            </button>
+                            <button
+                                onClick={handleBulkDelete}
+                                className="flex items-center gap-3 bg-red-100 hover:bg-red-200 text-red-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
+                            >
+                                <span className="material-symbols-outlined text-xl">delete</span>
+                                Remover
+                            </button>
+                        </div>
                     ) : (
                         <button
                             data-tour="students-import-btn"
@@ -579,6 +590,17 @@ export const StudentsList: React.FC = () => {
                     }}
                 />
             )}
+
+            <BulkTransferModal
+                isOpen={isBulkTransferring}
+                onClose={() => setIsBulkTransferring(false)}
+                studentIds={selectedIds}
+                onSuccess={() => {
+                    fetchStudents();
+                    setSelectedIds([]);
+                    setIsBulkTransferring(false);
+                }}
+            />
 
             <div className={`flex items-center justify-center gap-4 py-4`}>
                 <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800"></div>

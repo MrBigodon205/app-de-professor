@@ -202,7 +202,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
 
                                                     <button
                                                         onClick={() => handleDeleteSeries(cls.id, cls.name)}
-                                                        className="size-9 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center"
+                                                        className="size-9 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20 transition-all flex items-center justify-center opacity-100"
                                                         title="Excluir"
                                                     >
                                                         <span className="material-symbols-outlined text-lg">delete</span>
