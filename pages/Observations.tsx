@@ -284,7 +284,7 @@ export const Observations: React.FC = () => {
             <div className={`w-full lg:w-96 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden shrink-0 ${selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
                 <div className={`p-4 sm:p-8 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-slate-50 to-white dark:from-slate-950 dark:to-slate-900`}>
                     <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                        <div className={`size-8 sm:size-10 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
+                        <div className={`size-8 sm:size-10 rounded-xl flex items-center justify-center`} style={{ backgroundColor: `${theme.primaryColorHex}1A`, color: theme.primaryColorHex }}>
                             <span className="material-symbols-outlined text-lg sm:text-2xl">badge</span>
                         </div>
                         <h2 className="font-black text-slate-800 dark:text-white uppercase tracking-widest text-xs sm:text-sm">
@@ -309,18 +309,19 @@ export const Observations: React.FC = () => {
                             key={student.id}
                             onClick={() => setSelectedStudentId(student.id)}
                             className={`w-full flex items-center gap-4 p-4 landscape:p-2 rounded-2xl transition-all duration-300 relative group/item ${selectedStudentId === student.id
-                                ? `bg-${theme.primaryColor}/5 border border-${theme.primaryColor}/10`
+                                ? `border`
                                 : 'hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent'
                                 }`}
+                            style={selectedStudentId === student.id ? { backgroundColor: `${theme.primaryColorHex}0D`, borderColor: `${theme.primaryColorHex}1A` } : undefined}
                         >
                             {selectedStudentId === student.id && (
-                                <div className={`absolute left-2 w-1 h-6 bg-${theme.primaryColor} rounded-full landscape:hidden`}></div>
+                                <div className={`absolute left-2 w-1 h-6 rounded-full landscape:hidden`} style={{ backgroundColor: theme.primaryColorHex }}></div>
                             )}
                             <div className={`size-11 landscape:size-8 rounded-2xl bg-gradient-to-br ${student.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-sm font-black text-white shrink-0 shadow-lg shadow-slate-200 dark:shadow-none transition-transform group-hover/item:scale-110`}>
                                 {student.initials || student.name.substring(0, 2)}
                             </div>
                             <div className="flex flex-col items-start min-w-0 pr-4">
-                                <span className={`text-sm font-black truncate w-full text-left transition-colors ${selectedStudentId === student.id ? `text-${theme.primaryColor}` : 'text-slate-700 dark:text-slate-200 group-hover/item:text-slate-950 dark:group-hover/item:text-white'}`}>{student.name}</span>
+                                <span className={`text-sm font-black truncate w-full text-left transition-colors ${selectedStudentId === student.id ? `` : 'text-slate-700 dark:text-slate-200 group-hover/item:text-slate-950 dark:group-hover/item:text-white'}`} style={{ color: selectedStudentId === student.id ? theme.primaryColorHex : undefined }}>{student.name}</span>
                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest landscape:hidden">Nº {student.number.padStart(2, '0')}</span>
                             </div>
                         </button>
@@ -338,7 +339,7 @@ export const Observations: React.FC = () => {
                     <span className="material-symbols-outlined">arrow_back</span>
                 </button>
                 {/* Header Background Accent */}
-                <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-40 -mt-40 blur-3xl`}></div>
+                <div className="absolute top-0 right-0 w-80 h-80 rounded-full -mr-40 -mt-40 blur-3xl" style={{ backgroundImage: `linear-gradient(to bottom right, ${theme.primaryColorHex}0D, transparent)` }}></div>
 
                 {/* Header */}
                 <div className="p-3 sm:p-8 landscape:p-2 border-b border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4 sm:gap-8 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10 shrink-0">
@@ -353,7 +354,7 @@ export const Observations: React.FC = () => {
                                     <div className="flex items-center gap-2 sm:gap-3 text-[9px] sm:text-sm font-bold text-slate-400 landscape:hidden">
                                         <span className="bg-slate-100 dark:bg-slate-800 px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl font-mono text-slate-500">#{selectedStudent.number.padStart(2, '0')}</span>
                                         <span>•</span>
-                                        <span className={`text-${theme.primaryColor} truncate`}>{activeSeries?.name} • Turma {selectedSection}</span>
+                                        <span className={`truncate`} style={{ color: theme.primaryColorHex }}>{activeSeries?.name} • Turma {selectedSection}</span>
                                     </div>
                                 </div>
                             </>
@@ -396,8 +397,9 @@ export const Observations: React.FC = () => {
                                             key={u}
                                             onClick={() => setSelectedUnit(u)}
                                             className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${selectedUnit === u
-                                                ? `bg-${theme.primaryColor} text-white shadow-lg`
+                                                ? 'text-white shadow-lg'
                                                 : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                            style={{ backgroundColor: selectedUnit === u ? theme.primaryColorHex : undefined }}
                                         >
                                             {u}ª Unid
                                         </button>
@@ -408,7 +410,7 @@ export const Observations: React.FC = () => {
                             <div className="flex flex-col gap-4">
                                 <label className="flex items-center justify-between font-black text-slate-800 dark:text-white uppercase tracking-[0.2em] text-[10px] ml-1">
                                     <div className="flex items-center gap-3">
-                                        <span className={`size-3 rounded-full bg-${theme.primaryColor}`}></span>
+                                        <span className={`size-3 rounded-full`} style={{ backgroundColor: theme.primaryColorHex }}></span>
                                         Conteúdo do Diário de Bordo - {selectedUnit}ª Unidade
                                     </div>
                                     {saving ? (
@@ -492,9 +494,14 @@ export const Observations: React.FC = () => {
                                                     key={u}
                                                     onClick={() => setSelectedUnit(u)}
                                                     className={`h-11 sm:h-14 landscape:h-10 rounded-2xl border-2 font-black text-sm transition-all ${selectedUnit === u
-                                                        ? `border-${theme.primaryColor} bg-${theme.primaryColor}/10 text-${theme.primaryColor}`
+                                                        ? ''
                                                         : 'border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                                                         }`}
+                                                    style={selectedUnit === u ? {
+                                                        borderColor: theme.primaryColorHex,
+                                                        backgroundColor: `${theme.primaryColorHex}1A`,
+                                                        color: theme.primaryColorHex
+                                                    } : undefined}
                                                 >
                                                     {u}ª Unid
                                                 </button>

@@ -231,7 +231,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
             <nav className="flex flex-col gap-1.5 landscape:gap-1 mt-2 pr-2">
               {navItems.map((item) => (
-                <Link key={item.path} to={item.path} onClick={() => setIsMobileMenuOpen(false)} className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group hover:scale-[1.02] active:scale-95 ${isActive(item.path) ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/30 ring-1 ring-${theme.primaryColor}/20` : 'text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400 hover:text-text-main dark:hover:text-white'} ${isSidebarCollapsed && !isMobileMenuOpen ? 'justify-center px-0' : ''}`} title={isSidebarCollapsed && !isMobileMenuOpen ? item.label : ''}>
+                <Link key={item.path} to={item.path} onClick={() => setIsMobileMenuOpen(false)} style={{ backgroundColor: isActive(item.path) ? theme.primaryColorHex : undefined }} className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group hover:scale-[1.02] active:scale-95 ${isActive(item.path) ? `text-white shadow-lg shadow-${theme.primaryColor}/30 ring-1 ring-${theme.primaryColor}/20` : 'text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400 hover:text-text-main dark:hover:text-white'} ${isSidebarCollapsed && !isMobileMenuOpen ? 'justify-center px-0' : ''}`} title={isSidebarCollapsed && !isMobileMenuOpen ? item.label : ''}>
                   <span className={`material-symbols-outlined text-2xl transition-transform duration-300 group-hover:rotate-12 ${isActive(item.path) ? 'icon-filled scale-110' : 'group-hover:scale-110'}`}>{item.icon}</span>
                   {(!isSidebarCollapsed || isMobileMenuOpen) && <span className={`text-sm font-medium transition-all animate-in fade-in duration-300 ${isActive(item.path) ? 'font-bold' : ''}`}>{item.label}</span>}
                   {isActive(item.path) && (!isSidebarCollapsed || isMobileMenuOpen) && <span className="absolute right-3 w-1.5 h-1.5 bg-white rounded-full animate-ping" />}
@@ -391,7 +391,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </button>
         </div>
 
-        <main className={`flex-1 overflow-y-auto lg:overflow-hidden overflow-x-hidden scroll-smooth custom-scrollbar relative px-1`}>
+        <main className={`flex-1 overflow-y-auto overflow-x-hidden scroll-smooth custom-scrollbar relative px-1`}>
           {children}
         </main>
 

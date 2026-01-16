@@ -544,27 +544,27 @@ export const StudentProfile: React.FC = () => {
         <div className="max-w-[1400px] mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header / Selector */}
             {loading ? <SkeletonHeader /> : (
-                <div className={`bg-white dark:bg-slate-900 p-8 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group`}>
+                <div className={`bg-white dark:bg-slate-900 fluid-p-m rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-center justify-between fluid-gap-m relative overflow-hidden group`}>
                     <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-${theme.primaryColor}/10 to-transparent rounded-full -mr-40 -mt-40 blur-3xl group-hover:from-${theme.primaryColor}/15 transition-colors duration-700`}></div>
 
                     <div className="flex items-center gap-6 relative z-10 w-full lg:w-auto">
-                        <div className={`size-20 rounded-[28px] bg-gradient-to-br ${student?.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-3xl font-black text-white shadow-2xl shadow-slate-300 dark:shadow-none ring-8 ring-white dark:ring-slate-900`}>
+                        <div className={`size-16 md:size-20 rounded-[28px] bg-gradient-to-br ${student?.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-3xl font-black text-white shadow-2xl shadow-slate-300 dark:shadow-none ring-8 ring-white dark:ring-slate-900`}>
                             {student?.initials}
                         </div>
                         <div className="flex flex-col">
                             <div className="flex items-center gap-3">
-                                <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{student?.name}</h1>
+                                <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{student?.name}</h1>
                                 <span className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-xl font-mono font-black text-slate-400 text-sm">#{student?.number.padStart(2, '0')}</span>
                             </div>
-                            <p className="text-slate-500 font-bold mt-2 flex items-center gap-2">
+                            <p className="text-slate-500 font-bold mt-2 flex items-center gap-2 text-sm md:text-base">
                                 <span className={`size-1.5 rounded-full bg-${theme.primaryColor}`}></span>
                                 {activeSeries?.name} • Turma {selectedSection} • <span className={`text-${theme.primaryColor}`}>{currentUser?.subject}</span>
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto relative z-10 no-print">
-                        <div className="flex-1 min-w-[180px]">
+                    <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto relative z-10 no-print landscape:justify-end">
+                        <div className="flex-1 min-w-[160px] lg:min-w-[180px]">
                             <DynamicSelect
                                 label="Filtrar Período"
                                 value={selectedUnit}
@@ -577,7 +577,7 @@ export const StudentProfile: React.FC = () => {
                                 ]}
                             />
                         </div>
-                        <div className="flex-1 min-w-[240px]">
+                        <div className="flex-1 min-w-[200px] lg:min-w-[240px]">
                             <DynamicSelect
                                 label="Trocar Aluno"
                                 value={selectedStudentId}
@@ -590,21 +590,26 @@ export const StudentProfile: React.FC = () => {
                                 placeholder="Selecione..."
                             />
                         </div>
-                        <button
-                            onClick={() => setIsTransferModalOpen(true)}
-                            className={`h-14 px-8 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-black flex items-center justify-center gap-3 transition-all hover:border-${theme.primaryColor} hover:text-${theme.primaryColor} self-end active:scale-95 uppercase tracking-widest text-xs`}
-                        >
-                            <span className="material-symbols-outlined text-xl text-amber-500">move_up</span>
-                            Trocar de Turma
-                        </button>
-                        <button
-                            onClick={handleExportPDF}
-                            data-tour="reports-export-btn"
-                            className={`h-14 px-8 rounded-2xl bg-${theme.primaryColor} hover:opacity-90 text-white font-black flex items-center justify-center gap-3 transition-all shadow-xl shadow-${theme.primaryColor}/20 self-end active:scale-95 uppercase tracking-widest text-xs`}
-                        >
-                            <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
-                            Exportar Relatório
-                        </button>
+                        <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                            <button
+                                onClick={() => setIsTransferModalOpen(true)}
+                                className={`flex-1 sm:flex-none h-12 md:h-14 px-4 md:px-8 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-black flex items-center justify-center gap-2 md:gap-3 transition-all hover:border-${theme.primaryColor} hover:text-${theme.primaryColor} self-end active:scale-95 uppercase tracking-widest text-[10px] md:text-xs`}
+                            >
+                                <span className="material-symbols-outlined text-lg md:text-xl text-amber-500">move_up</span>
+                                <span className="hidden md:inline">Trocar de Turma</span>
+                                <span className="md:hidden">Transferir</span>
+                            </button>
+                            <button
+                                onClick={handleExportPDF}
+                                data-tour="reports-export-btn"
+                                className={`flex-1 sm:flex-none h-12 md:h-14 px-4 md:px-8 rounded-2xl text-white font-black flex items-center justify-center gap-2 md:gap-3 transition-all self-end active:scale-95 uppercase tracking-widest text-[10px] md:text-xs shadow-xl`}
+                                style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 20px 25px -5px ${theme.primaryColorHex}33` }}
+                            >
+                                <span className="material-symbols-outlined text-lg md:text-xl">picture_as_pdf</span>
+                                <span className="hidden md:inline">Exportar Relatório</span>
+                                <span className="md:hidden">PDF</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -632,23 +637,23 @@ export const StudentProfile: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 fluid-gap-m">
                     {/* Left Column: Chart & Unit Reports */}
-                    <div className="lg:col-span-2 flex flex-col gap-8">
+                    <div className="lg:col-span-2 flex flex-col fluid-gap-m">
                         {/* PERFORMANCE CHART */}
-                        <div className="bg-white dark:bg-slate-900 p-8 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 relative overflow-hidden" data-tour="reports-chart">
-                            <div className={`absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-${theme.primaryColor} to-${theme.secondaryColor}`}></div>
+                        <div className="bg-white dark:bg-slate-900 fluid-p-m rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 relative overflow-hidden landscape:min-h-[300px]" data-tour="reports-chart">
+                            <div className="absolute top-0 left-0 w-1 h-full" style={{ background: `linear-gradient(to bottom, ${theme.primaryColorHex}, ${theme.secondaryColorHex})` }}></div>
 
                             <div className="flex items-center justify-between mb-8">
                                 <h3 className="font-black text-xl text-slate-900 dark:text-white flex items-center gap-3">
-                                    <span className={`size-10 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
+                                    <span className={`size-10 rounded-xl flex items-center justify-center`} style={{ backgroundColor: `${theme.primaryColorHex}1A`, color: theme.primaryColorHex }}>
                                         <span className="material-symbols-outlined">trending_up</span>
                                     </span>
                                     Evolução Acadêmica
                                 </h3>
                                 <div className="flex gap-4">
                                     <div className="flex items-center gap-2">
-                                        <span className={`size-2 rounded-full bg-${theme.primaryColor}`}></span>
+                                        <span className={`size-2 rounded-full`} style={{ backgroundColor: theme.primaryColorHex }}></span>
                                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Desempenho por Unidade</span>
                                     </div>
                                 </div>
@@ -693,7 +698,7 @@ export const StudentProfile: React.FC = () => {
 
 
                         {/* UNIT BLOCKS */}
-                        <div className="flex flex-col gap-6">
+                        <div className="flex flex-col fluid-gap-s">
                             {['1', '2', '3']
                                 .filter(u => selectedUnit === 'all' || selectedUnit === u)
                                 .map(unit => {
@@ -701,7 +706,7 @@ export const StudentProfile: React.FC = () => {
                                     const avg = calculateUnitTotal(student, unit);
 
                                     return (
-                                        <div key={unit} className="bg-white dark:bg-slate-900 p-8 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row gap-6 md:gap-8 animate-in fade-in slide-in-from-left duration-500 hover:border-slate-200 dark:hover:border-slate-700 transition-all">
+                                        <div key={unit} className="bg-white dark:bg-slate-900 fluid-p-m rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row fluid-gap-m animate-in fade-in slide-in-from-left duration-500 hover:border-slate-200 dark:hover:border-slate-700 transition-all">
                                             <div className={`w-full md:w-48 flex flex-col items-center justify-center p-8 bg-slate-50 dark:bg-slate-950 rounded-3xl border border-slate-100 dark:border-slate-800 relative overflow-hidden group/unit`}>
                                                 <div className={`absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-${theme.primaryColor}/10 to-transparent rounded-full -mr-8 -mt-8`}></div>
                                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">{unit}ª Unidade</span>
@@ -736,9 +741,9 @@ export const StudentProfile: React.FC = () => {
                     </div>
 
                     {/* Right Column: Occurrences & Statistics */}
-                    <div className="flex flex-col gap-8 no-print">
+                    <div className="flex flex-col fluid-gap-m no-print">
                         {/* OCCURRENCES PANEL */}
-                        <div className="bg-white dark:bg-slate-900 p-8 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col h-fit sticky top-6">
+                        <div className="bg-white dark:bg-slate-900 fluid-p-m rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col h-fit sticky top-6">
                             <div className="flex items-center justify-between mb-8">
                                 <h3 className="font-black text-lg text-slate-900 dark:text-white flex items-center gap-3">
                                     <span className={`size-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center`}>
@@ -772,7 +777,7 @@ export const StudentProfile: React.FC = () => {
                                 )}
                             </div>
 
-                            <div className="space-y-8 pt-8 border-t border-slate-100 dark:border-slate-800">
+                            <div className="flex flex-col fluid-gap-m pt-8 border-t border-slate-100 dark:border-slate-800">
                                 {/* GENERAL REPORT */}
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-2 mb-4">

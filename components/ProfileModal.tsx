@@ -65,8 +65,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (file.size > 2 * 1024 * 1024) {
-            alert('A imagem deve ter no máximo 2MB.');
+        if (file.size > 20 * 1024 * 1024) {
+            alert('A imagem deve ter no máximo 20MB.');
             return;
         }
 

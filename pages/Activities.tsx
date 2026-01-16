@@ -12,6 +12,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { DynamicSelect } from '../components/DynamicSelect';
+import FileViewerModal from '../components/FileViewerModal';
 
 // Fallback types if fetch fails
 const DEFAULT_ACTIVITY_TYPES = ['Prova', 'Trabalho', 'Dever de Casa', 'Seminário', 'Pesquisa', 'Conteúdo', 'Outro'];
@@ -39,6 +40,7 @@ export const Activities: React.FC = () => {
     const [formEndDate, setFormEndDate] = useState('');
     const [formDescription, setFormDescription] = useState('');
     const [formFiles, setFormFiles] = useState<AttachmentFile[]>([]);
+    const [viewerFile, setViewerFile] = useState<AttachmentFile | null>(null); // State for the file viewer
     const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
     const [isPresentationOpen, setIsPresentationOpen] = useState(false); // State for presentation mode
     const [formSeriesId, setFormSeriesId] = useState('');
@@ -269,6 +271,50 @@ export const Activities: React.FC = () => {
 
         setLoading(true);
 
+        // --- FILE UPLOAD LOGIC (Copied from Planning.tsx) ---
+        const processedFiles = await Promise.all(formFiles.map(async (file) => {
+            if (file.url.startsWith('data:')) {
+                // Upload to Storage
+                try {
+                    const parts = file.url.split(';base64,');
+                    const mime = parts[0].split(':')[1];
+                    const bstr = atob(parts[1]);
+                    let n = bstr.length;
+                    const u8arr = new Uint8Array(n);
+                    while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+                    const blob = new Blob([u8arr], { type: mime });
+
+                    // Sanitize filename
+                    const sanitizedName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9.-]/g, "_");
+                    const fileName = `activities/${crypto.randomUUID()}-${sanitizedName}`; // Using 'activities' folder prefix (optional, requires bucket folder structure or flat bucket)
+                    // Note: 'planning-attachments' bucket is public. We can allow 'activities/' prefix if we just use the same bucket.
+                    // Or we just put everything in root. Let's use 'planning-attachments' bucket but maybe prefix with 'activity-'?
+                    // Actually, let's keep it simple. The user just wants it to work.
+                    // The bucket name is 'planning-attachments'. We can reuse it.
+
+                    const { error: uploadError } = await supabase.storage
+                        .from('planning-attachments')
+                        .upload(fileName, blob, {
+                            cacheControl: '3600',
+                            upsert: false
+                        });
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('planning-attachments')
+                        .getPublicUrl(fileName);
+
+                    return { ...file, url: publicUrl };
+                } catch (err: any) {
+                    console.error("Erro ao fazer upload:", err);
+                    alert(`Erro ao enviar arquivo ${file.name}. Detalhes: ${err.message || JSON.stringify(err)}`);
+                    throw err; // Stop saving if upload fails
+                }
+            }
+            return file;
+        }));
+
         const activityData = {
             title: formTitle,
             type: formType,
@@ -278,7 +324,7 @@ export const Activities: React.FC = () => {
             description: formDescription,
             series_id: formSeriesId,
             section: formSection || null,
-            files: formFiles,
+            files: processedFiles, // Use processed files with public URLs
             user_id: currentUser?.id,
             subject: activeSubject
         };
@@ -468,8 +514,8 @@ export const Activities: React.FC = () => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (file.size > 2 * 1024 * 1024) { // 2MB limit
-            alert("O arquivo é muito grande! O limite é de 2MB.");
+        if (file.size > 20 * 1024 * 1024) { // 20MB limit
+            alert("O arquivo é muito grande! O limite é de 20MB.");
             return;
         }
 
@@ -794,12 +840,12 @@ export const Activities: React.FC = () => {
                                 <span className="landscape:hidden">Aulas</span>
                                 <span className="hidden landscape:block text-xs">Aulas</span>
                             </Link>
-                            <button className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 text-${theme.primaryColor} shadow-sm landscape:p-1.5 whitespace-nowrap`}>
+                            <button className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 shadow-sm landscape:p-1.5 whitespace-nowrap`} style={{ color: theme.primaryColorHex }}>
                                 <span className="landscape:hidden">Atividades</span>
                                 <span className="hidden landscape:block text-xs">Ativ.</span>
                             </button>
                         </div>
-                        <button onClick={handleNewActivity} className={`bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-${theme.primaryColor}/20 hover:-translate-y-0.5 active:translate-y-0`} title="Nova Atividade" data-tour="activities-new-btn">
+                        <button onClick={handleNewActivity} className={`text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0`} title="Nova Atividade" data-tour="activities-new-btn" style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}33` }}>
                             <span className="material-symbols-outlined text-[20px]">add</span>
                         </button>
                     </div>
@@ -825,9 +871,10 @@ export const Activities: React.FC = () => {
                             <button
                                 onClick={() => setFilterSection('')}
                                 className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all border-2 ${filterSection === ''
-                                    ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-md shadow-${theme.primaryColor}/20`
+                                    ? `bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-transparent shadow-md`
                                     : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
                                     }`}
+                                style={filterSection === '' ? { backgroundColor: theme.primaryColorHex, backgroundImage: `linear-gradient(to bottom right, ${theme.primaryColorHex}, ${theme.secondaryColor})`, boxShadow: `0 4px 6px -1px ${theme.primaryColorHex}33` } : {}}
                             >
                                 Todas
                             </button>
@@ -836,9 +883,10 @@ export const Activities: React.FC = () => {
                                     key={sec}
                                     onClick={() => setFilterSection(sec)}
                                     className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all border-2 ${filterSection === sec
-                                        ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-md shadow-${theme.primaryColor}/20`
+                                        ? `bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-transparent shadow-md`
                                         : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
                                         }`}
+                                    style={filterSection === sec ? { backgroundColor: theme.primaryColorHex, backgroundImage: `linear-gradient(to bottom right, ${theme.primaryColorHex}, ${theme.secondaryColor})`, boxShadow: `0 4px 6px -1px ${theme.primaryColorHex}33` } : {}}
                                 >
                                     Turma {sec}
                                 </button>
@@ -868,10 +916,11 @@ export const Activities: React.FC = () => {
                                     key={act.id}
                                     onClick={() => handleSelectActivity(act)}
                                     className={`w-full text-left p-5 landscape:p-3 landscape:py-2 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${selectedActivityId === act.id
-                                        ? `bg-white/60 dark:bg-surface-dark/60 backdrop-blur-md border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}`
+                                        ? `bg-white/60 dark:bg-surface-dark/60 backdrop-blur-md shadow-lg ring-1`
                                         : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
+                                    style={selectedActivityId === act.id ? { borderColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}1a`, '--tw-ring-color': theme.primaryColorHex } as React.CSSProperties : {}}
                                 >
-                                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedActivityId === act.id ? `bg-${theme.primaryColor}` : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedActivityId === act.id ? '' : 'bg-transparent group-hover:bg-slate-200'} transition-all`} style={{ backgroundColor: selectedActivityId === act.id ? theme.primaryColorHex : undefined }}></div>
                                     <div className="pl-3 landscape:pl-0 w-full">
                                         <div className="flex justify-between items-start mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
                                             <h4 className={`font-bold text-base landscape:text-sm truncate pr-2 flex-1 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
@@ -917,7 +966,8 @@ export const Activities: React.FC = () => {
                         </p>
                         <button
                             onClick={handleNewActivity}
-                            className={`group relative inline-flex items-center justify-center gap-3 bg-${theme.primaryColor} hover:bg-${theme.secondaryColor} text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl shadow-${theme.primaryColor}/20 transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden`}
+                            className={`group relative inline-flex items-center justify-center gap-3 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden`}
+                            style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 20px 25px -5px ${theme.primaryColorHex}33` }}
                         >
                             <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">add</span>
                             Criar Nova Atividade
@@ -1071,7 +1121,7 @@ export const Activities: React.FC = () => {
                                 {selectedActivityId && (
                                     <button onClick={handleDelete} className="px-6 py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors">Excluir</button>
                                 )}
-                                <button onClick={handleSave} className={`px-8 py-2.5 rounded-xl bg-${theme.primaryColor} text-white font-bold shadow-lg shadow-${theme.primaryColor}/20 hover:shadow-xl hover:bg-${theme.secondaryColor} transition-all active:scale-95`}>
+                                <button onClick={handleSave} className={`px-8 py-2.5 rounded-xl text-white font-bold shadow-lg hover:shadow-xl transition-all active:scale-95`} style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}33` }}>
                                     Salvar Atividade
                                 </button>
                             </div>
@@ -1258,19 +1308,42 @@ export const Activities: React.FC = () => {
                                         </h3>
                                         <div className="flex flex-wrap gap-3">
                                             {currentActivity.files.map((file, index) => (
-                                                <a
-                                                    key={index}
-                                                    href={file.url}
-                                                    download={file.name}
-                                                    className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group text-decoration-none shadow-sm"
-                                                >
-                                                    <span className="material-symbols-outlined text-slate-500 group-hover:text-indigo-500 transition-colors">description</span>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{file.name}</span>
-                                                        <span className="text-[10px] text-slate-500 uppercase">{file.size}</span>
+                                                <div key={index} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group shadow-sm">
+                                                    <div className="flex items-center gap-3 flex-1 min-w-0 pointer-events-none">
+                                                        <span className="material-symbols-outlined text-slate-500 group-hover:text-indigo-500 transition-colors">description</span>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">{file.name}</span>
+                                                            <span className="text-[10px] text-slate-500 uppercase">{file.size}</span>
+                                                        </div>
                                                     </div>
-                                                    <span className="material-symbols-outlined text-slate-400 group-hover:text-indigo-500 transition-colors text-lg ml-2">download</span>
-                                                </a>
+
+                                                    <div className="flex items-center gap-1">
+                                                        {(
+                                                            // Image/PDF always viewable (native/base64 compatible)
+                                                            (file.name.match(/\.(pdf|jpg|jpeg|png|webp)$/i) ||
+                                                                file.url.startsWith('data:image') ||
+                                                                file.url.startsWith('data:application/pdf')) ||
+                                                            // Office files ONLY viewable if saved (public URL), NOT base64/data:
+                                                            (file.name.match(/\.(doc|docx|ppt|pptx|xls|xlsx)$/i) && !file.url.startsWith('data:'))
+                                                        ) && (
+                                                                <button
+                                                                    onClick={() => setViewerFile(file)}
+                                                                    className="p-2 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-all"
+                                                                    title={file.url.startsWith('data:') && file.name.match(/\.(doc|docx|ppt|pptx|xls|xlsx)$/i) ? "Salve para visualizar" : "Visualizar / Apresentar"}
+                                                                >
+                                                                    <span className="material-symbols-outlined">visibility</span>
+                                                                </button>
+                                                            )}
+                                                        <a
+                                                            href={file.url}
+                                                            download={file.name}
+                                                            className="p-2 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
+                                                            title="Baixar"
+                                                        >
+                                                            <span className="material-symbols-outlined">download</span>
+                                                        </a>
+                                                    </div>
+                                                </div>
                                             ))}
                                         </div>
                                     </div>
@@ -1315,16 +1388,16 @@ export const Activities: React.FC = () => {
                                                     <div
                                                         key={s.id}
                                                         className={`p-4 rounded-xl border-2 transition-all cursor-pointer animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-backwards flex items-center justify-between group ${isDone
-                                                            ? `bg-${theme.primaryColor}/5 border-${theme.primaryColor}/20`
+                                                            ? `bg-white dark:bg-slate-800/50`
                                                             : 'bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 hover:border-slate-200'}`}
                                                         onClick={() => toggleCompletion(s.id)}
-                                                        style={{ animationDelay: `${students.indexOf(s) * 30}ms` }}
+                                                        style={{ animationDelay: `${students.indexOf(s) * 30}ms`, ...(isDone ? { backgroundColor: `${theme.primaryColorHex}0D`, borderColor: `${theme.primaryColorHex}33` } : {}) }}
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <span className="text-xs font-mono text-slate-400 w-5">{s.number}</span>
                                                             <span className={`text-sm font-bold ${isDone ? `text-${theme.primaryColor}` : 'text-slate-600 dark:text-slate-300'}`}>{s.name}</span>
                                                         </div>
-                                                        <div className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 ${isDone ? `bg-${theme.primaryColor} border-${theme.primaryColor} text-white scale-110 shadow-sm shadow-${theme.primaryColor}/30` : `border-slate-200 dark:border-slate-700 group-hover:border-${theme.primaryColor}/50 group-hover:scale-110`}`}>
+                                                        <div className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300`} style={isDone ? { backgroundColor: theme.primaryColorHex, borderColor: theme.primaryColorHex, color: 'white', transform: 'scale(1.1)', boxShadow: `0 1px 2px 0 ${theme.primaryColorHex}4d` } : { borderColor: '#e2e8f0' /* slate-200 */ }}>
                                                             {isDone && <span className="material-symbols-outlined text-[16px] font-bold animate-in zoom-in spin-in-180 duration-300">check</span>}
                                                         </div>
                                                     </div>
@@ -1361,6 +1434,13 @@ export const Activities: React.FC = () => {
                     })()}
                 </div>
             )}
+
+            {/* File Viewer Modal */}
+            <FileViewerModal
+                isOpen={!!viewerFile}
+                onClose={() => setViewerFile(null)}
+                file={viewerFile ? { name: viewerFile.name, url: viewerFile.url, type: viewerFile.name.split('.').pop() } : null}
+            />
         </div>
     );
 };

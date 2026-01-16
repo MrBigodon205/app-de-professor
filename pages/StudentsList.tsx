@@ -348,7 +348,8 @@ export const StudentsList: React.FC = () => {
                     <button
                         data-tour="students-add-btn"
                         onClick={() => setIsAdding(!isAdding)}
-                        className={`flex items-center gap-3 bg-${theme.primaryColor} hover:opacity-90 text-white font-bold h-12 px-6 rounded-2xl shadow-lg shadow-${theme.primaryColor}/20 transition-all active:scale-95`}
+                        className={`flex items-center gap-3 hover:opacity-90 text-white font-bold h-12 px-6 rounded-2xl shadow-lg shadow-${theme.primaryColor}/20 transition-all active:scale-95`}
+                        style={{ backgroundColor: theme.primaryColorHex }}
                     >
                         <span className="material-symbols-outlined text-xl">add_circle</span>
                         Novo Aluno

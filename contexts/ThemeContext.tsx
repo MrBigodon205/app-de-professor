@@ -5,7 +5,9 @@ import { Subject } from '../types';
 interface ThemeConfig {
     baseColor: string;
     primaryColor: string;
+    primaryColorHex: string;
     secondaryColor: string;
+    secondaryColorHex: string;
     accentColor: string;
     bgGradient: string;
     icon: string;
@@ -16,20 +18,24 @@ interface ThemeConfig {
 
 const THEME_MAP: Record<string, ThemeConfig> = {
     'Geral': {
-        baseColor: 'blue',
-        primaryColor: 'blue-600',
-        secondaryColor: 'blue-700',
-        accentColor: 'blue-400',
-        bgGradient: 'from-blue-600 to-indigo-700',
+        baseColor: 'slate',
+        primaryColor: 'slate-600',
+        primaryColorHex: '#475569',
+        secondaryColor: 'slate-700',
+        secondaryColorHex: '#334155',
+        accentColor: 'slate-400',
+        bgGradient: 'from-slate-600 to-slate-800',
         icon: 'school',
         description: 'Visão geral da escola.',
         illustrations: ['school', 'domain', 'location_city', 'apartment'],
-        softBg: 'bg-blue-50 dark:bg-blue-900/10'
+        softBg: 'bg-slate-50 dark:bg-slate-900/10'
     },
     'Filosofia': {
         baseColor: 'indigo',
         primaryColor: 'indigo-600',
+        primaryColorHex: '#4f46e5',
         secondaryColor: 'indigo-700',
+        secondaryColorHex: '#4338ca',
         accentColor: 'indigo-400',
         bgGradient: 'from-indigo-600 to-violet-700',
         icon: 'psychology',
@@ -40,7 +46,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     'Educação Física': {
         baseColor: 'emerald',
         primaryColor: 'emerald-600',
+        primaryColorHex: '#059669',
         secondaryColor: 'emerald-700',
+        secondaryColorHex: '#047857',
         accentColor: 'emerald-400',
         bgGradient: 'from-emerald-600 to-teal-700',
         icon: 'sports_soccer',
@@ -51,7 +59,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     'Matemática': {
         baseColor: 'blue',
         primaryColor: 'blue-600',
+        primaryColorHex: '#2563eb',
         secondaryColor: 'blue-700',
+        secondaryColorHex: '#1d4ed8',
         accentColor: 'blue-400',
         bgGradient: 'from-blue-600 to-indigo-700',
         icon: 'functions',
@@ -62,7 +72,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     'Física': {
         baseColor: 'slate',
         primaryColor: 'slate-600',
+        primaryColorHex: '#475569',
         secondaryColor: 'slate-700',
+        secondaryColorHex: '#334155',
         accentColor: 'slate-400',
         bgGradient: 'from-slate-600 to-slate-800',
         icon: 'rocket_launch',
@@ -73,7 +85,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     'História': {
         baseColor: 'amber',
         primaryColor: 'amber-600',
+        primaryColorHex: '#d97706',
         secondaryColor: 'amber-700',
+        secondaryColorHex: '#b45309',
         accentColor: 'amber-400',
         bgGradient: 'from-amber-600 to-orange-700',
         icon: 'fort',
@@ -84,7 +98,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     'Geografia': {
         baseColor: 'cyan',
         primaryColor: 'cyan-600',
+        primaryColorHex: '#0891b2',
         secondaryColor: 'cyan-700',
+        secondaryColorHex: '#0e7490',
         accentColor: 'cyan-400',
         bgGradient: 'from-cyan-600 to-blue-700',
         icon: 'public',
@@ -95,7 +111,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     'Artes': {
         baseColor: 'pink',
         primaryColor: 'pink-600',
+        primaryColorHex: '#db2777',
         secondaryColor: 'pink-700',
+        secondaryColorHex: '#be185d',
         accentColor: 'pink-400',
         bgGradient: 'from-pink-600 to-rose-700',
         icon: 'palette',
@@ -106,7 +124,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     'Projeto de Vida': {
         baseColor: 'teal',
         primaryColor: 'teal-600',
+        primaryColorHex: '#0d9488',
         secondaryColor: 'teal-700',
+        secondaryColorHex: '#0f766e',
         accentColor: 'teal-400',
         bgGradient: 'from-teal-600 to-cyan-700',
         icon: 'flag',
@@ -117,7 +137,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     'Literatura': {
         baseColor: 'rose',
         primaryColor: 'rose-600',
+        primaryColorHex: '#e11d48',
         secondaryColor: 'rose-700',
+        secondaryColorHex: '#be123c',
         accentColor: 'rose-400',
         bgGradient: 'from-rose-600 to-red-700',
         icon: 'auto_stories',
@@ -128,7 +150,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     'Português': {
         baseColor: 'sky',
         primaryColor: 'sky-600',
+        primaryColorHex: '#0284c7',
         secondaryColor: 'sky-700',
+        secondaryColorHex: '#0369a1',
         accentColor: 'sky-400',
         bgGradient: 'from-sky-600 to-blue-700',
         icon: 'school',
@@ -139,7 +163,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     'Redação': {
         baseColor: 'violet',
         primaryColor: 'violet-600',
+        primaryColorHex: '#7c3aed',
         secondaryColor: 'violet-700',
+        secondaryColorHex: '#6d28d9',
         accentColor: 'violet-400',
         bgGradient: 'from-violet-600 to-purple-700',
         icon: 'edit_note',
@@ -150,7 +176,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     'Química': {
         baseColor: 'lime',
         primaryColor: 'lime-600',
+        primaryColorHex: '#65a30d',
         secondaryColor: 'lime-700',
+        secondaryColorHex: '#4d7c0f',
         accentColor: 'lime-400',
         bgGradient: 'from-lime-600 to-green-700',
         icon: 'science',
@@ -161,7 +189,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     'Ciências': {
         baseColor: 'green',
         primaryColor: 'green-600',
+        primaryColorHex: '#16a34a',
         secondaryColor: 'green-700',
+        secondaryColorHex: '#15803d',
         accentColor: 'green-400',
         bgGradient: 'from-green-600 to-emerald-700',
         icon: 'eco',
@@ -172,7 +202,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     'Inglês': {
         baseColor: 'indigo',
         primaryColor: 'indigo-500',
+        primaryColorHex: '#6366f1',
         secondaryColor: 'indigo-600',
+        secondaryColorHex: '#4f46e5',
         accentColor: 'indigo-300',
         bgGradient: 'from-indigo-500 to-blue-600',
         icon: 'translate',
@@ -183,7 +215,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     'Ensino Religioso': {
         baseColor: 'amber',
         primaryColor: 'amber-500',
+        primaryColorHex: '#f59e0b',
         secondaryColor: 'amber-600',
+        secondaryColorHex: '#d97706',
         accentColor: 'amber-300',
         bgGradient: 'from-amber-500 to-yellow-600',
         icon: 'church',
@@ -203,8 +237,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const { currentUser, activeSubject } = useAuth();
 
     const themeValue = useMemo(() => {
-        const subject = activeSubject || currentUser?.subject || 'Geral';
-        const config = THEME_MAP[subject] || THEME_MAP['Geral'];
+        const subject = activeSubject || currentUser?.subject || 'Matemática';
+        const config = THEME_MAP[subject] || THEME_MAP['Matemática'];
         return {
             subject,
             ...config

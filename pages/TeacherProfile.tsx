@@ -298,8 +298,8 @@ export const TeacherProfile: React.FC = () => {
                                             }
                                         }}
                                         className={`flex flex-col items-start p-4 rounded-2xl border-2 transition-all text-left relative overflow-hidden group ${isSelected
-                                                ? `bg-white dark:bg-slate-800 border-${theme.primaryColor} shadow-md`
-                                                : 'bg-slate-50 dark:bg-slate-950 border-transparent hover:border-slate-200 dark:hover:border-slate-800'
+                                            ? `bg-white dark:bg-slate-800 border-${theme.primaryColor} shadow-md`
+                                            : 'bg-slate-50 dark:bg-slate-950 border-transparent hover:border-slate-200 dark:hover:border-slate-800'
                                             }`}
                                     >
                                         <div className="flex items-center justify-between w-full mb-2">
