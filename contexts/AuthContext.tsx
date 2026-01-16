@@ -12,7 +12,7 @@ interface AuthContextType {
     updateProfile: (data: Partial<User>) => Promise<boolean>;
     loading: boolean;
     activeSubject: string;
-    updateActiveSubject: (subject: string) => void;
+    resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -407,6 +407,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, []);
 
+    const resetPassword = useCallback(async (email: string) => {
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/#/reset-password`,
+            });
+            if (error) throw error;
+            return { success: true };
+        } catch (e: any) {
+            console.error("Reset password error:", e);
+            return { success: false, error: e.message || "Erro ao enviar e-mail de recuperação." };
+        }
+    }, []);
+
     const updateProfile = useCallback(async (data: Partial<User>) => {
         if (!userId) {
             console.error("Update profile failed: No userId found");
@@ -482,8 +495,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateProfile,
         loading,
         activeSubject,
-        updateActiveSubject
-    }), [currentUser, userId, login, register, logout, updateProfile, loading, activeSubject, updateActiveSubject]);
+        updateActiveSubject,
+        resetPassword
+    }), [currentUser, userId, login, register, logout, updateProfile, loading, activeSubject, updateActiveSubject, resetPassword]);
 
     return (
         <AuthContext.Provider value={contextValue}>

@@ -13,9 +13,9 @@ const SUBJECTS: Subject[] = [
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, register } = useAuth();
+  const { login, register, resetPassword } = useAuth();
   const theme = useTheme();
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot-password'>('login');
 
   // State for forms
   const [email, setEmail] = useState('');
@@ -42,7 +42,7 @@ export const Login: React.FC = () => {
         } else {
           setError(result.error || 'E-mail ou senha incorretos.');
         }
-      } else { // This is the 'register' block
+      } else if (activeTab === 'register') {
         if (password !== confirmPassword) {
           setError('As senhas não coincidem.');
           return;
@@ -56,15 +56,22 @@ export const Login: React.FC = () => {
         const result = await register(name, email, password, mainSubject, selectedSubjects);
         if (result.success) {
           setSuccess('Cadastro realizado! Por favor, confirme seu e-mail.');
-          // Optionally clear fields or redirect
           setEmail('');
           setPassword('');
           setName('');
           setSelectedSubjects([]);
           setConfirmPassword('');
-          setActiveTab('login'); // Often redirect to login after successful registration
+          setActiveTab('login');
         } else {
           setError(result.error || 'Erro ao realizar cadastro.');
+        }
+      } else if (activeTab === 'forgot-password') {
+        const result = await resetPassword(email);
+        if (result.success) {
+          setSuccess('Link de recuperação enviado! Verifique seu e-mail.');
+          setEmail('');
+        } else {
+          setError(result.error || 'Erro ao enviar e-mail de recuperação.');
         }
       }
     } finally {
@@ -144,7 +151,7 @@ export const Login: React.FC = () => {
               onClick={() => setActiveTab('login')}
               className={`relative px-8 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'login' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
             >
-              {activeTab === 'login' && (
+              {(activeTab === 'login' || activeTab === 'forgot-password') && (
                 <motion.div layoutId="tab-pill" className="absolute inset-0 bg-primary rounded-xl shadow-lg shadow-primary/20" transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />
               )}
               <span className="relative z-10">Entrar</span>
@@ -163,10 +170,10 @@ export const Login: React.FC = () => {
           <div className="flex-1 flex flex-col justify-center max-w-[400px] w-full mx-auto lg:mx-0">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-white mb-2">
-                {activeTab === 'login' ? 'Bem-vindo de volta' : 'Inicie sua jornada'}
+                {activeTab === 'login' ? 'Bem-vindo de volta' : activeTab === 'register' ? 'Inicie sua jornada' : 'Recuperar Senha'}
               </h2>
               <p className="text-slate-400 text-sm">
-                {activeTab === 'login' ? 'Entre com suas credenciais para acessar o painel.' : 'Crie seu perfil pedagógico em segundos.'}
+                {activeTab === 'login' ? 'Entre com suas credenciais para acessar o painel.' : activeTab === 'register' ? 'Crie seu perfil pedagógico em segundos.' : 'Digite seu e-mail para receber o link de redefinição.'}
               </p>
             </div>
 
@@ -254,26 +261,39 @@ export const Login: React.FC = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Chave de Acesso</label>
-                    <div className="relative group">
-                      <input
-                        className="w-full bg-slate-900/40 border border-white/5 rounded-2xl py-4 pl-5 pr-12 text-white placeholder:text-slate-600 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[20px]">{showPassword ? 'visibility' : 'visibility_off'}</span>
-                      </button>
+                  {activeTab !== 'forgot-password' && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between ml-1">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Chave de Acesso</label>
+                        {activeTab === 'login' && (
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('forgot-password')}
+                            className="text-[10px] font-bold text-primary hover:text-emerald-400 transition-colors uppercase tracking-wider"
+                          >
+                            Esqueci a senha
+                          </button>
+                        )}
+                      </div>
+                      <div className="relative group">
+                        <input
+                          className="w-full bg-slate-900/40 border border-white/5 rounded-2xl py-4 pl-5 pr-12 text-white placeholder:text-slate-600 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[20px]">{showPassword ? 'visibility' : 'visibility_off'}</span>
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {activeTab === 'register' && (
                     <div className="space-y-2">
@@ -308,22 +328,32 @@ export const Login: React.FC = () => {
                       </span>
                     ) : (
                       <>
-                        {activeTab === 'login' ? 'Entrar no Sistema' : 'Finalizar Cadastro'}
+                        {activeTab === 'login' ? 'Entrar no Sistema' : activeTab === 'register' ? 'Finalizar Cadastro' : 'Enviar Link de Recuperação'}
                         <span className="material-symbols-outlined font-normal">arrow_forward</span>
                       </>
                     )}
                   </div>
                 </motion.button>
 
-                <div className="text-center">
+                {activeTab === 'forgot-password' && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('login')}
+                    className="w-full py-2 text-xs font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest"
+                  >
+                    Voltar para o Login
+                  </button>
+                )}
+
+                <div className="text-center pt-4">
                   <a
-                    href="https://wa.me/557187599246?text=Olá,%20esqueci%20meus%20dados%20de%20acesso%20ao%20Prof.%20Acerta+"
+                    href="https://wa.me/557187599246?text=Olá,%20esqueci%20meu%20e-mail%20de%20acesso%20ao%20Prof.%20Acerta+"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors uppercase tracking-[0.2em] inline-flex items-center gap-2"
+                    className="text-[10px] font-bold text-slate-500 hover:text-primary transition-colors uppercase tracking-[0.2em] inline-flex items-center gap-2"
                   >
-                    <span className="material-symbols-outlined text-[16px]">help</span>
-                    Esqueci meus dados / Suporte
+                    <span className="material-symbols-outlined text-[14px]">help</span>
+                    Esqueci meu e-mail / Suporte
                   </a>
                 </div>
               </div>

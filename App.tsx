@@ -12,7 +12,7 @@ import { Planning } from './pages/Planning';
 import { StudentProfile } from './pages/StudentProfile';
 import { TeacherProfile } from './pages/TeacherProfile';
 import { Observations } from './pages/Observations';
-import { StudentsList } from './pages/StudentsList';
+import { ResetPassword } from './pages/ResetPassword';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -26,6 +26,7 @@ const App: React.FC = () => {
       <SpeedInsights />
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/*" element={
           <ProtectedRoute>
             <Layout>
