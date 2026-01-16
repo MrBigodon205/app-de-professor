@@ -231,8 +231,8 @@ export const Login: React.FC = () => {
                               }
                             }}
                             className={`px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition-all border ${selectedSubjects.includes(s)
-                                ? 'bg-primary border-primary text-white'
-                                : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
+                              ? 'bg-primary border-primary text-white'
+                              : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
                               }`}
                           >
                             {s}
@@ -291,7 +291,7 @@ export const Login: React.FC = () => {
                 </motion.div>
               </AnimatePresence>
 
-              <div className="pt-4">
+              <div className="pt-4 space-y-4">
                 <motion.button
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
@@ -314,6 +314,18 @@ export const Login: React.FC = () => {
                     )}
                   </div>
                 </motion.button>
+
+                <div className="text-center">
+                  <a
+                    href="https://wa.me/557187599246?text=Olá,%20esqueci%20meus%20dados%20de%20acesso%20ao%20Prof.%20Acerta+"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors uppercase tracking-[0.2em] inline-flex items-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">help</span>
+                    Esqueci meus dados / Suporte
+                  </a>
+                </div>
               </div>
             </form>
           </div>
