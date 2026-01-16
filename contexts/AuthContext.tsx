@@ -10,9 +10,11 @@ interface AuthContextType {
     register: (name: string, email: string, password: string, subject: Subject, subjects?: Subject[]) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
     updateProfile: (data: Partial<User>) => Promise<boolean>;
+    resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+    updatePassword: (password: string) => Promise<{ success: boolean; error?: string }>;
     loading: boolean;
     activeSubject: string;
-    resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+    updateActiveSubject: (subject: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -172,6 +174,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (!initialLoadDone || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
                     fetchProfile(session.user.id);
                     initialLoadDone = true;
+                }
+
+                // Handle password recovery redirection
+                if (event === 'PASSWORD_RECOVERY') {
+                    window.location.hash = '/reset-password';
                 }
             } else {
                 setCurrentUser(null);
@@ -407,19 +414,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, []);
 
-    const resetPassword = useCallback(async (email: string) => {
-        try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/#/reset-password`,
-            });
-            if (error) throw error;
-            return { success: true };
-        } catch (e: any) {
-            console.error("Reset password error:", e);
-            return { success: false, error: e.message || "Erro ao enviar e-mail de recuperação." };
-        }
-    }, []);
-
     const updateProfile = useCallback(async (data: Partial<User>) => {
         if (!userId) {
             console.error("Update profile failed: No userId found");
@@ -479,6 +473,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [userId, currentUser]);
 
+    const resetPassword = useCallback(async (email: string) => {
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/#/reset-password`,
+            });
+            if (error) throw error;
+            return { success: true };
+        } catch (e: any) {
+            console.error("Reset password failed:", e);
+            return { success: false, error: e.message || "Erro ao enviar e-mail de recuperação." };
+        }
+    }, []);
+
+    const updatePassword = useCallback(async (password: string) => {
+        try {
+            const { error } = await supabase.auth.updateUser({ password });
+            if (error) throw error;
+            return { success: true };
+        } catch (e: any) {
+            console.error("Update password failed:", e);
+            return { success: false, error: e.message || "Erro ao atualizar senha." };
+        }
+    }, []);
+
     const updateActiveSubject = useCallback((subject: string) => {
         setActiveSubject(subject);
         if (userId) {
@@ -493,11 +511,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         updateProfile,
+        resetPassword,
+        updatePassword,
         loading,
         activeSubject,
-        updateActiveSubject,
-        resetPassword
-    }), [currentUser, userId, login, register, logout, updateProfile, loading, activeSubject, updateActiveSubject, resetPassword]);
+        updateActiveSubject
+    }), [currentUser, userId, login, register, logout, updateProfile, loading, activeSubject, updateActiveSubject]);
 
     return (
         <AuthContext.Provider value={contextValue}>
