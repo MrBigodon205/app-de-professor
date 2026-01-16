@@ -33,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const withTimeout = useCallback(<T,>(promise: PromiseLike<T>, ms: number, label: string): Promise<T> => {
         return Promise.race([
             promise,
-            new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`${label} timed out`)), ms))
+            new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`${label} expirou`)), ms))
         ]);
     }, []);
 
@@ -340,11 +340,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return { success: false, error: 'Erro ao autenticar.' };
 
         } catch (e: any) {
-            console.error("Login final failed:", e);
+            console.error("Falha final no login:", e);
             let msg = e.message;
             if (msg === 'Email not confirmed') msg = 'Por favor, confirme seu e-mail para entrar.';
             if (msg === 'Invalid login credentials' || msg === 'Erro no login via HTTP') msg = 'E-mail ou senha inválidos.';
-            if (msg.includes('timed out')) msg = 'Tempo esgotado. Verifique sua conexão.';
+            if (msg.includes('expirou') || msg.includes('timed out')) msg = 'Tempo esgotado. Verifique sua conexão.';
 
             setLoading(false);
             return { success: false, error: msg };
@@ -416,7 +416,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updateProfile = useCallback(async (data: Partial<User>) => {
         if (!userId) {
-            console.error("Update profile failed: No userId found");
+            console.error("Falha ao atualizar perfil: userId não encontrado");
             return false;
         }
 
@@ -467,7 +467,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             return true;
         } catch (e: any) {
-            console.error("Update profile failed", e);
+            console.error("Falha ao atualizar perfil", e);
             alert(`Erro ao atualizar perfil: ${e.message || 'Erro desconhecido'}`);
             return false;
         }
