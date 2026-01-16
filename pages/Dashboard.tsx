@@ -249,11 +249,31 @@ export const Dashboard: React.FC = () => {
       const today = new Date().toLocaleDateString('sv-SE');
       let query = supabase.from('plans')
         .select('*')
-        .eq('user_id', currentUser.id)
-        .gte('end_date', today)
-        .order('start_date', { ascending: true });
+        .eq('user_id', currentUser.id);
 
-      const { data } = await query.limit(5);
+      // Add subject filter to ensure plans from other subjects don't appear
+      if (activeSubject) {
+        query = query.eq('subject', activeSubject);
+      }
+
+      if (selectedSeriesId) {
+        query = query.eq('series_id', selectedSeriesId);
+        if (selectedSection) {
+          // If a section is selected, show plans for that section, NULL sections, 
+          // or special identifiers like "Todas as Turmas"
+          query = query.or(`section.eq.${selectedSection},section.is.null,section.eq.Todas as Turmas,section.eq.Todas,section.eq.Única`);
+        }
+      } else {
+        // If NO series is selected (Global view), we can either show everything or nothing.
+        // User said "as séries respectivas", so we follow the selection.
+      }
+
+      // Fetch all plans that haven't ended yet to find the active one
+      // We don't limit(5) here because the active one might be further down the list 
+      // of upcoming plans if there are many future ones.
+      query = query.gte('end_date', today).order('start_date', { ascending: true });
+
+      const { data } = await query;
 
       const formatted = (data || []).map(p => ({
         id: p.id.toString(),
@@ -264,11 +284,13 @@ export const Dashboard: React.FC = () => {
         seriesId: p.series_id.toString(),
         section: p.section,
         files: p.files || [],
-        userId: p.user_id
+        userId: p.user_id,
+        subject: p.subject
       }));
 
       setClassPlans(formatted.slice(0, 3));
 
+      // Precision finding: find the plan where today is between start and end
       const activePlan = formatted.find(p => today >= p.startDate && today <= p.endDate);
       setTodaysPlan(activePlan || null);
     } catch (e) {
@@ -276,7 +298,7 @@ export const Dashboard: React.FC = () => {
     } finally {
       if (!silent) setLoadingPlans(false);
     }
-  }, [currentUser]);
+  }, [currentUser, selectedSeriesId, selectedSection, activeSubject]);
 
   const fetchActivities = React.useCallback(async (silent = false) => {
     if (!currentUser) return;
@@ -438,65 +460,84 @@ export const Dashboard: React.FC = () => {
         <DashboardBanner theme={theme} currentUser={currentUser} />
       </motion.div>
 
-      {/* PLAN OF THE DAY BANNER - Overhauled for Premium Visibility */}
-      <motion.div variants={itemVariants} className="min-h-[240px] lg:min-h-[280px] landscape:min-h-[180px]">
+      {/* PLAN OF THE DAY - Compact and Complete Visibility */}
+      <motion.div variants={itemVariants} className="h-auto">
         {
           loadingPlans ? (
-            <div className="h-[240px] lg:h-[280px] landscape:h-[180px] rounded-[2.5rem] bg-slate-100 dark:bg-slate-800 animate-pulse"></div>
+            <div className="h-[140px] rounded-3xl bg-slate-100 dark:bg-slate-800 animate-pulse"></div>
           ) : todaysPlan ? (
-            <div className={`relative h-full min-h-[240px] lg:min-h-[280px] landscape:min-h-[180px] bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-[2.5rem] p-8 lg:p-12 landscape:p-6 text-white shadow-2xl shadow-blue-500/30 overflow-hidden flex flex-col justify-center group`}>
-              {/* Decorative background elements */}
-              <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:scale-110 transition-transform duration-1000">
-                <span className="material-symbols-outlined text-[300px] lg:text-[400px] landscape:text-[200px]">calendar_month</span>
+            <div className={`relative h-auto bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl p-6 lg:p-8 landscape:p-5 text-white shadow-xl shadow-blue-500/20 overflow-hidden flex flex-col group`}>
+              {/* Decorative background elements - Smaller and more subtle */}
+              <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-105 transition-transform duration-1000">
+                <span className="material-symbols-outlined text-[150px] lg:text-[200px] landscape:text-[100px]">calendar_month</span>
               </div>
-              <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-white/5 blur-[100px] rounded-full"></div>
 
               <div className="relative z-10 w-full">
-                <div className="flex items-center gap-3 mb-6 landscape:mb-4 text-blue-100/90 font-black uppercase text-[10px] sm:text-xs tracking-[0.2em] bg-white/10 w-fit px-4 py-2 rounded-xl backdrop-blur-md border border-white/10">
-                  <span className="size-2 bg-blue-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(96,165,250,0.8)]"></span>
-                  Aula de Hoje
-                  <span className="opacity-50">•</span>
-                  <span>{new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}</span>
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <div className="flex items-center gap-2 text-blue-100/90 font-black uppercase text-[9px] sm:text-[10px] tracking-widest bg-white/10 w-fit px-3 py-1.5 rounded-lg border border-white/5">
+                    <span className="size-1.5 bg-blue-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.8)]"></span>
+                    Aula de Hoje
+                    <span className="opacity-30">•</span>
+                    <span>{new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}</span>
+                  </div>
+                  {todaysPlan && (
+                    <div className="flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded text-[9px] font-bold text-blue-200 uppercase tracking-tighter border border-white/10">
+                      <span className="material-symbols-outlined text-xs">school</span>
+                      {classes.find(c => c.id === todaysPlan.seriesId)?.name || 'Série Geral'} {todaysPlan.section ? `- Turma ${todaysPlan.section}` : ''}
+                    </div>
+                  )}
                 </div>
 
-                <h2 className="text-3xl md:text-5xl lg:text-6xl font-black mb-4 lg:mb-6 tracking-tighter leading-tight drop-shadow-lg max-w-4xl">
+                <h2 className="text-xl md:text-2xl lg:text-3xl font-black mb-3 tracking-tight leading-tight drop-shadow-sm max-w-4xl">
                   {todaysPlan.title}
                 </h2>
 
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 landscape:gap-4">
-                  <div className="max-w-3xl">
-                    <p className="text-blue-50/90 text-lg md:text-xl lg:text-2xl font-medium line-clamp-2 leading-relaxed italic opacity-95 group-hover:opacity-100 transition-opacity border-l-4 border-white/20 pl-6 mb-2">
+                <div className="flex flex-col gap-4">
+                  <div className="max-w-4xl">
+                    <p className="text-blue-50/90 text-xs md:text-sm lg:text-base font-medium leading-relaxed italic opacity-95 group-hover:opacity-100 transition-opacity border-l-2 border-white/20 pl-4">
                       "{todaysPlan.description.replace(/<[^>]*>/g, '')}"
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-6 shrink-0">
-                    <Link
-                      to="/planning"
-                      className="group/btn relative px-8 py-4 landscape:py-3 bg-white text-blue-700 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 shadow-2xl shadow-black/10 hover:shadow-white/20 hover:-translate-y-1 transition-all active:scale-95"
-                    >
-                      <span>Ver Aula Completa</span>
-                      <span className="material-symbols-outlined text-xl group-hover/btn:translate-x-1 transition-transform">arrow_right_alt</span>
-                    </Link>
+                  <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-white/10 mt-1">
+                    <div className="flex flex-wrap items-center gap-4 shrink-0">
+                      <Link
+                        to="/planning"
+                        className="group/btn relative px-4 py-2 bg-white text-blue-700 rounded-lg font-black uppercase tracking-widest text-[9px] flex items-center gap-2 shadow-sm hover:shadow-white/10 hover:-translate-y-0.5 transition-all active:scale-95"
+                      >
+                        <span>Ver Planejamento</span>
+                        <span className="material-symbols-outlined text-base group-hover/btn:translate-x-0.5 transition-transform">arrow_forward</span>
+                      </Link>
 
-                    <div className="flex items-center gap-3 text-sm font-bold text-blue-100/80 bg-black/10 px-5 py-4 landscape:py-3 rounded-2xl backdrop-blur-sm border border-white/5">
-                      <span className="material-symbols-outlined text-2xl">event_upcoming</span>
-                      <div className="flex flex-col">
-                        <span className="text-[9px] uppercase tracking-wider opacity-60">Prazo de Entrega</span>
-                        <span>{new Date(todaysPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                      <div className="flex flex-col xl:flex-row items-start xl:items-center gap-3 xl:gap-8 text-[9px] md:text-xs lg:text-sm font-bold text-blue-100/70">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-base md:text-lg lg:text-xl opacity-60">calendar_today</span>
+                          <div className="flex flex-col md:flex-row md:items-center md:gap-2">
+                            <span className="opacity-50 uppercase tracking-tighter">Início da aplicação:</span>
+                            <span className="text-white">{new Date(todaysPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-base md:text-lg lg:text-xl opacity-60">event_available</span>
+                          <div className="flex flex-col md:flex-row md:items-center md:gap-2">
+                            <span className="opacity-50 uppercase tracking-tighter">Fim da aplicação:</span>
+                            <span className="text-white">{new Date(todaysPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                          </div>
+                        </div>
                       </div>
+                    </div>
+
+                    <div className="hidden sm:flex items-center gap-2">
+                      <span className="text-[9px] font-bold text-blue-200/40 uppercase tracking-widest leading-none">Status: Ativo</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="h-[240px] lg:h-[280px] landscape:h-[180px] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 group hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-500">
-              <div className="size-20 lg:size-24 rounded-[2rem] bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all">
-                <span className="material-symbols-outlined text-5xl lg:text-6xl opacity-30">event_busy</span>
-              </div>
-              <h3 className="text-lg lg:text-xl font-black uppercase tracking-[0.2em] opacity-60">Planejamento em Aberto</h3>
-              <p className="text-xs lg:text-sm font-bold opacity-40 mt-2">Toque em "Planejamento" para organizar sua aula de hoje.</p>
+            <div className="h-[140px] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-400 group hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-500">
+              <span className="material-symbols-outlined text-3xl opacity-30 mb-2">event_busy</span>
+              <h3 className="text-xs font-black uppercase tracking-widest opacity-60">Sem planejamento ativo</h3>
             </div>
           )
         }
