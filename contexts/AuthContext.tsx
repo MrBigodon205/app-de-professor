@@ -492,8 +492,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (error) throw error;
             return { success: true };
         } catch (e: any) {
-            console.error("Update password failed:", e);
-            return { success: false, error: e.message || "Erro ao atualizar senha." };
+            console.error("Erro ao atualizar senha:", e);
+            let msg = e.message;
+            if (msg === 'New password should be different from the old password.') {
+                msg = 'A nova senha deve ser diferente da senha antiga.';
+            }
+            return { success: false, error: msg || "Erro ao atualizar senha." };
         }
     }, []);
 
