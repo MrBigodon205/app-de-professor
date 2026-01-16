@@ -438,41 +438,65 @@ export const Dashboard: React.FC = () => {
         <DashboardBanner theme={theme} currentUser={currentUser} />
       </motion.div>
 
-      {/* PLAN OF THE DAY BANNER */}
-      <motion.div variants={itemVariants} className="min-h-[160px] landscape:min-h-[100px]">
+      {/* PLAN OF THE DAY BANNER - Overhauled for Premium Visibility */}
+      <motion.div variants={itemVariants} className="min-h-[240px] lg:min-h-[280px] landscape:min-h-[180px]">
         {
           loadingPlans ? (
-            <div className="h-[160px] rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse"></div>
+            <div className="h-[240px] lg:h-[280px] landscape:h-[180px] rounded-[2.5rem] bg-slate-100 dark:bg-slate-800 animate-pulse"></div>
           ) : todaysPlan ? (
-            <div className="h-[160px] landscape:h-[100px] bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 landscape:p-4 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden flex flex-col justify-center">
-              {/* ... Plan content ... */}
-              <div className="absolute right-0 top-0 p-4 opacity-10 landscape:opacity-5">
-                <span className="material-symbols-outlined text-[150px] landscape:text-[80px]">calendar_month</span>
+            <div className={`relative h-full min-h-[240px] lg:min-h-[280px] landscape:min-h-[180px] bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-[2.5rem] p-8 lg:p-12 landscape:p-6 text-white shadow-2xl shadow-blue-500/30 overflow-hidden flex flex-col justify-center group`}>
+              {/* Decorative background elements */}
+              <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:scale-110 transition-transform duration-1000">
+                <span className="material-symbols-outlined text-[300px] lg:text-[400px] landscape:text-[200px]">calendar_month</span>
               </div>
-              <div className="relative z-10 w-full">
-                <div className="flex items-center gap-2 mb-2 text-blue-100 font-bold uppercase text-xs tracking-wider">
-                  <span className="bg-white/20 px-2 py-0.5 rounded">Atividade do Dia</span>
-                  <span>•</span>
-                  <span>{new Date().toLocaleDateString('pt-BR')}</span>
-                </div>
-                <h2 className="text-2xl font-bold mb-2 truncate">{todaysPlan.title}</h2>
-                <p className="text-blue-100 max-w-2xl line-clamp-1">{todaysPlan.description.replace(/<[^>]*>/g, '')}</p>
+              <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-white/5 blur-[100px] rounded-full"></div>
 
-                <div className="flex items-center gap-4 mt-4 landscape:mt-2">
-                  <Link to="/planning" className={`bg-white text-${theme.primaryColor} px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-50 transition-colors landscape:py-1`}>
-                    Ver Detalhes
-                  </Link>
-                  <div className="flex items-center gap-2 text-sm landscape:text-xs">
-                    <span className="material-symbols-outlined text-lg">schedule</span>
-                    Termina em {new Date(todaysPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+              <div className="relative z-10 w-full">
+                <div className="flex items-center gap-3 mb-6 landscape:mb-4 text-blue-100/90 font-black uppercase text-[10px] sm:text-xs tracking-[0.2em] bg-white/10 w-fit px-4 py-2 rounded-xl backdrop-blur-md border border-white/10">
+                  <span className="size-2 bg-blue-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(96,165,250,0.8)]"></span>
+                  Aula de Hoje
+                  <span className="opacity-50">•</span>
+                  <span>{new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}</span>
+                </div>
+
+                <h2 className="text-3xl md:text-5xl lg:text-6xl font-black mb-4 lg:mb-6 tracking-tighter leading-tight drop-shadow-lg max-w-4xl">
+                  {todaysPlan.title}
+                </h2>
+
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 landscape:gap-4">
+                  <div className="max-w-3xl">
+                    <p className="text-blue-50/90 text-lg md:text-xl lg:text-2xl font-medium line-clamp-2 leading-relaxed italic opacity-95 group-hover:opacity-100 transition-opacity border-l-4 border-white/20 pl-6 mb-2">
+                      "{todaysPlan.description.replace(/<[^>]*>/g, '')}"
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-6 shrink-0">
+                    <Link
+                      to="/planning"
+                      className="group/btn relative px-8 py-4 landscape:py-3 bg-white text-blue-700 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 shadow-2xl shadow-black/10 hover:shadow-white/20 hover:-translate-y-1 transition-all active:scale-95"
+                    >
+                      <span>Ver Aula Completa</span>
+                      <span className="material-symbols-outlined text-xl group-hover/btn:translate-x-1 transition-transform">arrow_right_alt</span>
+                    </Link>
+
+                    <div className="flex items-center gap-3 text-sm font-bold text-blue-100/80 bg-black/10 px-5 py-4 landscape:py-3 rounded-2xl backdrop-blur-sm border border-white/5">
+                      <span className="material-symbols-outlined text-2xl">event_upcoming</span>
+                      <div className="flex flex-col">
+                        <span className="text-[9px] uppercase tracking-wider opacity-60">Prazo de Entrega</span>
+                        <span>{new Date(todaysPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="h-[160px] landscape:h-[100px] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-400">
-              <span className="material-symbols-outlined text-4xl mb-2 opacity-50">event_busy</span>
-              <span className="text-sm font-medium">Nenhum planejamento para hoje</span>
+            <div className="h-[240px] lg:h-[280px] landscape:h-[180px] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 group hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-500">
+              <div className="size-20 lg:size-24 rounded-[2rem] bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all">
+                <span className="material-symbols-outlined text-5xl lg:text-6xl opacity-30">event_busy</span>
+              </div>
+              <h3 className="text-lg lg:text-xl font-black uppercase tracking-[0.2em] opacity-60">Planejamento em Aberto</h3>
+              <p className="text-xs lg:text-sm font-bold opacity-40 mt-2">Toque em "Planejamento" para organizar sua aula de hoje.</p>
             </div>
           )
         }
