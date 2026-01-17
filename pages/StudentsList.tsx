@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -7,17 +8,25 @@ import { supabase } from '../lib/supabase';
 import { TransferStudentModal } from '../components/TransferStudentModal';
 import { BulkTransferModal } from '../components/BulkTransferModal';
 
-export const StudentsList: React.FC = () => {
+interface StudentsListProps {
+    mode?: 'manage' | 'report';
+}
+
+export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) => {
+    const navigate = useNavigate();
     const { selectedSeriesId, selectedSection, activeSeries } = useClass();
     const { currentUser } = useAuth();
     const theme = useTheme();
 
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
+    const [newStudentName, setNewStudentName] = useState('');
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editName, setEditName] = useState('');
-    const [newStudentName, setNewStudentName] = useState('');
     const [isAdding, setIsAdding] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [showBulkImport, setShowBulkImport] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Bulk Import State
     const [isImporting, setIsImporting] = useState(false);
@@ -30,7 +39,6 @@ export const StudentsList: React.FC = () => {
     const [isBulkTransferring, setIsBulkTransferring] = useState(false);
 
     // Selection Logic
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
     const toggleSelectAll = () => {
         if (selectedIds.length === students.length) {
@@ -318,42 +326,51 @@ export const StudentsList: React.FC = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto relative z-10">
-                    {selectedIds.length > 0 ? (
-                        <div className="flex items-center gap-3 animate-in fade-in zoom-in">
+                    {mode === 'manage' ? (
+                        <>
+                            {selectedIds.length > 0 ? (
+                                <div className="flex items-center gap-3 animate-in fade-in zoom-in">
+                                    <button
+                                        onClick={() => setIsBulkTransferring(true)}
+                                        className="flex items-center gap-3 bg-amber-100 hover:bg-amber-200 text-amber-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
+                                    >
+                                        <span className="material-symbols-outlined text-xl">move_up</span>
+                                        Transferir ({selectedIds.length})
+                                    </button>
+                                    <button
+                                        onClick={handleBulkDelete}
+                                        className="flex items-center gap-3 bg-red-100 hover:bg-red-200 text-red-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
+                                    >
+                                        <span className="material-symbols-outlined text-xl">delete</span>
+                                        Remover
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    data-tour="students-import-btn"
+                                    onClick={() => setIsImporting(true)}
+                                    className="flex items-center gap-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
+                                >
+                                    <span className="material-symbols-outlined text-xl">playlist_add</span>
+                                    Importar em Massa
+                                </button>
+                            )}
                             <button
-                                onClick={() => setIsBulkTransferring(true)}
-                                className="flex items-center gap-3 bg-amber-100 hover:bg-amber-200 text-amber-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
+                                data-tour="students-add-btn"
+                                onClick={() => setIsAdding(!isAdding)}
+                                className={`flex items-center gap-3 hover:opacity-90 text-white font-bold h-12 px-6 rounded-2xl shadow-lg shadow-${theme.primaryColor}/20 transition-all active:scale-95`}
+                                style={{ backgroundColor: theme.primaryColorHex }}
                             >
-                                <span className="material-symbols-outlined text-xl">move_up</span>
-                                Transferir ({selectedIds.length})
+                                <span className="material-symbols-outlined text-xl">add_circle</span>
+                                Novo Aluno
                             </button>
-                            <button
-                                onClick={handleBulkDelete}
-                                className="flex items-center gap-3 bg-red-100 hover:bg-red-200 text-red-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
-                            >
-                                <span className="material-symbols-outlined text-xl">delete</span>
-                                Remover
-                            </button>
-                        </div>
+                        </>
                     ) : (
-                        <button
-                            data-tour="students-import-btn"
-                            onClick={() => setIsImporting(true)}
-                            className="flex items-center gap-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
-                        >
-                            <span className="material-symbols-outlined text-xl">playlist_add</span>
-                            Importar em Massa
-                        </button>
+                        <div className="bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-300 px-6 py-3 rounded-2xl font-bold border border-indigo-100 dark:border-indigo-800 flex items-center gap-2">
+                            <span className="material-symbols-outlined">touch_app</span>
+                            Selecione um aluno para visualizar o relatório
+                        </div>
                     )}
-                    <button
-                        data-tour="students-add-btn"
-                        onClick={() => setIsAdding(!isAdding)}
-                        className={`flex items-center gap-3 hover:opacity-90 text-white font-bold h-12 px-6 rounded-2xl shadow-lg shadow-${theme.primaryColor}/20 transition-all active:scale-95`}
-                        style={{ backgroundColor: theme.primaryColorHex }}
-                    >
-                        <span className="material-symbols-outlined text-xl">add_circle</span>
-                        Novo Aluno
-                    </button>
                 </div>
             </div>
 
@@ -472,112 +489,202 @@ export const StudentsList: React.FC = () => {
                 )
             }
 
-            <div className={`bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden transition-all duration-300 ${loading ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
-                <div className="overflow-x-auto custom-scrollbar">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                                <th className="px-4 py-3 w-12">
-                                    <div className="flex items-center justify-center">
-                                        <input
-                                            type="checkbox"
-                                            className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
-                                            checked={students.length > 0 && selectedIds.length === students.length}
-                                            onChange={toggleSelectAll}
-                                        />
+            <div className={`transition-all duration-300 ${loading ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
+
+                {mode === 'report' ? (
+                    /* REPORT MODE: GRID LAYOUT */
+                    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+
+                        {/* Search Bar */}
+                        <div className="relative w-full max-w-md mx-auto mb-2">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span className={`material-symbols-outlined text-slate-400 ${searchQuery ? `text-${theme.primaryColor}` : ''}`}>search</span>
+                            </div>
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Buscar aluno por nome ou número..."
+                                className="w-full h-12 pl-12 pr-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-red-500 transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-lg">close</span>
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {students
+                                .filter(s =>
+                                    searchQuery === '' ||
+                                    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                    s.number.toString().includes(searchQuery)
+                                )
+                                .length === 0 ? (
+                                <div className="col-span-full py-20 text-center bg-white dark:bg-slate-900 rounded-[32px] border border-slate-100 dark:border-slate-800">
+                                    <div className="size-20 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-4 mx-auto">
+                                        <span className="material-symbols-outlined text-slate-300 text-4xl">group_off</span>
                                     </div>
-                                </th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest w-24">Nº</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Nome do Aluno</th>
-                                <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                            {students.length === 0 ? (
-                                <tr>
-                                    <td colSpan={3} className="px-8 py-20 text-center">
-                                        <div className="flex flex-col items-center">
-                                            <div className="size-20 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-4">
-                                                <span className="material-symbols-outlined text-slate-300 text-4xl">group_off</span>
-                                            </div>
-                                            <h4 className="font-bold text-slate-400">A lista está vazia</h4>
-                                            <p className="text-sm text-slate-300">Comece adicionando seu primeiro aluno acima.</p>
-                                        </div>
-                                    </td>
-                                </tr>
+                                    <h4 className="font-bold text-slate-400">Nenhum aluno encontrado</h4>
+                                    <p className="text-sm text-slate-300">Verifique os filtros de turma.</p>
+                                </div>
                             ) : (
-                                students.map((student) => (
-                                    <tr key={student.id} className={`group transition-all ${selectedIds.includes(student.id) ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/30'}`}>
-                                        <td className="px-4 py-4">
+                                students
+                                    .filter(s =>
+                                        searchQuery === '' ||
+                                        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                        s.number.toString().includes(searchQuery)
+                                    )
+                                    .map((student, index) => (
+                                        <div
+                                            key={student.id}
+                                            onClick={() => navigate(`/reports/${student.id}`)}
+                                            className="group bg-white dark:bg-slate-900 rounded-[24px] p-6 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-500/20 hover:-translate-y-1 transition-all cursor-pointer relative overflow-hidden"
+                                            style={{ animationDelay: `${index * 50}ms` }}
+                                        >
+                                            <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${student.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} opacity-10 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-500`}></div>
+
+                                            <div className="flex items-start justify-between mb-4 relative z-10">
+                                                <div className={`size-14 rounded-2xl bg-gradient-to-br ${student.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-white text-lg font-black shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform duration-300`}>
+                                                    {student.initials}
+                                                </div>
+                                                <span className="px-3 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                    #{student.number}
+                                                </span>
+                                            </div>
+
+                                            <div className="relative z-10">
+                                                <h3 className="text-lg font-black text-slate-800 dark:text-white mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
+                                                    {student.name}
+                                                </h3>
+                                                <p className="text-xs font-medium text-slate-400 dark:text-slate-500 mb-6">
+                                                    {activeSeries?.name} • {selectedSection}
+                                                </p>
+
+                                                <button className="w-full h-10 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-widest group-hover:bg-indigo-600 group-hover:text-white transition-all flex items-center justify-center gap-2">
+                                                    <span>Relatório</span>
+                                                    <span className="material-symbols-outlined text-base">arrow_forward</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    /* MANAGE MODE: TABLE LAYOUT */
+                    <div className={`bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden`}>
+                        <div className="overflow-x-auto custom-scrollbar">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                                        <th className="px-4 py-3 w-12">
                                             <div className="flex items-center justify-center">
                                                 <input
                                                     type="checkbox"
                                                     className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
-                                                    checked={selectedIds.includes(student.id)}
-                                                    onChange={() => toggleSelect(student.id)}
+                                                    checked={students.length > 0 && selectedIds.length === students.length}
+                                                    onChange={toggleSelectAll}
                                                 />
                                             </div>
-                                        </td>
-                                        <td className="px-8 py-4">
-                                            <span className="font-mono text-sm font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">
-                                                {student.number}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-4">
-                                            {editingId === student.id ? (
-                                                <div className="flex items-center gap-3 animate-in fade-in zoom-in-95 duration-200">
-                                                    <input
-                                                        type="text"
-                                                        value={editName}
-                                                        onChange={(e) => setEditName(e.target.value)}
-                                                        className={`px-4 py-2 border-2 border-primary/30 rounded-xl text-sm w-full max-w-md font-bold dark:bg-slate-900 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all`}
-                                                        autoFocus
-                                                    />
-                                                    <div className="flex gap-1">
-                                                        <button onClick={saveEdit} className="p-2 bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-500/20 hover:scale-110 transition-transform"><span className="material-symbols-outlined">check</span></button>
-                                                        <button onClick={() => setEditingId(null)} className="p-2 bg-slate-200 text-slate-600 rounded-xl hover:scale-110 transition-transform"><span className="material-symbols-outlined">close</span></button>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`size-11 rounded-2xl bg-gradient-to-br ${student.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-xs font-black text-white shadow-lg shadow-slate-200 dark:shadow-none`}>
-                                                        {student.initials}
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-black text-slate-800 dark:text-white group-hover:text-primary transition-colors">{student.name}</span>
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Frequência: 100% (Draft)</span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="px-8 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                                                <button
-                                                    onClick={() => setTransferringStudent(student)}
-                                                    className={`p-2.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-xl transition-all`}
-                                                    title="Transferir Aluno">
-                                                    <span className="material-symbols-outlined text-[22px]">move_up</span>
-                                                </button>
-                                                <button
-                                                    onClick={() => handleEdit(student)}
-                                                    className={`p-2.5 text-slate-400 hover:text-${theme.primaryColor} hover:bg-${theme.primaryColor}/10 rounded-xl transition-all`}
-                                                    title="Editar Aluno">
-                                                    <span className="material-symbols-outlined text-[22px]">edit_note</span>
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(student.id)}
-                                                    className="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all"
-                                                    title="Remover Aluno">
-                                                    <span className="material-symbols-outlined text-[22px]">delete</span>
-                                                </button>
-                                            </div>
-                                        </td>
+                                        </th>
+                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest w-24">Nº</th>
+                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Nome do Aluno</th>
+                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">Ações</th>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                                    {students.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="px-8 py-20 text-center">
+                                                <div className="flex flex-col items-center">
+                                                    <div className="size-20 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-4">
+                                                        <span className="material-symbols-outlined text-slate-300 text-4xl">group_off</span>
+                                                    </div>
+                                                    <h4 className="font-bold text-slate-400">A lista está vazia</h4>
+                                                    <p className="text-sm text-slate-300">Comece adicionando seu primeiro aluno acima.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        students.map((student) => (
+                                            <tr key={student.id} className={`group transition-all ${selectedIds.includes(student.id) ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/30'}`}>
+                                                <td className="px-4 py-4">
+                                                    <div className="flex items-center justify-center">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
+                                                            checked={selectedIds.includes(student.id)}
+                                                            onChange={() => toggleSelect(student.id)}
+                                                        />
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-4">
+                                                    <span className="font-mono text-sm font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">
+                                                        {student.number}
+                                                    </span>
+                                                </td>
+                                                <td className="px-8 py-4">
+                                                    {editingId === student.id ? (
+                                                        <div className="flex items-center gap-3 animate-in fade-in zoom-in-95 duration-200">
+                                                            <input
+                                                                type="text"
+                                                                value={editName}
+                                                                onChange={(e) => setEditName(e.target.value)}
+                                                                className={`px-4 py-2 border-2 border-primary/30 rounded-xl text-sm w-full max-w-md font-bold dark:bg-slate-900 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all`}
+                                                                autoFocus
+                                                            />
+                                                            <div className="flex gap-1">
+                                                                <button onClick={saveEdit} className="p-2 bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-500/20 hover:scale-110 transition-transform"><span className="material-symbols-outlined">check</span></button>
+                                                                <button onClick={() => setEditingId(null)} className="p-2 bg-slate-200 text-slate-600 rounded-xl hover:scale-110 transition-transform"><span className="material-symbols-outlined">close</span></button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-4">
+                                                            <div className={`size-11 rounded-2xl bg-gradient-to-br ${student.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-xs font-black text-white shadow-lg shadow-slate-200 dark:shadow-none`}>
+                                                                {student.initials}
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="font-black text-slate-800 dark:text-white group-hover:text-primary transition-colors">{student.name}</span>
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Frequência: 100% (Draft)</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-8 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                                                        <button
+                                                            onClick={() => setTransferringStudent(student)}
+                                                            className={`p-2.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-xl transition-all`}
+                                                            title="Transferir Aluno">
+                                                            <span className="material-symbols-outlined text-[22px]">move_up</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleEdit(student)}
+                                                            className={`p-2.5 text-slate-400 hover:text-${theme.primaryColor} hover:bg-${theme.primaryColor}/10 rounded-xl transition-all`}
+                                                            title="Editar Aluno">
+                                                            <span className="material-symbols-outlined text-[22px]">edit_note</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(student.id)}
+                                                            className="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all"
+                                                            title="Remover Aluno">
+                                                            <span className="material-symbols-outlined text-[22px]">delete</span>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {transferringStudent && (

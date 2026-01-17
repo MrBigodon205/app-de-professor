@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,6 +17,8 @@ interface Grades {
 }
 
 export const StudentProfile: React.FC = () => {
+    const navigate = useNavigate();
+    const { id } = useParams<{ id: string }>();
     const { selectedSeriesId, selectedSection, activeSeries } = useClass();
     const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
@@ -42,14 +45,21 @@ export const StudentProfile: React.FC = () => {
 
     useEffect(() => {
         if (students.length > 0) {
-            const currentInList = students.find(s => s.id === selectedStudentId);
-            if (!currentInList) {
-                setSelectedStudentId(students[0].id);
+            if (id) {
+                // If URL has an ID, use it
+                const found = students.find(s => s.id === id);
+                if (found) setSelectedStudentId(id);
+            } else {
+                // Legacy Fallback
+                const currentInList = students.find(s => s.id === selectedStudentId);
+                if (!currentInList) {
+                    setSelectedStudentId(students[0].id);
+                }
             }
         } else {
             setSelectedStudentId('');
         }
-    }, [students, selectedStudentId]);
+    }, [students, selectedStudentId, id]);
 
     const fetchData = async (silent = false) => {
         if (!currentUser) return;
@@ -269,7 +279,7 @@ export const StudentProfile: React.FC = () => {
                 doc.text(label.toUpperCase(), x + 8, y + 8);
 
                 doc.setTextColor(30, 41, 59); // Slate 800
-                doc.setFontSize(14);
+                doc.setFontSize(11); // Slightly smaller to fit long status text if needed
                 doc.text(value, x + 8, y + 16);
 
                 doc.setTextColor(148, 163, 184); // Slate 400
@@ -302,13 +312,15 @@ export const StudentProfile: React.FC = () => {
                 : (annualStatus === 'RECOVERY' || (annualStatus as string) === 'FAILED') ? [239, 68, 68] // Red
                     : [249, 115, 22]; // Orange (Final)
 
-            // Label text
-            const statusText = annualStatus === 'APPROVED' ? 'Aprovado'
-                : annualStatus === 'RECOVERY' ? 'Recuperação'
-                    : annualStatus === 'FINAL' ? 'Prova Final'
-                        : 'Reprovado';
+            // Label text - Updated to be explicit as requested
+            const statusText = annualStatus === 'APPROVED' ? 'APROVADO'
+                : annualStatus === 'RECOVERY' ? 'RECUPERAÇÃO'
+                    : annualStatus === 'FINAL' ? 'PROVA FINAL'
+                        : 'REPROVADO';
 
-            drawStatCard(138, 85, 'Situação Final', annualStatus === 'APPROVED' ? annualTotal.toFixed(1) : statusText, annualStatus === 'APPROVED' ? 'Total Anual' : `Total: ${annualTotal.toFixed(1)}`, statusColor as any);
+            const statusSubtext = annualStatus === 'APPROVED' ? `Média Final: ${(annualTotal / 3).toFixed(1)}` : `Total Atual: ${annualTotal.toFixed(1)}`;
+
+            drawStatCard(138, 85, 'Situação Final', statusText, statusSubtext, statusColor as any);
 
             let startY = 125;
             let maxFinalY = startY;
@@ -429,6 +441,47 @@ export const StudentProfile: React.FC = () => {
                 if (currentY > maxFinalY) maxFinalY = currentY;
             });
 
+            // --- PEDAGOGICAL ANALYSIS (AUTOMATED) ---
+            const finalY = maxFinalY + 10;
+
+            // Logic to generate the analysis text
+            const generateAnalysis = () => {
+                let text = `${student.name} apresenta um desempenho `;
+
+                // Academic
+                if (annualStatus === 'APPROVED') text += "satisfatório acadêmicamente, alcançando os objetivos propostos para o ciclo. ";
+                else if (annualStatus === 'RECOVERY') text += "que requer atenção, não atingindo a média necessária e necessitando de reforço nos conteúdos. ";
+                else text += "que demanda acompanhamento próximo para superação das dificuldades apresentadas. ";
+
+                // Attendance
+                const attPct = parseInt(attendancePercentage);
+                if (attPct >= 90) text += "Sua frequência às aulas é excelente, demonstrando compromisso. ";
+                else if (attPct >= 75) text += "A frequência é regular, mas faltas pontuais devem ser observadas. ";
+                else text += "A frequência está crítica, comprometendo o acompanhamento do conteúdo. ";
+
+                // Behavioral
+                if (activeAlerts === 0) text += "Não possui registros disciplinares negativos, mantendo boa conduta.";
+                else if (activeAlerts <= 2) text += "Apresenta ocorrências pontuais que foram devidamente registradas.";
+                else text += "Possui número relevante de ocorrências comportamentais que impactam no ambiente escolar e requerem intervenção.";
+
+                return text;
+            };
+
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(14, finalY, 182, 35, 3, 3, 'F');
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(71, 85, 105);
+            doc.text('PONTO DE ATENÇÃO / ANÁLISE PEDAGÓGICA (Automático)', 18, finalY + 8);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(51, 65, 85);
+            const analysisText = generateAnalysis();
+            const splitAnalysis = doc.splitTextToSize(analysisText, 174);
+            doc.text(splitAnalysis, 18, finalY + 14);
+
             // --- FOOTER ---
             const pageCount = (doc as any).internal.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
@@ -544,27 +597,37 @@ export const StudentProfile: React.FC = () => {
         <div className="max-w-[1400px] mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header / Selector */}
             {loading ? <SkeletonHeader /> : (
-                <div className={`bg-white dark:bg-slate-900 fluid-p-m rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-center justify-between fluid-gap-m relative overflow-hidden group`}>
+                <div className={`bg-white dark:bg-slate-900 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col items-center p-8 relative overflow-hidden group`}>
+                    <div className={`absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-${theme.primaryColor}/20 to-${theme.secondaryColor}/20`}></div>
                     <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-${theme.primaryColor}/10 to-transparent rounded-full -mr-40 -mt-40 blur-3xl group-hover:from-${theme.primaryColor}/15 transition-colors duration-700`}></div>
 
-                    <div className="flex items-center gap-6 relative z-10 w-full lg:w-auto">
-                        <div className={`size-16 md:size-20 rounded-[28px] bg-gradient-to-br ${student?.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-3xl font-black text-white shadow-2xl shadow-slate-300 dark:shadow-none ring-8 ring-white dark:ring-slate-900`}>
+                    {/* Back Button - Moved to parent for correct positioning */}
+                    <div className="w-full flex justify-start px-0 mb-4 md:mb-0 md:absolute md:top-6 md:left-6 z-20 no-print">
+                        <button
+                            onClick={() => navigate('/reports')}
+                            className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm hover:shadow-md"
+                        >
+                            <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                            <span className="text-sm font-bold">Voltar</span>
+                        </button>
+                    </div>
+
+                    <div className="relative z-10 -mt-4 flex flex-col items-center">
+                        <div className={`size-24 md:size-28 rounded-[36px] bg-gradient-to-br ${student?.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-4xl font-black text-white shadow-2xl shadow-indigo-500/30 ring-8 ring-white dark:ring-slate-900`}>
                             {student?.initials}
                         </div>
-                        <div className="flex flex-col">
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{student?.name}</h1>
-                                <span className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-xl font-mono font-black text-slate-400 text-sm">#{student?.number.padStart(2, '0')}</span>
-                            </div>
-                            <p className="text-slate-500 font-bold mt-2 flex items-center gap-2 text-sm md:text-base">
-                                <span className={`size-1.5 rounded-full bg-${theme.primaryColor}`}></span>
-                                {activeSeries?.name} • Turma {selectedSection} • <span className={`text-${theme.primaryColor}`}>{currentUser?.subject}</span>
-                            </p>
+
+                        <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight mt-4 text-center">{student?.name}</h1>
+
+                        <div className="flex items-center gap-3 mt-2">
+                            <span className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-xl font-mono font-bold text-slate-500 text-xs">#{student?.number.padStart(2, '0')}</span>
+                            <span className="text-slate-400 font-bold text-sm">•</span>
+                            <span className="text-slate-500 font-bold text-sm">{activeSeries?.name} - {selectedSection}</span>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto relative z-10 no-print landscape:justify-end">
-                        <div className="flex-1 min-w-[160px] lg:min-w-[180px]">
+                    <div className="flex flex-wrap items-center justify-center gap-4 w-full mt-8 relative z-10 no-print">
+                        <div className="w-full max-w-xs">
                             <DynamicSelect
                                 label="Filtrar Período"
                                 value={selectedUnit}
@@ -577,37 +640,19 @@ export const StudentProfile: React.FC = () => {
                                 ]}
                             />
                         </div>
-                        <div className="flex-1 min-w-[200px] lg:min-w-[240px]">
-                            <DynamicSelect
-                                label="Trocar Aluno"
-                                value={selectedStudentId}
-                                onChange={setSelectedStudentId}
-                                options={students.map(s => ({
-                                    value: s.id,
-                                    label: `${s.number.padStart(2, '0')} - ${s.name}`,
-                                    icon: 'person'
-                                }))}
-                                placeholder="Selecione..."
-                            />
+                        <div className="w-full max-w-xs">
+                            {/* Student Switcher Removed as per request */}
                         </div>
-                        <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                            <button
-                                onClick={() => setIsTransferModalOpen(true)}
-                                className={`flex-1 sm:flex-none h-12 md:h-14 px-4 md:px-8 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-black flex items-center justify-center gap-2 md:gap-3 transition-all hover:border-${theme.primaryColor} hover:text-${theme.primaryColor} self-end active:scale-95 uppercase tracking-widest text-[10px] md:text-xs`}
-                            >
-                                <span className="material-symbols-outlined text-lg md:text-xl text-amber-500">move_up</span>
-                                <span className="hidden md:inline">Trocar de Turma</span>
-                                <span className="md:hidden">Transferir</span>
-                            </button>
+
+                        <div className="flex gap-2 w-full sm:w-auto sm:self-end">
                             <button
                                 onClick={handleExportPDF}
                                 data-tour="reports-export-btn"
-                                className={`flex-1 sm:flex-none h-12 md:h-14 px-4 md:px-8 rounded-2xl text-white font-black flex items-center justify-center gap-2 md:gap-3 transition-all self-end active:scale-95 uppercase tracking-widest text-[10px] md:text-xs shadow-xl`}
-                                style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 20px 25px -5px ${theme.primaryColorHex}33` }}
+                                className={`h-14 px-8 rounded-2xl text-white font-black flex items-center justify-center gap-3 transition-all active:scale-95 uppercase tracking-widest text-xs shadow-xl hover:opacity-90 w-full sm:w-auto`}
+                                style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 20px -5px ${theme.primaryColorHex}40` }}
                             >
-                                <span className="material-symbols-outlined text-lg md:text-xl">picture_as_pdf</span>
-                                <span className="hidden md:inline">Exportar Relatório</span>
-                                <span className="md:hidden">PDF</span>
+                                <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
+                                Exportar PDF
                             </button>
                         </div>
                     </div>

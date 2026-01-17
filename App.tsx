@@ -14,6 +14,7 @@ import { TeacherProfile } from './pages/TeacherProfile';
 import { Observations } from './pages/Observations';
 import { StudentsList } from './pages/StudentsList';
 import { ResetPassword } from './pages/ResetPassword';
+import { Instructions } from './pages/Instructions';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -38,11 +39,13 @@ const App: React.FC = () => {
                   <Route path="/grades" element={<PageTransition type="grades"><Grades /></PageTransition>} />
                   <Route path="/activities" element={<PageTransition type="activities"><Activities /></PageTransition>} />
                   <Route path="/planning" element={<PageTransition type="planning"><Planning /></PageTransition>} />
-                  <Route path="/students" element={<PageTransition type="students"><StudentsList /></PageTransition>} />
-                  <Route path="/reports" element={<PageTransition type="default"><StudentProfile /></PageTransition>} />
+                  <Route path="/students" element={<PageTransition type="students"><StudentsList mode="manage" /></PageTransition>} />
+                  <Route path="/reports" element={<PageTransition type="default"><StudentsList mode="report" /></PageTransition>} />
+                  <Route path="/reports/:id" element={<PageTransition type="default"><StudentProfile /></PageTransition>} />
                   <Route path="/students/:id" element={<PageTransition type="default"><StudentProfile /></PageTransition>} />
                   <Route path="/profile" element={<PageTransition type="default"><TeacherProfile /></PageTransition>} />
                   <Route path="/observations" element={<PageTransition type="dashboard"><Observations /></PageTransition>} />
+                  <Route path="/instructions" element={<PageTransition type="default"><Instructions /></PageTransition>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </AnimatePresence>

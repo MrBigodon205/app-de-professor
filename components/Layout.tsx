@@ -49,6 +49,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     { path: '/students', label: 'Alunos', icon: 'groups' },
     { path: '/observations', label: 'Ocorrências', icon: 'warning' },
     { path: '/reports', label: 'Relatórios', icon: 'description' },
+    { path: '/instructions', label: 'Instruções', icon: 'menu_book' },
   ];
 
   const handleSelectSeries = (id: string) => {
@@ -262,7 +263,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       </button>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-full relative z-10">
+      <div className={`flex-1 flex flex-col min-w-0 h-full relative z-10 transition-all duration-200 ease-out ${isSidebarCollapsed ? 'lg:ml-0 landscape:ml-0' : 'lg:ml-72 landscape:ml-72'}`}>
         {isMobileMenuOpen && (
           <div className="fixed inset-0 bg-black/60 z-[55] lg:hidden backdrop-blur-sm transition-all" onClick={() => setIsMobileMenuOpen(false)}></div>
         )}
