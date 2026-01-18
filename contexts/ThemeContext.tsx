@@ -227,8 +227,13 @@ const THEME_MAP: Record<string, ThemeConfig> = {
     }
 };
 
+// Enhanced Theme Context with Dark Mode Support
 interface ThemeContextType {
-    theme: ThemeConfig & { subject: string };
+    theme: ThemeConfig & {
+        subject: string;
+        isDarkMode: boolean;
+        toggleTheme: () => void; // New toggle function
+    };
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -236,16 +241,53 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { currentUser, activeSubject } = useAuth();
 
+    // --- DARK MODE LOGIC ---
+    // Initialize from localStorage or default to FALSE (Light Mode) as requested
+    const [isDarkMode, setIsDarkMode] = React.useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('theme_mode');
+            return saved === 'dark';
+        }
+        return false;
+    });
+
+    // Sync with HTML class and localStorage
+    React.useEffect(() => {
+        const root = window.document.documentElement;
+        if (isDarkMode) {
+            root.classList.add('dark');
+            localStorage.setItem('theme_mode', 'dark');
+        } else {
+            root.classList.remove('dark');
+            localStorage.setItem('theme_mode', 'light');
+        }
+    }, [isDarkMode]);
+
+    const toggleTheme = React.useCallback(() => {
+        setIsDarkMode(prev => !prev);
+    }, []);
+
     const themeValue = useMemo(() => {
         const subject = activeSubject || currentUser?.subject || 'Matemática';
         const config = THEME_MAP[subject] || THEME_MAP['Matemática'];
         return {
             subject,
-            ...config
+            ...config,
+            isDarkMode, // Export state
+            toggleTheme // Export toggler
         };
-    }, [activeSubject, currentUser?.subject]);
+    }, [activeSubject, currentUser?.subject, isDarkMode, toggleTheme]);
 
     const contextValue = useMemo(() => ({ theme: themeValue }), [themeValue]);
+
+    // Dynamic CSS Variable Injection
+    React.useEffect(() => {
+        const root = document.documentElement;
+        root.style.setProperty('--theme-primary', themeValue.primaryColorHex);
+        root.style.setProperty('--theme-secondary', themeValue.secondaryColorHex);
+        // Add a subtle tint for backgrounds
+        root.style.setProperty('--theme-surface', `${themeValue.primaryColorHex}10`);
+    }, [themeValue]);
 
     return (
         <ThemeContext.Provider value={contextValue}>

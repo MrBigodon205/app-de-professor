@@ -7,11 +7,24 @@ import { supabase } from '../lib/supabase';
 import { DatePicker } from '../components/DatePicker';
 import { CategorySelect } from '../components/CategorySelect';
 
+const getOccurrenceIcon = (type: string) => {
+    switch (type) {
+        case 'Elogio': return 'star';
+        case 'Indisciplina': return 'gavel';
+        case 'Atraso': return 'schedule';
+        case 'Não Fez Tarefa': return 'assignment_late';
+        case 'Falta de Material': return 'inventory_2';
+        case 'Uso de Celular': return 'smartphone';
+        case 'Alerta': return 'priority_high';
+        default: return 'warning';
+    }
+};
+
 export const Observations: React.FC = () => {
     const { selectedSeriesId, selectedSection, activeSeries } = useClass();
     const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
-    const [activeTab, setActiveTab] = useState<'general' | 'occurrences'>('general');
+    const [activeTab, setActiveTab] = useState<'general' | 'occurrences' | 'history'>('general');
     const [students, setStudents] = useState<Student[]>([]);
     const [occurrences, setOccurrences] = useState<Occurrence[]>([]);
     const [selectedStudentId, setSelectedStudentId] = useState('');
@@ -25,6 +38,7 @@ export const Observations: React.FC = () => {
     const [occurrenceDate, setOccurrenceDate] = useState(new Date().toLocaleDateString('sv-SE'));
     const [editingOccId, setEditingOccId] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
+    const [selectedOccIds, setSelectedOccIds] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         if (selectedSeriesId && selectedSection) {
@@ -77,14 +91,20 @@ export const Observations: React.FC = () => {
 
             const { data: occData, error: occError } = await supabase
                 .from('occurrences')
-                .select('*')
+                .select(`
+                    *,
+                    student:students (
+                        name
+                    )
+                `)
                 .eq('user_id', currentUser.id)
-                .eq('subject', activeSubject);
+                .eq('subject', activeSubject)
+                .order('date', { ascending: false })
+                .order('created_at', { ascending: false });
 
             if (!occError && occData) {
                 const studentIds = new Set(formattedStudents.map(s => s.id));
                 const formattedOcc: Occurrence[] = occData
-                    .filter(o => studentIds.has(o.student_id.toString()))
                     .map(o => ({
                         id: o.id.toString(),
                         studentId: o.student_id.toString(),
@@ -92,7 +112,8 @@ export const Observations: React.FC = () => {
                         description: o.description,
                         date: o.date,
                         unit: o.unit,
-                        userId: o.user_id
+                        userId: o.user_id,
+                        student_name: (o.student as any)?.name || 'Estudante'
                     }));
                 setOccurrences(formattedOcc);
             }
@@ -229,8 +250,52 @@ export const Observations: React.FC = () => {
 
             if (!error) {
                 setOccurrences(occurrences.filter(o => o.id !== id));
+                const newSelected = new Set(selectedOccIds);
+                newSelected.delete(id);
+                setSelectedOccIds(newSelected);
             }
         } catch (e) { console.error(e) }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedOccIds.size === 0) return;
+        if (!window.confirm(`Deseja realmente excluir ${selectedOccIds.size} registros selecionados?`)) return;
+
+        setSaving(true);
+        try {
+            const idsToDelete = Array.from(selectedOccIds);
+            const { error } = await supabase
+                .from('occurrences')
+                .delete()
+                .in('id', idsToDelete);
+
+            if (!error) {
+                setOccurrences(occurrences.filter(o => !selectedOccIds.has(o.id)));
+                setSelectedOccIds(new Set());
+            }
+        } catch (e) {
+            console.error("Error in bulk delete:", e);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const toggleOccurrenceSelection = (id: string) => {
+        const newSelected = new Set(selectedOccIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedOccIds(newSelected);
+    };
+
+    const toggleSelectAll = (list: Occurrence[]) => {
+        if (selectedOccIds.size === list.length && list.length > 0) {
+            setSelectedOccIds(new Set());
+        } else {
+            setSelectedOccIds(new Set(list.map(o => o.id)));
+        }
     };
 
     const handleSaveGeneralObs = async (text: string) => {
@@ -377,6 +442,13 @@ export const Observations: React.FC = () => {
                             <span className="material-symbols-outlined text-base sm:text-lg">history_edu</span>
                             Ocorrências
                         </button>
+                        <button
+                            onClick={() => setActiveTab('history')}
+                            className={`flex-1 sm:flex-none px-3 sm:px-8 py-2 sm:py-3 landscape:py-1.5 rounded-xl sm:rounded-[14px] text-[9px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === 'history' ? `bg-white dark:bg-slate-800 text-${theme.primaryColor} shadow-md` : 'text-slate-400'}`}
+                        >
+                            <span className="material-symbols-outlined text-base sm:text-lg">history</span>
+                            Histórico
+                        </button>
                     </div>
                 </div>
 
@@ -450,6 +522,87 @@ export const Observations: React.FC = () => {
                                     <span className="material-symbols-outlined text-sm">info</span>
                                     Salvamento automático ao perder o foco.
                                 </p>
+                            </div>
+                        </div>
+                    ) : activeTab === 'history' ? (
+                        <div className="max-w-4xl mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center justify-between px-2">
+                                <h3 className="font-black text-xl text-slate-800 dark:text-white flex items-center gap-3">
+                                    Histórico de Ocorrências
+                                    <span className="text-[10px] font-black text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">{occurrences.length} Registros</span>
+                                </h3>
+                                <div className="flex items-center gap-3">
+                                    {selectedOccIds.size > 0 && (
+                                        <button
+                                            onClick={handleBulkDelete}
+                                            className="px-4 py-2 bg-red-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/20 active:scale-95 transition-all flex items-center gap-2"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">delete</span>
+                                            Limpar {selectedOccIds.size}
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => toggleSelectAll(occurrences)}
+                                        className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 active:scale-95 transition-all"
+                                    >
+                                        {selectedOccIds.size === occurrences.length && occurrences.length > 0 ? 'Desmarcar' : 'Selecionar Tudo'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                {occurrences.length === 0 ? (
+                                    <div className="p-20 text-center flex flex-col items-center gap-4 bg-slate-50 dark:bg-slate-950/50 rounded-[32px] border-2 border-dashed border-slate-200 dark:border-slate-800">
+                                        <div className="size-20 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-slate-300 text-4xl">inventory_2</span>
+                                        </div>
+                                        <p className="text-sm font-bold text-slate-400 italic">Nenhuma ocorrência encontrada para esta disciplina.</p>
+                                    </div>
+                                ) : (
+                                    occurrences.map((occ, idx) => (
+                                        <div
+                                            key={occ.id}
+                                            onClick={() => toggleOccurrenceSelection(occ.id)}
+                                            className={`bg-white dark:bg-slate-900/50 p-6 rounded-3xl border shadow-sm hover:shadow-md transition-all flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300 cursor-pointer group/card ${selectedOccIds.has(occ.id) ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'}`}
+                                            style={{ animationDelay: `${idx * 30}ms` }}
+                                        >
+                                            <div className="flex justify-between items-start gap-4">
+                                                <div className="flex items-center gap-4 min-w-0">
+                                                    <div className={`size-10 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0 ${occ.type === 'Elogio' ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-500/20' : 'bg-gradient-to-br from-rose-500 to-rose-700 shadow-rose-500/20'}`}>
+                                                        <span className="material-symbols-outlined text-lg">{selectedOccIds.has(occ.id) ? 'check_circle' : getOccurrenceIcon(occ.type)}</span>
+                                                    </div>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="text-sm font-black text-slate-900 dark:text-white truncate">{(occ as any).student_name}</span>
+                                                        <span className={`text-[10px] font-black uppercase tracking-widest ${occ.type === 'Elogio' ? 'text-emerald-500' : 'text-rose-500'}`}>{occ.type}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col items-end shrink-0">
+                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                                                    <div className="flex items-center gap-1 mt-2">
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedStudentId(occ.studentId);
+                                                                handleEditOccurrence(occ);
+                                                            }}
+                                                            className="p-1.5 hover:bg-amber-500/10 hover:text-amber-600 rounded-lg transition-all"
+                                                            title="Editar"
+                                                        >
+                                                            <span className="material-symbols-outlined text-lg">edit</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteOccurrence(occ.id)}
+                                                            className="p-1.5 hover:bg-rose-500/10 hover:text-rose-600 rounded-lg transition-all"
+                                                            title="Excluir"
+                                                        >
+                                                            <span className="material-symbols-outlined text-lg">delete</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed italic pr-4">"{occ.description}"</p>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
                     ) : (
@@ -558,6 +711,23 @@ export const Observations: React.FC = () => {
                                         Linha do Tempo
                                         <span className="text-[10px] font-black text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">{studentOccurrences.length} Registros</span>
                                     </h3>
+                                    <div className="flex items-center gap-3">
+                                        {selectedOccIds.size > 0 && studentOccurrences.some(o => selectedOccIds.has(o.id)) && (
+                                            <button
+                                                onClick={handleBulkDelete}
+                                                className="px-4 py-2 bg-red-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/20 active:scale-95 transition-all flex items-center gap-2"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">delete</span>
+                                                Limpar Selecionados
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => toggleSelectAll(studentOccurrences)}
+                                            className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 active:scale-95 transition-all"
+                                        >
+                                            {studentOccurrences.length > 0 && studentOccurrences.every(o => selectedOccIds.has(o.id)) ? 'Desmarcar' : 'Selecionar Tudo'}
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="relative border-l-4 border-slate-100 dark:border-slate-800 ml-6 space-y-10 pb-12">
@@ -569,10 +739,21 @@ export const Observations: React.FC = () => {
                                             <p className="text-sm font-bold text-slate-400 italic">Nenhum evento registrado ainda.</p>
                                         </div>
                                     )}
-                                    {studentOccurrences.slice().reverse().map((occ, idx) => (
-                                        <div key={occ.id} className="relative pl-12 group/occ animate-in slide-in-from-left duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
-                                            <div className={`absolute -left-[14px] top-6 size-6 rounded-full border-4 border-white dark:border-slate-900 shadow-md transition-transform group-hover/occ:scale-125 z-10 ${occ.type === 'Elogio' ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
-                                            <div className="bg-white dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none hover:border-slate-200 dark:hover:border-slate-700 transition-all flex flex-col gap-3 group-hover/occ:translate-x-2">
+                                    {studentOccurrences.map((occ, idx) => (
+                                        <div
+                                            key={occ.id}
+                                            onClick={() => toggleOccurrenceSelection(occ.id)}
+                                            className={`relative pl-12 group/occ animate-in slide-in-from-left duration-500 cursor-pointer ${selectedOccIds.has(occ.id) ? 'opacity-100' : ''}`}
+                                            style={{ animationDelay: `${idx * 100}ms` }}
+                                        >
+                                            <div className={`absolute -left-[14px] top-6 size-6 rounded-full border-4 border-white dark:border-slate-900 shadow-md transition-all z-10 ${selectedOccIds.has(occ.id) ? 'bg-amber-500 scale-125' : (occ.type === 'Elogio' ? 'bg-emerald-500' : 'bg-rose-500')}`}>
+                                                {selectedOccIds.has(occ.id) ? (
+                                                    <span className="material-symbols-outlined text-[12px] text-white flex items-center justify-center h-full">check</span>
+                                                ) : (
+                                                    <span className="material-symbols-outlined text-[14px] text-white flex items-center justify-center h-full">{getOccurrenceIcon(occ.type)}</span>
+                                                )}
+                                            </div>
+                                            <div className={`bg-white dark:bg-slate-900/50 p-6 rounded-3xl border shadow-xl shadow-slate-200/40 dark:shadow-none hover:border-slate-200 dark:hover:border-slate-700 transition-all flex flex-col gap-3 group-hover/occ:translate-x-2 ${selectedOccIds.has(occ.id) ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-100 dark:border-slate-800'}`}>
                                                 <div className="flex justify-between items-center">
                                                     <span className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-xl border-2 ${occ.type === 'Elogio' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10' : 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-500/10'}`}>
                                                         {occ.type}

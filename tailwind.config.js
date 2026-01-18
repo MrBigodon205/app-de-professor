@@ -13,23 +13,25 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: "#137fec",
-                "primary-hover": "#0f6ac7",
-                "primary-dark": "#2563eb",
-                "background-light": "#f6f7f8",
-                "background-dark": "#101922",
+                primary: "#06b6d4", // Neon Cyan
+                "primary-hover": "#0891b2",
+                "primary-dark": "#0e7490",
+                secondary: "#8b5cf6", // Electric Violet
+                "background-light": "#f8fafc",
+                "background-dark": "#020617", // Deep Space (Slate 950+)
                 "surface-light": "#ffffff",
-                "surface-dark": "#1a2632",
-                "header-dark": "#111827",
-                "input-bg": "#f3f4f6",
-                "border-light": "#e7edf3",
-                "border-dark": "#2a3b4d",
-                "text-main": "#0d141b",
-                "text-secondary": "#4c739a",
+                "surface-dark": "#0f172a", // Slate 900
+                "header-dark": "#020617",
+                "input-bg": "#f1f5f9",
+                "border-light": "#e2e8f0",
+                "border-dark": "#1e293b",
+                "text-main": "#0f172a",
+                "text-secondary": "#64748b",
             },
             fontFamily: {
-                display: ["Lexend", "sans-serif"],
-                body: ["Noto Sans", "sans-serif"],
+                display: ["Outfit", "sans-serif"],
+                body: ["Outfit", "sans-serif"],
+                mono: ["Space Grotesk", "monospace"],
             },
             boxShadow: {
                 soft: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",

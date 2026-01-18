@@ -22,7 +22,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             <div className="flex items-center gap-5">
                 <div className="relative group">
                     {/* Pulsing glow background */}
-                    <div className={`absolute -inset-1 bg-gradient-to-r from-${theme.primaryColor} to-${theme.secondaryColor} rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 animate-pulse`}></div>
+                    <div
+                        className="absolute -inset-1 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 animate-pulse"
+                        style={{ background: `linear-gradient(to right, ${theme.primaryColorHex}, ${theme.secondaryColorHex})` }}
+                    ></div>
 
                     <div className="relative size-16 md:size-20 landscape:size-12 rounded-full border-4 border-white dark:border-slate-800 shadow-2xl overflow-hidden bg-white dark:bg-slate-900 group-hover:scale-105 transition-transform duration-500">
                         {currentUser?.photoUrl ? (
@@ -32,7 +35,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                 className="size-full object-cover"
                             />
                         ) : (
-                            <div className={`size-full flex items-center justify-center bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white font-bold text-2xl`}>
+                            <div
+                                className="size-full flex items-center justify-center text-white font-bold text-2xl"
+                                style={{ background: `linear-gradient(to bottom right, ${theme.primaryColorHex}, ${theme.secondaryColorHex})` }}
+                            >
                                 {currentUser?.name?.substring(0, 2).toUpperCase()}
                             </div>
                         )}
@@ -48,7 +54,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                     </div>
                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
                         <h1 className="text-2xl md:text-4xl landscape:text-xl font-black tracking-tight text-slate-900 dark:text-white">
-                            Seu Painel <span className={`text-transparent bg-clip-text bg-gradient-to-r from-${theme.primaryColor} to-${theme.secondaryColor}`}>
+                            Seu Painel <span
+                                className="text-transparent bg-clip-text"
+                                style={{ backgroundImage: `linear-gradient(to right, ${theme.primaryColorHex}, ${theme.secondaryColorHex})` }}
+                            >
                                 {isContextSelected ? contextName : 'Geral'}
                             </span>
                         </h1>

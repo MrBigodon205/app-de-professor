@@ -13,6 +13,19 @@ import { DashboardBanner } from '../components/DashboardBanner';
 import { ActivityHeatmap } from '../components/ActivityHeatmap';
 import { calculateUnitTotal } from '../utils/gradeCalculations';
 
+const getOccurrenceIcon = (type: string) => {
+  switch (type) {
+    case 'Elogio': return 'star';
+    case 'Indisciplina': return 'gavel';
+    case 'Atraso': return 'schedule';
+    case 'Não Fez Tarefa': return 'assignment_late';
+    case 'Falta de Material': return 'inventory_2';
+    case 'Uso de Celular': return 'smartphone';
+    case 'Alerta': return 'priority_high';
+    default: return 'warning';
+  }
+};
+
 // Create MotionLink for animated router links
 const MotionLink = motion.create(Link);
 
@@ -39,6 +52,8 @@ export const Dashboard: React.FC = () => {
   const [todaysPlan, setTodaysPlan] = useState<any | null>(null);
   const [upcomingActivities, setUpcomingActivities] = useState<Activity[]>([]);
   const [classPlans, setClassPlans] = useState<any[]>([]);
+
+  const totalSelected = 0; // Placeholder to avoid breaking other parts if any
 
   useEffect(() => {
     if (currentUser?.id) {
@@ -182,16 +197,18 @@ export const Dashboard: React.FC = () => {
     if (!currentUser) return;
     if (!silent) setLoadingOccurrences(true);
     try {
-      const today = new Date();
-      const fourMonthsAgo = new Date();
-      fourMonthsAgo.setDate(today.getDate() - 120);
-
+      const today = new Date().toLocaleDateString('sv-SE');
       let query = supabase.from('occurrences')
-        .select('*')
+        .select(`
+          *,
+          student:students (
+            name
+          )
+        `)
         .eq('user_id', currentUser.id)
         .eq('subject', activeSubject)
-        .gte('date', fourMonthsAgo.toLocaleDateString('sv-SE'))
-        .order('date', { ascending: false });
+        .eq('date', today)
+        .order('created_at', { ascending: false });
 
       if (selectedSeriesId) {
         const { data: sData } = await supabase.from('students').select('id').eq('series_id', selectedSeriesId).eq('user_id', currentUser.id);
@@ -224,9 +241,10 @@ export const Dashboard: React.FC = () => {
       // For the recent list, we take the top 5
       const recentData = (data || []).slice(0, 5);
 
-      setRecentOccurrences((recentData || []).map(o => ({
+      setRecentOccurrences((data || []).map(o => ({
         id: o.id.toString(),
         studentId: o.student_id.toString(),
+        student_name: (o.student as any)?.name || 'Estudante',
         date: o.date,
         type: o.type as any,
         description: o.description,
@@ -234,7 +252,7 @@ export const Dashboard: React.FC = () => {
         userId: o.user_id
       })));
 
-      setStats(prev => ({ ...prev, newObservations: (data || []).filter(o => o.date >= new Date().toLocaleDateString('sv-SE')).length }));
+      setStats(prev => ({ ...prev, newObservations: (data || []).length }));
     } catch (e) {
       console.error("Error fetching occurrences:", e);
     } finally {
@@ -288,11 +306,10 @@ export const Dashboard: React.FC = () => {
         subject: p.subject
       }));
 
-      setClassPlans(formatted.slice(0, 3));
-
-      // Precision finding: find the plan where today is between start and end
       const activePlan = formatted.find(p => today >= p.startDate && today <= p.endDate);
       setTodaysPlan(activePlan || null);
+      // Show up to 10 most recent plans
+      setClassPlans(formatted.slice(0, 10));
     } catch (e) {
       console.error("Error fetching plans:", e);
     } finally {
@@ -304,12 +321,14 @@ export const Dashboard: React.FC = () => {
     if (!currentUser) return;
     if (!silent) setLoadingActivities(true);
     try {
+      const today = new Date().toLocaleDateString('sv-SE');
       let query = supabase.from('activities')
         .select('*')
         .eq('user_id', currentUser.id)
         .eq('subject', activeSubject)
-        .gte('date', new Date().toLocaleDateString('sv-SE'))
-        .order('date', { ascending: true });
+        .or(`date.eq.${today},and(start_date.lte.${today},end_date.gte.${today})`)
+        .order('date', { ascending: false })
+        .order('created_at', { ascending: false });
 
       if (selectedSeriesId) {
         query = query.eq('series_id', selectedSeriesId);
@@ -327,7 +346,8 @@ export const Dashboard: React.FC = () => {
         else query = query.in('series_id', [-1]);
       }
 
-      const { data } = await query.limit(5);
+      // Show up to 50 items (effectively "all" for the dashboard widget)
+      const { data } = await query.limit(50);
 
       setUpcomingActivities((data || []).map(a => ({
         id: a.id.toString(),
@@ -342,13 +362,15 @@ export const Dashboard: React.FC = () => {
         files: a.files || [],
         completions: a.completions || [],
         userId: a.user_id
-      })).slice(0, 3));
+      })));
     } catch (e) {
       console.error("Error fetching activities:", e);
     } finally {
       if (!silent) setLoadingActivities(false);
     }
   }, [currentUser, selectedSeriesId, selectedSection, activeSubject]);
+
+
 
   const refreshAll = React.useCallback((silent = true) => {
     fetchCounts(silent);
@@ -441,138 +463,194 @@ export const Dashboard: React.FC = () => {
 
   return (
     <motion.div
-      className="h-full overflow-y-auto overflow-x-hidden fluid-p-m fluid-gap-m flex flex-col custom-scrollbar pb-32 lg:pb-12 landscape:fluid-p-s landscape:fluid-gap-s landscape:pb-10"
+      className="h-full overflow-y-auto overflow-x-hidden fluid-p-m fluid-gap-m flex flex-col custom-scrollbar pb-32 lg:pb-12 landscape:fluid-p-s landscape:fluid-gap-s landscape:pb-10 theme-transition relative"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      <motion.div variants={itemVariants} data-tour="dashboard-kpi">
+      {/* Dynamic Background Glyphs */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-5">
+        {theme.illustrations && theme.illustrations.map((icon, i) => (
+          <span
+            key={i}
+            className="material-symbols-outlined absolute text-[20vw]"
+            style={{
+              color: theme.primaryColorHex || 'var(--theme-primary)',
+              top: `${Math.random() * 80}%`,
+              left: `${Math.random() * 80}%`,
+              transform: `rotate(${Math.random() * 45 - 22.5}deg)`,
+              opacity: 0.3
+            }}
+          >
+            {icon}
+          </span>
+        ))}
+      </div>
+
+      <motion.div variants={itemVariants} className="relative z-10" data-tour="dashboard-kpi">
         <DashboardHeader
           currentUser={currentUser}
           theme={theme}
-          loading={loadingCounts} // Use counts loading for header spinner if needed, or false
+          loading={loadingCounts}
           isContextSelected={isContextSelected}
           contextName={contextName}
         />
       </motion.div>
 
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} className="relative z-10">
         <DashboardBanner theme={theme} currentUser={currentUser} />
       </motion.div>
 
-      {/* PLAN OF THE DAY - Compact and Complete Visibility */}
-      <motion.div variants={itemVariants} className="h-auto">
+      {/* PLAN OF THE DAY - Holographic Glass Design */}
+      <motion.div variants={itemVariants} className="h-auto relative z-10">
         {
           loadingPlans ? (
-            <div className="h-[140px] rounded-3xl bg-slate-100 dark:bg-slate-800 animate-pulse"></div>
+            <div className="h-[200px] rounded-[2rem] bg-white/5 animate-pulse border border-white/5"></div>
           ) : todaysPlan ? (
-            <div className={`relative h-auto bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl p-6 lg:p-8 landscape:p-5 text-white shadow-xl shadow-blue-500/20 overflow-hidden flex flex-col group`}>
-              {/* Decorative background elements - Smaller and more subtle */}
-              <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-105 transition-transform duration-1000">
-                <span className="material-symbols-outlined text-[150px] lg:text-[200px] landscape:text-[100px]">calendar_month</span>
+            <div
+              className={`relative h-auto min-h-[220px] rounded-[2.5rem] p-8 landscape:p-6 overflow-hidden flex flex-col group transition-all duration-500 hover:shadow-lg`}
+              style={{ boxShadow: `0 0 20px -5px ${theme.primaryColorHex}40` }}
+            >
+              {/* Dynamic Background */}
+              <div
+                className="absolute inset-0 z-0 transition-all duration-1000"
+                style={{ background: `linear-gradient(135deg, ${theme.primaryColorHex}E6, ${theme.secondaryColorHex}E6, ${theme.primaryColorHex}F2)` }}
+              ></div>
+
+              {/* Pulse Orbs */}
+              <div className="absolute top-0 right-0 p-32 rounded-full blur-[100px] -mr-20 -mt-20 mix-blend-screen pointer-events-none animate-pulse-slow" style={{ backgroundColor: `${theme.accentColor}33` }}></div>
+              <div className="absolute bottom-0 left-0 p-32 rounded-full blur-[100px] -ml-20 -mb-20 mix-blend-screen pointer-events-none" style={{ backgroundColor: `${theme.secondaryColorHex}33` }}></div>
+
+              {/* Decorative Theme Watermark */}
+              <div className="absolute top-6 right-6 z-10 opacity-10">
+                <span className="material-symbols-outlined text-8xl font-thin text-white">{theme.icon}</span>
               </div>
 
-              <div className="relative z-10 w-full">
-                <div className="flex flex-wrap items-center gap-2 mb-3">
-                  <div className="flex items-center gap-2 text-blue-100/90 font-black uppercase text-[9px] sm:text-[10px] tracking-widest bg-white/10 w-fit px-3 py-1.5 rounded-lg border border-white/5">
-                    <span className="size-1.5 bg-blue-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.8)]"></span>
-                    Aula de Hoje
-                    <span className="opacity-30">•</span>
-                    <span>{new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}</span>
+              <div className="relative z-10 w-full flex flex-col gap-6">
+                {/* Header Badge */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/20 border border-white/10 backdrop-blur-md shadow-inner">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-white"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                    </span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/90">Aula de Hoje</span>
                   </div>
-                  {todaysPlan && (
-                    <div className="flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded text-[9px] font-bold text-blue-200 uppercase tracking-tighter border border-white/10">
-                      <span className="material-symbols-outlined text-xs">school</span>
-                      {classes.find(c => c.id === todaysPlan.seriesId)?.name || 'Série Geral'} {todaysPlan.section ? `- Turma ${todaysPlan.section}` : ''}
-                    </div>
-                  )}
+                  <span className="text-xs font-bold text-white/60 font-mono">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                 </div>
 
-                <h2 className="text-xl md:text-2xl lg:text-3xl font-black mb-3 tracking-tight leading-tight drop-shadow-sm max-w-4xl">
-                  {todaysPlan.title}
-                </h2>
+                <div className="flex flex-col gap-2">
+                  {todaysPlan && (
+                    <span className="text-xs font-bold text-white/80 uppercase tracking-wider flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm">school</span>
+                      {classes.find(c => c.id === todaysPlan.seriesId)?.name || 'Série Geral'} {todaysPlan.section ? `• Turma ${todaysPlan.section}` : ''}
+                    </span>
+                  )}
+                  <h2 className="text-3xl md:text-4xl font-display font-black text-white tracking-tight leading-none drop-shadow-lg">
+                    {todaysPlan.title}
+                  </h2>
+                </div>
 
-                <div className="flex flex-col gap-4">
-                  <div className="max-w-4xl">
-                    <p className="text-blue-50/90 text-xs md:text-sm lg:text-base font-medium leading-relaxed italic opacity-95 group-hover:opacity-100 transition-opacity border-l-2 border-white/20 pl-4">
+                <div className="flex flex-col gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Roteiro do Planejamento</span>
+                  <div className="max-w-3xl bg-black/20 backdrop-blur-md border border-white/20 p-4 rounded-xl">
+                    <p className="text-white text-sm md:text-base font-medium leading-relaxed font-body line-clamp-2 mix-blend-plus-lighter">
                       "{todaysPlan.description.replace(/<[^>]*>/g, '')}"
                     </p>
                   </div>
+                </div>
 
-                  <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-white/10 mt-1">
-                    <div className="flex flex-wrap items-center gap-4 shrink-0">
-                      <Link
-                        to="/planning"
-                        className="group/btn relative px-4 py-2 bg-white text-blue-700 rounded-lg font-black uppercase tracking-widest text-[9px] flex items-center gap-2 shadow-sm hover:shadow-white/10 hover:-translate-y-0.5 transition-all active:scale-95"
-                      >
-                        <span>Ver Planejamento</span>
-                        <span className="material-symbols-outlined text-base group-hover/btn:translate-x-0.5 transition-transform">arrow_forward</span>
-                      </Link>
+                <div className="flex flex-wrap items-center gap-4 mt-auto">
+                  <Link
+                    to="/planning"
+                    className="group relative px-6 py-3 bg-white text-slate-900 rounded-xl font-bold uppercase tracking-wider text-xs flex items-center gap-2 shadow-lg hover:-translate-y-1 transition-all active:scale-95 overflow-hidden"
+                  >
+                    <span className="relative z-10">Acessar Planejamento</span>
+                    <span className="material-symbols-outlined text-lg relative z-10 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                  </Link>
 
-                      <div className="flex flex-col xl:flex-row items-start xl:items-center gap-3 xl:gap-8 text-[9px] md:text-xs lg:text-sm font-bold text-blue-100/70">
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-base md:text-lg lg:text-xl opacity-60">calendar_today</span>
-                          <div className="flex flex-col md:flex-row md:items-center md:gap-2">
-                            <span className="opacity-50 uppercase tracking-tighter">Início da aplicação:</span>
-                            <span className="text-white">{new Date(todaysPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-base md:text-lg lg:text-xl opacity-60">event_available</span>
-                          <div className="flex flex-col md:flex-row md:items-center md:gap-2">
-                            <span className="opacity-50 uppercase tracking-tighter">Fim da aplicação:</span>
-                            <span className="text-white">{new Date(todaysPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
-                          </div>
-                        </div>
-                      </div>
+                  <div className="flex items-center gap-6 px-6 py-3 rounded-xl bg-black/20 border border-white/10 text-xs text-white/80 font-mono">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-lg">schedule</span>
+                      <span>Início: <span className="text-white font-bold">{new Date(todaysPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span></span>
                     </div>
-
-                    <div className="hidden sm:flex items-center gap-2">
-                      <span className="text-[9px] font-bold text-blue-200/40 uppercase tracking-widest leading-none">Status: Ativo</span>
+                    <div className="w-px h-4 bg-white/20"></div>
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-lg">event</span>
+                      <span>Fim: <span className="text-white font-bold">{new Date(todaysPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span></span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="h-[140px] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-400 group hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-500">
-              <span className="material-symbols-outlined text-3xl opacity-30 mb-2">event_busy</span>
-              <h3 className="text-xs font-black uppercase tracking-widest opacity-60">Sem planejamento ativo</h3>
+            <div
+              className="h-[200px] flex flex-col items-center justify-center bg-white/5 dark:bg-slate-900/40 rounded-[2.5rem] border border-dashed border-slate-300 dark:border-slate-800/50 text-slate-400 group hover:border-[var(--theme-primary)] transition-all duration-500 relative overflow-hidden"
+              style={{ borderColor: `${theme.primaryColorHex}30` }}
+            >
+              <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ background: `linear-gradient(to bottom right, ${theme.primaryColorHex}10, transparent)` }}
+              ></div>
+              <span className="material-symbols-outlined text-5xl opacity-20 mb-3 group-hover:scale-110 transition-all text-[var(--theme-primary)]">event_busy</span>
+              <h3 className="text-sm font-black uppercase tracking-widest opacity-60">Sem planejamento hoje</h3>
+              <p className="text-xs opacity-40 mt-1">Aproveite para organizar suas próximas aulas</p>
             </div>
           )
         }
       </motion.div>
 
-      {/* Main KPI Grid - Bento Style */}
-      <div className="grid grid-cols-1 landscape:grid-cols-2 md:grid-cols-2 xl:grid-cols-4 fluid-gap-s landscape:fluid-gap-xs">
+      {/* Main KPI Grid - Cyber-Glass Bento */}
+      <div className="grid grid-cols-1 landscape:grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-6 relative z-10">
 
         {/* Total Students (Large Card) */}
-        <motion.div variants={itemVariants} className="col-span-1 landscape:col-span-2 md:col-span-2 xl:col-span-2 glass-card-premium p-6 sm:p-8 relative overflow-hidden group transition-all duration-500 flex flex-col justify-between h-auto min-h-[380px] md:min-h-[240px] landscape:min-h-[200px]">
-          <div className="absolute top-0 right-0 p-40 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700"></div>
+        <motion.div variants={itemVariants} className="col-span-1 landscape:col-span-2 md:col-span-2 xl:col-span-2 glass-card-premium p-8 relative overflow-hidden group transition-all duration-500 flex flex-col justify-between h-auto min-h-[380px] md:min-h-[260px] border-white/20">
+          {/* Ambient Glows */}
+          <div
+            className="absolute -top-20 -right-20 p-40 rounded-full blur-[80px] opacity-10 group-hover:opacity-20 transition-opacity duration-700"
+            style={{ backgroundColor: theme.primaryColorHex }}
+          ></div>
+          <div
+            className="absolute -bottom-20 -left-20 p-40 rounded-full blur-[80px] opacity-10 group-hover:opacity-20 transition-opacity duration-700"
+            style={{ backgroundColor: theme.secondaryColorHex }}
+          ></div>
 
-          <div className="relative flex flex-col md:flex-row items-start justify-between h-auto md:h-full gap-6 md:gap-0 landscape:flex-row landscape:gap-4">
-            <div className="flex flex-col justify-between h-full w-full md:w-auto landscape:w-auto">
-              <div className={`size-16 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/25 group-hover:rotate-6 transition-transform duration-300 landscape:size-12`}>
-                <span className="material-symbols-outlined text-3xl landscape:text-xl">groups</span>
+          <div className="relative flex flex-col md:flex-row items-start justify-between h-full gap-6 md:gap-0">
+            <div className="flex flex-col justify-between h-full">
+              <div
+                className="size-16 rounded-2xl bg-black/5 dark:bg-slate-900/50 border border-white/10 flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-500"
+                style={{ color: theme.primaryColorHex, boxShadow: `0 10px 30px -10px ${theme.primaryColorHex}40` }}
+              >
+                <span className="material-symbols-outlined text-3xl">groups</span>
               </div>
-              <div className="mt-4 landscape:mt-2">
+              <div>
                 {loadingCounts ? (
-                  <div className="h-[60px] w-24 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse"></div>
+                  <div className="h-16 w-32 bg-slate-800/10 rounded-2xl animate-pulse"></div>
                 ) : (
-                  <span className="block text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none landscape:text-4xl">{displayCount}</span>
+                  <span className="block text-6xl lg:text-7xl font-display font-black text-transparent bg-clip-text bg-gradient-to-b from-slate-900 to-slate-500 dark:from-white dark:to-white/50 tracking-tighter leading-none shadow-xl drop-shadow-sm">{displayCount}</span>
                 )}
-                <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 mt-1">Alunos Matriculados</h2>
+                <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-2">{isContextSelected ? 'Alunos na Turma' : 'Total de Alunos'}</h2>
               </div>
             </div>
 
-            <div className="flex-1 w-full md:w-auto flex flex-col items-start md:items-end pt-2 h-full justify-between landscape:items-end">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/10 mb-6 max-w-full whitespace-nowrap overflow-hidden text-ellipsis landscape:mb-1">
-                <span className="size-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                Atividade Recente
+            <div className="flex-1 w-full md:w-auto flex flex-col items-end h-full justify-between">
+              <span
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border mb-6 backdrop-blur-sm"
+                style={{
+                  color: theme.primaryColorHex,
+                  backgroundColor: `${theme.primaryColorHex}15`,
+                  borderColor: `${theme.primaryColorHex}30`
+                }}
+              >
+                <span className="size-1.5 rounded-full animate-pulse shadow-[0_0_10px_currentColor]" style={{ backgroundColor: theme.primaryColorHex }}></span>
+                Fluxo de Atividade
               </span>
 
               {/* GITHUB HEATMAP INTEGRATION */}
-              <div className="w-full max-w-full md:max-w-[280px] landscape:max-w-[200px]">
+              <div
+                className="w-full lg:w-max max-w-full glass-card-soft p-3 rounded-2xl bg-black/5 dark:bg-black/20 border border-white/5"
+                style={{ borderColor: `${theme.primaryColorHex}20` }}
+              >
                 <ActivityHeatmap data={activityPoints} loading={loadingOccurrences} />
               </div>
             </div>
@@ -580,137 +658,235 @@ export const Dashboard: React.FC = () => {
         </motion.div>
 
         {/* Grades (Small Card) */}
-        <MotionLink variants={itemVariants} to="/grades" className="card p-6 hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[160px] md:min-h-[180px]">
-          <div className="flex justify-between items-start">
-            <div className={`size-12 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+        {/* Grades (Small Card) */}
+        <MotionLink
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          to="/grades"
+          className="glass-card-soft p-6 hover:bg-white/10 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px] border border-white/10 hover:shadow-lg"
+          style={{
+            '--hover-border': theme.primaryColorHex,
+          } as React.CSSProperties}
+        >
+          <div className="flex justify-between items-start relative z-10">
+            <div
+              className="size-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+              style={{
+                backgroundColor: `${theme.secondaryColorHex}15`,
+                color: theme.secondaryColorHex,
+                border: `1px solid ${theme.secondaryColorHex}30`
+              }}
+            >
               <span className="material-symbols-outlined text-2xl">grade</span>
             </div>
-            <span className="material-symbols-outlined text-slate-300">arrow_outward</span>
+            <span className="material-symbols-outlined text-slate-400 group-hover:text-white transition-colors">arrow_outward</span>
           </div>
-          <div>
-            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Média da Turma</h3>
+          <div className="relative z-10">
+            <h3 className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-1">Média Geral</h3>
             {loadingStats ? (
-              <div className="h-9 w-24 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mt-1"></div>
+              <div className="h-10 w-24 bg-slate-800/10 rounded-lg animate-pulse"></div>
             ) : (
-              <div className="flex items-baseline gap-1 mt-1">
-                <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.gradeAverage.toFixed(1)}</span>
-                <span className="text-xs font-bold text-slate-400">/ 10</span>
+              <div className="flex items-baseline gap-2">
+                <span
+                  className={`text-4xl font-display font-black tracking-tight`}
+                  style={{ color: stats.gradeAverage >= 6 ? theme.primaryColorHex : '#fb7185' }}
+                >
+                  {stats.gradeAverage.toFixed(1)}
+                </span>
+                <span className="text-xs font-bold text-slate-500">/ 10</span>
               </div>
             )}
           </div>
+          {/* Bg decoration */}
+          <div className="absolute -bottom-10 -right-10 size-32 rounded-full blur-[40px] opacity-10 group-hover:opacity-20 transition-colors" style={{ backgroundColor: theme.secondaryColorHex }}></div>
         </MotionLink>
 
         {/* Attendance (Small Card) */}
-        <MotionLink variants={itemVariants} to="/attendance" className="card p-6 hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[160px] md:min-h-[180px]">
-          <div className="flex justify-between items-start">
-            <div className="size-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+        <MotionLink
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          to="/attendance"
+          className="glass-card-soft p-6 hover:bg-white/10 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px] border border-white/10 hover:shadow-lg"
+        >
+          <div className="flex justify-between items-start relative z-10">
+            <div
+              className="size-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+              style={{
+                backgroundColor: `${theme.accentColor}20`,
+                color: theme.baseColor === 'emerald' ? '#10b981' : theme.primaryColorHex,
+                border: `1px solid ${theme.primaryColorHex}30`
+              }}
+            >
               <span className="material-symbols-outlined text-2xl">event_available</span>
             </div>
-            <span className="material-symbols-outlined text-slate-300">arrow_outward</span>
+            <span className="material-symbols-outlined text-slate-400 group-hover:text-white transition-colors">arrow_outward</span>
           </div>
-          <div>
-            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Presença Hoje</h3>
+          <div className="relative z-10">
+            <h3 className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-1">Presença Hoje</h3>
             {loadingStats ? (
-              <div className="h-9 w-24 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mt-1"></div>
+              <div className="h-10 w-24 bg-slate-800/10 rounded-lg animate-pulse"></div>
             ) : (
-              <div className="flex items-baseline gap-1 mt-1">
-                <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.presentToday}</span>
-                <span className="text-xs font-bold text-slate-400">/ {displayCount}</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-display font-black text-slate-900 dark:text-white tracking-tight">{stats.presentToday}</span>
+                <span className="text-xs font-bold text-slate-500">/ {displayCount}</span>
               </div>
             )}
           </div>
+          {/* Bg decoration */}
+          <div className="absolute -bottom-10 -right-10 size-32 rounded-full blur-[40px] opacity-10 group-hover:opacity-20 transition-colors" style={{ backgroundColor: theme.primaryColorHex }}></div>
         </MotionLink>
 
-        {/* Removed Independent Observations Card */}
-
         {/* Activities and Plans (Wide Card) */}
-        <motion.div variants={itemVariants} className="col-span-1 xl:col-span-2 card p-6 sm:p-8 flex flex-col h-full" data-tour="dashboard-activities">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
-              <span className={`material-symbols-outlined text-${theme.primaryColor}`}>assignment_turned_in</span>
-              Atividades e Planejamento
+        <motion.div variants={itemVariants} className="col-span-1 xl:col-span-2 glass-card-soft p-8 flex flex-col h-full border border-white/10" data-tour="dashboard-activities">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white flex items-center gap-3">
+              <span className="material-symbols-outlined" style={{ color: theme.primaryColorHex }}>assignment_turned_in</span>
+              Atividades & Agenda
             </h3>
+            <div className="flex gap-2">
+            </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-8">
+            {/* Upcoming Activities */}
             <div>
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Atividades Avaliativas</h4>
-              <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-px flex-1 bg-gradient-to-r to-transparent" style={{ from: `${theme.primaryColorHex}80`, backgroundImage: `linear-gradient(to right, ${theme.primaryColorHex}80, transparent)` }}></div>
+                <h4 className="text-[10px] font-black uppercase tracking-widest" style={{ color: theme.primaryColorHex }}>Atividades do Dia</h4>
+              </div>
+              <div className="space-y-3">
                 {loadingActivities ? (
-                  [1, 2].map(i => <div key={i} className="h-12 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>)
+                  [1, 2].map(i => <div key={i} className="h-14 bg-slate-800/10 rounded-xl animate-pulse"></div>)
                 ) : upcomingActivities.length === 0 ? (
-                  <p className="text-sm text-slate-400 italic">Nenhuma atividade recente.</p>
+                  <p className="text-sm text-slate-500 italic text-center py-4 bg-white/5 rounded-xl border border-dashed border-white/5">Nenhuma atividade agendada.</p>
                 ) : (
                   upcomingActivities.map(act => (
-                    <div key={act.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all duration-300 group cursor-default">
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        <span className="material-symbols-outlined text-emerald-500 group-hover:scale-110 transition-transform duration-300 shrink-0">task_alt</span>
-                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{act.title}</span>
+                    <Link
+                      key={act.id}
+                      to="/activities"
+                      className="flex items-center justify-between p-4 bg-black/5 dark:bg-black/20 hover:bg-white/5 rounded-2xl border border-white/5 transition-all duration-300 group cursor-pointer backdrop-blur-sm"
+                      style={{ borderColor: 'rgba(255,255,255,0.05)' }}
+                    >
+                      <div className="flex items-center gap-4 overflow-hidden">
+                        <div
+                          className="size-10 rounded-xl flex items-center justify-center border transition-all"
+                          style={{
+                            backgroundColor: `${theme.primaryColorHex}15`,
+                            color: theme.primaryColorHex,
+                            borderColor: `${theme.primaryColorHex}20`
+                          }}
+                        >
+                          <span className="material-symbols-outlined">task_alt</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white truncate transition-colors">{act.title}</span>
+                          <span className="text-[10px] font-mono text-slate-500 uppercase">{act.seriesId === '-1' ? 'Todas as Turmas' : 'Série Específica'}</span>
+                        </div>
                       </div>
-                      <span className="text-xs text-slate-400 group-hover:text-slate-500 transition-colors shrink-0 ml-2">{new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
-                    </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0 ml-4">
+                        <span className="text-xs font-bold text-slate-400 bg-white/5 px-2 py-1.5 rounded-lg border border-white/5 w-28 text-center block">
+                          {act.type === 'Conteúdo' && act.startDate && act.endDate
+                            ? `${new Date(act.startDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} - ${new Date(act.endDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`
+                            : new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </Link>
                   ))
                 )}
               </div>
             </div>
 
+            {/* Recent Plans */}
             <div>
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Últimos Planejamentos</h4>
-              <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-px flex-1 bg-gradient-to-r to-transparent" style={{ backgroundImage: `linear-gradient(to right, ${theme.secondaryColorHex}80, transparent)` }}></div>
+                <h4 className="text-[10px] font-black uppercase tracking-widest" style={{ color: theme.secondaryColorHex }}>Planejamentos</h4>
+              </div>
+              <div className="space-y-3">
                 {loadingPlans ? (
-                  [1, 2].map(i => <div key={i} className="h-12 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"></div>)
+                  [1, 2].map(i => <div key={i} className="h-14 bg-slate-800/10 rounded-xl animate-pulse"></div>)
                 ) : classPlans.length === 0 ? (
-                  <p className="text-sm text-slate-400 italic">Nenhum planejamento recente.</p>
+                  <p className="text-sm text-slate-500 italic text-center py-4 bg-white/5 rounded-xl border border-dashed border-white/5">Nenhum planejamento recente.</p>
                 ) : (
                   classPlans.map(plan => (
-                    <div key={plan.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all duration-300 group cursor-default">
-                      <div className="flex items-center gap-3">
-                        <span className={`material-symbols-outlined text-${theme.primaryColor} group-hover:rotate-6 transition-transform duration-300`}>calendar_today</span>
-                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{plan.title}</span>
+                    <Link
+                      key={plan.id}
+                      to="/planning"
+                      className="flex items-center justify-between p-4 bg-black/5 dark:bg-black/20 hover:bg-white/5 rounded-2xl border border-white/5 transition-all duration-300 group cursor-pointer backdrop-blur-sm"
+                    >
+                      <div className="flex items-center gap-4 overflow-hidden">
+                        <div
+                          className="size-10 rounded-xl flex items-center justify-center border transition-all"
+                          style={{
+                            backgroundColor: `${theme.secondaryColorHex}15`,
+                            color: theme.secondaryColorHex,
+                            borderColor: `${theme.secondaryColorHex}20`
+                          }}
+                        >
+                          <span className="material-symbols-outlined">calendar_today</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white truncate transition-colors">{plan.title}</span>
+                        </div>
                       </div>
-                      <span className="text-[10px] text-slate-400 uppercase group-hover:text-slate-500 transition-colors">{new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
-                    </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0 ml-4">
+                        <span className="text-xs font-bold text-slate-400 bg-white/5 px-2 py-1.5 rounded-lg border border-white/5 w-28 text-center block">{new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                      </div>
+                    </Link>
                   ))
                 )}
+
               </div>
             </div>
           </div>
         </motion.div>
 
         {/* Recent Ocurrences (Wide Card) */}
-        <motion.div variants={itemVariants} className="col-span-1 xl:col-span-2 card p-6 sm:p-8 flex flex-col h-full" data-tour="dashboard-occurrences">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
-              <span className="material-symbols-outlined text-slate-400">history</span>
-              Ocorrências Recentes
+        <motion.div variants={itemVariants} className="col-span-1 xl:col-span-2 glass-card-soft p-8 flex flex-col h-full border border-white/10" data-tour="dashboard-occurrences">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="material-symbols-outlined text-amber-500">history</span>
+              Ocorrências
               {stats.newObservations > 0 && (
-                <span className="bg-amber-100 text-amber-600 text-[10px] px-2 py-0.5 rounded-full border border-amber-200 font-bold uppercase tracking-wide">
-                  {stats.newObservations} Novas
+                <span className="bg-amber-500/20 text-amber-500 text-[9px] px-2 py-0.5 rounded-full border border-amber-500/30 font-black uppercase tracking-wide ml-2">
+                  +{stats.newObservations} Novas
                 </span>
               )}
             </h3>
-            <Link to="/observations" className={`text-${theme.primaryColor} font-bold text-sm hover:underline`}>Ver Todas</Link>
+            <Link
+              to="/observations"
+              className={`text-xs font-bold uppercase tracking-wider hover:underline flex items-center gap-1`}
+              style={{ color: theme.primaryColorHex }}
+            >
+              Ver Todas
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </Link>
           </div>
 
           <div className="space-y-3">
             {loadingOccurrences ? (
-              [1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-100 dark:bg-slate-800 rounded-2xl animate-pulse"></div>)
+              [1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-800/10 rounded-2xl animate-pulse"></div>)
             ) : recentOccurrences.length === 0 ? (
-              <div className="p-8 text-center bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                <p className="text-slate-400 font-medium">Nenhuma ocorrência registrada.</p>
+              <div className="p-8 text-center bg-black/5 dark:bg-black/20 rounded-2xl border border-dashed border-white/10">
+                <span className="material-symbols-outlined text-3xl text-slate-400 mb-2">check_circle</span>
+                <p className="text-slate-500 font-medium text-sm">Nenhuma ocorrência registrada.</p>
               </div>
             ) : (
               recentOccurrences.map(occ => (
-                <div key={occ.id} className="flex items-center gap-4 p-4 bg-slate-50 hover:bg-white dark:bg-slate-900/50 dark:hover:bg-slate-800/80 rounded-2xl transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-700 hover:shadow-sm group">
-                  <div className={`size-10 rounded-xl flex items-center justify-center text-white shadow-sm ${occ.type === 'Elogio' ? 'bg-gradient-to-br from-green-400 to-emerald-600' : 'bg-gradient-to-br from-red-400 to-rose-600'}`}>
-                    <span className="material-symbols-outlined text-lg">{occ.type === 'Elogio' ? 'thumb_up' : 'warning'}</span>
+                <div key={occ.id} className="flex items-center gap-4 p-4 bg-black/5 dark:bg-black/20 hover:bg-white/5 rounded-2xl transition-all border border-transparent border-white/5 hover:border-white/10 hover:shadow-lg group">
+                  <div className={`size-10 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0 ${occ.type === 'Elogio' ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-500/20' : 'bg-gradient-to-br from-rose-500 to-rose-700 shadow-rose-500/20'}`}>
+                    <span className="material-symbols-outlined text-lg">{getOccurrenceIcon(occ.type)}</span>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-bold text-slate-900 dark:text-white">{occ.type}</p>
-                      <span className="text-[10px] font-bold text-slate-400 bg-white dark:bg-slate-900 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-800">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <p className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                        {(occ as any).student_name} • {occ.type}
+                      </p>
+                      <span className="text-[10px] font-mono font-bold text-slate-500 bg-black/10 dark:bg-black/30 px-2 py-0.5 rounded border border-white/5">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                     </div>
-                    <p className="text-sm text-slate-500 line-clamp-1">{occ.description}</p>
+                    <p className="text-xs text-slate-400 line-clamp-1 group-hover:text-slate-500 transition-colors font-medium">"{occ.description}"</p>
                   </div>
                 </div>
               ))

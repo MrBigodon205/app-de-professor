@@ -16,9 +16,10 @@ const InstructionSection: React.FC<SectionProps> = ({ id, title, icon, isOpen, o
 
     return (
         <motion.div
+            id={id}
             initial={false}
             className={`group card overflow-hidden border transition-all duration-300 ${isOpen
-                ? `border-${theme.primaryColor}/30 bg-white dark:bg-slate-800 shadow-lg shadow-${theme.primaryColor}/5`
+                ? `border-${theme.primaryColor}/30 bg-white dark:bg-slate-800 shadow-xl shadow-${theme.primaryColor}/5`
                 : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600'
                 } rounded-3xl`}
         >
@@ -48,12 +49,12 @@ const InstructionSection: React.FC<SectionProps> = ({ id, title, icon, isOpen, o
                     </div>
                 </div>
                 <div className={`
-           size-10 rounded-full flex items-center justify-center border transition-all duration-300
-           ${isOpen
+            size-10 rounded-full flex items-center justify-center border transition-all duration-300
+            ${isOpen
                         ? `bg-${theme.primaryColor}/10 border-${theme.primaryColor}/20 text-${theme.primaryColor} rotate-180`
                         : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-400'
                     }
-         `}>
+          `}>
                     <span className="material-symbols-outlined font-bold">expand_more</span>
                 </div>
             </button>
@@ -66,7 +67,7 @@ const InstructionSection: React.FC<SectionProps> = ({ id, title, icon, isOpen, o
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                     >
-                        <div className="px-6 pb-6 sm:px-8 sm:pb-8 pt-0 text-slate-600 dark:text-slate-300 space-y-6 leading-relaxed border-t border-slate-100 dark:border-slate-700/50 mt-2 pt-6">
+                        <div className="px-6 pb-8 sm:px-8 sm:pb-10 pt-0 text-slate-600 dark:text-slate-300 space-y-6 leading-relaxed border-t border-slate-100 dark:border-slate-700/50 mt-2 pt-8">
                             {children}
                         </div>
                     </motion.div>
@@ -82,32 +83,15 @@ export const Instructions: React.FC = () => {
 
     const toggleSection = (id: string) => {
         setOpenSection(active => active === id ? null : id);
-    };
-
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: { staggerChildren: 0.1 }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: {
-                type: 'spring',
-                stiffness: 70,
-                damping: 15
-            }
+        const element = document.getElementById(id);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     };
 
     const Step = ({ number, title, text }: { number: number, title: string, text: React.ReactNode }) => (
-        <div className="flex gap-4">
-            <div className={`mt-1 size-6 rounded-full bg-${theme.primaryColor}/10 text-${theme.primaryColor} text-xs font-black flex items-center justify-center shrink-0 border border-${theme.primaryColor}/20 shadow-sm`}>
+        <div className="flex gap-4 group/step">
+            <div className={`mt-1 size-7 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} text-xs font-black flex items-center justify-center shrink-0 border border-${theme.primaryColor}/20 shadow-sm group-hover/step:scale-110 transition-transform`}>
                 {number}
             </div>
             <div>
@@ -117,6 +101,20 @@ export const Instructions: React.FC = () => {
                 </div>
             </div>
         </div>
+    );
+
+    const QuickAction = ({ icon, label, target }: { icon: string, label: string, target: string }) => (
+        <button
+            onClick={() => toggleSection(target)}
+            className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all active:scale-95 group"
+        >
+            <div className={`size-12 rounded-xl bg-${theme.primaryColor}/5 text-${theme.primaryColor} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                <span className="material-symbols-outlined text-2xl">{icon}</span>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                {label}
+            </span>
+        </button>
     );
 
     return (
@@ -129,411 +127,364 @@ export const Instructions: React.FC = () => {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
                         className="flex flex-col items-center text-center max-w-2xl mx-auto gap-6 bg-white/50 dark:bg-slate-900/50 p-8 rounded-[2.5rem] backdrop-blur-sm border border-white/50 dark:border-white/5 shadow-xl"
                     >
-                        <div className={`p-4 rounded-3xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white shadow-xl shadow-${theme.primaryColor}/20 mb-2 rotate-3 hover:rotate-6 transition-transform duration-300`}>
-                            <span className="material-symbols-outlined text-5xl">menu_book</span>
+                        <div className={`p-4 rounded-3xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white shadow-xl shadow-${theme.primaryColor}/20 mb-2 rotate-3`}>
+                            <span className="material-symbols-outlined text-5xl">auto_stories</span>
                         </div>
 
                         <div>
                             <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight mb-2">
-                                Manual do Professor
+                                Guia Interativo
                             </h1>
                             <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 font-medium">
-                                Guia completo e detalhado de todas as funcionalidades.
+                                Domine as funcionalidades do Prof. Acerta+
                             </p>
                         </div>
                     </motion.div>
                 </div>
             </div>
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 -mt-8 relative z-20">
-                <motion.div
-                    initial="hidden"
-                    animate="visible"
-                    variants={containerVariants}
-                    className="flex flex-col gap-4"
-                >
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-20">
+                {/* Fast Navigation */}
+                <div className="-mt-8 mb-12 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <QuickAction icon="school" label="Turmas" target="classes" />
+                    <QuickAction icon="groups" label="Alunos" target="students" />
+                    <QuickAction icon="dashboard" label="Agenda" target="dashboard" />
+                    <QuickAction icon="history_edu" label="Histórico" target="observations" />
+                </div>
+
+                <div className="flex flex-col gap-6">
 
                     {/* 1. GESTÃO DE TURMAS */}
-                    <motion.div variants={itemVariants}>
-                        <InstructionSection
-                            id="classes"
-                            title="Gestão de Turmas e Séries"
-                            icon="school"
-                            isOpen={openSection === 'classes'}
-                            onToggle={() => toggleSection('classes')}
-                        >
-                            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-800/30 mb-6">
-                                <p className="text-xs font-bold text-amber-700 dark:text-amber-300 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-lg">info</span>
-                                    Importante: Comece por aqui! Sem turmas criadas, você não consegue adicionar alunos.
-                                </p>
-                            </div>
+                    <InstructionSection
+                        id="classes"
+                        title="Gestão de Turmas e Séries"
+                        icon="school"
+                        isOpen={openSection === 'classes'}
+                        onToggle={() => toggleSection('classes')}
+                    >
+                        <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-800/30 mb-8">
+                            <p className="text-xs font-bold text-amber-700 dark:text-amber-300 flex items-center gap-2 text-center justify-center">
+                                <span className="material-symbols-outlined text-lg">info</span>
+                                Comece por aqui! Sem criar séries e turmas, o app fica vazio de alunos.
+                            </p>
+                        </div>
 
-                            {/* Illustration: Class Navigation */}
-                            <div className="mb-8 rounded-xl overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800">
-                                <img
-                                    src="/images/instruction_class_nav_real.png"
-                                    alt="Navegação e Seleção de Turmas"
-                                    className="w-full h-auto object-cover bg-slate-50 dark:bg-slate-900"
-                                    loading="lazy"
-                                />
-                                <div className="p-2 text-center bg-slate-50 dark:bg-slate-900/50 text-[10px] text-slate-400">
-                                    A barra superior é onde você cria e troca de turmas.
+                        <div className="grid md:grid-cols-2 gap-8 items-center">
+                            <div className="space-y-6">
+                                <h4 className={`font-black text-${theme.primaryColor} uppercase text-[10px] tracking-widest`}>Organização Central</h4>
+                                <div className="space-y-4">
+                                    <Step number={1} title="Criar Série" text="No painel 'Gerenciar Turmas', defina suas séries (ex: 6º, 7º, 8º Anos)." />
+                                    <Step number={2} title="Expandir Letras" text="Gere automaticamente as turmas A, B, C clicando no botão 'NOVA'." />
+                                    <Step number={3} title="Troca Rápida" text="Use as pílulas de navegação no topo para alternar entre as turmas." />
                                 </div>
                             </div>
-
-                            <div className="grid md:grid-cols-2 gap-8">
-                                <div>
-                                    <h4 className={`font-bold text-${theme.primaryColor} mb-4 uppercase text-xs tracking-widest`}>Criando uma Série</h4>
-                                    <div className="space-y-4">
-                                        <Step number={1} title="Acessar Gerenciador" text={
-                                            <span>No topo da tela (desktop) ou no menu "Contexto" (mobile), clique no botão que exibe o nome da série atual (ou "Selecione..."). Isso abre o painel <strong>Gerenciar Turmas</strong>.</span>
-                                        } />
-                                        <Step number={2} title="Nova Série" text={
-                                            <span>No campo superior "Nova série...", digite o nome (ex: <i>6º Ano</i>, <i>3º Médio</i>) e pressione <strong>Enter</strong> ou clique em "ADICIONAR".</span>
-                                        } />
-                                        <Step number={3} title="Adicionar Turmas (A, B, C...)" text={
-                                            <span>Com a série criada e selecionada, clique no botão pontilhado <strong>"NOVA"</strong> na lista de turmas. O sistema cria automaticamente A, B, C em sequência.</span>
-                                        } />
-                                    </div>
+                            <div className="bg-slate-100 dark:bg-slate-900/50 p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 flex flex-col items-center gap-4 group">
+                                <div className="flex gap-2 w-full justify-center">
+                                    <div className={`p-2 px-4 rounded-xl bg-${theme.primaryColor} text-white text-xs font-bold shadow-lg shadow-${theme.primaryColor}/20`}>Turma A</div>
+                                    <div className="p-2 px-4 rounded-xl bg-white dark:bg-slate-800 text-slate-400 text-xs font-bold border border-slate-200 dark:border-slate-700">Turma B</div>
+                                    <div className="p-2 px-4 rounded-xl bg-white dark:bg-slate-800 text-slate-400 text-xs font-bold border border-slate-200 dark:border-slate-700">Turma C</div>
                                 </div>
+                                <div className="w-full aspect-video bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-center relative overflow-hidden">
+                                    <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-${theme.primaryColor} to-transparent`}></div>
+                                    <span className="material-symbols-outlined text-4xl text-slate-200 dark:text-slate-700 animate-pulse">groups</span>
+                                </div>
+                            </div>
+                        </div>
+                    </InstructionSection>
 
+                    {/* 2. ALUNOS & IMPORTAÇÃO */}
+                    <InstructionSection
+                        id="students"
+                        title="Alunos: Cadastro e Importação em Massa"
+                        icon="groups"
+                        isOpen={openSection === 'students'}
+                        onToggle={() => toggleSection('students')}
+                    >
+                        <div className="grid md:grid-cols-2 gap-10 items-center">
+                            <div>
+                                <h4 className="font-black text-slate-800 dark:text-white uppercase text-[10px] tracking-widest mb-6">Velocidade no Lançamento</h4>
                                 <div className="space-y-6">
-                                    <div>
-                                        <h4 className={`font-bold text-${theme.primaryColor} mb-4 uppercase text-xs tracking-widest`}>Alternando Entre Turmas</h4>
-                                        <p className="text-sm mb-2">
-                                            O app funciona com o conceito de <strong>Contexto Ativo</strong>.
-                                        </p>
-                                        <ul className="text-xs sm:text-sm space-y-2 list-disc pl-4 marker:text-slate-300">
-                                            <li>Tudo que você vê na tela (alunos, notas, planos) refere-se à série selecionada no topo.</li>
-                                            <li>Basta clicar na "pílula" da turma (ex: "A", "B") no topo para trocar instantaneamente.</li>
-                                        </ul>
-                                    </div>
-
-                                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-                                        <h4 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-widest mb-2">Excluir Séries ou Turmas</h4>
-                                        <p className="text-xs text-slate-500">
-                                            <strong>Série:</strong> Clique no ícone de lixeira vermelha ao lado do nome da série. <i>Cuidado: Isso apaga TODOS os alunos e notas daquela série.</i><br />
-                                            <strong>Turma:</strong> Passe o mouse sobre a letra da turma (ex: "A") e clique no "X" vermelho que aparece.
-                                        </p>
-                                    </div>
+                                    <Step number={1} title="Importar Lista" text="Copie os nomes de qualquer arquivo e cole em 'Importar em Massa'." />
+                                    <Step number={2} title="Processamento" text="O app separa os nomes e gera os números de chamada na hora." />
+                                    <Step number={3} title="Sincronização" text="Todos os dados acadêmicos são criados automaticamente para cada aluno." />
                                 </div>
                             </div>
-                        </InstructionSection>
-                    </motion.div>
-
-                    {/* 2. GESTÃO DE ALUNOS */}
-                    <motion.div variants={itemVariants}>
-                        <InstructionSection
-                            id="students"
-                            title="Gestão de Alunos (Cadastro e Importação)"
-                            icon="groups"
-                            isOpen={openSection === 'students'}
-                            onToggle={() => toggleSection('students')}
-                        >
-                            <p className="mb-6">
-                                Acesse a aba <strong>Alunos</strong> no menu. Certifique-se de ter selecionado a turma correta no topo da tela.
-                            </p>
-
-                            {/* Illustration: Student Actions */}
-                            <div className="mb-8 rounded-xl overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800 max-w-2xl mx-auto">
-                                <img
-                                    src="/images/instruction_students_real.png"
-                                    alt="Botões de Ação de Alunos"
-                                    className="w-full h-auto object-cover bg-slate-50 dark:bg-slate-900"
-                                    loading="lazy"
-                                />
-                                <div className="p-2 text-center bg-slate-50 dark:bg-slate-900/50 text-[10px] text-slate-400">
-                                    Use os botões no topo da lista para cadastrar ou importar.
-                                </div>
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-8 mb-8">
-                                <div>
-                                    <h4 className="font-bold text-slate-900 dark:text-white mb-3 text-sm flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-blue-500">person_add</span> Cadastro Manual
-                                    </h4>
-                                    <div className="space-y-3">
-                                        <Step number={1} title="Novo Aluno" text="Clique no botão 'Novo Aluno'." />
-                                        <Step number={2} title="Nome" text="Digite o nome completo. O sistema gera automaticamente as iniciais e a cor do avatar." />
-                                        <Step number={3} title="Número" text="O número da chamada é sugerido automaticamente com base no último aluno (ex: se o último é 15, o novo será 16)." />
+                            <div className="p-8 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/20 dark:to-blue-950/20 rounded-[2rem] border border-indigo-100 dark:border-indigo-900/30 flex flex-col gap-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="size-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center shrink-0">
+                                        <span className="material-symbols-outlined text-sm text-white">content_paste</span>
                                     </div>
+                                    <div className="h-2 w-full bg-indigo-500/20 rounded-full"></div>
                                 </div>
-
-                                <div>
-                                    <h4 className="font-bold text-slate-900 dark:text-white mb-3 text-sm flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-purple-500">playlist_add</span> Importação em Massa (Recomendado)
-                                    </h4>
-                                    <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
-                                        <p className="text-xs mb-3">
-                                            Ideal para início de ano. Você pode copiar a lista do Excel/Word e colar aqui.
-                                        </p>
-                                        <Step number={1} title="Copiar & Colar" text={
-                                            <span>Clique em <strong>"Importar em Massa"</strong>. Cole a lista de nomes (um por linha) na caixa de texto.</span>
-                                        } />
-                                        <Step number={2} title="Processamento Inteligente" text={
-                                            <span>O sistema verifica se o nome já existe na turma. Se existir, ele atualiza o número. Se não, cria um novo cadastro.</span>
-                                        } />
-                                    </div>
+                                <div className="space-y-2">
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} className="flex items-center gap-3 bg-white dark:bg-slate-800 p-2 rounded-xl border border-indigo-100/50 dark:border-indigo-900/20 shadow-sm animate-pulse" style={{ animationDelay: `${i * 0.2}s` }}>
+                                            <div className="size-6 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-[10px] flex items-center justify-center text-indigo-500 font-bold">{i}</div>
+                                            <div className="h-1.5 w-2/3 bg-slate-100 dark:bg-slate-700 rounded-full"></div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
+                        </div>
+                    </InstructionSection>
 
-                            <h4 className={`font-bold text-${theme.primaryColor} mb-3 uppercase text-xs tracking-widest`}>Edição e Transferência</h4>
-                            <div className="grid sm:grid-cols-3 gap-4">
-                                <div className="card p-4 border border-slate-100 dark:border-slate-700 shadow-sm">
-                                    <span className="font-bold text-xs block mb-1">Editar Nome</span>
-                                    <p className="text-[10px] text-slate-500">Clique no ícone de lápis na linha do aluno. Altere o nome e confirme no "check" verde.</p>
+                    {/* 3. DASHBOARD & AGENDA */}
+                    <InstructionSection
+                        id="dashboard"
+                        title="Dashboard: Sua Agenda Inteligente"
+                        icon="dashboard"
+                        isOpen={openSection === 'dashboard'}
+                        onToggle={() => toggleSection('dashboard')}
+                    >
+                        <div className="grid md:grid-cols-2 gap-8 items-center">
+                            <div className="p-8 bg-slate-50 dark:bg-slate-900/50 rounded-[2rem] border border-slate-200 dark:border-slate-800 space-y-4 shadow-inner">
+                                <div className="flex justify-between items-center mb-6">
+                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Agenda Hoje</span>
+                                    <span className={`text-[10px] font-bold text-${theme.primaryColor}`}>{new Date().toLocaleDateString('pt-BR', { weekday: 'long' })}</span>
                                 </div>
-                                <div className="card p-4 border border-slate-100 dark:border-slate-700 shadow-sm">
-                                    <span className="font-bold text-xs block mb-1">Transferir</span>
-                                    <p className="text-[10px] text-slate-500">Use o ícone de setas (move_up) para mover um aluno para outra turma (ex: do 6A para o 6B). As notas são preservadas.</p>
+                                <div className={`p-4 bg-white dark:bg-slate-800 rounded-2xl border-l-4 border-${theme.primaryColor} shadow-md`}>
+                                    <div className="text-xs font-bold mb-1">Avaliação de Matemática</div>
+                                    <div className="text-[10px] text-slate-400">7º Ano A • Unidade 1</div>
                                 </div>
-                                <div className="card p-4 border border-slate-100 dark:border-slate-700 shadow-sm">
-                                    <span className="font-bold text-xs block mb-1">Excluir</span>
-                                    <p className="text-[10px] text-slate-500">Use a lixeira para remover o aluno. Atenção: isso apaga histórico de notas e faltas.</p>
+                                <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl border-l-4 border-emerald-500 shadow-md translate-x-4 opacity-80 scale-95">
+                                    <div className="text-xs font-bold mb-1">Trabalho de Biologia</div>
+                                    <div className="text-[10px] text-slate-400">8º Ano B • Unidade 1</div>
                                 </div>
                             </div>
-                        </InstructionSection>
-                    </motion.div>
-
-                    {/* 3. PLANEJAMENTO */}
-                    <motion.div variants={itemVariants}>
-                        <InstructionSection
-                            id="planning"
-                            title="Planejamento e BNCC"
-                            icon="calendar_month"
-                            isOpen={openSection === 'planning'}
-                            onToggle={() => toggleSection('planning')}
-                        >
-                            <p className="mb-4">
-                                Substitua seu caderno físico. Seus planos ficam salvos na nuvem e organizados por número de aula.
-                            </p>
-
                             <div className="space-y-6">
-                                <div>
-                                    <h4 className={`font-bold text-${theme.primaryColor} mb-2 uppercase text-xs tracking-widest`}>Passo a Passo</h4>
-                                    <ol className="list-decimal list-inside space-y-2 text-sm pl-2 marker:font-bold marker:text-slate-400">
-                                        <li>Vá para a aba <strong>Planejamento</strong>.</li>
-                                        <li>Clique em <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-200">Nova Aula +</span>.</li>
-                                        <li><strong>Conteúdo:</strong> O que será ensinado (ex: "Equações de 1º Grau").</li>
-                                        <li><strong>Metodologia:</strong> Como será ensinado (ex: "Aula expositiva com resolução de exercícios").</li>
-                                        <li><strong>BNCC:</strong> Comece a digitar o código (ex: "EF05") e selecione na lista suspensa para preencher automaticamente a descrição da habilidade.</li>
-                                    </ol>
-                                </div>
+                                <h4 className={`font-black text-${theme.primaryColor} uppercase text-[10px] tracking-widest`}>Foco e Produtividade</h4>
+                                <p className="text-sm">O Dashboard remove o ruído e mostra apenas o que é relevante para o seu dia:</p>
+                                <ul className="space-y-4">
+                                    <li className="flex gap-4">
+                                        <div className="size-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-500 flex items-center justify-center shrink-0">
+                                            <span className="material-symbols-outlined text-xl">event_upcoming</span>
+                                        </div>
+                                        <div>
+                                            <span className="font-bold text-sm block">Próximas Atividades</span>
+                                            <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Prazos de entrega e provas nos próximos dias.</span>
+                                        </div>
+                                    </li>
+                                    <li className="flex gap-4">
+                                        <div className="size-10 rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-500 flex items-center justify-center shrink-0">
+                                            <span className="material-symbols-outlined text-xl">warning</span>
+                                        </div>
+                                        <div>
+                                            <span className="font-bold text-sm block">Alertas Recentes</span>
+                                            <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Últimas ocorrências registradas na turma ativa.</span>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </InstructionSection>
 
-                                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
-                                    <h5 className="font-bold text-blue-700 dark:text-blue-300 text-sm mb-2">Funcionalidades Extras</h5>
-                                    <ul className="grid sm:grid-cols-2 gap-4 text-xs text-blue-800 dark:text-blue-200">
-                                        <li className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-base">content_copy</span>
-                                            <span><strong>Clonar:</strong> Use o botão de copiar para replicar uma aula de uma turma para outra (ex: do 6A para o 6B).</span>
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-base">edit</span>
-                                            <span><strong>Editar:</strong> Clique em qualquer card de aula para alterar o texto.</span>
-                                        </li>
-                                    </ul>
+                    {/* 4. PLANEJAMENTO BNCC */}
+                    <InstructionSection
+                        id="planning"
+                        title="Planejamento e Automação BNCC"
+                        icon="calendar_month"
+                        isOpen={openSection === 'planning'}
+                        onToggle={() => toggleSection('planning')}
+                    >
+                        <div className="space-y-8">
+                            <div className="flex flex-col md:flex-row gap-8 items-center bg-slate-50 dark:bg-slate-900/50 p-6 rounded-[2.5rem] border border-slate-200 dark:border-slate-800">
+                                <div className="space-y-4 flex-1">
+                                    <h4 className="font-black text-emerald-600 uppercase text-[10px] tracking-widest text-center md:text-left">Inteligência Pedagógica</h4>
+                                    <p className="text-sm text-center md:text-left">O sistema entende a BNCC. Digite o código e veja a mágica:</p>
+                                    <div className="flex flex-wrap gap-4 items-center justify-center md:justify-start">
+                                        <div className="bg-white dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold shadow-sm">EF06MA01</div>
+                                        <span className="material-symbols-outlined text-slate-300">double_arrow</span>
+                                        <div className="text-[10px] text-slate-500 dark:text-slate-400 italic bg-white/50 dark:bg-slate-800/50 p-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 max-w-xs leading-tight">
+                                            "Compreender e utilizar o sistema de numeração decimal..."
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-3">
+                                    <div className="text-center w-24 bg-blue-500 text-white p-4 rounded-3xl shadow-lg hover:translate-y-[-4px] transition-transform">
+                                        <span className="material-symbols-outlined text-2xl mb-1">file_download</span>
+                                        <span className="block text-[8px] font-black uppercase tracking-wider">Exportar</span>
+                                    </div>
+                                    <div className="text-center w-24 bg-emerald-500 text-white p-4 rounded-3xl shadow-lg hover:translate-y-[-4px] transition-transform">
+                                        <span className="material-symbols-outlined text-2xl mb-1">content_copy</span>
+                                        <span className="block text-[8px] font-black uppercase tracking-wider">Clonar</span>
+                                    </div>
                                 </div>
                             </div>
-                        </InstructionSection>
-                    </motion.div>
+                        </div>
+                    </InstructionSection>
 
-                    {/* 4. ATIVIDADES E NOTAS */}
-                    <motion.div variants={itemVariants}>
-                        <InstructionSection
-                            id="grades"
-                            title="Atividades, Notas e Pesos"
-                            icon="assignment"
-                            isOpen={openSection === 'grades'}
-                            onToggle={() => toggleSection('grades')}
-                        >
-                            <div className="mb-8">
-                                <h4 className={`font-bold text-${theme.primaryColor} mb-3 uppercase text-xs tracking-widest`}>Ciclo de Avaliação</h4>
-
-                                {/* Illustration: Activities Flow */}
-                                <div className="mb-6 rounded-xl overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800">
-                                    <img
-                                        src="/images/instruction_activities_real.png"
-                                        alt="Fluxo de Criação de Atividades"
-                                        className="w-full h-auto object-cover bg-white dark:bg-slate-900"
-                                        loading="lazy"
-                                    />
+                    {/* 5. ATIVIDADES & NOTAS */}
+                    <InstructionSection
+                        id="grades"
+                        title="Atividades, Notas e Unidades"
+                        icon="assignment"
+                        isOpen={openSection === 'grades'}
+                        onToggle={() => toggleSection('grades')}
+                    >
+                        <div className="grid md:grid-cols-2 gap-x-12 gap-y-8 items-center">
+                            <div>
+                                <h4 className="font-black text-slate-800 dark:text-white uppercase text-[10px] tracking-widest mb-6 border-l-4 border-rose-500 pl-4">Boletim Dinâmico</h4>
+                                <ul className="space-y-6 text-sm">
+                                    <li className="flex items-start gap-4">
+                                        <div className="size-8 rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-emerald-500 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-900/30">
+                                            <span className="material-symbols-outlined text-lg">bolt</span>
+                                        </div>
+                                        <span><strong>Lançamento Veloz:</strong> As notas são salvas enquanto você digita. Não existe botão 'salvar'.</span>
+                                    </li>
+                                    <li className="flex items-start gap-4">
+                                        <div className="size-8 rounded-full bg-indigo-50 dark:bg-indigo-950/20 text-indigo-500 flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-900/30">
+                                            <span className="material-symbols-outlined text-lg">functions</span>
+                                        </div>
+                                        <span><strong>Cálculos Automáticos:</strong> Médias e somatórios são calculados instantaneamente por Unidade.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div className="bg-slate-50 dark:bg-slate-900/50 p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 flex flex-col items-center gap-6">
+                                <div className="flex gap-3 justify-center">
+                                    {[1, 2, 3].map(u => (
+                                        <div key={u} className={`size-10 rounded-2xl flex items-center justify-center text-xs font-black border transition-all ${u === 1 ? `bg-${theme.primaryColor} text-white border-${theme.primaryColor} shadow-lg` : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 opacity-50'}`}>U{u}</div>
+                                    ))}
                                 </div>
+                                <div className="w-full space-y-3">
+                                    <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                        <span className="text-xs font-bold">Prova Trimestral</span>
+                                        <div className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg text-[10px] font-black">PESO 4</div>
+                                    </div>
+                                    <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 opacity-60">
+                                        <span className="text-xs font-bold">Atividade Casa</span>
+                                        <div className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-400 rounded-lg text-[10px] font-black uppercase">Peso 1</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </InstructionSection>
+
+                    {/* 6. OCORRÊNCIAS & HISTÓRICO */}
+                    <InstructionSection
+                        id="observations"
+                        title="Ocorrências e Linha do Tempo"
+                        icon="history_edu"
+                        isOpen={openSection === 'observations'}
+                        onToggle={() => toggleSection('observations')}
+                    >
+                        <div className="space-y-10">
+                            <div className="grid md:grid-cols-2 gap-12 items-center">
+                                <div className="space-y-6">
+                                    <h4 className="font-black text-amber-600 uppercase text-[10px] tracking-widest pl-4 border-l-4 border-amber-500">Histórico de Turma</h4>
+                                    <p className="text-sm">Veja todos os acontecimentos de forma cronológica, filtrando por aluno ou tipo de evento.</p>
+                                    <div className="p-5 bg-amber-50 dark:bg-amber-900/20 rounded-3xl border border-amber-100 dark:border-amber-800/20 relative overflow-hidden group">
+                                        <div className="flex items-center gap-3 relative z-10">
+                                            <div className="size-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-lg">
+                                                <span className="material-symbols-outlined text-xl">delete_sweep</span>
+                                            </div>
+                                            <div>
+                                                <span className="font-bold text-xs block truncate">Ação em Massa</span>
+                                                <p className="text-[10px] text-amber-700 dark:text-amber-400 leading-tight">Selecione vários registros e limpe o histórico com um clique.</p>
+                                            </div>
+                                        </div>
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl translate-x-8 -translate-y-8"></div>
+                                    </div>
+                                </div>
+                                <div className="bg-slate-100 dark:bg-slate-900/50 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 space-y-4">
+                                    <div className="text-[10px] font-black uppercase text-slate-400 mb-2">Linha do Tempo Turma B</div>
+                                    <div className="relative pl-6 space-y-4 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-200 dark:before:bg-slate-700">
+                                        <div className="relative flex items-center gap-3">
+                                            <div className="absolute -left-[30px] size-[10px] rounded-full bg-emerald-500 border-4 border-white dark:border-slate-800 z-10 transition-transform hover:scale-150"></div>
+                                            <span className="material-symbols-outlined text-emerald-500 text-lg">star</span>
+                                            <div className="h-2 w-24 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                                        </div>
+                                        <div className="relative flex items-center gap-3">
+                                            <div className="absolute -left-[30px] size-[10px] rounded-full bg-rose-500 border-4 border-white dark:border-slate-800 z-10 transition-transform hover:scale-150"></div>
+                                            <span className="material-symbols-outlined text-rose-500 text-lg">smartphone</span>
+                                            <div className="h-2 w-16 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                                        </div>
+                                        <div className="relative flex items-center gap-3">
+                                            <div className="absolute -left-[30px] size-[10px] rounded-full bg-amber-500 border-4 border-white dark:border-slate-800 z-10 transition-transform hover:scale-150"></div>
+                                            <span className="material-symbols-outlined text-amber-500 text-lg">inventory_2</span>
+                                            <div className="h-2 w-32 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </InstructionSection>
+
+                    {/* 7. FREQUÊNCIA RELÂMPAGO */}
+                    <InstructionSection
+                        id="attendance"
+                        title="Frequência Relâmpago"
+                        icon="co_present"
+                        isOpen={openSection === 'attendance'}
+                        onToggle={() => toggleSection('attendance')}
+                    >
+                        <div className="flex flex-col md:flex-row gap-8 items-center">
+                            <div className="flex-1 space-y-4">
+                                <h4 className="font-black text-rose-500 uppercase text-[10px] tracking-widest pl-4 border-l-4 border-rose-500">A Chamada de 10 Segundos</h4>
+                                <p className="text-sm">Esqueça as chamadas demoradas. Use a lógica reversa:</p>
+                                <ul className="space-y-4">
+                                    <li className="flex gap-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-700 items-center">
+                                        <div className="h-8 px-3 w-max rounded-lg bg-emerald-500 text-white flex items-center justify-center font-black text-[9px] shadow-md shrink-0">PRESENÇA GERAL</div>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">Um clique para marcar todos como presentes.</p>
+                                    </li>
+                                    <li className="flex gap-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                        <div className="flex gap-2">
+                                            <div className="size-8 rounded-lg bg-rose-500 text-white flex items-center justify-center font-bold text-xs opacity-50">F</div>
+                                            <div className="size-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-xs">J</div>
+                                        </div>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">Alternar faltas ou justificativas clicando no aluno.</p>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div className="p-8 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/20 dark:to-pink-950/20 rounded-[2.5rem] border border-rose-100 dark:border-rose-900/30 flex justify-center items-center h-full aspect-square md:aspect-auto md:w-64">
                                 <div className="relative">
-                                    <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700"></div>
-                                    <div className="space-y-6">
-                                        <div className="relative pl-10">
-                                            <div className={`absolute left-0 top-0 size-6 rounded-full bg-${theme.primaryColor} text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-${theme.primaryColor}/30`}>1</div>
-                                            <h5 className="font-bold text-sm mb-1">Criar a Atividade</h5>
-                                            <p className="text-xs text-slate-500">
-                                                Vá em <strong>Atividades</strong> e clique em "Nova". Defina:<br />
-                                                - <strong>Valor Máximo:</strong> Quanto vale (ex: 10,0).<br />
-                                                - <strong>Data:</strong> Quando foi aplicada.<br />
-                                                - <strong>Tipo:</strong> Prova, Trabalho ou Conceito (apenas para organização).
-                                            </p>
-                                        </div>
-                                        <div className="relative pl-10">
-                                            <div className={`absolute left-0 top-0 size-6 rounded-full bg-white dark:bg-slate-800 border-2 border-${theme.primaryColor} text-${theme.primaryColor} flex items-center justify-center text-xs font-bold`}>2</div>
-                                            <h5 className="font-bold text-sm mb-1">Lançar as Notas</h5>
-                                            <p className="text-xs text-slate-500">
-                                                Na lista de alunos que aparece, digite a nota de cada um. O sistema salva automaticamente ao sair do campo (auto-save).
-                                                <br /><i>Nota: Se você digitar um valor maior que o máximo, o sistema avisa.</i>
-                                            </p>
-                                        </div>
-                                        <div className="relative pl-10">
-                                            <div className={`absolute left-0 top-0 size-6 rounded-full bg-white dark:bg-slate-800 border-2 border-${theme.primaryColor} text-${theme.primaryColor} flex items-center justify-center text-xs font-bold`}>3</div>
-                                            <h5 className="font-bold text-sm mb-1">Conferir Médias</h5>
-                                            <p className="text-xs text-slate-500">
-                                                Vá para a aba <strong>Notas</strong>. Lá você vê a soma de todas as atividades da unidade.
-                                            </p>
-                                        </div>
+                                    <div className="size-32 rounded-full border-8 border-white dark:border-slate-800 flex items-center justify-center bg-rose-500 shadow-2xl animate-pulse">
+                                        <span className="material-symbols-outlined text-5xl text-white">timer</span>
                                     </div>
+                                    <div className="absolute -bottom-2 -right-2 px-3 py-1 bg-white dark:bg-slate-900 rounded-lg text-[10px] font-black shadow-lg">10s</div>
                                 </div>
                             </div>
+                        </div>
+                    </InstructionSection>
 
-                            <div className="grid md:grid-cols-2 gap-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                                <div>
-                                    <h5 className="font-bold text-slate-900 dark:text-white text-sm mb-2">Cálculo de Pesos</h5>
-                                    <p className="text-xs text-slate-500 leading-relaxed mb-2">
-                                        O sistema calcula a média anual baseada em <strong>Média Ponderada</strong> ou <strong>Soma Simples</strong>, dependendo da configuração da sua escola.
-                                    </p>
-                                    <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg font-mono text-xs text-slate-600 dark:text-slate-400">
-                                        (N1 + N2 + N3) ÷ 3<br />
-                                        <span className="text-slate-400 dark:text-slate-600 italic">// Exemplo de média simples</span>
+                    {/* 8. PERSONALIZAÇÃO */}
+                    <InstructionSection
+                        id="customization"
+                        title="Cores, Temas e Identidade"
+                        icon="palette"
+                        isOpen={openSection === 'customization'}
+                        onToggle={() => toggleSection('customization')}
+                    >
+                        <div className="space-y-6">
+                            <div className="flex flex-col md:flex-row gap-10 items-center justify-between">
+                                <div className="flex-1 space-y-4">
+                                    <h4 className="font-black text-slate-800 dark:text-white uppercase text-[10px] tracking-widest pl-4 border-l-4 border-slate-800 dark:border-white">Experiência Visual</h4>
+                                    <p className="text-sm">O Prof. Acerta+ é dinâmico. Escolha o tema que melhor se adapta à sua luz ambiente:</p>
+                                    <div className="flex gap-4">
+                                        <div className="flex-1 p-4 bg-white rounded-2xl border border-slate-200 flex flex-col items-center gap-2 group hover:shadow-lg transition-all hover:-translate-y-1">
+                                            <span className="material-symbols-outlined text-slate-900 bg-slate-100 p-2 rounded-xl">light_mode</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">Modo Claro</span>
+                                        </div>
+                                        <div className="flex-1 p-4 bg-slate-900 rounded-2xl border border-slate-700 flex flex-col items-center gap-2 group hover:shadow-lg transition-all hover:-translate-y-1">
+                                            <span className="material-symbols-outlined text-white bg-slate-800 p-2 rounded-xl">dark_mode</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-white">Modo Escuro</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div>
-                                    <h5 className="font-bold text-slate-900 dark:text-white text-sm mb-2">Unidades (Bimestre/Trimestre)</h5>
-                                    <p className="text-xs text-slate-500 leading-relaxed">
-                                        No topo da tela de Notas/Atividades, você vê botões "1, 2, 3...". Use-os para mudar o período letivo vigente. As notas da Unidade 1 não se misturam com as da Unidade 2.
-                                    </p>
-                                </div>
-                            </div>
-                        </InstructionSection>
-                    </motion.div>
-
-                    {/* 5. FREQUÊNCIA E CHAMADA */}
-                    <motion.div variants={itemVariants}>
-                        <InstructionSection
-                            id="attendance"
-                            title="Frequência e Chamada Rápida"
-                            icon="co_present"
-                            isOpen={openSection === 'attendance'}
-                            onToggle={() => toggleSection('attendance')}
-                        >
-                            <div className="grid sm:grid-cols-2 gap-8">
-                                <div>
-                                    <p className="text-sm mb-4">
-                                        O módulo de frequência foi desenhado para ser usado em sala, pelo celular, em menos de 10 segundos.
-                                    </p>
-                                    <h4 className={`font-bold text-${theme.primaryColor} mb-2 uppercase text-xs tracking-widest`}>Fluxo de Chamada</h4>
-                                    <ol className="list-decimal list-inside space-y-2 text-xs sm:text-sm pl-2 marker:font-bold marker:text-slate-400">
-                                        <li>Vá para a aba <strong>Frequência</strong>.</li>
-                                        <li>Verifique se a <strong>Data</strong> no topo está correta.</li>
-                                        <li>Clique no botão verde <strong>"Presença Geral"</strong> (canto superior direito). Isso marca 'P' para todos.</li>
-                                        <li>Consulte quem faltou e clique no botão 'P' ao lado do nome para mudar para 'F' (Falta) ou 'J' (Falta Justificada).</li>
-                                    </ol>
-                                </div>
-
-                                <div className="bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                    <h5 className="font-bold text-slate-900 dark:text-white text-sm mb-3">Sessão "Relâmpago"</h5>
-
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <div className="size-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs">P</div>
-                                        <span className="text-xs text-slate-600 dark:text-slate-400">Presença (Conta como comparecimento)</span>
+                                <div className="p-10 bg-slate-100 dark:bg-slate-900/50 rounded-[3rem] border border-slate-200 dark:border-slate-800 flex flex-col items-center gap-6 relative overflow-hidden">
+                                    <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2 z-10">Cores de Destaque</div>
+                                    <div className="flex flex-wrap gap-3 justify-center z-10 relative">
+                                        {['bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-rose-500', 'bg-amber-500'].map((color, i) => (
+                                            <div key={i} className={`size-8 rounded-full ${color} shadow-lg ring-4 ring-white dark:ring-slate-800 transition-transform hover:scale-125 hover:z-20`} style={{ marginLeft: i > 0 ? '-8px' : '0' }}></div>
+                                        ))}
                                     </div>
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <div className="size-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs">F</div>
-                                        <span className="text-xs text-slate-600 dark:text-slate-400">Falta (Reduz a % de frequência)</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="size-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-xs">J</div>
-                                        <span className="text-xs text-slate-600 dark:text-slate-400">Justificada (Não afeta a porcentagem)</span>
-                                    </div>
+                                    <div className={`absolute -bottom-8 -right-8 size-40 bg-${theme.primaryColor}/5 rounded-full blur-3xl`}></div>
                                 </div>
                             </div>
-                        </InstructionSection>
-                    </motion.div>
-
-                    {/* 6. DICAS DE ORGANIZAÇÃO & ROTINA */}
-                    <motion.div variants={itemVariants}>
-                        <InstructionSection
-                            id="organization"
-                            title="Dicas de Organização & Rotina"
-                            icon="lightbulb"
-                            isOpen={openSection === 'organization'}
-                            onToggle={() => toggleSection('organization')}
-                        >
-                            <div className="space-y-6">
-                                <p className="text-sm">
-                                    O <strong>Prof. Acerta+</strong> foi desenhado não apenas para lançar dados, mas para te ajudar a ganhar tempo. Aqui estão algumas sugestões de fluxo de trabalho:
-                                </p>
-
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
-                                        <div className={`absolute top-0 right-0 p-2 bg-${theme.primaryColor}/10 rounded-bl-2xl text-${theme.primaryColor}`}>
-                                            <span className="material-symbols-outlined">timer</span>
-                                        </div>
-                                        <h4 className="font-bold text-slate-800 dark:text-white text-sm mb-3 pr-8">No Início da Aula (5 min)</h4>
-                                        <ul className="space-y-3 text-xs text-slate-500 dark:text-slate-400">
-                                            <li className="flex items-start gap-2">
-                                                <span className="material-symbols-outlined text-sm mt-0.5 text-emerald-500">check_circle</span>
-                                                <span>Abra a aba <strong>Frequência</strong> e faça a "Chamada Relâmpago" (Presença Geral + Ajustes).</span>
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                                <span className="material-symbols-outlined text-sm mt-0.5 text-blue-500">check_circle</span>
-                                                <span>Se houver lição de casa para checar, use a aba <strong>Atividades</strong> → crie uma atividade "Visto no Caderno" (valor 1,0 ou Conceito) e lance rapidamente enquanto circula pela sala.</span>
-                                            </li>
-                                        </ul>
-                                    </div>
-
-                                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
-                                        <div className={`absolute top-0 right-0 p-2 bg-${theme.primaryColor}/10 rounded-bl-2xl text-${theme.primaryColor}`}>
-                                            <span className="material-symbols-outlined">weekend</span>
-                                        </div>
-                                        <h4 className="font-bold text-slate-800 dark:text-white text-sm mb-3 pr-8">No Final da Semana (20 min)</h4>
-                                        <ul className="space-y-3 text-xs text-slate-500 dark:text-slate-400">
-                                            <li className="flex items-start gap-2">
-                                                <span className="material-symbols-outlined text-sm mt-0.5 text-purple-500">check_circle</span>
-                                                <span>Vá em <strong>Planejamento</strong>. Use a tarde de sexta-feira para criar os cards das aulas da próxima semana. Lembre-se de usar o código BNCC para facilitar.</span>
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                                <span className="material-symbols-outlined text-sm mt-0.5 text-amber-500">check_circle</span>
-                                                <span>Verifique a aba <strong>Dashboard</strong> para ver se alguma turma está com média de frequência caindo muito e anote para falar com a coordenação.</span>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
-                                    <h4 className={`font-bold text-${theme.primaryColor} mb-4 uppercase text-xs tracking-widest`}>O Que Você Pode Fazer?</h4>
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                        <div className="text-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                            <span className="material-symbols-outlined text-2xl mb-2 text-indigo-500">picture_as_pdf</span>
-                                            <span className="block text-[10px] font-bold text-slate-600 dark:text-slate-300">Gerar Relatórios</span>
-                                        </div>
-                                        <div className="text-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                            <span className="material-symbols-outlined text-2xl mb-2 text-pink-500">psychology</span>
-                                            <span className="block text-[10px] font-bold text-slate-600 dark:text-slate-300">Análise Pedagógica</span>
-                                        </div>
-                                        <div className="text-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                            <span className="material-symbols-outlined text-2xl mb-2 text-teal-500">history_edu</span>
-                                            <span className="block text-[10px] font-bold text-slate-600 dark:text-slate-300">Histórico Escolar</span>
-                                        </div>
-                                        <div className="text-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                            <span className="material-symbols-outlined text-2xl mb-2 text-orange-500">warning</span>
-                                            <span className="block text-[10px] font-bold text-slate-600 dark:text-slate-300">Registrar Ocorrências</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </InstructionSection>
-                    </motion.div>
-
-                </motion.div>
+                        </div>
+                    </InstructionSection>
+                </div>
             </div>
         </div>
     );

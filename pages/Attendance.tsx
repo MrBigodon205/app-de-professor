@@ -87,32 +87,41 @@ const MiniCalendar: React.FC<{
                 onClick={onClose}
             />
 
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 lg:p-6 landscape:p-2 z-50 w-[85%] max-w-[280px] lg:max-w-[400px] max-h-[90vh] landscape:max-h-[95vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 landscape:flex landscape:flex-row landscape:items-start landscape:gap-4 landscape:w-auto landscape:max-w-none">
-                <div className="flex items-center justify-between mb-2 landscape:mb-0 landscape:flex-col landscape:gap-2 landscape:justify-center landscape:w-32 landscape:border-r landscape:border-slate-100 landscape:dark:border-slate-800 landscape:pr-2">
-                    <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors">
-                        <span className="material-symbols-outlined text-sm">expand_less</span>
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 lg:p-8 landscape:p-2 z-50 w-[90%] max-w-[320px] lg:max-w-[500px] max-h-[90vh] landscape:max-h-[95vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 landscape:flex landscape:flex-row landscape:items-start landscape:gap-4 landscape:w-auto landscape:max-w-none">
+                <div className="flex items-center justify-between mb-4 landscape:mb-0 landscape:flex-col landscape:gap-2 landscape:justify-center landscape:w-32 landscape:border-r landscape:border-slate-100 landscape:dark:border-slate-800 landscape:pr-2">
+                    <button onClick={() => changeMonth(-1)} className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 transition-colors">
+                        <span className="material-symbols-outlined text-lg lg:text-2xl">expand_less</span>
                     </button>
-                    <span className="font-bold text-slate-700 dark:text-slate-200 capitalize text-sm lg:text-lg text-center leading-tight">
+                    <span className="font-bold text-slate-700 dark:text-slate-200 capitalize text-sm lg:text-2xl text-center leading-tight">
                         {viewDate.toLocaleString('pt-BR', { month: 'long' })}<br />
-                        <span className="text-xs text-slate-400">{viewDate.getFullYear()}</span>
+                        <span className="text-xs lg:text-base text-slate-400">{viewDate.getFullYear()}</span>
                     </span>
-                    <button onClick={() => changeMonth(1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors">
-                        <span className="material-symbols-outlined text-sm">expand_more</span>
+                    <button onClick={() => changeMonth(1)} className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 transition-colors">
+                        <span className="material-symbols-outlined text-lg lg:text-2xl">expand_more</span>
+                    </button>
+
+                    {/* Mobile Close Button moved here for landscape side layout */}
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="hidden landscape:flex w-full mt-auto py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors justify-center"
+                    >
+                        Fechar
                     </button>
                 </div>
 
                 <div className="landscape:flex-1">
 
-                    <div className="grid grid-cols-7 gap-1 lg:gap-2 mb-2">
+                    <div className="grid grid-cols-7 gap-1 lg:gap-3 mb-2">
                         {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(day => (
-                            <div key={day} className="text-center text-[10px] lg:text-xs font-bold text-slate-400">
+                            <div key={day} className="text-center text-[10px] lg:text-sm font-bold text-slate-400 py-1 uppercase tracking-widest">
                                 {day}
                             </div>
                         ))}
                     </div>
-                    <div className="grid grid-cols-7 gap-1 lg:gap-2">
+                    <div className="grid grid-cols-7 gap-1 lg:gap-3">
                         {days.map((day, i) => {
-                            if (!day) return <div key={`empty-${i}`} className="h-7 sm:h-6" />;
+                            if (!day) return <div key={`empty-${i}`} className="h-9 w-9 lg:h-14 lg:w-14" />;
                             return (
                                 <button
                                     key={day || `empty-${i}`}
@@ -123,7 +132,7 @@ const MiniCalendar: React.FC<{
                                             onClose();
                                         }
                                     }}
-                                    className={`size-8 lg:size-10 landscape:size-7 flex items-center justify-center rounded-full text-xs lg:text-sm font-medium transition-all ${isSelected(day as number)
+                                    className={`h-9 w-9 lg:h-14 lg:w-14 landscape:size-7 flex items-center justify-center rounded-full text-xs lg:text-sm font-medium transition-all ${isSelected(day as number)
                                         ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/30 scale-110`
                                         : isToday(day as number)
                                             ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor} font-bold`

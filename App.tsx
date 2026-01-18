@@ -40,7 +40,7 @@ const App: React.FC = () => {
                   <Route path="/activities" element={<PageTransition type="activities"><Activities /></PageTransition>} />
                   <Route path="/planning" element={<PageTransition type="planning"><Planning /></PageTransition>} />
                   <Route path="/students" element={<PageTransition type="students"><StudentsList mode="manage" /></PageTransition>} />
-                  <Route path="/reports" element={<PageTransition type="default"><StudentsList mode="report" /></PageTransition>} />
+                  <Route path="/reports" element={<PageTransition type="default"><StudentProfile /></PageTransition>} />
                   <Route path="/reports/:id" element={<PageTransition type="default"><StudentProfile /></PageTransition>} />
                   <Route path="/students/:id" element={<PageTransition type="default"><StudentProfile /></PageTransition>} />
                   <Route path="/profile" element={<PageTransition type="default"><TeacherProfile /></PageTransition>} />

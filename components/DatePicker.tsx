@@ -111,18 +111,18 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, 
                         onClick={() => setIsOpen(false)}
                     />
 
-                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 landscape:p-2 z-50 w-[90%] max-w-[320px] lg:max-w-[400px] max-h-[90vh] landscape:max-h-[95vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 landscape:flex landscape:flex-row landscape:items-start landscape:gap-4 landscape:w-auto landscape:max-w-none">
+                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 lg:p-8 landscape:p-2 z-50 w-[90%] max-w-[320px] lg:max-w-[500px] max-h-[90vh] landscape:max-h-[95vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 landscape:flex landscape:flex-row landscape:items-start landscape:gap-4 landscape:w-auto landscape:max-w-none">
 
                         <div className="flex items-center justify-between mb-4 landscape:mb-0 landscape:flex-col landscape:gap-2 landscape:justify-center landscape:w-32 landscape:border-r landscape:border-slate-100 landscape:dark:border-slate-800 landscape:pr-2">
-                            <button type="button" onClick={() => changeMonth(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors">
-                                <span className="material-symbols-outlined text-lg">expand_less</span>
+                            <button type="button" onClick={() => changeMonth(-1)} className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 transition-colors">
+                                <span className="material-symbols-outlined text-lg lg:text-2xl">expand_less</span>
                             </button>
-                            <span className="font-bold text-slate-700 dark:text-slate-200 capitalize text-sm lg:text-lg text-center leading-tight">
+                            <span className="font-bold text-slate-700 dark:text-slate-200 capitalize text-sm lg:text-2xl text-center leading-tight">
                                 {viewDate.toLocaleString('pt-BR', { month: 'long' })}<br />
-                                <span className="text-xs text-slate-400">{viewDate.getFullYear()}</span>
+                                <span className="text-xs lg:text-base text-slate-400">{viewDate.getFullYear()}</span>
                             </span>
-                            <button type="button" onClick={() => changeMonth(1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors">
-                                <span className="material-symbols-outlined text-lg">expand_more</span>
+                            <button type="button" onClick={() => changeMonth(1)} className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 transition-colors">
+                                <span className="material-symbols-outlined text-lg lg:text-2xl">expand_more</span>
                             </button>
 
                             {/* Mobile Close Button moved here for landscape side layout */}
@@ -137,19 +137,19 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, 
 
                         <div className="landscape:flex-1">
 
-                            <div className="grid grid-cols-7 gap-1 lg:gap-2 mb-2 text-center text-[10px] lg:text-xs font-black text-slate-400 py-1 uppercase tracking-widest">
+                            <div className="grid grid-cols-7 gap-1 lg:gap-3 mb-2 text-center text-[10px] lg:text-sm font-black text-slate-400 py-1 uppercase tracking-widest">
                                 {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => <div key={i}>{d}</div>)}
                             </div>
 
-                            <div className="grid grid-cols-7 gap-1 lg:gap-2">
+                            <div className="grid grid-cols-7 gap-1 lg:gap-3">
                                 {days.map((day, i) => {
-                                    if (!day) return <div key={`empty-${i}`} className="h-9 w-9 lg:h-12 lg:w-12" />; // Placeholder spacing
+                                    if (!day) return <div key={`empty-${i}`} className="h-9 w-9 lg:h-14 lg:w-14" />; // Placeholder spacing
                                     return (
                                         <button
                                             key={i}
                                             type="button"
                                             onClick={() => handleDateSelect(day, month, year)}
-                                            className={`h-9 w-9 lg:h-12 lg:w-12 landscape:h-8 landscape:w-8 flex flex-col items-center justify-center rounded-full relative transition-all duration-200 mx-auto
+                                            className={`h-9 w-9 lg:h-14 lg:w-14 landscape:h-8 landscape:w-8 flex flex-col items-center justify-center rounded-full relative transition-all duration-200 mx-auto
                                             ${isSelected(day)
                                                     ? `bg-${primaryColor} text-white shadow-lg shadow-${primaryColor}/30 font-bold scale-110 z-10`
                                                     : isToday(day)

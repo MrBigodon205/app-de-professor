@@ -581,7 +581,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                         <div className="overflow-x-auto custom-scrollbar">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                                    <tr className="bg-slate-100 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                                         <th className="px-4 py-3 w-12">
                                             <div className="flex items-center justify-center">
                                                 <input
@@ -592,9 +592,9 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                 />
                                             </div>
                                         </th>
-                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest w-24">Nº</th>
-                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Nome do Aluno</th>
-                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">Ações</th>
+                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 tracking-widest w-24">Nº</th>
+                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 tracking-widest">Nome do Aluno</th>
+                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 tracking-widest text-right">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
@@ -612,7 +612,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                         </tr>
                                     ) : (
                                         students.map((student) => (
-                                            <tr key={student.id} className={`group transition-all ${selectedIds.includes(student.id) ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/30'}`}>
+                                            <tr key={student.id} className={`group transition-all border-b border-slate-100 dark:border-slate-800 ${selectedIds.includes(student.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30'}`}>
                                                 <td className="px-4 py-4">
                                                     <div className="flex items-center justify-center">
                                                         <input

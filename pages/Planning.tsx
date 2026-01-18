@@ -54,6 +54,35 @@ export const Planning: React.FC = () => {
     const [filterSection, setFilterSection] = useState('');
     const [viewerFile, setViewerFile] = useState<{ name: string; url: string; } | null>(null);
 
+    // Bulk Delete State
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+    const toggleSelection = (id: string) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    };
+
+    const handleBulkDelete = async () => {
+        if (!window.confirm(`Tem certeza que deseja excluir ${selectedIds.length} aulas?`)) return;
+
+        try {
+            const { error } = await supabase.from('plans').delete().in('id', selectedIds);
+            if (error) throw error;
+
+            setPlans(prev => prev.filter(p => !selectedIds.includes(p.id)));
+            setSelectedIds([]);
+            setIsSelectionMode(false);
+            if (selectedPlanId && selectedIds.includes(selectedPlanId)) {
+                setSelectedPlanId(null);
+                setShowForm(false);
+            }
+        } catch (error) {
+            console.error('Error deleting plans:', error);
+            alert('Erro ao excluir aulas.');
+        }
+    };
+
+
     useEffect(() => {
         fetchPlans();
 
@@ -114,8 +143,9 @@ export const Planning: React.FC = () => {
             formatted.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 
             setPlans(formatted);
-            if (formatted.length > 0 && !selectedPlanId && window.innerWidth >= 1024) {
-                if (!selectedPlanId) setSelectedPlanId(formatted[0].id);
+            // ONLY auto-select if NOT in editing/creating mode and no current selection
+            if (formatted.length > 0 && !selectedPlanId && !showForm && !viewMode && window.innerWidth >= 1024) {
+                setSelectedPlanId(formatted[0].id);
             } else if (formatted.length === 0) {
                 setSelectedPlanId(null);
             }
@@ -186,6 +216,31 @@ export const Planning: React.FC = () => {
         setFormEndDate(plan.endDate);
         setFormDescription(plan.description);
         setFormFiles(plan.files);
+        setFormSeriesId(plan.seriesId);
+        setFormSection(plan.section || '');
+        setFormObjectives(plan.objectives || '');
+        setFormBncc(plan.bncc_codes || '');
+        setFormMethodology(plan.methodology || '');
+        setFormResources(plan.resources || '');
+        setFormAssessment(plan.assessment || '');
+        setFormDuration(plan.duration || '');
+        setFormThemeArea(plan.theme_area || '');
+        setFormCoordinator(plan.coordinator_name || '');
+        setFormActivityType(plan.activity_type || '');
+        setFormSubject(plan.subject || currentUser?.subject || '');
+    };
+
+    const handleClone = (plan: Plan) => {
+        setIsEditing(true);
+        setSelectedPlanId(null); // Key: set to null so it creates a new record on save
+        setShowForm(true);
+        setViewMode(false);
+
+        setFormTitle(`${plan.title} (Cópia)`);
+        setFormStartDate(new Date().toLocaleDateString('sv-SE')); // Set to today
+        setFormEndDate(new Date().toLocaleDateString('sv-SE'));
+        setFormDescription(plan.description);
+        setFormFiles(plan.files || []); // Clone files too
         setFormSeriesId(plan.seriesId);
         setFormSection(plan.section || '');
         setFormObjectives(plan.objectives || '');
@@ -715,6 +770,35 @@ export const Planning: React.FC = () => {
                             <span className="material-symbols-outlined text-[20px]">add</span>
                         </button>
                     </div>
+                    {/* Bulk Selection Controls */}
+                    <div className="flex gap-2 mb-4 landscape:mb-0">
+                        {isSelectionMode ? (
+                            <div className="flex items-center gap-2 w-full">
+                                <button
+                                    onClick={handleBulkDelete}
+                                    disabled={selectedIds.length === 0}
+                                    className="flex-1 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white px-3 py-2 rounded-xl text-xs font-bold uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-sm">delete</span>
+                                    Excluir ({selectedIds.length})
+                                </button>
+                                <button
+                                    onClick={() => { setIsSelectionMode(false); setSelectedIds([]); }}
+                                    className="px-3 py-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-xs font-bold uppercase"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setIsSelectionMode(true)}
+                                className="w-full py-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 border border-dashed border-slate-300 dark:border-slate-700"
+                            >
+                                <span className="material-symbols-outlined text-sm">checklist</span>
+                                Selecionar
+                            </button>
+                        )}
+                    </div>
                     <div className="relative">
                         <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">search</span>
                         <input type="text" placeholder="Buscar..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-sm transition-all focus:bg-white dark:focus:bg-black`} />
@@ -767,12 +851,20 @@ export const Planning: React.FC = () => {
                         displayedPlans.map((plan, idx) => (
                             <button
                                 key={plan.id}
-                                onClick={() => handleSelectPlan(plan)}
+                                onClick={() => isSelectionMode ? toggleSelection(plan.id) : handleSelectPlan(plan)}
                                 style={{ '--delay': `${idx * 100}ms` } as React.CSSProperties}
-                                className={`w-full text-left p-5 landscape:p-2 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm animate-in fade-in md:slide-in-from-left duration-500 fill-mode-backwards animate-delay-[var(--delay)] ${selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600'}`}
+                                className={`w-full text-left p-5 landscape:p-2 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm animate-in fade-in md:slide-in-from-left duration-500 fill-mode-backwards animate-delay-[var(--delay)] ${isSelectionMode
+                                    ? (selectedIds.includes(plan.id) ? `bg-${theme.primaryColor}/5 border-${theme.primaryColor} dark:bg-${theme.primaryColor}/20` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800')
+                                    : (selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600')
+                                    }`}
                             >
+                                {isSelectionMode && (
+                                    <div className={`absolute left-4 top-1/2 -translate-y-1/2 size-5 rounded border-2 flex items-center justify-center transition-all z-10 ${selectedIds.includes(plan.id) ? `bg-${theme.primaryColor} border-${theme.primaryColor}` : 'border-slate-300 bg-white'}`}>
+                                        {selectedIds.includes(plan.id) && <span className="material-symbols-outlined text-sm text-white font-bold">check</span>}
+                                    </div>
+                                )}
                                 <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedPlanId === plan.id ? '' : 'bg-transparent group-hover:bg-slate-200'} transition-all`} style={{ backgroundColor: selectedPlanId === plan.id ? theme.primaryColorHex : undefined }}></div>
-                                <div className="pl-3 landscape:pl-0 w-full">
+                                <div className={`pl-3 w-full ${isSelectionMode ? 'pl-11' : 'landscape:pl-0'}`}>
                                     <div className="flex justify-between items-start mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
                                         <h4 className={`font-bold text-base landscape:text-sm truncate pr-2 flex-1 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
                                         <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
@@ -1062,6 +1154,13 @@ export const Planning: React.FC = () => {
                                             title="Baixar Word"
                                         >
                                             <span className="material-symbols-outlined landscape:text-2xl">description</span>
+                                        </button>
+                                        <button
+                                            onClick={() => currentPlan && handleClone(currentPlan)}
+                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
+                                            title="Clonar Aula"
+                                        >
+                                            <span className="material-symbols-outlined landscape:text-2xl">content_copy</span>
                                         </button>
                                         <button
                                             onClick={() => { setIsEditing(true); setShowForm(true); }}
