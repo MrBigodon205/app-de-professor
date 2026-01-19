@@ -83,24 +83,38 @@ export const Planning: React.FC = () => {
     };
 
 
+    const prevSeriesIdRef = useRef<string | null>(selectedSeriesId);
+    const hasMounted = useRef(false);
+
     useEffect(() => {
         fetchPlans();
 
-        // Mobile Landscape "Zen Mode" Reset
-        if (window.innerHeight < 500 && window.innerWidth > window.innerHeight) {
-            // Potentially auto-collapse sidebar or similar if needed
+        // Only reset UI state if the series has actually changed
+        // and we are not currently in the middle of editing/creating (unless the series changed)
+        if (hasMounted.current) {
+            if (prevSeriesIdRef.current !== selectedSeriesId) {
+                // If series changed, we MUST reset to avoid data mismatch
+                setSelectedPlanId(null);
+                setShowForm(false);
+                setViewMode(false);
+                prevSeriesIdRef.current = selectedSeriesId;
+            }
+        } else {
+            hasMounted.current = true;
+            // Initial mount logic
+            if (window.innerWidth < 1024) {
+                setSelectedPlanId(null);
+                setShowForm(false);
+                setViewMode(false);
+            }
         }
-
-        setSelectedPlanId(null);
-        setShowForm(false);
-        setViewMode(false);
     }, [selectedSeriesId, currentUser, activeSubject]);
 
     useEffect(() => {
-        if (selectedSeriesId) {
+        if (selectedSeriesId && !showForm && !isEditing) {
             setFormSeriesId(selectedSeriesId);
         }
-    }, [selectedSeriesId]);
+    }, [selectedSeriesId, showForm, isEditing]);
 
     const fetchPlans = async (silent = false) => {
         if (!currentUser) return;
@@ -834,7 +848,8 @@ export const Planning: React.FC = () => {
                     </div>
                 )}
 
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-0 landscape:space-y-1">
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-[400px] landscape:space-y-1">
+
                     {loading ? (
                         Array.from({ length: 5 }).map((_, i) => (
                             <div key={i} className="w-full h-24 rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 p-4 animate-pulse">
@@ -863,8 +878,9 @@ export const Planning: React.FC = () => {
                                         {selectedIds.includes(plan.id) && <span className="material-symbols-outlined text-sm text-white font-bold">check</span>}
                                     </div>
                                 )}
-                                <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedPlanId === plan.id ? '' : 'bg-transparent group-hover:bg-slate-200'} transition-all`} style={{ backgroundColor: selectedPlanId === plan.id ? theme.primaryColorHex : undefined }}></div>
-                                <div className={`pl-3 w-full ${isSelectionMode ? 'pl-11' : 'landscape:pl-0'}`}>
+                                <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedPlanId === plan.id ? '' : 'bg-transparent group-hover:bg-slate-200'} transition-all z-20`} style={{ backgroundColor: selectedPlanId === plan.id ? theme.primaryColorHex : undefined }}></div>
+                                <div className={`pl-4 w-full transition-all duration-300 ${isSelectionMode ? 'pl-16' : 'landscape:pl-0'}`}>
+
                                     <div className="flex justify-between items-start mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
                                         <h4 className={`font-bold text-base landscape:text-sm truncate pr-2 flex-1 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
                                         <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
@@ -990,6 +1006,10 @@ export const Planning: React.FC = () => {
                                             <input type="text" value={formDuration} onChange={e => setFormDuration(e.target.value)} placeholder="Ex: 2 aulas de 50min" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
                                         </div>
                                     </div>
+                                    <div>
+                                        <label className="label">Coordenador Pedagógico</label>
+                                        <input type="text" value={formCoordinator} onChange={e => setFormCoordinator(e.target.value)} placeholder="Nome do Coordenador" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
+                                    </div>
                                 </div>
 
                                 {/* 2. CONTEÚDO */}
@@ -1095,7 +1115,7 @@ export const Planning: React.FC = () => {
                                     {selectedPlanId && (
                                         <button onClick={handleDelete} className="px-6 py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors">Excluir</button>
                                     )}
-                                    <button onClick={handleSave} className={`px-8 py-2.5 rounded-xl bg-${theme.primaryColor} text-white font-bold shadow-lg shadow-${theme.primaryColor}/20 hover:shadow-xl hover:bg-${theme.secondaryColor} transition-all active:scale-95`}>
+                                    <button onClick={handleSave} className="px-8 py-2.5 rounded-xl text-white font-bold shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0" style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}40` }}>
                                         Salvar Aula
                                     </button>
                                 </div>

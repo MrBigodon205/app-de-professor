@@ -57,8 +57,13 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
         if (isPadding) return { backgroundColor: 'transparent', borderColor: 'transparent', boxShadow: 'none' };
 
         if (count === 0) return {
-            backgroundColor: 'rgba(255,255,255,0.05)',
-            borderColor: 'rgba(255,255,255,0.05)'
+            backgroundColor: 'rgba(226, 232, 240, 0.3)', // Slate 200 light
+            borderColor: 'rgba(226, 232, 240, 0.5)',
+            // In dark mode we override this:
+            ...(document.documentElement.classList.contains('dark') ? {
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                borderColor: 'rgba(255, 255, 255, 0.05)'
+            } : {})
         };
 
         const baseColor = theme?.primaryColorHex || '#06b6d4';

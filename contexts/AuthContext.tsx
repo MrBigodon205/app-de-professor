@@ -84,7 +84,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 };
 
                 localStorage.setItem(`cached_profile_${finalUser.id}`, JSON.stringify(finalUser));
-                setCurrentUser(finalUser);
+
+                // STABILIZATION: Only update state if data actually changed to prevent app-wide re-renders
+                setCurrentUser(prev => {
+                    if (prev && JSON.stringify(prev) === JSON.stringify(finalUser)) {
+                        return prev;
+                    }
+                    return finalUser;
+                });
+
                 setUserId(finalUser.id);
 
                 // Initialize activeSubject

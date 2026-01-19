@@ -326,8 +326,9 @@ export const Dashboard: React.FC = () => {
         .select('*')
         .eq('user_id', currentUser.id)
         .eq('subject', activeSubject)
-        .or(`date.eq.${today},and(start_date.lte.${today},end_date.gte.${today})`)
-        .order('date', { ascending: false })
+        // Show today's, ongoing, and future activities
+        .or(`date.gte.${today},and(start_date.lte.${today},end_date.gte.${today})`)
+        .order('date', { ascending: true }) // Show soonest first
         .order('created_at', { ascending: false });
 
       if (selectedSeriesId) {
@@ -569,12 +570,12 @@ export const Dashboard: React.FC = () => {
                     <span className="material-symbols-outlined text-lg relative z-10 group-hover:translate-x-1 transition-transform">arrow_forward</span>
                   </Link>
 
-                  <div className="flex items-center gap-6 px-6 py-3 rounded-xl bg-black/20 border border-white/10 text-xs text-white/80 font-mono">
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-6 px-6 py-3 rounded-xl bg-black/20 border border-white/10 text-xs text-white/80 font-mono w-full md:w-auto">
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-lg">schedule</span>
                       <span>Início: <span className="text-white font-bold">{new Date(todaysPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span></span>
                     </div>
-                    <div className="w-px h-4 bg-white/20"></div>
+                    <div className="w-px h-4 bg-white/20 hidden md:block"></div>
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-lg">event</span>
                       <span>Fim: <span className="text-white font-bold">{new Date(todaysPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span></span>
@@ -766,12 +767,12 @@ export const Dashboard: React.FC = () => {
                     <Link
                       key={act.id}
                       to="/activities"
-                      className="flex items-center justify-between p-4 bg-black/5 dark:bg-black/20 hover:bg-white/5 rounded-2xl border border-white/5 transition-all duration-300 group cursor-pointer backdrop-blur-sm"
+                      className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-black/5 dark:bg-black/20 hover:bg-white/5 rounded-2xl border border-white/5 transition-all duration-300 group cursor-pointer backdrop-blur-sm gap-3 md:gap-0"
                       style={{ borderColor: 'rgba(255,255,255,0.05)' }}
                     >
-                      <div className="flex items-center gap-4 overflow-hidden">
+                      <div className="flex items-center gap-4 overflow-hidden w-full md:w-auto">
                         <div
-                          className="size-10 rounded-xl flex items-center justify-center border transition-all"
+                          className="size-10 rounded-xl flex items-center justify-center border transition-all shrink-0"
                           style={{
                             backgroundColor: `${theme.primaryColorHex}15`,
                             color: theme.primaryColorHex,
@@ -780,13 +781,13 @@ export const Dashboard: React.FC = () => {
                         >
                           <span className="material-symbols-outlined">task_alt</span>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col min-w-0 flex-1">
                           <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white truncate transition-colors">{act.title}</span>
-                          <span className="text-[10px] font-mono text-slate-500 uppercase">{act.seriesId === '-1' ? 'Todas as Turmas' : 'Série Específica'}</span>
+                          <span className="text-[10px] font-mono text-slate-500 uppercase truncate">{act.seriesId === '-1' ? 'Todas as Turmas' : 'Série Específica'}</span>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-1 shrink-0 ml-4">
-                        <span className="text-xs font-bold text-slate-400 bg-white/5 px-2 py-1.5 rounded-lg border border-white/5 w-28 text-center block">
+                      <div className="flex flex-col items-start md:items-end gap-1 shrink-0 ml-0 md:ml-4 w-full md:w-auto">
+                        <span className="text-xs font-bold text-slate-400 bg-white/5 px-2 py-1.5 rounded-lg border border-white/5 w-full md:w-28 text-center block">
                           {act.type === 'Conteúdo' && act.startDate && act.endDate
                             ? `${new Date(act.startDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} - ${new Date(act.endDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`
                             : new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}
@@ -814,11 +815,11 @@ export const Dashboard: React.FC = () => {
                     <Link
                       key={plan.id}
                       to="/planning"
-                      className="flex items-center justify-between p-4 bg-black/5 dark:bg-black/20 hover:bg-white/5 rounded-2xl border border-white/5 transition-all duration-300 group cursor-pointer backdrop-blur-sm"
+                      className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-black/5 dark:bg-black/20 hover:bg-white/5 rounded-2xl border border-white/5 transition-all duration-300 group cursor-pointer backdrop-blur-sm gap-3 md:gap-0"
                     >
-                      <div className="flex items-center gap-4 overflow-hidden">
+                      <div className="flex items-center gap-4 overflow-hidden w-full md:w-auto">
                         <div
-                          className="size-10 rounded-xl flex items-center justify-center border transition-all"
+                          className="size-10 rounded-xl flex items-center justify-center border transition-all shrink-0"
                           style={{
                             backgroundColor: `${theme.secondaryColorHex}15`,
                             color: theme.secondaryColorHex,
@@ -827,12 +828,12 @@ export const Dashboard: React.FC = () => {
                         >
                           <span className="material-symbols-outlined">calendar_today</span>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col min-w-0 flex-1">
                           <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white truncate transition-colors">{plan.title}</span>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-1 shrink-0 ml-4">
-                        <span className="text-xs font-bold text-slate-400 bg-white/5 px-2 py-1.5 rounded-lg border border-white/5 w-28 text-center block">{new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                      <div className="flex flex-col items-start md:items-end gap-1 shrink-0 ml-0 md:ml-4 w-full md:w-auto">
+                        <span className="text-xs font-bold text-slate-400 bg-white/5 px-2 py-1.5 rounded-lg border border-white/5 w-full md:w-28 text-center block">{new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                       </div>
                     </Link>
                   ))
@@ -845,19 +846,19 @@ export const Dashboard: React.FC = () => {
 
         {/* Recent Ocurrences (Wide Card) */}
         <motion.div variants={itemVariants} className="col-span-1 xl:col-span-2 glass-card-soft p-8 flex flex-col h-full border border-white/10" data-tour="dashboard-occurrences">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4 md:gap-0">
             <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
               <span className="material-symbols-outlined text-amber-500">history</span>
               Ocorrências
               {stats.newObservations > 0 && (
-                <span className="bg-amber-500/20 text-amber-500 text-[9px] px-2 py-0.5 rounded-full border border-amber-500/30 font-black uppercase tracking-wide ml-2">
+                <span className="bg-amber-500/20 text-amber-500 text-[9px] px-2 py-0.5 rounded-full border border-amber-500/30 font-black uppercase tracking-wide ml-2 whitespace-nowrap">
                   +{stats.newObservations} Novas
                 </span>
               )}
             </h3>
             <Link
               to="/observations"
-              className={`text-xs font-bold uppercase tracking-wider hover:underline flex items-center gap-1`}
+              className={`text-xs font-bold uppercase tracking-wider hover:underline flex items-center gap-1 self-end md:self-auto`}
               style={{ color: theme.primaryColorHex }}
             >
               Ver Todas
@@ -880,17 +881,18 @@ export const Dashboard: React.FC = () => {
                     <span className="material-symbols-outlined text-lg">{getOccurrenceIcon(occ.type)}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <p className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-1 md:mb-0.5 gap-1">
+                      <p className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors truncate">
                         {(occ as any).student_name} • {occ.type}
                       </p>
-                      <span className="text-[10px] font-mono font-bold text-slate-500 bg-black/10 dark:bg-black/30 px-2 py-0.5 rounded border border-white/5">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                      <span className="text-[10px] font-mono font-bold text-slate-500 bg-black/10 dark:bg-black/30 px-2 py-0.5 rounded border border-white/5 w-fit whitespace-nowrap">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                     </div>
                     <p className="text-xs text-slate-400 line-clamp-1 group-hover:text-slate-500 transition-colors font-medium">"{occ.description}"</p>
                   </div>
                 </div>
               ))
             )}
+
           </div>
         </motion.div>
 

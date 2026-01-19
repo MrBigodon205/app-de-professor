@@ -639,13 +639,21 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                                 autoFocus
                                                             />
                                                             <div className="flex gap-1">
-                                                                <button onClick={saveEdit} className="p-2 bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-500/20 hover:scale-110 transition-transform"><span className="material-symbols-outlined">check</span></button>
-                                                                <button onClick={() => setEditingId(null)} className="p-2 bg-slate-200 text-slate-600 rounded-xl hover:scale-110 transition-transform"><span className="material-symbols-outlined">close</span></button>
+                                                                <button
+                                                                    onClick={saveEdit}
+                                                                    className="p-2 text-white rounded-xl shadow-lg transition-transform hover:scale-110 active:scale-95"
+                                                                    style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 8px 15px -3px ${theme.primaryColorHex}40` }}
+                                                                >
+                                                                    <span className="material-symbols-outlined">check</span>
+                                                                </button>
+                                                                <button onClick={() => setEditingId(null)} className="p-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl hover:scale-110 transition-transform active:scale-95">
+                                                                    <span className="material-symbols-outlined">close</span>
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     ) : (
                                                         <div className="flex items-center gap-4">
-                                                            <div className={`size-11 rounded-2xl bg-gradient-to-br ${student.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-xs font-black text-white shadow-lg shadow-slate-200 dark:shadow-none`}>
+                                                            <div className={`student-avatar student-avatar-md bg-gradient-to-br ${student.color || `from-indigo-600 to-indigo-800`}`}>
                                                                 {student.initials}
                                                             </div>
                                                             <div className="flex flex-col">

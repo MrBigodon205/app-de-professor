@@ -162,15 +162,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       {/* Floating Sidebar */}
       <aside className={`fixed top-4 bottom-4 left-4 z-[60] w-72 glass-card-premium border-r-0 transform transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1) flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[110%]'} ${isSidebarCollapsed ? 'lg:-translate-x-[110%] landscape:-translate-x-[110%]' : 'lg:translate-x-0 landscape:translate-x-0'}`}>
-        <div className="flex flex-col h-full justify-between bg-white/5 dark:bg-black/20">
+        <div className="flex flex-col h-full justify-between bg-white/40 dark:bg-black/20">
           <div className="lg:hidden landscape:hidden absolute top-4 right-4 z-50">
-            <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-white/10 dark:bg-white/5 rounded-full text-white/70 hover:text-white backdrop-blur-md transition-colors">
+            <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-slate-100 dark:bg-white/5 rounded-full text-slate-500 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white backdrop-blur-md transition-colors shadow-sm">
               <span className="material-symbols-outlined">close</span>
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 landscape:p-2 flex flex-col gap-4 landscape:gap-2">
-            <div className={`flex gap-3 items-center px-2 py-4 landscape:py-2 border-b border-white/10 mb-2 shrink-0 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+            <div className={`flex gap-3 items-center px-2 py-4 landscape:py-2 border-b border-slate-200 dark:border-white/10 mb-2 shrink-0 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
               <div className={`size-12 rounded-2xl bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-lg shadow-primary/30 shrink-0`}>
                 <span className="material-symbols-outlined text-3xl">school</span>
               </div>
@@ -182,9 +182,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               )}
             </div>
 
-            <div className="lg:hidden landscape:hidden flex flex-col gap-2 mb-2 p-3 bg-white/5 dark:bg-black/20 rounded-2xl border border-white/5 shrink-0 backdrop-blur-md">
+            <div className="lg:hidden landscape:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5 shrink-0 backdrop-blur-md shadow-sm">
               <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setIsProfileModalOpen(true); setIsMobileMenuOpen(false); }}>
-                <div className="size-10 rounded-full bg-slate-800 overflow-hidden shrink-0 border-2 border-primary/50 shadow-neon">
+                <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden shrink-0 border-2 border-primary/50 shadow-neon">
                   {currentUser?.photoUrl ? (
                     <img src={currentUser.photoUrl} alt="Profile" className="size-full object-cover" />
                   ) : (
@@ -194,20 +194,20 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   )}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold text-white shadow-black/50 drop-shadow-md">{currentUser?.name?.split(' ')[0]}</span>
-                  <span className="text-[9px] uppercase tracking-widest text-primary-hover font-mono">Meu Perfil</span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white shadow-black/5 dark:shadow-black/50 drop-shadow-sm">{currentUser?.name?.split(' ')[0]}</span>
+                  <span className="text-[9px] uppercase tracking-widest text-primary font-mono">Meu Perfil</span>
                 </div>
-                <span className="material-symbols-outlined text-white/50 ml-auto">settings</span>
+                <span className="material-symbols-outlined text-slate-400 dark:text-white/50 ml-auto bg-slate-200 dark:bg-white/10 rounded-full p-1 text-[16px]">settings</span>
               </div>
             </div>
 
             <div className="lg:hidden landscape:hidden px-3 mb-2 shrink-0">
               <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block px-1 font-mono">Matéria Atual</label>
-              <div className="bg-white/5 dark:bg-black/20 rounded-xl border border-white/5 overflow-hidden backdrop-blur-md">
-                <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="w-full flex items-center justify-between p-3">
+              <div className="bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 overflow-hidden backdrop-blur-md shadow-sm">
+                <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="w-full flex items-center justify-between p-3 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
                   <div className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-primary shadow-neon"></span>
-                    <span className="font-bold text-sm text-white">{activeSubject}</span>
+                    <span className="font-bold text-sm text-slate-900 dark:text-white">{activeSubject}</span>
                   </div>
                   <span className="material-symbols-outlined text-slate-400">expand_more</span>
                 </button>
@@ -216,7 +216,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
             <nav className="flex flex-col gap-2 landscape:gap-1 mt-2">
               {navItems.map((item) => (
-                <Link key={item.path} to={item.path} onClick={() => setIsMobileMenuOpen(false)} className={`relative flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group hover:scale-[1.02] active:scale-95 ${isActive(item.path) ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-white shadow-sm dark:shadow-neon border border-primary/10 dark:border-primary/20' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary dark:hover:text-white border border-transparent'} ${isSidebarCollapsed && !isMobileMenuOpen ? 'justify-center px-0' : ''}`} title={isSidebarCollapsed && !isMobileMenuOpen ? item.label : ''}>
+                <Link key={item.path} to={item.path} onClick={() => setIsMobileMenuOpen(false)} className={`relative flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group hover:scale-[1.02] active:scale-95 ${isActive(item.path) ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-white shadow-sm dark:shadow-neon border border-primary/10 dark:border-primary/20' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary dark:hover:text-white border border-transparent'} ${isSidebarCollapsed && !isMobileMenuOpen ? 'justify-center px-0' : ''}`} title={isSidebarCollapsed && !isMobileMenuOpen ? item.label : ''}>
                   <span className={`material-symbols-outlined text-2xl transition-transform duration-300 group-hover:rotate-12 ${isActive(item.path) ? 'icon-filled text-primary dark:text-white scale-110' : 'group-hover:text-primary group-hover:scale-110'}`}>{item.icon}</span>
                   {(!isSidebarCollapsed || isMobileMenuOpen) && <span className={`text-sm tracking-wide transition-all animate-in fade-in duration-300 ${isActive(item.path) ? 'font-bold' : 'font-medium'}`}>{item.label}</span>}
                   {isActive(item.path) && (!isSidebarCollapsed || isMobileMenuOpen) && <span className="absolute right-3 w-1.5 h-1.5 bg-primary rounded-full animate-pulse shadow-neon" />}
@@ -225,14 +225,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </nav>
           </div>
 
-          <div className="p-4 border-t border-white/10 flex flex-col gap-2">
-            <button onClick={() => { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); }} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-white/5 hover:text-amber-400 transition-all active:scale-95 hover:scale-[1.01] group border border-transparent hover:border-white/5 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-              <span className="material-symbols-outlined text-[24px] font-medium transition-transform duration-500 group-hover:rotate-[180deg]">dark_mode</span>
-              {!isSidebarCollapsed && <span className="text-sm font-medium animate-in fade-in duration-300">Alternar Tema</span>}
+          <div className="p-4 border-t border-slate-200 dark:border-white/10 flex flex-col gap-2">
+            <button onClick={() => { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); }} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-amber-500 dark:hover:text-amber-400 transition-all active:scale-95 hover:scale-[1.01] group border border-transparent hover:border-slate-200 dark:hover:border-white/5 ${isSidebarCollapsed ? 'lg:justify-center' : ''}`}>
+              <span className="material-symbols-outlined text-[24px] font-medium transition-transform duration-500 lg:group-hover:rotate-[180deg]">dark_mode</span>
+              <span className={`text-sm font-medium animate-in fade-in duration-300 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>Alternar Tema</span>
             </button>
-            <button onClick={logout} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 border border-transparent transition-all active:scale-95 hover:scale-[1.01] group ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+            <button onClick={logout} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-500/20 border border-transparent transition-all active:scale-95 hover:scale-[1.01] group ${isSidebarCollapsed ? 'lg:justify-center' : ''}`}>
               <span className="material-symbols-outlined text-[24px] font-medium transition-transform group-hover:-translate-x-1">logout</span>
-              {!isSidebarCollapsed && <span className="text-sm font-medium animate-in fade-in duration-300">Sair</span>}
+              <span className={`text-sm font-medium animate-in fade-in duration-300 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>Sair</span>
             </button>
           </div>
         </div>

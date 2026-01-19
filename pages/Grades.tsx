@@ -63,8 +63,8 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                     {student.number}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                        <div className={`flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br ${student.color} flex items-center justify-center text-white text-xs font-bold shadow-sm mr-3`}>
+                    <div className="flex items-center gap-4">
+                        <div className={`student-avatar student-avatar-sm bg-gradient-to-br ${student.color || 'from-indigo-600 to-indigo-800'}`}>
                             {student.initials}
                         </div>
                         <div className="text-sm font-medium text-slate-900 dark:text-white">
@@ -90,8 +90,8 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                 {student.number}
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
-                    <div className={`flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-br ${student.color} flex items-center justify-center text-white text-xs font-bold shadow-sm mr-3`}>
+                <div className="flex items-center gap-4">
+                    <div className={`student-avatar student-avatar-sm bg-gradient-to-br ${student.color || 'from-indigo-600 to-indigo-800'}`}>
                         {student.initials}
                     </div>
                     <div className="text-sm font-medium text-slate-900 dark:text-white">
@@ -605,9 +605,10 @@ export const Grades: React.FC = () => {
                             key={unit}
                             onClick={() => setSelectedUnit(unit)}
                             className={`px-4 py-2 landscape:py-1 landscape:px-2 rounded-md text-sm font-bold transition-all duration-200 whitespace-nowrap ${selectedUnit === unit
-                                ? `bg-${theme.baseColor}-600 dark:bg-${theme.baseColor}-500 text-white shadow-md transform scale-105`
+                                ? `text-white shadow-md transform scale-105`
                                 : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'
                                 }`}
+                            style={selectedUnit === unit ? { backgroundColor: theme.primaryColorHex } : {}}
                         >
                             <span className="landscape:hidden">
                                 {unit === 'final' ? 'Prova Final' : unit === 'recovery' ? 'Recuperação' : unit === 'results' ? 'Resultado' : `${unit}ª Unidade`}

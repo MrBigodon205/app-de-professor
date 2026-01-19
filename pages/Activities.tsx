@@ -84,12 +84,8 @@ export const Activities: React.FC = () => {
         setIsEditing(false);
     }, [selectedSeriesId, activeSubject]);
 
-    useEffect(() => {
-        if (!selectedActivityId) {
-            setIsEditing(false);
-            setIsPresentationOpen(false);
-        }
-    }, [selectedActivityId]);
+    // useEffect removed to fix "Create New" bug.
+    // If we auto-reset isEditing when selectedActivityId is null, we can't switch to "Create Mode".
 
     const fetchActivityTypes = async () => {
         try {
@@ -131,7 +127,7 @@ export const Activities: React.FC = () => {
             // Fetch students based on global context
             fetchStudents(selectedSeriesId, selectedSection);
         }
-    }, [selectedActivityId, selectedSeriesId, selectedSection, currentUser, activities.length]);
+    }, [selectedActivityId, selectedSeriesId, selectedSection, currentUser, activities]);
 
     const fetchStudents = async (seriesId?: string, section?: string) => {
         const targetSeries = seriesId !== undefined ? seriesId : selectedSeriesId;
@@ -202,10 +198,20 @@ export const Activities: React.FC = () => {
                 files: a.files || [],
                 completions: a.completions || [],
                 userId: a.user_id,
-                subject: a.subject
+                subject: a.subject,
+                createdAt: a.created_at
             }));
 
-            formatted.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            formatted.sort((a, b) => {
+                const dateA = new Date(a.date).getTime();
+                const dateB = new Date(b.date).getTime();
+                if (dateB !== dateA) return dateB - dateA; // Primary: Date Descending
+
+                // Secondary: Created At Descending (Newest created first)
+                const createdA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const createdB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return createdB - createdA;
+            });
 
             setActivities(formatted);
             // ONLY auto-select if NOT in editing/creating mode and no current selection
@@ -897,8 +903,9 @@ export const Activities: React.FC = () => {
                 )}
 
                 {/* List Items */}
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-0">
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0">
                     {loading ? (
+
                         Array.from({ length: 5 }).map((_, i) => (
                             <div key={i} className="w-full h-24 rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 p-4 animate-pulse">
                                 <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-3"></div>
@@ -916,7 +923,7 @@ export const Activities: React.FC = () => {
                                 <button
                                     key={act.id}
                                     onClick={() => isSelectionMode ? toggleSelection(act.id) : handleSelectActivity(act)}
-                                    className={`w-full text-left p-5 landscape:p-3 landscape:py-2 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${isSelectionMode
+                                    className={`w-full text-left p-4 landscape:p-3 landscape:py-2 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${isSelectionMode
                                         ? (selectedIds.includes(act.id) ? 'bg-indigo-50 border-indigo-500 dark:bg-indigo-900/20 dark:border-indigo-500' : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800')
                                         : (selectedActivityId === act.id ? `bg-white/60 dark:bg-surface-dark/60 backdrop-blur-md shadow-lg ring-1` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600')
                                         }`}
@@ -928,8 +935,8 @@ export const Activities: React.FC = () => {
                                         </div>
                                     )}
                                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedActivityId === act.id ? '' : 'bg-transparent group-hover:bg-slate-200'} transition-all`} style={{ backgroundColor: selectedActivityId === act.id ? theme.primaryColorHex : undefined }}></div>
-                                    <div className={`pl-3 w-full ${isSelectionMode ? 'pl-11' : 'landscape:pl-0'}`}>
-                                        <div className="flex justify-between items-start mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
+                                    <div className={`pl-4 w-full ${isSelectionMode ? 'pl-16' : 'landscape:pl-0'}`}>
+                                        <div className="flex justify-between items-center mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
                                             <h4 className={`font-bold text-base landscape:text-sm truncate pr-2 flex-1 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
                                             <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
                                         </div>
@@ -1128,8 +1135,14 @@ export const Activities: React.FC = () => {
                                 {selectedActivityId && (
                                     <button onClick={handleDelete} className="px-6 py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors">Excluir</button>
                                 )}
-                                <button onClick={handleSave} className={`px-8 py-2.5 rounded-xl text-white font-bold shadow-lg hover:shadow-xl transition-all active:scale-95`} style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}33` }}>
-                                    Salvar Atividade
+                                <button
+                                    onClick={handleSave}
+                                    disabled={loading}
+                                    className={`px-8 py-2.5 rounded-xl text-white font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center gap-2`}
+                                    style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}33` }}
+                                >
+                                    {loading && <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>}
+                                    {loading ? 'Salvando...' : 'Salvar Atividade'}
                                 </button>
                             </div>
                         </div>
@@ -1192,7 +1205,20 @@ export const Activities: React.FC = () => {
                                         <span className="material-symbols-outlined landscape:text-2xl">print</span>
                                     </button>
                                     <button
-                                        onClick={() => setIsEditing(true)}
+                                        onClick={() => {
+                                            if (currentActivity) {
+                                                setFormTitle(currentActivity.title);
+                                                setFormType(currentActivity.type);
+                                                setFormDate(currentActivity.date);
+                                                setFormStartDate(currentActivity.startDate || currentActivity.date);
+                                                setFormEndDate(currentActivity.endDate || currentActivity.date);
+                                                setFormDescription(currentActivity.description);
+                                                setFormFiles(currentActivity.files);
+                                                setFormSeriesId(currentActivity.seriesId);
+                                                setFormSection(currentActivity.section || '');
+                                            }
+                                            setIsEditing(true);
+                                        }}
                                         className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
                                         title="Editar Atividade"
                                     >
@@ -1388,7 +1414,7 @@ export const Activities: React.FC = () => {
                                             </button>
                                         </h3>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 min-h-[200px]">
                                             {students.map(s => {
                                                 const isDone = currentActivity.completions?.includes(s.id);
                                                 return (
@@ -1400,17 +1426,18 @@ export const Activities: React.FC = () => {
                                                         onClick={() => toggleCompletion(s.id)}
                                                         style={{ animationDelay: `${students.indexOf(s) * 30}ms`, ...(isDone ? { backgroundColor: `${theme.primaryColorHex}0D`, borderColor: `${theme.primaryColorHex}33` } : {}) }}
                                                     >
-                                                        <div className="flex items-center gap-3">
-                                                            <span className="text-xs font-mono text-slate-400 w-5">{s.number}</span>
-                                                            <span className={`text-sm font-bold ${isDone ? `text-${theme.primaryColor}` : 'text-slate-600 dark:text-slate-300'}`}>{s.name}</span>
+                                                        <div className="flex items-center gap-3 min-w-0">
+                                                            <span className="text-xs font-mono text-slate-400 w-5 shrink-0">{s.number}</span>
+                                                            <span className={`text-sm font-bold truncate ${isDone ? `text-${theme.primaryColor}` : 'text-slate-600 dark:text-slate-300'}`}>{s.name}</span>
                                                         </div>
-                                                        <div className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300`} style={isDone ? { backgroundColor: theme.primaryColorHex, borderColor: theme.primaryColorHex, color: 'white', transform: 'scale(1.1)', boxShadow: `0 1px 2px 0 ${theme.primaryColorHex}4d` } : { borderColor: '#e2e8f0' /* slate-200 */ }}>
+                                                        <div className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 shrink-0`} style={isDone ? { backgroundColor: theme.primaryColorHex, borderColor: theme.primaryColorHex, color: 'white', transform: 'scale(1.1)', boxShadow: `0 1px 2px 0 ${theme.primaryColorHex}4d` } : { borderColor: '#e2e8f0' /* slate-200 */ }}>
                                                             {isDone && <span className="material-symbols-outlined text-[16px] font-bold animate-in zoom-in spin-in-180 duration-300">check</span>}
                                                         </div>
                                                     </div>
                                                 );
                                             })}
                                         </div>
+
                                     </div>
                                 )}
                             </div>

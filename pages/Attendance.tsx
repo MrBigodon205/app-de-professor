@@ -83,20 +83,27 @@ const MiniCalendar: React.FC<{
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-in fade-in duration-300"
+                className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 animate-in fade-in duration-300"
                 onClick={onClose}
             />
 
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 lg:p-8 landscape:p-2 z-50 w-[90%] max-w-[320px] lg:max-w-[500px] max-h-[90vh] landscape:max-h-[95vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 landscape:flex landscape:flex-row landscape:items-start landscape:gap-4 landscape:w-auto landscape:max-w-none">
-                <div className="flex items-center justify-between mb-4 landscape:mb-0 landscape:flex-col landscape:gap-2 landscape:justify-center landscape:w-32 landscape:border-r landscape:border-slate-100 landscape:dark:border-slate-800 landscape:pr-2">
-                    <button onClick={() => changeMonth(-1)} className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 transition-colors">
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/50 dark:border-slate-700 p-4 lg:p-8 landscape:p-2 z-50 w-[90%] max-w-[320px] lg:max-w-[500px] max-h-[90vh] landscape:max-h-[95vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 landscape:flex landscape:flex-row landscape:items-start landscape:gap-4 landscape:w-auto landscape:max-w-none">
+
+                {/* Decorative background glow */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+                    <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-20" style={{ backgroundColor: theme.primaryColorHex }}></div>
+                    <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full blur-3xl opacity-20" style={{ backgroundColor: theme.secondaryColorHex }}></div>
+                </div>
+
+                <div className="relative flex items-center justify-between mb-4 landscape:mb-0 landscape:flex-col landscape:gap-2 landscape:justify-center landscape:w-32 landscape:border-r landscape:border-slate-200/50 landscape:dark:border-slate-700/50 landscape:pr-2">
+                    <button onClick={() => changeMonth(-1)} className="p-3 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-slate-500 transition-colors">
                         <span className="material-symbols-outlined text-lg lg:text-2xl">expand_less</span>
                     </button>
-                    <span className="font-bold text-slate-700 dark:text-slate-200 capitalize text-sm lg:text-2xl text-center leading-tight">
+                    <span className="font-bold text-slate-800 dark:text-white capitalize text-sm lg:text-2xl text-center leading-tight">
                         {viewDate.toLocaleString('pt-BR', { month: 'long' })}<br />
-                        <span className="text-xs lg:text-base text-slate-400">{viewDate.getFullYear()}</span>
+                        <span className="text-xs lg:text-base text-slate-400 font-mono">{viewDate.getFullYear()}</span>
                     </span>
-                    <button onClick={() => changeMonth(1)} className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 transition-colors">
+                    <button onClick={() => changeMonth(1)} className="p-3 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-slate-500 transition-colors">
                         <span className="material-symbols-outlined text-lg lg:text-2xl">expand_more</span>
                     </button>
 
@@ -104,17 +111,17 @@ const MiniCalendar: React.FC<{
                     <button
                         type="button"
                         onClick={onClose}
-                        className="hidden landscape:flex w-full mt-auto py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors justify-center"
+                        className="hidden landscape:flex w-full mt-auto py-2 bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors justify-center"
                     >
                         Fechar
                     </button>
                 </div>
 
-                <div className="landscape:flex-1">
+                <div className="relative landscape:flex-1">
 
                     <div className="grid grid-cols-7 gap-1 lg:gap-3 mb-2">
                         {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(day => (
-                            <div key={day} className="text-center text-[10px] lg:text-sm font-bold text-slate-400 py-1 uppercase tracking-widest">
+                            <div key={day} className="text-center text-[10px] lg:text-sm font-black text-slate-400 py-1 uppercase tracking-widest">
                                 {day}
                             </div>
                         ))}
@@ -132,18 +139,26 @@ const MiniCalendar: React.FC<{
                                             onClose();
                                         }
                                     }}
-                                    className={`h-9 w-9 lg:h-14 lg:w-14 landscape:size-7 flex items-center justify-center rounded-full text-xs lg:text-sm font-medium transition-all ${isSelected(day as number)
-                                        ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/30 scale-110`
-                                        : isToday(day as number)
-                                            ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor} font-bold`
-                                            : hasData(day as number)
-                                                ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800'
-                                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                    className={`h-9 w-9 lg:h-14 lg:w-14 landscape:size-7 flex items-center justify-center rounded-full text-xs lg:text-sm transition-all relative group
+                                    ${isSelected(day as number)
+                                            ? 'text-white shadow-lg scale-110 font-black z-10'
+                                            : isToday(day as number)
+                                                ? 'font-bold'
+                                                : hasData(day as number)
+                                                    ? 'text-emerald-500 dark:text-emerald-400 font-black drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]'
+                                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                                         }`}
+                                    style={
+                                        isSelected(day as number)
+                                            ? { backgroundColor: theme.primaryColorHex, color: '#fff', boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}4D` }
+                                            : isToday(day as number)
+                                                ? { backgroundColor: `${theme.primaryColorHex}1A`, color: theme.primaryColorHex }
+                                                : {}
+                                    }
                                 >
                                     <span className="z-10">{day}</span>
-                                    {day && hasData(day) && !isSelected(day) && (
-                                        <span className={`absolute bottom-0.5 w-1 h-1 rounded-full bg-emerald-500`}></span>
+                                    {hasData(day as number) && !isSelected(day as number) && (
+                                        <div className="absolute bottom-1 w-1 h-1 rounded-full bg-emerald-500"></div>
                                     )}
                                 </button>
                             );
@@ -154,13 +169,12 @@ const MiniCalendar: React.FC<{
                 {/* Mobile Close Button */}
                 <button
                     onClick={onClose}
-                    className="w-full mt-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg font-bold text-[10px] sm:hidden hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                    className="w-full mt-3 py-2 bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 rounded-lg font-bold text-[10px] sm:hidden hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                 >
                     Fechar
                 </button>
             </div>
         </>
-
     );
 };
 
@@ -169,7 +183,7 @@ export const Attendance: React.FC = () => {
     const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
     const [students, setStudents] = useState<Student[]>([]);
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString('sv-SE'));
     const [selectedUnit, setSelectedUnit] = useState<string>('1');
     const [viewMode, setViewMode] = useState<'daily' | 'history'>('daily');
     const [attendanceMap, setAttendanceMap] = useState<Record<string, string>>({});
@@ -311,6 +325,8 @@ export const Attendance: React.FC = () => {
                 .eq('user_id', currentUser.id)
                 .eq('subject', activeSubject)
                 .eq('unit', selectedUnit)
+                .eq('series_id', selectedSeriesId)
+                .eq('section', selectedSection)
                 .gte('date', `${year}-01-01`)
                 .lte('date', `${year}-12-31`)
                 .in('student_id', studentIds);
@@ -842,8 +858,8 @@ const AttendanceRow = React.memo(({ student: s, status, onStatusChange, theme }:
             <td className="px-3 sm:px-8 py-3 sm:py-4 landscape:py-1.5 landscape:px-2">
                 <div className="flex items-center gap-2 sm:gap-4">
                     <div className="h-6 sm:h-8 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block mx-2 landscape:hidden"></div>
-                    <div className={`size-8 sm:size-10 landscape:size-8 rounded-xl bg-gradient-to-br from-${theme.primaryColor}/10 to-${theme.secondaryColor}/10 flex items-center justify-center text-${theme.primaryColor} font-bold text-xs sm:text-sm border border-${theme.primaryColor}/10 shrink-0`}>
-                        {s.name.substring(0, 1)}
+                    <div className={`student-avatar student-avatar-sm bg-gradient-to-br ${s.color || `from-indigo-600 to-indigo-800`}`}>
+                        {s.initials || s.name.substring(0, 2)}
                     </div>
                     <div className="flex flex-col min-w-0">
                         <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white group-hover:text-primary transition-colors truncate max-w-[120px] sm:max-w-xs">{s.name}</span>

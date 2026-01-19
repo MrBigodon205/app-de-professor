@@ -54,6 +54,7 @@ export interface Activity {
   completions?: string[];
   userId: string;
   subject?: string;
+  createdAt?: string;
 }
 
 export interface Plan {

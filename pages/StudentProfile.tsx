@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useClass } from '../contexts/ClassContext';
@@ -33,33 +33,7 @@ export const StudentProfile: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
-    useEffect(() => {
-        if (selectedSeriesId && selectedSection) {
-            fetchData();
-        } else {
-            setStudents([]);
-            setOccurrences([]);
-            setLoading(false);
-        }
-    }, [selectedSeriesId, selectedSection, activeSubject]);
-
-    useEffect(() => {
-        if (students.length > 0) {
-            if (id) {
-                // If URL has an ID, use it
-                const found = students.find(s => s.id === id);
-                if (found) setSelectedStudentId(id);
-            } else {
-                // Desktop: Auto-select first if none. Mobile: Keep empty to show list.
-                const isMobile = window.innerWidth < 1024; // lg breakpoint
-                if (!isMobile && !selectedStudentId) {
-                    setSelectedStudentId(students[0].id);
-                }
-            }
-        }
-    }, [students, selectedStudentId, id]);
-
-    const fetchData = async (silent = false) => {
+    const fetchData = useCallback(async (silent = false) => {
         if (!currentUser) return;
         if (!silent) setLoading(true);
         try {
@@ -178,7 +152,33 @@ export const StudentProfile: React.FC = () => {
         } finally {
             if (!silent) setLoading(false);
         }
-    };
+    }, [currentUser, selectedSeriesId, selectedSection, activeSubject]);
+
+    useEffect(() => {
+        if (selectedSeriesId && selectedSection) {
+            fetchData();
+        } else {
+            setStudents([]);
+            setOccurrences([]);
+            setLoading(false);
+        }
+    }, [selectedSeriesId, selectedSection, activeSubject, fetchData]);
+
+    useEffect(() => {
+        if (students.length > 0) {
+            if (id) {
+                // If URL has an ID, use it
+                const found = students.find(s => s.id === id);
+                if (found) setSelectedStudentId(id);
+            } else {
+                // Desktop: Auto-select first if none. Mobile: Keep empty to show list.
+                const isMobile = window.innerWidth < 1024; // lg breakpoint
+                if (!isMobile && !selectedStudentId) {
+                    setSelectedStudentId(students[0].id);
+                }
+            }
+        }
+    }, [students, selectedStudentId, id]);
 
     // --- REALTIME SUBSCRIPTION ---
     useEffect(() => {
@@ -202,7 +202,7 @@ export const StudentProfile: React.FC = () => {
             supabase.removeChannel(channel);
             clearInterval(interval);
         };
-    }, [selectedSeriesId, selectedSection, currentUser, activeSubject]);
+    }, [selectedSeriesId, selectedSection, currentUser, activeSubject, fetchData]);
 
     const handleExportPDF = async () => {
         if (!student) return;
@@ -303,7 +303,7 @@ export const StudentProfile: React.FC = () => {
             drawStatCard(76, 85, 'Total Ocorrências', totalOccurrences.toString(), `${activeAlerts} alertas registrados`, [249, 115, 22] /* Orange */);
 
             // Calculate Global Grade Average using Shared Logic
-            const { annualTotal, status: annualStatus, baseTotal } = calculateAnnualSummary(student);
+            const { annualTotal, status: annualStatus, baseTotal, finalNeeded } = calculateAnnualSummary(student);
 
             // Determine Color based on status
             const statusColor = annualStatus === 'APPROVED' ? [34, 197, 94] // Green
@@ -441,33 +441,112 @@ export const StudentProfile: React.FC = () => {
             });
 
             // --- PEDAGOGICAL ANALYSIS (AUTOMATED) ---
-            const finalY = maxFinalY + 10;
 
             // Logic to generate the analysis text
             const generateAnalysis = () => {
-                let text = `${student.name} apresenta um desempenho `;
+                const parts: string[] = [];
+                const firstName = student.name.split(' ')[0];
 
-                // Academic
-                if (annualStatus === 'APPROVED') text += "satisfatório acadêmicamente, alcançando os objetivos propostos para o ciclo. ";
-                else if (annualStatus === 'RECOVERY') text += "que requer atenção, não atingindo a média necessária e necessitando de reforço nos conteúdos. ";
-                else text += "que demanda acompanhamento próximo para superação das dificuldades apresentadas. ";
+                // 1. ACADEMIC ANALYSIS
+                // Calculate average (0-10 scale approximation based on annual total / 3 units)
+                const approximateAverage = (annualTotal / 3);
 
-                // Attendance
+                if (annualStatus === 'APPROVED') {
+                    if (approximateAverage >= 9.0) {
+                        parts.push(`${firstName} apresenta um desempenho acadêmico excepcional, mantendo médias elevadas e demonstrando domínio completo dos conteúdos.`);
+                    } else if (approximateAverage >= 8.0) {
+                        parts.push(`${firstName} tem um desempenho acadêmico muito bom, alcançando consistentemente os objetivos de aprendizagem propostos.`);
+                    } else {
+                        parts.push(`${firstName} apresenta um desempenho satisfatório, atingindo a média necessária para aprovação no ciclo.`);
+                    }
+                } else if (annualStatus === 'FINAL') {
+                    const pointsNeeded = finalNeeded.toFixed(1);
+                    if (finalNeeded <= 3.0) {
+                        parts.push(`O desempenho acadêmico requer atenção. O aluno está em Prova Final por uma pequena diferença, necessitando de apenas ${pointsNeeded} pontos para aprovação.`);
+                    } else {
+                        parts.push(`O desempenho acadêmico inspira cuidados. O aluno está em Prova Final e precisará de dedicação para alcançar os ${pointsNeeded} pontos necessários.`);
+                    }
+                } else if (annualStatus === 'RECOVERY') {
+                    // Check if it was close to Final (8.0 total needed for Final)
+                    if (baseTotal >= 5.0) {
+                        parts.push(`O desempenho está abaixo do esperado. O aluno não atingiu a média para Prova Final e está em Recuperação. É fundamental intensificar os estudos nos conteúdos básicos.`);
+                    } else {
+                        parts.push(`O quadro acadêmico é preocupante. Com médias baixas durante o ano, o aluno está em Recuperação e necessitará de um plano de estudos rigoroso para reverter o quadro.`);
+                    }
+                } else {
+                    parts.push(`O desempenho acadêmico foi insatisfatório, não atingindo os critérios mínimos de aprovação estabelecidos.`);
+                }
+
+                // 2. ATTENDANCE ANALYSIS
                 const attPct = parseInt(attendancePercentage);
-                if (attPct >= 90) text += "Sua frequência às aulas é excelente, demonstrando compromisso. ";
-                else if (attPct >= 75) text += "A frequência é regular, mas faltas pontuais devem ser observadas. ";
-                else text += "A frequência está crítica, comprometendo o acompanhamento do conteúdo. ";
+                if (attPct >= 90) {
+                    parts.push("Sua frequência às aulas é excelente, o que contribui positivamente para seu aproveitamento.");
+                } else if (attPct >= 75) {
+                    parts.push("A frequência é regular, mas faltas pontuais devem ser evitadas para não prejudicar a sequência do aprendizado.");
+                } else if (attPct >= 45) {
+                    parts.push("ALERT: A frequência apresenta instabilidade. O número de faltas está alto e pode comprometer a aprovação se não houver melhora imediata.");
+                } else {
+                    parts.push("CRÍTICO: A frequência está extremamente baixa (abaixo de 45%), colocando o aluno em sério risco de reprovação por faltas. Requer intervenção imediata da gestão.");
+                }
 
-                // Behavioral
-                if (activeAlerts === 0) text += "Não possui registros disciplinares negativos, mantendo boa conduta.";
-                else if (activeAlerts <= 2) text += "Apresenta ocorrências pontuais que foram devidamente registradas.";
-                else text += "Possui número relevante de ocorrências comportamentais que impactam no ambiente escolar e requerem intervenção.";
+                // 3. BEHAVIORAL ANALYSIS
+                const negativeOccurrences = studentOccurrences.filter(o => o.type !== 'Elogio');
+                const praises = studentOccurrences.filter(o => o.type === 'Elogio');
 
-                return text;
+                if (negativeOccurrences.length > 0) {
+                    // Count types to find the most frequent issue
+                    const typeCounts: Record<string, number> = {};
+                    negativeOccurrences.forEach(o => {
+                        typeCounts[o.type] = (typeCounts[o.type] || 0) + 1;
+                    });
+
+                    const mostFrequentType = Object.keys(typeCounts).reduce((a, b) => typeCounts[a] > typeCounts[b] ? a : b);
+                    const count = typeCounts[mostFrequentType];
+
+                    if (mostFrequentType.toLowerCase().includes('celular')) {
+                        parts.push(`Comportamentalmente, observa-se o uso recorrente do celular em sala (${count} registros), o que tem dispersado a atenção e pode estar impactando o rendimento.`);
+                    } else if (mostFrequentType.toLowerCase().includes('indisciplina') || mostFrequentType.toLowerCase().includes('conversa')) {
+                        parts.push(`No aspecto disciplinar, há registros frequentes de ${mostFrequentType.toLowerCase()}, interferindo na dinâmica da aula e no aproveitamento do próprio aluno.`);
+                    } else if (mostFrequentType.toLowerCase().includes('material')) {
+                        parts.push(`Nota-se a falta constante de material didático, o que dificulta a realização das atividades propostas em sala.`);
+                    } else {
+                        parts.push(`Há registros de ocorrências comportamentais (${mostFrequentType.toLowerCase()}) que requerem orientação para garantir um ambiente propício ao aprendizado.`);
+                    }
+                } else {
+                    parts.push("A conduta disciplinar é exemplar, não havendo registros negativos que desabonem seu comportamento em sala.");
+                }
+
+                // Add Praise if available
+                if (praises.length > 0) {
+                    const lastPraise = praises[praises.length - 1]; // Use the most recent praise
+                    // Truncate description if too long
+                    let praiseDesc = lastPraise.description;
+                    if (praiseDesc.length > 100) praiseDesc = praiseDesc.substring(0, 100) + '...';
+
+                    parts.push(`Vale destacar o elogio registrado recentemente: "${praiseDesc}"`);
+                }
+
+                return parts.join(' ');
             };
 
+            const analysisText = generateAnalysis();
+            // Reduced width from 174 to 160 to prevent text cutoff and add better padding
+            const splitAnalysis = doc.splitTextToSize(analysisText, 160);
+            const lineHeight = 4; // mm
+            const textHeight = splitAnalysis.length * lineHeight;
+            const boxPadding = 16; // 8top + 8bottom
+            const boxHeight = textHeight + boxPadding + 10; // +10 for title space
+
+            let finalY = maxFinalY + 5; // Reduced spacing to 5
+
+            // Check Page Break - Increased threshold to 285 (approx 12mm margin bottom)
+            if (finalY + boxHeight > 285) {
+                doc.addPage();
+                finalY = 20; // Reset to top
+            }
+
             doc.setFillColor(248, 250, 252);
-            doc.roundedRect(14, finalY, 182, 35, 3, 3, 'F');
+            doc.roundedRect(14, finalY, 182, boxHeight, 3, 3, 'F');
 
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(9);
@@ -477,9 +556,7 @@ export const StudentProfile: React.FC = () => {
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(8);
             doc.setTextColor(51, 65, 85);
-            const analysisText = generateAnalysis();
-            const splitAnalysis = doc.splitTextToSize(analysisText, 174);
-            doc.text(splitAnalysis, 18, finalY + 14);
+            doc.text(splitAnalysis, 18, finalY + 14, { lineHeightFactor: 1.5 });
 
             // --- FOOTER ---
             const pageCount = (doc as any).internal.getNumberOfPages();
@@ -642,7 +719,7 @@ export const StudentProfile: React.FC = () => {
                                     ? `bg-${theme.primaryColor}/10 border border-${theme.primaryColor}/20`
                                     : 'hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent hover:border-slate-100 dark:hover:border-slate-800'}`}
                             >
-                                <div className={`size-10 rounded-full shrink-0 flex items-center justify-center text-sm font-black text-white bg-gradient-to-br ${s.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`}`}>
+                                <div className={`student-avatar student-avatar-sm bg-gradient-to-br ${s.color || `from-indigo-600 to-indigo-800`}`}>
                                     {s.initials}
                                 </div>
                                 <div className="min-w-0">
@@ -686,7 +763,7 @@ export const StudentProfile: React.FC = () => {
                                 </div>
 
                                 <div className="relative z-10 -mt-4 flex flex-col items-center">
-                                    <div className={`size-24 md:size-28 rounded-[36px] bg-gradient-to-br ${student?.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-4xl font-black text-white shadow-2xl shadow-indigo-500/30 ring-8 ring-white dark:ring-slate-900`}>
+                                    <div className={`student-avatar student-avatar-lg bg-gradient-to-br ${student?.color || `from-indigo-600 to-indigo-800`}`}>
                                         {student?.initials}
                                     </div>
 
@@ -819,155 +896,194 @@ export const StudentProfile: React.FC = () => {
                                     <div className="flex flex-col fluid-gap-s">
                                         {['1', '2', '3']
                                             .filter(u => selectedUnit === 'all' || selectedUnit === u)
-                                            .map(unit => {
-                                                const unitData = student.units[unit] || {};
-                                                const avg = calculateUnitTotal(student, unit);
-
-                                                return (
-                                                    <div key={unit} className="bg-white dark:bg-slate-900 fluid-p-m rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row fluid-gap-m animate-in fade-in slide-in-from-left duration-500 hover:border-slate-200 dark:hover:border-slate-700 transition-all">
-                                                        <div className={`w-full md:w-48 flex flex-col items-center justify-center p-8 bg-slate-50 dark:bg-slate-950 rounded-3xl border border-slate-100 dark:border-slate-800 relative overflow-hidden group/unit`}>
-                                                            <div className={`absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-${theme.primaryColor}/10 to-transparent rounded-full -mr-8 -mt-8`}></div>
-                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">{unit}ª Unidade</span>
-                                                            <div className="relative">
-                                                                <span className={`text-6xl font-black ${avg >= 6 ? 'text-emerald-500' : 'text-rose-500'} tracking-tighter`}>{avg.toFixed(1)}</span>
+                                            .map(unit => (
+                                                <div key={unit} className="bg-white dark:bg-slate-900 fluid-p-m rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 group/unit hover:border-primary/20 transition-all duration-500">
+                                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="size-14 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover/unit:bg-primary/10 transition-colors">
+                                                                <span className="material-symbols-outlined text-slate-400 group-hover/unit:text-primary">{unit === '1' ? 'looks_one' : unit === '2' ? 'looks_two' : 'looks_3'}</span>
                                                             </div>
-                                                            <div className="mt-6 flex flex-col items-center gap-1">
-                                                                <div className={`h-1.5 w-16 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden`}>
-                                                                    <div className={`h-full ${avg >= 6 ? 'bg-emerald-500' : 'bg-rose-500'} dynamic-width`} style={{ '--progress-width': `${avg * 10}%` } as React.CSSProperties}></div>
-                                                                </div>
-                                                                <span className="text-[10px] font-black text-slate-400 mt-2 uppercase">Status: {avg >= 6 ? 'Aprovado' : 'Abaixo'}</span>
+                                                            <div>
+                                                                <h4 className="font-black text-slate-900 dark:text-white text-lg">{unit}ª Unidade</h4>
+                                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Relatório de Desempenho</p>
                                                             </div>
                                                         </div>
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center justify-between mb-4">
-                                                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest leading-none">Parecer Pedagógico Analítico</label>
-                                                                <div className="flex gap-1">
-                                                                    <span className="material-symbols-outlined text-slate-300 text-sm">edit</span>
-                                                                </div>
+
+                                                        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-2 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                                            <div className="px-4 py-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm">
+                                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Média Final</p>
+                                                                <p className="text-xl font-black text-slate-800 dark:text-white leading-none">
+                                                                    {calculateUnitTotal(student, unit).toFixed(1)}
+                                                                </p>
                                                             </div>
-                                                            <textarea
-                                                                className={`w-full h-40 rounded-[24px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 resize-none focus:ring-8 focus:ring-${theme.primaryColor}/5 focus:border-${theme.primaryColor} transition-all text-sm font-medium leading-relaxed p-6 custom-scrollbar`}
-                                                                placeholder={`Descreva aqui a evolução, dificuldades e habilidades desenvolvidas por ${student.name.split(' ')[0]} nesta unidade...`}
-                                                                defaultValue={unitData.observation || ''}
-                                                                onBlur={(e) => saveObservation(unit, e.target.value)}
-                                                            ></textarea>
+                                                            <div className={`px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest ${calculateUnitTotal(student, unit) >= 6 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>
+                                                                {calculateUnitTotal(student, unit) >= 6 ? 'Acima da Média' : 'Abaixo da Média'}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                )
-                                            })}
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                                                        {Object.entries(student.units[unit] || {}).map(([key, value]) => {
+                                                            if (key === 'observation' || typeof value !== 'number') return null;
+                                                            return (
+                                                                <div key={key} className="bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100/50 dark:border-slate-700/50 flex flex-col gap-1 transition-all hover:translate-y-[-2px] hover:shadow-lg hover:shadow-slate-200/20 dark:hover:shadow-none">
+                                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{key}</p>
+                                                                    <p className="text-xl font-black text-slate-800 dark:text-white">{(value as number).toFixed(1)}</p>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    <div className="relative mt-4">
+                                                        <span className="material-symbols-outlined absolute left-4 top-4 text-slate-400 text-lg">edit_note</span>
+                                                        <textarea
+                                                            placeholder="Adicione uma observação pedagógica para esta unidade..."
+                                                            className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 pl-12 h-32 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all outline-none resize-none font-medium dark:text-slate-200"
+                                                            value={student.units[unit]?.observation || ''}
+                                                            onChange={(e) => saveObservation(unit, e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
                                     </div>
                                 </div>
 
-                                {/* Right Column: Occurrences & Statistics */}
-                                <div className="flex flex-col fluid-gap-m no-print">
-                                    {/* OCCURRENCES PANEL */}
-                                    <div className="bg-white dark:bg-slate-900 fluid-p-m rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col h-fit sticky top-6">
-                                        <div className="flex items-center justify-between mb-8">
-                                            <h3 className="font-black text-lg text-slate-900 dark:text-white flex items-center gap-3">
-                                                <span className={`size-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center`}>
-                                                    <span className="material-symbols-outlined">warning</span>
-                                                </span>
-                                                Pontos de Atenção
-                                            </h3>
-                                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-black px-3 py-1 rounded-full">{getStudentOccurrences().length}</span>
-                                        </div>
+                                {/* Right Column: Sidebar Stats */}
+                                <div className="flex flex-col fluid-gap-m">
+                                    {/* EXAM STATUS CARD */}
+                                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 text-slate-800 dark:text-white relative overflow-hidden group shadow-xl border border-slate-100 dark:border-slate-800">
+                                        <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-${theme.primaryColor}/20 to-transparent rounded-full -mr-16 -mt-16 blur-2xl group-hover:blur-3xl transition-all duration-700`}></div>
 
-                                        <div className="flex flex-col gap-4 max-h-[320px] overflow-y-auto pr-2 mb-8 custom-scrollbar">
-                                            {getStudentOccurrences().length === 0 ? (
-                                                <div className="flex flex-col items-center justify-center py-12 text-center">
-                                                    <div className="size-16 rounded-full bg-slate-50 dark:bg-slate-950 flex items-center justify-center mb-4 border border-slate-100 dark:border-slate-800">
-                                                        <span className="material-symbols-outlined text-slate-300 text-3xl">verified</span>
+
+                                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-lg text-primary">analytics</span>
+                                            Resumo Anual
+                                        </h4>
+
+                                        {(() => {
+                                            const { annualTotal, status, baseTotal } = calculateAnnualSummary(student);
+                                            const score = status === 'APPROVED' ? (annualTotal / 3) : annualTotal;
+
+                                            return (
+                                                <div className="flex flex-col gap-8">
+                                                    <div className="flex items-end gap-3">
+                                                        <p className="text-6xl font-black tracking-tighter leading-none">{score.toFixed(1)}</p>
+                                                        <div className="flex flex-col mb-1">
+                                                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{status === 'APPROVED' ? 'Média Final' : 'Pontos Totais'}</p>
+                                                            <div className="h-1.5 w-12 bg-primary rounded-full mt-1"></div>
+                                                        </div>
                                                     </div>
-                                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nenhuma ocorrência</p>
+
+                                                    <div className="flex flex-col gap-3">
+                                                        <div className="flex items-center justify-between text-xs font-bold px-1">
+                                                            <span className="text-slate-400 uppercase tracking-widest">Status do Aluno</span>
+                                                            <span className={status === 'APPROVED' ? 'text-emerald-400' : 'text-amber-400'}>
+                                                                {status === 'APPROVED' ? 'Aprovado' : status === 'FINAL' ? 'Prova Final' : status === 'RECOVERY' ? 'Recuperação' : 'Reprovado'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="h-4 w-full bg-slate-100 dark:bg-slate-800 rounded-full p-1 border border-slate-200 dark:border-slate-700/50">
+                                                            <div
+                                                                className={`h-full rounded-full transition-all duration-1000 ${status === 'APPROVED' ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)]'}`}
+                                                                style={{ width: `${Math.min((annualTotal / 18) * 100, 100)}%` }}
+                                                            ></div>
+                                                        </div>
+
+                                                        <p className="text-[10px] text-slate-500 font-bold text-center italic mt-1">
+                                                            {status === 'APPROVED' ? 'Parabéns! Requisitos mínimos atingidos.' : `Faltam ${(18 - annualTotal).toFixed(1)} pontos para aprovação.`}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+
+                                    {/* QUICK STATS GRID */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
+                                            <div className="size-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-4">
+                                                <span className="material-symbols-outlined">event_available</span>
+                                            </div>
+                                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Presença</p>
+                                            <p className="text-2xl font-black text-slate-800 dark:text-white leading-none">{getAttendanceStats().percentage}%</p>
+                                        </div>
+                                        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
+                                            <div className="size-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 mb-4">
+                                                <span className="material-symbols-outlined">warning</span>
+                                            </div>
+                                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Ocorrências</p>
+                                            <p className="text-2xl font-black text-slate-800 dark:text-white leading-none">{getStudentOccurrences().length}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* RECENT OCCURRENCES */}
+                                    <div className="bg-white dark:bg-slate-900 fluid-p-m rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden h-96 flex flex-col">
+                                        <h4 className="font-black text-slate-800 dark:text-white mb-6 flex items-center gap-3">
+                                            <span className="size-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+                                                <span className="material-symbols-outlined text-lg">history</span>
+                                            </span>
+                                            Histórico Recente
+                                        </h4>
+                                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-4">
+                                            {getStudentOccurrences().length === 0 ? (
+                                                <div className="flex flex-col items-center justify-center h-full opacity-40 grayscale">
+                                                    <span className="material-symbols-outlined text-4xl mb-2">folder_open</span>
+                                                    <p className="text-xs font-bold uppercase tracking-widest">Sem Registros</p>
                                                 </div>
                                             ) : (
-                                                getStudentOccurrences().slice().reverse().map(occ => (
-                                                    <div key={occ.id} className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/50 relative group/occ">
-                                                        <div className="flex justify-between items-start mb-3">
-                                                            <span className={`text-[10px] uppercase font-black tracking-widest px-2 py-1 rounded-lg border-2 ${occ.type === 'Elogio' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10' : 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-500/10'}`}>
-                                                                {occ.type}
-                                                            </span>
-                                                            <span className="text-[10px] font-bold text-slate-400">{occ.date}</span>
+                                                getStudentOccurrences().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(occ => (
+                                                    <div key={occ.id} className="group/occ relative pl-6 pb-6 border-l-2 border-slate-100 dark:border-slate-800 last:pb-0">
+                                                        <div className={`absolute -left-[9px] top-0 size-4 rounded-full border-4 border-white dark:border-slate-900 ring-1 ring-slate-100 dark:ring-slate-800 ${occ.type === 'Elogio' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]'}`}></div>
+                                                        <div className="bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-2xl transition-all group-hover/occ:bg-slate-100 dark:group-hover/occ:bg-slate-800">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                                                                <span className={`text-[10px] font-black uppercase tracking-widest ${occ.type === 'Elogio' ? 'text-emerald-600' : 'text-rose-600'}`}>{occ.type}</span>
+                                                            </div>
+                                                            <p className="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed">{occ.description}</p>
                                                         </div>
-                                                        <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed italic line-clamp-3">"{occ.description}"</p>
                                                     </div>
                                                 ))
                                             )}
                                         </div>
+                                    </div>
 
-                                        <div className="flex flex-col fluid-gap-m pt-8 border-t border-slate-100 dark:border-slate-800">
-                                            {/* GENERAL REPORT */}
-                                            <div className="flex flex-col">
-                                                <div className="flex items-center gap-2 mb-4">
-                                                    <span className={`material-symbols-outlined text-${theme.primaryColor} text-lg`}>auto_fix_high</span>
-                                                    <h4 className="font-black text-xs uppercase tracking-widest text-slate-500">Relatório Consolidado Anual</h4>
+                                    {/* ASSIGNED ACTIVITIES */}
+                                    <div className="bg-white dark:bg-slate-900 fluid-p-m rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden h-96 flex flex-col">
+                                        <h4 className="font-black text-slate-800 dark:text-white mb-6 flex items-center gap-3">
+                                            <span className="size-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+                                                <span className="material-symbols-outlined text-lg">assignment</span>
+                                            </span>
+                                            Atividades da Turma
+                                        </h4>
+                                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-3">
+                                            {getStudentActivities().length === 0 ? (
+                                                <div className="flex flex-col items-center justify-center h-full opacity-40 grayscale">
+                                                    <span className="material-symbols-outlined text-4xl mb-2">task</span>
+                                                    <p className="text-xs font-bold uppercase tracking-widest">Nenhuma Atividade</p>
                                                 </div>
-                                                <textarea
-                                                    className={`w-full h-32 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 resize-none focus:ring-8 focus:ring-${theme.primaryColor}/5 focus:border-${theme.primaryColor} transition-all text-xs font-medium leading-relaxed p-4 custom-scrollbar`}
-                                                    placeholder="Visão macro sobre o desenvolvimento socioemocional e cognitivo..."
-                                                    defaultValue={student.units.generalReport || ''}
-                                                    onBlur={(e) => saveObservation('generalReport', e.target.value)}
-                                                ></textarea>
-                                            </div>
-
-                                            {/* ATTENDANCE CARD */}
-                                            <div className={`bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} p-6 rounded-[28px] text-white shadow-xl shadow-${theme.primaryColor}/20 relative overflow-hidden group/att`}>
-                                                <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                                                    <span className="material-symbols-outlined text-[100px]">how_to_reg</span>
-                                                </div>
-                                                <div className="flex items-center justify-between mb-4 relative z-10">
-                                                    <h4 className="font-black text-xs uppercase tracking-[0.2em] opacity-80">Frequência Total</h4>
-                                                    <span className="text-3xl font-black tracking-tighter">{getAttendanceStats().percentage}%</span>
-                                                </div>
-                                                <div className="h-2 w-full bg-white/20 rounded-full overflow-hidden mb-4 relative z-10">
-                                                    <div
-                                                        className="h-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)] dynamic-width"
-                                                        style={{ '--progress-width': `${getAttendanceStats().percentage}%` } as React.CSSProperties}
-                                                    ></div>
-                                                </div>
-                                                <div className="flex items-center justify-between relative z-10">
-                                                    <span className="text-[10px] font-black uppercase opacity-60 tracking-widest">{getAttendanceStats().present} Dias Presentes</span>
-                                                    <span className="text-[10px] font-black uppercase opacity-60 tracking-widest">{getAttendanceStats().total} Letivos</span>
-                                                </div>
-                                            </div>
-
-                                            {/* RECENT ACTIVITIES */}
-                                            <div className="flex flex-col gap-4">
-                                                <h4 className="font-black text-xs uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                                                    <span className="material-symbols-outlined text-emerald-500 text-lg">verified</span>
-                                                    Atividades Realizadas
-                                                </h4>
-                                                <div className="flex flex-col gap-2">
-                                                    {getStudentActivities().length === 0 ? (
-                                                        <p className="text-[10px] text-zinc-400 italic">Sem registros no momento.</p>
-                                                    ) : (
-                                                        getStudentActivities().slice(0, 4).map(act => (
-                                                            <div key={act.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-[11px]">
-                                                                <div className="flex flex-col min-w-0 pr-2">
-                                                                    <span className="font-bold text-slate-700 dark:text-slate-300 truncate">{act.title}</span>
-                                                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{new Date(act.date).toLocaleDateString('pt-BR')}</span>
-                                                                </div>
-                                                                {act.done ? (
-                                                                    <span className="size-6 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-                                                                        <span className="material-symbols-outlined text-sm">check</span>
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="size-6 rounded-full bg-rose-500/10 text-rose-600 flex items-center justify-center shrink-0">
-                                                                        <span className="material-symbols-outlined text-xs">close</span>
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        ))
-                                                    )}
-                                                </div>
-                                            </div>
+                                            ) : (
+                                                getStudentActivities().map(act => (
+                                                    <div key={act.id} className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/50 border border-slate-100/50 dark:border-slate-700/50">
+                                                        <div className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${act.done ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-slate-200 dark:bg-slate-700 text-slate-400'}`}>
+                                                            <span className="material-symbols-outlined text-xl">{act.done ? 'check_circle' : 'pending_actions'}</span>
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="text-xs font-black text-slate-800 dark:text-white truncate">{act.title}</p>
+                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{act.done ? 'Concluída' : 'Pendente'}</p>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
                                         </div>
+                                    </div>
 
+                                    {/* MANAGEMENT ACTIONS */}
+                                    <div className="flex flex-col fluid-gap-s no-print">
                                         <button
-                                            className={`mt-8 w-full h-14 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:border-${theme.primaryColor} hover:text-${theme.primaryColor} hover:bg-${theme.primaryColor}/5 transition-all flex items-center justify-center gap-3 no-print active:scale-95`}
+                                            onClick={() => setIsTransferModalOpen(true)}
+                                            className="w-full h-16 rounded-[2rem] bg-slate-800 hover:bg-slate-950 text-white font-black flex items-center justify-center gap-3 transition-all active:scale-95 shadow-xl shadow-slate-900/20 group"
                                         >
-                                            <span className="material-symbols-outlined text-lg">add_circle</span>
-                                            Nova Ocorrência
+                                            <span className="material-symbols-outlined group-hover:rotate-12 transition-transform">move_group</span>
+                                            Mudar Turma do Aluno
                                         </button>
                                     </div>
                                 </div>

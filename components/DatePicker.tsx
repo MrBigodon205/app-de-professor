@@ -14,7 +14,6 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, 
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const theme = useTheme();
-    const primaryColor = theme.primaryColor;
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -93,12 +92,16 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, 
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-full flex items-center justify-between font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl transition-all duration-200 outline-none ${compact ? 'p-2.5 h-10 sm:h-11' : 'p-3 h-14 sm:h-auto'} ${isOpen ? `ring-2 ring-${primaryColor}/50 border-transparent bg-white dark:bg-black` : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                className={`w-full flex items-center justify-between font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl transition-all duration-200 outline-none ${compact ? 'p-2.5 h-10 sm:h-11' : 'p-3 h-14 sm:h-auto'} ${isOpen ? `ring-2 border-transparent bg-white dark:bg-black` : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                style={isOpen ? { ringColor: `${theme.primaryColorHex}80` } : undefined}
             >
                 <span className={`block truncate ${compact ? 'text-xs' : 'text-sm'} ${!value ? 'text-slate-400' : 'text-slate-900 dark:text-white font-bold'}`}>
                     {value ? formatDateDisplay(value) : (label || 'Selecionar data')}
                 </span>
-                <span className={`material-symbols-outlined text-slate-400 transition-transform duration-200 ${compact ? 'text-lg' : 'text-xl'} ${isOpen ? 'rotate-180 text-' + primaryColor : ''}`}>
+                <span
+                    className={`material-symbols-outlined text-slate-400 transition-transform duration-200 ${compact ? 'text-lg' : 'text-xl'} ${isOpen ? 'rotate-180' : ''}`}
+                    style={isOpen ? { color: theme.primaryColorHex } : undefined}
+                >
                     calendar_month
                 </span>
             </button>
@@ -107,21 +110,27 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, 
                 <>
                     {/* Backdrop */}
                     <div
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-in fade-in duration-300"
+                        className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 animate-in fade-in duration-300"
                         onClick={() => setIsOpen(false)}
                     />
 
-                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 lg:p-8 landscape:p-2 z-50 w-[90%] max-w-[320px] lg:max-w-[500px] max-h-[90vh] landscape:max-h-[95vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 landscape:flex landscape:flex-row landscape:items-start landscape:gap-4 landscape:w-auto landscape:max-w-none">
+                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/50 dark:border-slate-700 p-4 lg:p-8 landscape:p-2 z-50 w-[90%] max-w-[320px] lg:max-w-[500px] max-h-[90vh] landscape:max-h-[95vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 landscape:flex landscape:flex-row landscape:items-start landscape:gap-4 landscape:w-auto landscape:max-w-none">
 
-                        <div className="flex items-center justify-between mb-4 landscape:mb-0 landscape:flex-col landscape:gap-2 landscape:justify-center landscape:w-32 landscape:border-r landscape:border-slate-100 landscape:dark:border-slate-800 landscape:pr-2">
-                            <button type="button" onClick={() => changeMonth(-1)} className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 transition-colors">
+                        {/* Decorative background glow */}
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+                            <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-20" style={{ backgroundColor: theme.primaryColorHex }}></div>
+                            <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full blur-3xl opacity-20" style={{ backgroundColor: theme.secondaryColorHex }}></div>
+                        </div>
+
+                        <div className="relative flex items-center justify-between mb-4 landscape:mb-0 landscape:flex-col landscape:gap-2 landscape:justify-center landscape:w-32 landscape:border-r landscape:border-slate-200/50 landscape:dark:border-slate-700/50 landscape:pr-2">
+                            <button type="button" onClick={() => changeMonth(-1)} className="p-3 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-slate-500 transition-colors">
                                 <span className="material-symbols-outlined text-lg lg:text-2xl">expand_less</span>
                             </button>
-                            <span className="font-bold text-slate-700 dark:text-slate-200 capitalize text-sm lg:text-2xl text-center leading-tight">
+                            <span className="font-bold text-slate-800 dark:text-white capitalize text-sm lg:text-2xl text-center leading-tight">
                                 {viewDate.toLocaleString('pt-BR', { month: 'long' })}<br />
-                                <span className="text-xs lg:text-base text-slate-400">{viewDate.getFullYear()}</span>
+                                <span className="text-xs lg:text-base text-slate-400 font-mono">{viewDate.getFullYear()}</span>
                             </span>
-                            <button type="button" onClick={() => changeMonth(1)} className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 transition-colors">
+                            <button type="button" onClick={() => changeMonth(1)} className="p-3 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-slate-500 transition-colors">
                                 <span className="material-symbols-outlined text-lg lg:text-2xl">expand_more</span>
                             </button>
 
@@ -129,13 +138,13 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, 
                             <button
                                 type="button"
                                 onClick={() => setIsOpen(false)}
-                                className="hidden landscape:flex w-full mt-auto py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors justify-center"
+                                className="hidden landscape:flex w-full mt-auto py-2 bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors justify-center"
                             >
                                 Fechar
                             </button>
                         </div>
 
-                        <div className="landscape:flex-1">
+                        <div className="relative landscape:flex-1">
 
                             <div className="grid grid-cols-7 gap-1 lg:gap-3 mb-2 text-center text-[10px] lg:text-sm font-black text-slate-400 py-1 uppercase tracking-widest">
                                 {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => <div key={i}>{d}</div>)}
@@ -149,19 +158,26 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, 
                                             key={i}
                                             type="button"
                                             onClick={() => handleDateSelect(day, month, year)}
-                                            className={`h-9 w-9 lg:h-14 lg:w-14 landscape:h-8 landscape:w-8 flex flex-col items-center justify-center rounded-full relative transition-all duration-200 mx-auto
-                                            ${isSelected(day)
-                                                    ? `bg-${primaryColor} text-white shadow-lg shadow-${primaryColor}/30 font-bold scale-110 z-10`
+                                            className={`h-9 w-9 lg:h-14 lg:w-14 landscape:h-8 landscape:w-8 flex flex-col items-center justify-center rounded-full relative transition-all duration-200 mx-auto group`}
+                                            style={
+                                                isSelected(day)
+                                                    ? { backgroundColor: theme.primaryColorHex, color: '#fff', boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}4D` }
                                                     : isToday(day)
-                                                        ? `bg-${primaryColor}/10 text-${primaryColor} font-bold`
-                                                        : hasMark(day)
-                                                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800 font-bold'
-                                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-                                                }`}
+                                                        ? { backgroundColor: `${theme.primaryColorHex}1A`, color: theme.primaryColorHex }
+                                                        : {}
+                                            }
                                         >
-                                            <span className="text-xs lg:text-sm leading-none z-10">{day}</span>
+                                            <span
+                                                className={`text-xs lg:text-sm leading-none z-10 ${isSelected(day) ? 'font-black scale-110' :
+                                                        isToday(day) ? 'font-bold' :
+                                                            hasMark(day) ? 'font-black text-emerald-500' :
+                                                                'text-slate-600 dark:text-slate-300 group-hover:bg-slate-100 dark:group-hover:bg-slate-800'
+                                                    }`}
+                                            >
+                                                {day}
+                                            </span>
                                             {hasMark(day) && !isSelected(day) && (
-                                                <span className="absolute bottom-1 w-1 h-1 rounded-full bg-emerald-500"></span>
+                                                <div className="absolute bottom-1 w-1 h-1 rounded-full bg-emerald-500"></div>
                                             )}
                                         </button>
                                     );
@@ -173,7 +189,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, 
                         <button
                             type="button"
                             onClick={() => setIsOpen(false)}
-                            className="w-full mt-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-bold text-xs uppercase tracking-widest lg:hidden landscape:hidden hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                            className="w-full mt-4 py-3 bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 rounded-xl font-bold text-xs uppercase tracking-widest lg:hidden landscape:hidden hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                         >
                             Fechar
                         </button>
