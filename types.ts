@@ -116,6 +116,9 @@ export type Subject =
   | 'Inglês'
   | 'Ensino Religioso'
   | 'Ciências'
+  | 'Biologia'
+  | 'Sociologia'
+  | 'Espanhol'
   | 'Geral';
 
 export interface User {

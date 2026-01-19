@@ -8,9 +8,9 @@ import { Subject } from '../types';
 import { ForgotPasswordModal } from '../components/ForgotPasswordModal';
 
 
-const SUBJECTS: Subject[] = [
-  'Filosofia', 'Educação Física', 'Matemática', 'Física', 'História', 'Geografia',
-  'Artes', 'Projeto de Vida', 'Literatura', 'Português', 'Redação', 'Química', 'Ciências'
+'Filosofia', 'Educação Física', 'Matemática', 'Física', 'História', 'Geografia',
+  'Artes', 'Projeto de Vida', 'Literatura', 'Português', 'Redação', 'Química', 'Ciências',
+  'Biologia', 'Sociologia', 'Inglês', 'Espanhol', 'Ensino Religioso'
 ];
 
 export const Login: React.FC = () => {
