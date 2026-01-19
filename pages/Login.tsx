@@ -8,7 +8,8 @@ import { Subject } from '../types';
 import { ForgotPasswordModal } from '../components/ForgotPasswordModal';
 
 
-'Filosofia', 'Educação Física', 'Matemática', 'Física', 'História', 'Geografia',
+const SUBJECTS: Subject[] = [
+  'Filosofia', 'Educação Física', 'Matemática', 'Física', 'História', 'Geografia',
   'Artes', 'Projeto de Vida', 'Literatura', 'Português', 'Redação', 'Química', 'Ciências',
   'Biologia', 'Sociologia', 'Inglês', 'Espanhol', 'Ensino Religioso'
 ];
