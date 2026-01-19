@@ -40,7 +40,7 @@ export const Activities: React.FC = () => {
     const [formEndDate, setFormEndDate] = useState('');
     const [formDescription, setFormDescription] = useState('');
     const [formFiles, setFormFiles] = useState<AttachmentFile[]>([]);
-    const [viewerFile, setViewerFile] = useState<AttachmentFile | null>(null); // State for the file viewer
+    const [viewerFile, setViewerFile] = useState<AttachmentFile | null>(null);
     const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
     const [isPresentationOpen, setIsPresentationOpen] = useState(false); // State for presentation mode
     const [formSeriesId, setFormSeriesId] = useState('');
@@ -935,7 +935,7 @@ export const Activities: React.FC = () => {
                                         </div>
                                     )}
                                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedActivityId === act.id ? '' : 'bg-transparent group-hover:bg-slate-200'} transition-all`} style={{ backgroundColor: selectedActivityId === act.id ? theme.primaryColorHex : undefined }}></div>
-                                    <div className={`pl-4 w-full ${isSelectionMode ? 'pl-16' : 'landscape:pl-0'}`}>
+                                    <div className={`pl-4 w-full ${isSelectionMode ? 'pl-16 landscape:pl-16' : 'landscape:pl-0'}`}>
                                         <div className="flex justify-between items-center mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
                                             <h4 className={`font-bold text-base landscape:text-sm truncate pr-2 flex-1 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
                                             <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
@@ -1470,11 +1470,13 @@ export const Activities: React.FC = () => {
             )}
 
             {/* File Viewer Modal */}
-            <FileViewerModal
-                isOpen={!!viewerFile}
-                onClose={() => setViewerFile(null)}
-                file={viewerFile ? { name: viewerFile.name, url: viewerFile.url, type: viewerFile.name.split('.').pop() } : null}
-            />
+            {viewerFile && (
+                <FileViewerModal
+                    isOpen={!!viewerFile}
+                    onClose={() => setViewerFile(null)}
+                    file={viewerFile}
+                />
+            )}
         </div>
     );
 };

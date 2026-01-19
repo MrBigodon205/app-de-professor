@@ -879,7 +879,7 @@ export const Planning: React.FC = () => {
                                     </div>
                                 )}
                                 <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedPlanId === plan.id ? '' : 'bg-transparent group-hover:bg-slate-200'} transition-all z-20`} style={{ backgroundColor: selectedPlanId === plan.id ? theme.primaryColorHex : undefined }}></div>
-                                <div className={`pl-4 w-full transition-all duration-300 ${isSelectionMode ? 'pl-16' : 'landscape:pl-0'}`}>
+                                <div className={`pl-4 w-full transition-all duration-300 ${isSelectionMode ? 'pl-16 landscape:pl-16' : 'landscape:pl-0'}`}>
 
                                     <div className="flex justify-between items-start mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
                                         <h4 className={`font-bold text-base landscape:text-sm truncate pr-2 flex-1 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
