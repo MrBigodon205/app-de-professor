@@ -171,9 +171,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 landscape:p-2 flex flex-col gap-4 landscape:gap-2">
             <div className={`flex gap-3 items-center px-2 py-4 landscape:py-2 border-b border-slate-200 dark:border-white/10 mb-2 shrink-0 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-              <div className={`size-12 rounded-2xl bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-lg shadow-primary/30 shrink-0`}>
-                <span className="material-symbols-outlined text-3xl">school</span>
-              </div>
+              <img src="/logo.png" alt="Acerta+" className="size-12 object-contain drop-shadow-md shrink-0" />
               {!isSidebarCollapsed && (
                 <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500 min-w-0">
                   <h1 className="text-slate-800 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:to-white/70 text-2xl font-black leading-none tracking-tight truncate filter drop-shadow-sm">Prof. Acerta<span className="text-primary">+</span></h1>
@@ -260,9 +258,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 <span className="material-symbols-outlined">menu</span>
               </button>
               <div className="lg:hidden landscape:hidden flex items-center gap-2">
-                <div className={`size-8 rounded-lg bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-lg shadow-primary/20`}>
-                  <span className="material-symbols-outlined text-lg">school</span>
-                </div>
+                <img src="/logo.svg" alt="Acerta+" className="size-8 object-contain drop-shadow-md" />
                 <span className="font-bold text-slate-800 dark:text-white text-xs landscape:hidden">Prof. Acerta+</span>
               </div>
 
@@ -358,9 +354,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         <div className="xl:hidden px-3 pt-2.5 -mb-0.5 z-30 landscape:pt-1 landscape:px-2">
           <button onClick={() => setIsClassSelectorOpen(true)} className="w-full bg-white/90 dark:bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl border border-slate-200 dark:border-white/5 shadow-lg dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all landscape:p-1.5 landscape:rounded-xl">
             <div className="flex items-center gap-2.5">
-              <div className={`size-8 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20 landscape:size-7`}>
-                <span className="material-symbols-outlined text-base font-black">school</span>
-              </div>
+              <img src="/logo.png" alt="Acerta+" className="size-8 landscape:size-7 object-contain drop-shadow-md" />
               <div className="flex flex-col items-start gap-0">
                 <span className="text-[7px] uppercase font-black tracking-widest text-slate-400 leading-none mb-0.5 landscape:hidden">Contexto</span>
                 <span className="text-[11px] font-black text-slate-900 dark:text-white tracking-tight truncate max-w-[120px] xs:max-w-none text-left flex items-center gap-1.5 landscape:text-[10px]">

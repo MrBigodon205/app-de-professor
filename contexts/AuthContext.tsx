@@ -180,6 +180,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 // Only fetch if it's not the initial redundant call or if it's a specific event
                 if (!initialLoadDone || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+
+                    // SOCIAL LOGIN POST-PROCESSING:
+                    // Check if there are pending subjects from registration flow (Google Login)
+                    const pendingSubs = localStorage.getItem('pending_subs');
+                    if (pendingSubs && event === 'SIGNED_IN') {
+                        try {
+                            const subjects = JSON.parse(pendingSubs);
+                            if (Array.isArray(subjects) && subjects.length > 0) {
+                                // console.log("Applying pending subjects to new Google user...", subjects);
+                                const mainSubject = subjects[0];
+
+                                // Update profile immediately
+                                await supabase.from('profiles').update({
+                                    subject: mainSubject,
+                                    subjects: subjects
+                                }).eq('id', session.user.id);
+
+                                // Clean up
+                                localStorage.removeItem('pending_subs');
+                            }
+                        } catch (e) {
+                            console.error("Error applying pending subjects:", e);
+                        }
+                    }
+
                     fetchProfile(session.user.id);
                     initialLoadDone = true;
                 }
@@ -389,8 +414,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // Background seeding
                 seedUserData(data.user.id);
 
-                // Local backup removed
+                // FORCE UPDATE PROFILE to ensure metadata is synced
+                // The trigger might miss proper mapping sometimes, so we enforce it here.
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .update({
+                        name: name,
+                        subject: subject,
+                        subjects: subjects
+                    })
+                    .eq('id', data.user.id);
 
+                if (profileError) {
+                    console.warn("Manual profile update failed:", profileError);
+                    // We don't fail the registration here, as the user is created.
+                }
 
                 return { success: true };
             }
