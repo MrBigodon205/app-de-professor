@@ -817,7 +817,6 @@ export const Activities: React.FC = () => {
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
-                accept="*/*"
                 multiple
                 onChange={handleFileChange}
                 title="Upload de arquivo"
