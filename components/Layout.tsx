@@ -197,8 +197,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         layout
         transition={{ type: "spring", bounce: 0, duration: 0.4 }}
         className={`fixed top-4 bottom-4 left-4 z-[60] w-72 glass-card-premium border-r-0 transform flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden 
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[120%]'} 
-          ${isSidebarCollapsed ? 'lg:-translate-x-[120%] landscape:-translate-x-[120%]' : 'lg:translate-x-0 landscape:translate-x-0'}
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-80'} 
+          ${isSidebarCollapsed ? 'lg:-translate-x-80 landscape:-translate-x-80' : 'lg:translate-x-0 landscape:translate-x-0'}
         `}
       >
         <div className="flex flex-col h-full justify-between bg-white/40 dark:bg-black/20">
