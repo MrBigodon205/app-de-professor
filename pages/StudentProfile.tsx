@@ -46,9 +46,9 @@ export const StudentProfile: React.FC = () => {
                 .eq('user_id', currentUser.id);
 
             const independentPromises = Promise.all([
-                supabase.from('occurrences').select('*').eq('user_id', currentUser.id),
+                supabase.from('occurrences').select('*').eq('user_id', currentUser.id).order('date', { ascending: false }),
                 supabase.from('attendance').select('*').eq('user_id', currentUser.id),
-                supabase.from('activities').select('*').eq('user_id', currentUser.id).eq('series_id', selectedSeriesId).eq('section', selectedSection),
+                supabase.from('activities').select('*').eq('user_id', currentUser.id).eq('series_id', selectedSeriesId).or(`section.eq.${selectedSection},section.is.null,section.eq.,section.eq.Todas as Turmas`),
                 supabase.from('plans').select('*').eq('user_id', currentUser.id).eq('series_id', selectedSeriesId).eq('section', selectedSection)
             ]);
 
@@ -439,6 +439,85 @@ export const StudentProfile: React.FC = () => {
 
                 if (currentY > maxFinalY) maxFinalY = currentY;
             });
+
+            // --- ACTIVITIES & TASKS SECTION ---
+            let actY = maxFinalY + 5;
+
+            // Check page break for Activities
+            if (actY > 250) {
+                doc.addPage();
+                actY = 20;
+            }
+
+            // Filter activities for this student (already filtered by class/section in fetch, but let's sort by date)
+            const studentActivities = activities
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+            if (studentActivities.length > 0) {
+                doc.setFillColor(241, 245, 249); // Slate 100
+                doc.rect(14, actY, 182, 8, 'F');
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(30, 41, 59);
+                doc.text('ATIVIDADES & TAREFAS', 18, actY + 5.5);
+
+                // Stats
+                const totalActs = studentActivities.length;
+                const doneActs = studentActivities.filter(a => a.completions?.includes(student.id)).length;
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                doc.text(`Entregues: ${doneActs} de ${totalActs}`, 190, actY + 5.5, { align: 'right' });
+
+                actY += 10;
+
+                const actBody = studentActivities.map(act => {
+                    const isDone = act.completions?.includes(student.id);
+                    const date = new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR');
+                    return [date, act.title, act.type, isDone ? 'CONCLUÍDO' : 'PENDENTE'];
+                });
+
+                autoTable(doc, {
+                    startY: actY,
+                    head: [['Data', 'Atividade', 'Tipo', 'Status']],
+                    body: actBody,
+                    theme: 'grid',
+                    styles: {
+                        fontSize: 8,
+                        cellPadding: 2,
+                        valign: 'middle',
+                        lineColor: [241, 245, 249],
+                        lineWidth: 0.1,
+                        textColor: [51, 65, 85]
+                    },
+                    headStyles: {
+                        fillColor: [248, 250, 252],
+                        textColor: [71, 85, 105],
+                        fontStyle: 'bold',
+                        lineWidth: 0,
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 25, halign: 'center' },
+                        1: { cellWidth: 'auto' },
+                        2: { cellWidth: 30, halign: 'center' },
+                        3: { cellWidth: 30, halign: 'center', fontStyle: 'bold' }
+                    },
+                    margin: { left: 14, right: 14 },
+                    didParseCell: (data) => {
+                        if (data.section === 'body' && data.column.index === 3) {
+                            const val = data.cell.raw;
+                            if (val === 'CONCLUÍDO') {
+                                data.cell.styles.textColor = [22, 163, 74]; // Green
+                            } else {
+                                data.cell.styles.textColor = [239, 68, 68]; // Red
+                            }
+                        }
+                    }
+                });
+
+                maxFinalY = (doc as any).lastAutoTable.finalY;
+            } else {
+                // No activities found
+            }
 
             // --- PEDAGOGICAL ANALYSIS (AUTOMATED) ---
 
