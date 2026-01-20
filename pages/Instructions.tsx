@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../hooks/useTheme';
+import { useTutorial } from '../contexts/TutorialContext';
 
 interface SectionProps {
     id: string;
@@ -79,6 +80,7 @@ const InstructionSection: React.FC<SectionProps> = ({ id, title, icon, isOpen, o
 
 export const Instructions: React.FC = () => {
     const theme = useTheme();
+    const { startTutorial } = useTutorial();
     const [openSection, setOpenSection] = useState<string | null>('classes');
 
     const toggleSection = (id: string) => {
@@ -169,6 +171,14 @@ export const Instructions: React.FC = () => {
                             <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 font-medium">
                                 Guia completo para dominar o <strong>Prof. Acerta+</strong>
                             </p>
+
+                            <button
+                                onClick={startTutorial}
+                                className={`mt-4 px-8 py-3 rounded-xl bg-${theme.primaryColor} text-white font-bold shadow-lg shadow-${theme.primaryColor}/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-3`}
+                            >
+                                <span className="material-symbols-outlined">play_circle</span>
+                                Iniciar Tour Interativo
+                            </button>
                         </div>
                     </motion.div>
                 </div>

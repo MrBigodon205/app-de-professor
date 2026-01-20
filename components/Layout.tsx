@@ -327,6 +327,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 </div>
               )}
               <div className="hidden md:block landscape:block">
+                <Link to="/instructions" title="Precisa de ajuda?" className="flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-white/5 transition-colors group">
+                  <span className="material-symbols-outlined group-hover:animate-bounce">help</span>
+                </Link>
+              </div>
+              <div className="hidden md:block landscape:block">
                 <NotificationCenter />
               </div>
               <button onClick={() => setIsProfileModalOpen(true)} className="flex items-center gap-3 bg-white/50 dark:bg-white/5 pl-1.5 pr-4 py-1.5 rounded-xl border border-white/20 dark:border-white/5 shadow-sm hover:shadow-neon hover:border-primary/30 transition-all group active:scale-95 backdrop-blur-sm">
