@@ -137,7 +137,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                 onClick={onClose}
             ></div>
 
-            <div className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-[85vh]">
+            <div className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-auto md:max-h-[80vh] landscape:h-[95dvh] landscape:md:h-auto">
 
                 {/* Close Button Mobile */}
                 <button

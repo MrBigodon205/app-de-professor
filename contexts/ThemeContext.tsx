@@ -26,8 +26,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'slate-400',
         bgGradient: 'from-slate-600 to-slate-800',
         icon: 'school',
-        description: 'Gestão acadêmica e visão estratégica.',
-        illustrations: ['school', 'domain', 'meeting_room', 'corporate_fare'],
+        description: 'Visão geral da escola.',
+        illustrations: ['school', 'domain', 'location_city', 'apartment', 'meeting_room', 'group'],
         softBg: 'bg-slate-50 dark:bg-slate-900/10'
     },
     'Filosofia': {
@@ -39,9 +39,22 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'indigo-400',
         bgGradient: 'from-indigo-600 to-violet-700',
         icon: 'psychology',
-        description: 'Investigação rigorosa sobre existência, conhecimento e ética.',
-        illustrations: ['psychology', 'balance', 'forum', 'self_improvement', 'lightbulb'],
+        description: 'Amor pela sabedoria e busca pela verdade.',
+        illustrations: ['psychology', 'lightbulb', 'question_mark', 'self_improvement', 'balance', 'menu_book', 'manage_search'],
         softBg: 'bg-indigo-50 dark:bg-indigo-900/10'
+    },
+    'Sociologia': {
+        baseColor: 'orange',
+        primaryColor: 'orange-600',
+        primaryColorHex: '#ea580c',
+        secondaryColor: 'orange-700',
+        secondaryColorHex: '#c2410c',
+        accentColor: 'orange-400',
+        bgGradient: 'from-orange-600 to-red-700',
+        icon: 'groups',
+        description: 'Estudo da sociedade e interações humanas.',
+        illustrations: ['groups', 'public', 'diversity_3', 'handshake', 'forum', 'poll', 'connect_without_contact'],
+        softBg: 'bg-orange-50 dark:bg-orange-900/10'
     },
     'Educação Física': {
         baseColor: 'emerald',
@@ -52,8 +65,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'emerald-400',
         bgGradient: 'from-emerald-600 to-teal-700',
         icon: 'sports_soccer',
-        description: 'Cinesiologia, fisiologia do exercício e cultura corporal.',
-        illustrations: ['monitor_heart', 'directions_run', 'fitness_center', 'sports_score', 'cardiology'],
+        description: 'Desenvolvimento físico e bem-estar através do esporte.',
+        illustrations: ['sports_soccer', 'sports_basketball', 'fitness_center', 'pool', 'timer', 'heart_check', 'directions_run', 'trophy'],
         softBg: 'bg-emerald-50 dark:bg-emerald-900/10'
     },
     'Matemática': {
@@ -65,34 +78,34 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'blue-400',
         bgGradient: 'from-blue-600 to-indigo-700',
         icon: 'functions',
-        description: 'Análise lógica, estruturas algébricas e modelagem quantitativa.',
-        illustrations: ['functions', 'data_object', 'timeline', 'architecture', 'view_in_ar'],
+        description: 'O estudo das quantidades, estruturas e espaços.',
+        illustrations: ['video_label', 'pentagon', 'percent', 'data_object', '123', 'area_chart', 'timeline', 'calculate', 'function'],
         softBg: 'bg-blue-50 dark:bg-blue-900/10'
     },
     'Física': {
-        baseColor: 'slate',
-        primaryColor: 'slate-600',
-        primaryColorHex: '#475569',
-        secondaryColor: 'slate-700',
-        secondaryColorHex: '#334155',
-        accentColor: 'slate-400',
-        bgGradient: 'from-slate-600 to-slate-800',
+        baseColor: 'violet',
+        primaryColor: 'violet-600',
+        primaryColorHex: '#7c3aed',
+        secondaryColor: 'violet-700',
+        secondaryColorHex: '#6d28d9',
+        accentColor: 'violet-400',
+        bgGradient: 'from-violet-600 to-purple-700',
         icon: 'rocket_launch',
-        description: 'Mecânica, termodinâmica, eletromagnetismo e física moderna.',
-        illustrations: ['electric_bolt', 'speed', 'lens', 'waves', 'settings_system_daydream'],
-        softBg: 'bg-slate-100 dark:bg-slate-800/30'
+        description: 'O estudo da matéria, energia e tempo.',
+        illustrations: ['electric_bolt', 'waves', 'lens', 'hub', 'satellite_alt', 'air', 'thermostat', 'speed', 'science'],
+        softBg: 'bg-violet-50 dark:bg-violet-900/10'
     },
     'História': {
         baseColor: 'amber',
-        primaryColor: 'amber-600',
-        primaryColorHex: '#d97706',
-        secondaryColor: 'amber-700',
-        secondaryColorHex: '#b45309',
-        accentColor: 'amber-400',
-        bgGradient: 'from-amber-600 to-orange-700',
-        icon: 'fort',
-        description: 'Historiografia, análise documental e processos civilizatórios.',
-        illustrations: ['history_edu', 'hourglass_top', 'account_balance', 'museum', 'temple_hindu'],
+        primaryColor: 'amber-700',
+        primaryColorHex: '#b45309',
+        secondaryColor: 'amber-800',
+        secondaryColorHex: '#92400e',
+        accentColor: 'amber-500',
+        bgGradient: 'from-amber-700 to-orange-800',
+        icon: 'account_balance',
+        description: 'Explorando as raízes e eventos do passado.',
+        illustrations: ['museum', 'hourglass_top', 'account_balance', 'history_edu', 'flag', 'temple_buddhist', 'crown', 'gavel'],
         softBg: 'bg-amber-50 dark:bg-amber-900/10'
     },
     'Geografia': {
@@ -104,8 +117,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'cyan-400',
         bgGradient: 'from-cyan-600 to-blue-700',
         icon: 'public',
-        description: 'Geopolítica, cartografia digital, climatologia e demografia.',
-        illustrations: ['satellite_alt', 'landscape', 'map', 'public', 'wrong_location'],
+        description: 'O estudo da Terra e sua relação com o homem.',
+        illustrations: ['public', 'landscape', 'volcano', 'travel_explore', 'south_america', 'near_me', 'pin_drop', 'satellite', 'map'],
         softBg: 'bg-cyan-50 dark:bg-cyan-900/10'
     },
     'Artes': {
@@ -117,8 +130,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'pink-400',
         bgGradient: 'from-pink-600 to-rose-700',
         icon: 'palette',
-        description: 'Estética, história da arte e poéticas contemporâneas.',
-        illustrations: ['palette', 'brush', 'auto_awesome_mosaic', 'theater_comedy', 'contrast'],
+        description: 'Expressão criativa através das artes visuais.',
+        illustrations: ['palette', 'piano', 'imagesmode', 'brush', 'color_lens', 'photo_camera', 'movie', 'music_note', 'architecture'],
         softBg: 'bg-pink-50 dark:bg-pink-900/10'
     },
     'Projeto de Vida': {
@@ -130,8 +143,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'teal-400',
         bgGradient: 'from-teal-600 to-cyan-700',
         icon: 'flag',
-        description: 'Competências socioemocionais e gestão de carreira.',
-        illustrations: ['route', 'diversity_3', 'emoji_objects', 'verified', 'flag'],
+        description: 'Planejando seu futuro e seus sonhos.',
+        illustrations: ['stairs', 'emoji_objects', 'verified', 'rocket_launch', 'route', 'mountain_flag', 'target'],
         softBg: 'bg-teal-50 dark:bg-teal-900/10'
     },
     'Literatura': {
@@ -143,8 +156,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'rose-400',
         bgGradient: 'from-rose-600 to-red-700',
         icon: 'auto_stories',
-        description: 'Teoria literária, estilos de época e hermenêutica.',
-        illustrations: ['auto_stories', 'history_edu', 'style', 'local_library', 'format_quote'],
+        description: 'A arte da palavra e dos grandes clássicos.',
+        illustrations: ['history_edu', 'menu_book', 'collections_bookmark', 'library_books', 'theater_comedy', 'format_quote'],
         softBg: 'bg-rose-50 dark:bg-rose-900/10'
     },
     'Português': {
@@ -155,23 +168,23 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         secondaryColorHex: '#0369a1',
         accentColor: 'sky-400',
         bgGradient: 'from-sky-600 to-blue-700',
-        icon: 'translate',
-        description: 'Morfossintaxe, semântica e linguística textual.',
-        illustrations: ['spellcheck', 'text_fields', 'record_voice_over', 'translate', 'article'],
+        icon: 'library_books',
+        description: 'O domínio da nossa língua materna.',
+        illustrations: ['abc', 'font_download', 'spellcheck', 'translate', 'article', 'chat_bubble'],
         softBg: 'bg-sky-50 dark:bg-sky-900/10'
     },
     'Redação': {
-        baseColor: 'violet',
-        primaryColor: 'violet-600',
-        primaryColorHex: '#7c3aed',
-        secondaryColor: 'violet-700',
-        secondaryColorHex: '#6d28d9',
-        accentColor: 'violet-400',
-        bgGradient: 'from-violet-600 to-purple-700',
+        baseColor: 'fuchsia',
+        primaryColor: 'fuchsia-600',
+        primaryColorHex: '#c026d3',
+        secondaryColor: 'fuchsia-700',
+        secondaryColorHex: '#a21caf',
+        accentColor: 'fuchsia-400',
+        bgGradient: 'from-fuchsia-600 to-purple-700',
         icon: 'edit_note',
-        description: 'Argumentação lógica, coesão, coerência e estrutura.',
-        illustrations: ['edit_document', 'post_add', 'fact_check', 'ink_pen', 'plagiarism'],
-        softBg: 'bg-violet-50 dark:bg-violet-900/10'
+        description: 'Estruturação do pensamento e escrita.',
+        illustrations: ['pen_size_2', 'article', 'description', 'rate_review', 'edit_document', 'ink_pen'],
+        softBg: 'bg-fuchsia-50 dark:bg-fuchsia-900/10'
     },
     'Química': {
         baseColor: 'lime',
@@ -182,8 +195,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'lime-400',
         bgGradient: 'from-lime-600 to-green-700',
         icon: 'science',
-        description: 'Estequiometria, termoquímica e ligações moleculares.',
-        illustrations: ['science', 'bubble_chart', 'hexagon', 'science_off', 'vaccines'],
+        description: 'A ciência das transformações da matéria.',
+        illustrations: ['biotech', 'vaccines', 'water_drop', 'science', 'bubble_chart', 'propane', 'recycling', 'experiment'],
         softBg: 'bg-lime-50 dark:bg-lime-900/10'
     },
     'Ciências': {
@@ -195,22 +208,35 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'green-400',
         bgGradient: 'from-green-600 to-emerald-700',
         icon: 'eco',
-        description: 'Biologia celular, ecossistemas e método científico.',
-        illustrations: ['biotech', 'nature_people', 'coronavirus', 'compost', 'water_drop'],
+        description: 'Descobrindo o world natural e a vida.',
+        illustrations: ['nature', 'microscope', 'dna', 'forest', 'pets', 'skeleton', 'potted_plant', 'water_drop'],
+        softBg: 'bg-green-50 dark:bg-green-900/10'
+    },
+    'Biologia': {
+        baseColor: 'green',
+        primaryColor: 'green-600',
+        primaryColorHex: '#16a34a',
+        secondaryColor: 'green-700',
+        secondaryColorHex: '#15803d',
+        accentColor: 'green-400',
+        bgGradient: 'from-green-600 to-emerald-700',
+        icon: 'biotech',
+        description: 'Estudo da vida e dos organismos vivos.',
+        illustrations: ['dna', 'microscope', 'pest_control', 'neurology', 'cardiology', 'skeleton', 'nutrition'],
         softBg: 'bg-green-50 dark:bg-green-900/10'
     },
     'Inglês': {
-        baseColor: 'indigo',
-        primaryColor: 'indigo-500',
-        primaryColorHex: '#6366f1',
-        secondaryColor: 'indigo-600',
-        secondaryColorHex: '#4f46e5',
-        accentColor: 'indigo-300',
-        bgGradient: 'from-indigo-500 to-blue-600',
-        icon: 'language',
-        description: 'Linguística aplicada, fonologia e proficiência global.',
-        illustrations: ['language', 'interpreter_mode', 'headphones', 'chat', 'public'],
-        softBg: 'bg-indigo-50 dark:bg-indigo-900/10'
+        baseColor: 'rose',
+        primaryColor: 'rose-600',
+        primaryColorHex: '#e11d48',
+        secondaryColor: 'rose-700',
+        secondaryColorHex: '#be123c',
+        accentColor: 'rose-400',
+        bgGradient: 'from-rose-600 to-red-700',
+        icon: 'public',
+        description: 'Communication and global connection through English.',
+        illustrations: ['translate', 'public', 'forum', 'chat', 'headphones', 'subtitles', 'airplane_ticket', 'flag'],
+        softBg: 'bg-rose-50 dark:bg-rose-900/10'
     },
     'Ensino Religioso': {
         baseColor: 'amber',
@@ -220,9 +246,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         secondaryColorHex: '#d97706',
         accentColor: 'amber-300',
         bgGradient: 'from-amber-500 to-yellow-600',
-        icon: 'self_improvement',
-        description: 'Fenômeno religioso, antropologia e ética aplicada.',
-        illustrations: ['self_improvement', 'diversity_1', 'volunteer_activism', 'menu_book', 'handshake'],
+        icon: 'volunteer_activism',
+        description: 'Ética, valores e o fenômeno religioso.',
+        illustrations: ['volunteer_activism', 'temple_hindu', 'self_improvement', 'church', 'mosque', 'synagogue', 'handshake'],
         softBg: 'bg-amber-50 dark:bg-amber-900/10'
     }
 };
