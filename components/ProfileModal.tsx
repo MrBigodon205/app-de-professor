@@ -65,20 +65,42 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (file.size > 20 * 1024 * 1024) {
-            alert('A imagem deve ter no máximo 20MB.');
+        if (file.size > 5 * 1024 * 1024) {
+            alert('A imagem deve ter no máximo 5MB.');
             return;
         }
 
         setUploading(true);
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-            const base64String = reader.result as string;
-            await updateProfile({ photoUrl: base64String });
+        try {
+            // 1. Create a unique path
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${currentUser.id}_${Date.now()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            // 2. Upload to Supabase Storage
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file);
+
+            if (uploadError) {
+                throw uploadError;
+            }
+
+            // 3. Get Public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+
+            // 4. Update Profile with URL
+            await updateProfile({ photoUrl: publicUrl });
+
+        } catch (error: any) {
+            console.error('Error uploading image:', error);
+            alert('Erro ao fazer upload da imagem: ' + error.message);
+        } finally {
             setUploading(false);
-        };
-        reader.readAsDataURL(file);
-        e.target.value = '';
+            e.target.value = '';
+        }
     };
 
     const handleSaveProfile = async () => {
@@ -91,7 +113,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
         // Ensure primary subject is included in selected subjects
         const finalSubjects = Array.from(new Set([...selectedSubjects, subject]));
 
-        const success = await updateProfile({ name, email, subject, subjects: finalSubjects });
+        const success = await updateProfile({ name, email, subject: subject as any, subjects: finalSubjects });
         setLoading(false);
 
         if (success) {

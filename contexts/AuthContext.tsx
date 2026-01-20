@@ -70,7 +70,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 profile = data;
             } catch (e) {
                 // console.debug("SDK Profile fetch failed, trying raw fetch...");
-                profile = await rawProfileFetch();
+                try {
+                    profile = await withTimeout(rawProfileFetch(), 6000, "Raw Profile Fetch");
+                } catch (rawErr) {
+                    console.warn("Raw fetch also failed/timed out", rawErr);
+                }
             }
 
             if (profile) {
@@ -128,8 +132,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const initSession = async () => {
             try {
                 // Try to restore session from Supabase locally first (very fast)
-                const { data: { session }, error } = await supabase.auth.getSession();
+                let { data: { session }, error } = await supabase.auth.getSession();
                 if (error) console.error("Session init error:", error);
+
+                // FALLBACK: Se o SDK não achou a sessão, tentamos ler do localStorage manualmente
+                // (Já que salvamos manualmente no login para evitar travamento)
+                if (!session) {
+                    try {
+                        const supabaseUrl = (supabase as any).supabaseUrl;
+                        const projectRef = supabaseUrl.split('//')[1].split('.')[0];
+                        const storageKey = `sb-${projectRef}-auth-token`;
+                        const raw = localStorage.getItem(storageKey);
+                        if (raw) {
+                            const parsed = JSON.parse(raw);
+                            if (parsed.user && parsed.access_token) {
+                                // console.log("Recuperando sessão manual...");
+                                session = parsed;
+                                // Opcional: Tentar setar sessao no SDK sem await para não travar?
+                                // Melhor não. Deixa desincronizado. O que importa é o currentUser.
+                            }
+                        }
+                    } catch (e) {
+                        console.warn("Erro ao ler fallback session:", e);
+                    }
+                }
 
                 if (session?.user) {
                     setUserId(session.user.id);
@@ -147,8 +173,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         }
                     }
 
-                    // Background refresh
-                    fetchProfile(session.user.id);
+                    // CRITICAL: Await profile fetch before finishing initSession
+                    // This ensures currentUser is set before loading becomes false in the finally block
+                    await fetchProfile(session.user.id);
                     initialLoadDone = true;
                 }
             } catch (err) {
@@ -325,13 +352,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             const data = await response.json();
 
-            // Manually set session in Supabase client to sync state
-            const { error: sessionError } = await supabase.auth.setSession({
-                access_token: data.access_token,
-                refresh_token: data.refresh_token
-            });
+            // SESSÃO MANUAL (BYPASS DE TRAVAMENTO)
+            // O comando setSession trava neste ambiente. Vamos fazer manualmente:
+            // 1. Salvar no LocalStorage
+            try {
+                const projectRef = supabaseUrl.split('//')[1].split('.')[0];
+                const storageKey = `sb-${projectRef}-auth-token`;
+                localStorage.setItem(storageKey, JSON.stringify(data));
+            } catch (e) {
+                console.warn("Erro ao salvar token manual:", e);
+            }
 
-            if (sessionError) throw sessionError;
+            // 2. Atualizar estado do Contexto manualmente
+            // Isso engana a aplicação para achar que o onAuthStateChange disparou
+            if (data.user) {
+                setUserId(data.user.id);
+                // AWAIT para garantir que o currentUser esteja preenchido antes de navegar
+                await fetchProfile(data.user.id);
+            }
+
+            // Retorna sucesso imediato
             return { user: data.user, session: data };
         };
 
@@ -340,7 +380,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Bypasses SDK internal overhead during the critical token hand-off
             let authResult;
             try {
-                authResult = await rawLogin();
+                // Timeout logic for login matching the logout protection
+                const loginPromise = async () => {
+                    try {
+                        return await rawLogin();
+                    } catch (err) {
+                        return err; // throw downstream
+                    }
+                };
+
+                // Race against 10s timeout
+                authResult = await Promise.race([
+                    rawLogin(),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Login timed out (10s)')), 10000))
+                ]);
+
             } catch (rawErr: any) {
                 // Propagate credential errors
                 if (rawErr.message === 'Email not confirmed' || rawErr.message === 'Invalid login credentials') {
@@ -349,7 +403,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 // Fallback to standard SDK for generic/network errors
                 console.warn("Raw Login failed, trying SDK fallback:", rawErr.message);
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+                // WRAP SDK IN TIMEOUT TOO (Fix for infinite hanging on local/fallback)
+                const { data, error } = await Promise.race([
+                    supabase.auth.signInWithPassword({ email, password }),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('SDK Login timed out (10s)')), 10000)) as Promise<any>
+                ]);
+
                 if (error) throw error;
                 authResult = { user: data.user, session: data.session };
             }
@@ -442,17 +502,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const logout = useCallback(async () => {
         try {
-            // 1. Tenta logout no Supabase
-            await supabase.auth.signOut();
+            // 1. Tenta logout no Supabase com Race Condition (Timeout de 1s)
+            // Se o servidor n ao responder em 1s, forçamos o logout local
+            await Promise.race([
+                supabase.auth.signOut(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Logout timed out')), 1000))
+            ]);
         } catch (error) {
-            console.error("Erro no signOut (ignorado):", error);
+            console.warn("Logout upstream falhou ou demorou muito (prosseguindo localmente):", error);
         } finally {
             // 2. LIMPEZA TOTAL (Nuclear Option)
             // Garante que não sobra lixo de sessão antiga causando loop
             setCurrentUser(null);
             setUserId(null);
 
-            localStorage.clear(); // Limpa tokens antigos
+            // Limpa chaves específicas para evitar limpar preferências do usuário que não são de sessão
+            localStorage.removeItem('sb-' + (import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0] || '') + '-auth-token');
+            localStorage.removeItem('supabase.auth.token'); // Nova chave explícita
+
+            // Limpa caches de perfil
+            const keys = Object.keys(localStorage);
+            keys.forEach(k => {
+                if (k.startsWith('cached_profile_') || k.startsWith('sb-') || k.startsWith('supabase.')) {
+                    localStorage.removeItem(k);
+                }
+            });
+
             sessionStorage.clear();
 
             // 3. Força recarregamento para estado limpo
