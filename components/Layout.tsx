@@ -132,6 +132,35 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     };
   }, [mouseX, mouseY, orientX, orientY]);
 
+  // Enhanced Orientation & Resize Handler
+  useEffect(() => {
+    const handleResizeAndOrientation = () => {
+      const isLandscape = window.innerWidth > window.innerHeight;
+      const isLargeScreen = window.innerWidth >= 1024; // lg breakpoint
+
+      // If rotating to Portrait Mobile, force sidebar closed
+      if (!isLandscape && !isLargeScreen) {
+        setIsSidebarCollapsed(true);
+        setIsMobileMenuOpen(false);
+      }
+
+      // Optional: If rotating to Landscape on Mobile, we might want to default to 'open' or 'collapsed'
+      // dependent on user preference, but let's respect the persisted state or default to collapsed if screen is smallish
+    };
+
+    window.addEventListener('resize', handleResizeAndOrientation);
+    window.addEventListener('orientationchange', handleResizeAndOrientation);
+
+    // Initial check
+    // handleResizeAndOrientation(); // Avoid running on mount to prevent overriding stored preference immediately, 
+    // or run checks carefully. Let's rely on user interaction mostly, but auto-close on portrait is key.
+
+    return () => {
+      window.removeEventListener('resize', handleResizeAndOrientation);
+      window.removeEventListener('orientationchange', handleResizeAndOrientation);
+    };
+  }, []);
+
   const backgroundOrientation = useMemo(() => ({ x: springOrientX, y: springOrientY }), [springOrientX, springOrientY]);
 
   return (
@@ -167,7 +196,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <motion.aside
         layout
         transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-        className={`fixed top-4 bottom-4 left-4 z-[60] w-72 glass-card-premium border-r-0 transform flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[110%]'} ${isSidebarCollapsed ? 'lg:-translate-x-[110%] landscape:-translate-x-[110%]' : 'lg:translate-x-0 landscape:translate-x-0'}`}
+        className={`fixed top-4 bottom-4 left-4 z-[60] w-72 glass-card-premium border-r-0 transform flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden 
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[120%]'} 
+          ${isSidebarCollapsed ? 'lg:-translate-x-[120%] landscape:-translate-x-[120%]' : 'lg:translate-x-0 landscape:translate-x-0'}
+        `}
       >
         <div className="flex flex-col h-full justify-between bg-white/40 dark:bg-black/20">
           <div className="lg:hidden landscape:hidden absolute top-4 right-4 z-50">
@@ -255,7 +287,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <motion.div
         layout
         transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-        className={`flex-1 flex flex-col min-w-0 h-full relative z-10 ${isSidebarCollapsed ? 'lg:ml-0 landscape:ml-0' : 'lg:ml-72 landscape:ml-72'}`}
+        className={`flex-1 flex flex-col min-w-0 h-full relative z-10 
+          ${isSidebarCollapsed ? 'lg:ml-0 landscape:ml-0' : 'lg:ml-72 landscape:ml-72'}
+        `}
       >
         {isMobileMenuOpen && (
           <div className="fixed inset-0 bg-black/60 z-[55] lg:hidden backdrop-blur-sm transition-all" onClick={() => setIsMobileMenuOpen(false)}></div>
