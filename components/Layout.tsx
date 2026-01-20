@@ -41,6 +41,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const isActive = (path: string) => location.pathname === path;
 
   const navItems = [
+    { path: '/instructions', label: 'Manual de Uso', icon: 'menu_book' }, // MOVED TO TOP
     { path: '/dashboard', label: 'Início', icon: 'dashboard' },
     { path: '/planning', label: 'Planejamento', icon: 'calendar_month' },
     { path: '/activities', label: 'Atividades', icon: 'assignment' },
@@ -49,7 +50,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     { path: '/students', label: 'Alunos', icon: 'groups' },
     { path: '/observations', label: 'Ocorrências', icon: 'warning' },
     { path: '/reports', label: 'Relatórios', icon: 'description' },
-    { path: '/instructions', label: 'Instruções', icon: 'menu_book' },
   ];
 
   const handleSelectSeries = (id: string) => {

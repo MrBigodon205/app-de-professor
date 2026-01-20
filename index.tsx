@@ -3,14 +3,9 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { ClassProvider } from './contexts/ClassContext';
+import { TutorialProvider } from './contexts/TutorialContext';
 
-import { HashRouter } from 'react-router-dom';
-
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
-}
+// ... imports ...
 
 const root = ReactDOM.createRoot(rootElement);
 root.render(
@@ -19,7 +14,9 @@ root.render(
       <AuthProvider>
         <ThemeProvider>
           <ClassProvider>
-            <App />
+            <TutorialProvider>
+              <App />
+            </TutorialProvider>
           </ClassProvider>
         </ThemeProvider>
       </AuthProvider>

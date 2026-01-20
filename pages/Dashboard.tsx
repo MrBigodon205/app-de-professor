@@ -601,6 +601,39 @@ export const Dashboard: React.FC = () => {
         }
       </motion.div>
 
+      {/* Help Banner - Visible for new users or quick access */}
+      <motion.div variants={itemVariants} className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-500 to-purple-600 p-[1px] shadow-lg shadow-indigo-500/20 group">
+        <div className="relative bg-white dark:bg-slate-900 rounded-[23px] p-6 flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden">
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="size-16 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm shrink-0">
+              <span className="material-symbols-outlined text-3xl">rocket_launch</span>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+                Domine o Prof. Acerta+
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 text-sm max-w-lg leading-relaxed">
+                Descubra como lançar notas, controlar frequência e gerar relatórios em segundos.
+                <span className="hidden sm:inline"> Confira nosso guia passo-a-passo.</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex w-full sm:w-auto gap-3 relative z-10">
+            <Link
+              to="/instructions"
+              className="flex-1 sm:flex-none px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-indigo-600/20 active:scale-95 flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-lg">menu_book</span>
+              Ver Manual
+            </Link>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Main KPI Grid - Cyber-Glass Bento */}
       <div className="grid grid-cols-1 landscape:grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-6 relative z-10">
 
