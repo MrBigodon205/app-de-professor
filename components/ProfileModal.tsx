@@ -76,10 +76,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
             return;
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-            alert('A imagem deve ter no máximo 5MB.');
-            return;
-        }
+
 
         // Read file as Data URL for cropper
         const reader = new FileReader();
