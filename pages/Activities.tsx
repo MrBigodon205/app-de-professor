@@ -817,7 +817,8 @@ export const Activities: React.FC = () => {
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
-                accept="*/*"
+                accept="image/*,application/pdf,.doc,.docx,.ppt,.pptx"
+                multiple
                 onChange={handleFileChange}
                 title="Upload de arquivo"
                 aria-label="Upload de arquivo"
@@ -1113,7 +1114,7 @@ export const Activities: React.FC = () => {
                                         <label className="text-xs font-black uppercase text-slate-400 ml-1 tracking-widest">Materiais de Apoio</label>
                                     </div>
                                     <div
-                                        className={`col-span-full border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-4 transition-all ${isDragging ? `border-${theme.primaryColor} bg-${theme.primaryColor}/5` : 'border-slate-200 dark:border-slate-700'}`}
+                                        className={`col-span-full border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 ${isDragging ? `border-${theme.primaryColor} bg-${theme.primaryColor}/5` : 'border-slate-200 dark:border-slate-700'}`}
                                         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                                         onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
                                         onDrop={(e) => {
@@ -1122,13 +1123,14 @@ export const Activities: React.FC = () => {
                                             const files = Array.from(e.dataTransfer.files);
                                             if (files.length > 0) handleFiles(files);
                                         }}
+                                        onClick={() => fileInputRef.current?.click()}
                                     >
                                         <div className={`size-16 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-2 ${isDragging ? 'animate-bounce' : ''}`}>
                                             <span className={`material-symbols-outlined text-3xl ${isDragging ? `text-${theme.primaryColor}` : 'text-slate-400'}`}>cloud_upload</span>
                                         </div>
                                         <div className="text-center">
                                             <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                                                Arraste arquivos aqui ou <button type="button" onClick={() => fileInputRef.current?.click()} className={`text-${theme.primaryColor} hover:underline`}>clique para buscar</button>
+                                                Toque ou arraste arquivos aqui
                                             </p>
                                             <p className="text-xs text-slate-400 mt-1">PDF, Imagens, Word, PowerPoint (Máx 20MB)</p>
                                         </div>
