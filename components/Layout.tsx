@@ -196,9 +196,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <motion.aside
         layout
         transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-        className={`fixed top-4 bottom-4 left-4 z-[60] w-72 glass-card-premium border-r-0 transform flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden 
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-80'} 
-          ${isSidebarCollapsed ? 'lg:-translate-x-80 landscape:-translate-x-80' : 'lg:translate-x-0 landscape:translate-x-0'}
+        className={`fixed top-4 bottom-4 left-4 z-[60] glass-card-premium transform flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden transition-all duration-300
+          ${isMobileMenuOpen ? 'translate-x-0 w-72 border-r-0' : ''} 
+          ${!isMobileMenuOpen && isSidebarCollapsed ? 'lg:-translate-x-full landscape:-translate-x-full w-0 border-0 p-0 opacity-0 pointer-events-none' : 'lg:translate-x-0 landscape:translate-x-0 w-72 border-r-0'}
+          ${!isMobileMenuOpen && !isSidebarCollapsed ? '-translate-x-[120%]' : ''}
         `}
       >
         <div className="flex flex-col h-full justify-between bg-white/40 dark:bg-black/20">
