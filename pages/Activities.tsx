@@ -817,6 +817,7 @@ export const Activities: React.FC = () => {
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
+                accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain"
                 multiple
                 onChange={handleFileChange}
                 title="Upload de arquivo"
@@ -1133,20 +1134,24 @@ export const Activities: React.FC = () => {
                                             </p>
                                             <p className="text-xs text-slate-400 mt-1 mb-2">PDF, Imagens, Word, PowerPoint (Máx 20MB)</p>
 
-                                            {/* Cloud Platforms Visual Cue */}
-                                            <div className="flex items-center justify-center gap-3 mt-2 opacity-60">
-                                                <div className="flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-[18px] text-blue-500">add_to_drive</span>
-                                                    <span className="text-[10px] font-bold text-slate-500 uppercase">Drive</span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-[18px] text-blue-400">cloud</span>
-                                                    <span className="text-[10px] font-bold text-slate-500 uppercase">OneDrive</span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-[18px] text-slate-500">folder_open</span>
-                                                    <span className="text-[10px] font-bold text-slate-500 uppercase">Arquivos</span>
-                                                </div>
+                                            {/* Explicit Cloud Options */}
+                                            <div className="grid grid-cols-2 gap-2 mt-3 w-full max-w-sm px-4">
+                                                <button type="button" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 hover:bg-blue-100 transition-colors">
+                                                    <span className="material-symbols-outlined text-xl">add_to_drive</span>
+                                                    <span className="text-[9px] font-bold uppercase tracking-wide">Google Drive</span>
+                                                </button>
+                                                <button type="button" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-800 hover:bg-sky-100 transition-colors">
+                                                    <span className="material-symbols-outlined text-xl">cloud</span>
+                                                    <span className="text-[9px] font-bold uppercase tracking-wide">OneDrive</span>
+                                                </button>
+                                                <button type="button" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-100 dark:border-orange-800 hover:bg-orange-100 transition-colors">
+                                                    <span className="material-symbols-outlined text-xl">folder_shared</span>
+                                                    <span className="text-[9px] font-bold uppercase tracking-wide">iCloud / Arqs</span>
+                                                </button>
+                                                <button type="button" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-colors">
+                                                    <span className="material-symbols-outlined text-xl">image</span>
+                                                    <span className="text-[9px] font-bold uppercase tracking-wide">Galeria</span>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
