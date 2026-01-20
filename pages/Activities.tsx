@@ -46,6 +46,41 @@ export const Activities: React.FC = () => {
     const [formSeriesId, setFormSeriesId] = useState('');
     const [formSection, setFormSection] = useState('');
     const [filterSection, setFilterSection] = useState('');
+    const [isDragging, setIsDragging] = useState(false);
+
+    // Generate UUID Helper
+    const generateUUID = () => {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    };
+
+    // File Processing Helper
+    const handleFiles = (files: File[]) => {
+        files.forEach(file => {
+            if (file.size > 20 * 1024 * 1024) {
+                alert(`O arquivo ${file.name} é muito grande! Limite de 20MB.`);
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                if (event.target?.result) {
+                    setFormFiles(prev => [...prev, {
+                        id: generateUUID(),
+                        name: file.name,
+                        size: `${(file.size / 1024).toFixed(1)} KB`,
+                        url: event.target.result as string
+                    }]);
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    };
 
     // Bulk Delete State
     const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -319,7 +354,7 @@ export const Activities: React.FC = () => {
 
                     // Sanitize filename
                     const sanitizedName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9.-]/g, "_");
-                    const fileName = `activities/${crypto.randomUUID()}-${sanitizedName}`; // Using 'activities' folder prefix (optional, requires bucket folder structure or flat bucket)
+                    const fileName = `activities/${generateUUID()}-${sanitizedName}`; // Using 'activities' folder prefix (optional, requires bucket folder structure or flat bucket)
                     // Note: 'planning-attachments' bucket is public. We can allow 'activities/' prefix if we just use the same bucket.
                     // Or we just put everything in root. Let's use 'planning-attachments' bucket but maybe prefix with 'activity-'?
                     // Actually, let's keep it simple. The user just wants it to work.
@@ -488,30 +523,11 @@ export const Activities: React.FC = () => {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        if (file.size > 20 * 1024 * 1024) { // 20MB limit
-            alert("O arquivo é muito grande! O limite é de 20MB.");
-            return;
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            handleFiles(Array.from(files));
         }
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            if (event.target?.result) {
-                const newFile: AttachmentFile = {
-                    id: crypto.randomUUID(),
-                    name: file.name,
-                    size: `${(file.size / 1024).toFixed(1)} KB`,
-                    url: event.target.result as string // Base64 Data URL
-                };
-                setFormFiles([...formFiles, newFile]);
-            }
-        };
-        reader.readAsDataURL(file);
-
-        // Reset input
-        e.target.value = '';
+        e.target.value = ''; // Reset input
     };
 
     const handleRemoveFile = (id: string) => {
@@ -1095,18 +1111,31 @@ export const Activities: React.FC = () => {
                                 <div>
                                     <div className="flex items-center justify-between mb-4">
                                         <label className="text-xs font-black uppercase text-slate-400 ml-1 tracking-widest">Materiais de Apoio</label>
-                                        <button
-                                            onClick={() => fileInputRef.current?.click()}
-                                            type="button"
-                                            className={`flex items-center gap-2 px-5 py-3 bg-${theme.primaryColor}/10 text-${theme.primaryColor} rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-${theme.primaryColor} hover:text-white transition-all active:scale-95 border border-${theme.primaryColor}/20 hover:border-transparent shadow-sm`}
-                                        >
-                                            <span className="material-symbols-outlined text-base">upload_file</span>
-                                            Adicionar Arquivo
-                                        </button>
                                     </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div
+                                        className={`col-span-full border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-4 transition-all ${isDragging ? `border-${theme.primaryColor} bg-${theme.primaryColor}/5` : 'border-slate-200 dark:border-slate-700'}`}
+                                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                        onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                                        onDrop={(e) => {
+                                            e.preventDefault();
+                                            setIsDragging(false);
+                                            const files = Array.from(e.dataTransfer.files);
+                                            if (files.length > 0) handleFiles(files);
+                                        }}
+                                    >
+                                        <div className={`size-16 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-2 ${isDragging ? 'animate-bounce' : ''}`}>
+                                            <span className={`material-symbols-outlined text-3xl ${isDragging ? `text-${theme.primaryColor}` : 'text-slate-400'}`}>cloud_upload</span>
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                                                Arraste arquivos aqui ou <button type="button" onClick={() => fileInputRef.current?.click()} className={`text-${theme.primaryColor} hover:underline`}>clique para buscar</button>
+                                            </p>
+                                            <p className="text-xs text-slate-400 mt-1">PDF, Imagens, Word, PowerPoint (Máx 20MB)</p>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
                                         {formFiles.map(file => (
-                                            <div key={file.id} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 group">
+                                            <div key={file.id} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 group relative">
                                                 <div className={`size-10 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0`}>
                                                     <span className="material-symbols-outlined">description</span>
                                                 </div>
@@ -1119,12 +1148,6 @@ export const Activities: React.FC = () => {
                                                 </button>
                                             </div>
                                         ))}
-                                        {formFiles.length === 0 && (
-                                            <div className="col-span-full border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 flex flex-col items-center justify-center text-slate-400 gap-2">
-                                                <span className="material-symbols-outlined text-3xl">folder_open</span>
-                                                <span className="text-sm">Nenhum arquivo anexado</span>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             </div>
