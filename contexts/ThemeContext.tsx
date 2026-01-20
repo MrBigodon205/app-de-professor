@@ -64,7 +64,7 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         secondaryColorHex: '#047857',
         accentColor: 'emerald-400',
         bgGradient: 'from-emerald-600 to-teal-700',
-        icon: 'sports_soccer',
+        icon: 'sports_soccer', // Bola confirmed
         description: 'Desenvolvimento físico e bem-estar através do esporte.',
         illustrations: ['sports_soccer', 'sports_basketball', 'fitness_center', 'pool', 'timer', 'heart_check', 'directions_run', 'trophy'],
         softBg: 'bg-emerald-50 dark:bg-emerald-900/10'
@@ -77,9 +77,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         secondaryColorHex: '#1d4ed8',
         accentColor: 'blue-400',
         bgGradient: 'from-blue-600 to-indigo-700',
-        icon: 'functions',
+        icon: 'square_foot', // Changed to Ruler/Triangle
         description: 'O estudo das quantidades, estruturas e espaços.',
-        illustrations: ['video_label', 'pentagon', 'percent', 'data_object', '123', 'area_chart', 'timeline', 'calculate', 'function'],
+        illustrations: ['square_foot', 'calculate', 'percent', 'data_object', '123', 'area_chart', 'timeline', 'function', 'pentagon'],
         softBg: 'bg-blue-50 dark:bg-blue-900/10'
     },
     'Física': {
@@ -92,7 +92,7 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         bgGradient: 'from-violet-600 to-purple-700',
         icon: 'rocket_launch',
         description: 'O estudo da matéria, energia e tempo.',
-        illustrations: ['electric_bolt', 'waves', 'lens', 'hub', 'satellite_alt', 'air', 'thermostat', 'speed', 'science'],
+        illustrations: ['rocket_launch', 'electric_bolt', 'waves', 'lens', 'hub', 'satellite_alt', 'air', 'thermostat', 'speed'],
         softBg: 'bg-violet-50 dark:bg-violet-900/10'
     },
     'História': {
@@ -105,7 +105,7 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         bgGradient: 'from-amber-700 to-orange-800',
         icon: 'account_balance',
         description: 'Explorando as raízes e eventos do passado.',
-        illustrations: ['museum', 'hourglass_top', 'account_balance', 'history_edu', 'flag', 'temple_buddhist', 'crown', 'gavel'],
+        illustrations: ['account_balance', 'museum', 'hourglass_top', 'history_edu', 'flag', 'temple_buddhist', 'crown', 'gavel'],
         softBg: 'bg-amber-50 dark:bg-amber-900/10'
     },
     'Geografia': {
@@ -144,7 +144,7 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         bgGradient: 'from-teal-600 to-cyan-700',
         icon: 'flag',
         description: 'Planejando seu futuro e seus sonhos.',
-        illustrations: ['stairs', 'emoji_objects', 'verified', 'rocket_launch', 'route', 'mountain_flag', 'target'],
+        illustrations: ['flag', 'stairs', 'emoji_objects', 'verified', 'rocket_launch', 'route', 'mountain_flag', 'target'],
         softBg: 'bg-teal-50 dark:bg-teal-900/10'
     },
     'Literatura': {
@@ -157,7 +157,7 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         bgGradient: 'from-rose-600 to-red-700',
         icon: 'auto_stories',
         description: 'A arte da palavra e dos grandes clássicos.',
-        illustrations: ['history_edu', 'menu_book', 'collections_bookmark', 'library_books', 'theater_comedy', 'format_quote'],
+        illustrations: ['auto_stories', 'history_edu', 'menu_book', 'collections_bookmark', 'library_books', 'theater_comedy', 'format_quote'],
         softBg: 'bg-rose-50 dark:bg-rose-900/10'
     },
     'Português': {
@@ -170,7 +170,7 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         bgGradient: 'from-sky-600 to-blue-700',
         icon: 'library_books',
         description: 'O domínio da nossa língua materna.',
-        illustrations: ['abc', 'font_download', 'spellcheck', 'translate', 'article', 'chat_bubble'],
+        illustrations: ['library_books', 'abc', 'font_download', 'spellcheck', 'translate', 'article', 'chat_bubble'],
         softBg: 'bg-sky-50 dark:bg-sky-900/10'
     },
     'Redação': {
@@ -183,7 +183,7 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         bgGradient: 'from-fuchsia-600 to-purple-700',
         icon: 'edit_note',
         description: 'Estruturação do pensamento e escrita.',
-        illustrations: ['pen_size_2', 'article', 'description', 'rate_review', 'edit_document', 'ink_pen'],
+        illustrations: ['edit_note', 'pen_size_2', 'article', 'description', 'rate_review', 'edit_document', 'ink_pen'],
         softBg: 'bg-fuchsia-50 dark:bg-fuchsia-900/10'
     },
     'Química': {
@@ -196,7 +196,7 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         bgGradient: 'from-lime-600 to-green-700',
         icon: 'science',
         description: 'A ciência das transformações da matéria.',
-        illustrations: ['biotech', 'vaccines', 'water_drop', 'science', 'bubble_chart', 'propane', 'recycling', 'experiment'],
+        illustrations: ['science', 'biotech', 'vaccines', 'water_drop', 'bubble_chart', 'propane', 'recycling', 'experiment'],
         softBg: 'bg-lime-50 dark:bg-lime-900/10'
     },
     'Ciências': {
@@ -207,9 +207,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         secondaryColorHex: '#15803d',
         accentColor: 'green-400',
         bgGradient: 'from-green-600 to-emerald-700',
-        icon: 'eco',
-        description: 'Descobrindo o world natural e a vida.',
-        illustrations: ['nature', 'microscope', 'dna', 'forest', 'pets', 'skeleton', 'potted_plant', 'water_drop'],
+        icon: 'forest',
+        description: 'Descobrindo o mundo natural e a vida.',
+        illustrations: ['forest', 'nature', 'microscope', 'dna', 'pets', 'skeleton', 'potted_plant', 'water_drop'],
         softBg: 'bg-green-50 dark:bg-green-900/10'
     },
     'Biologia': {
@@ -222,7 +222,7 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         bgGradient: 'from-green-600 to-emerald-700',
         icon: 'biotech',
         description: 'Estudo da vida e dos organismos vivos.',
-        illustrations: ['dna', 'microscope', 'pest_control', 'neurology', 'cardiology', 'skeleton', 'nutrition'],
+        illustrations: ['biotech', 'dna', 'microscope', 'pest_control', 'neurology', 'cardiology', 'skeleton', 'nutrition'],
         softBg: 'bg-green-50 dark:bg-green-900/10'
     },
     'Inglês': {
@@ -235,7 +235,7 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         bgGradient: 'from-rose-600 to-red-700',
         icon: 'public',
         description: 'Communication and global connection through English.',
-        illustrations: ['translate', 'public', 'forum', 'chat', 'headphones', 'subtitles', 'airplane_ticket', 'flag'],
+        illustrations: ['public', 'translate', 'forum', 'chat', 'headphones', 'subtitles', 'airplane_ticket', 'flag'],
         softBg: 'bg-rose-50 dark:bg-rose-900/10'
     },
     'Ensino Religioso': {

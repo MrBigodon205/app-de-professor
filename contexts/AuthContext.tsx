@@ -166,16 +166,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         try {
                             const parsed = JSON.parse(cached);
                             setCurrentUser(parsed);
-                            setLoading(false); // Stop loading spinner ASAP
-                            // console.log("Perfil carregado do cache!");
                         } catch (e) {
                             console.error("Erro ao ler cache:", e);
                         }
                     }
 
-                    // CRITICAL: Await profile fetch before finishing initSession
-                    // This ensures currentUser is set before loading becomes false in the finally block
-                    await fetchProfile(session.user.id);
+                    // CRITICAL: Await profile fetch
+                    try {
+                        await fetchProfile(session.user.id);
+                    } catch (e) {
+                        console.error("Fetch profile failed explicitly in init:", e);
+                    }
+
                     initialLoadDone = true;
                 }
             } catch (err) {

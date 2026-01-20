@@ -164,7 +164,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       />
 
       {/* Floating Sidebar */}
-      <aside className={`fixed top-4 bottom-4 left-4 z-[60] w-72 glass-card-premium border-r-0 transform transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1) flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[110%]'} ${isSidebarCollapsed ? 'lg:-translate-x-[110%] landscape:-translate-x-[110%]' : 'lg:translate-x-0 landscape:translate-x-0'}`}>
+      <motion.aside
+        layout
+        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+        className={`fixed top-4 bottom-4 left-4 z-[60] w-72 glass-card-premium border-r-0 transform flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[110%]'} ${isSidebarCollapsed ? 'lg:-translate-x-[110%] landscape:-translate-x-[110%]' : 'lg:translate-x-0 landscape:translate-x-0'}`}
+      >
         <div className="flex flex-col h-full justify-between bg-white/40 dark:bg-black/20">
           <div className="lg:hidden landscape:hidden absolute top-4 right-4 z-50">
             <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-slate-100 dark:bg-white/5 rounded-full text-slate-500 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white backdrop-blur-md transition-colors shadow-sm">
@@ -237,7 +241,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </button>
           </div>
         </div>
-      </aside>
+      </motion.aside>
 
       <button
         onClick={toggleSidebar}
@@ -248,12 +252,19 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       </button>
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col min-w-0 h-full relative z-10 transition-all duration-200 ease-out ${isSidebarCollapsed ? 'lg:ml-0 landscape:ml-0' : 'lg:ml-72 landscape:ml-72'}`}>
+      <motion.div
+        layout
+        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+        className={`flex-1 flex flex-col min-w-0 h-full relative z-10 ${isSidebarCollapsed ? 'lg:ml-0 landscape:ml-0' : 'lg:ml-72 landscape:ml-72'}`}
+      >
         {isMobileMenuOpen && (
           <div className="fixed inset-0 bg-black/60 z-[55] lg:hidden backdrop-blur-sm transition-all" onClick={() => setIsMobileMenuOpen(false)}></div>
         )}
 
-        <header className={`flex items-center justify-between mx-4 mt-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-md px-4 md:px-6 py-2 md:py-3 z-[40] shrink-0 gap-4 sticky top-4 transition-all duration-300 shadow-lg shadow-black/5`}>
+        <motion.header
+          layout
+          className={`flex items-center justify-between mx-4 mt-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-md px-4 md:px-6 py-2 md:py-3 z-[40] shrink-0 gap-4 sticky top-4 shadow-lg shadow-black/5`}
+        >
           {/* Centered Container for Landscape */}
           <div className="contents landscape:flex landscape:w-full landscape:max-w-5xl landscape:items-center landscape:justify-between landscape:mx-auto">
             <div className="flex items-center gap-4 flex-1">
@@ -357,12 +368,17 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </button>
             </div>
           </div> {/* End of Centered Container */}
-        </header>
+        </motion.header>
 
         <div className="xl:hidden px-3 pt-2.5 -mb-0.5 z-30 landscape:pt-1 landscape:px-2">
           <button onClick={() => setIsClassSelectorOpen(true)} className="w-full bg-white/90 dark:bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl border border-slate-200 dark:border-white/5 shadow-lg dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all landscape:p-1.5 landscape:rounded-xl">
             <div className="flex items-center gap-2.5">
-              <img src="/logo.png" alt="Acerta+" className="size-8 landscape:size-7 object-contain drop-shadow-md" />
+
+              {/* Dynamic Theme Icon instead of static logo */}
+              <div className={`size-8 rounded-lg bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-md shadow-primary/20 shrink-0`}>
+                <span className="material-symbols-outlined text-lg font-black">{theme.icon}</span>
+              </div>
+
               <div className="flex flex-col items-start gap-0">
                 <span className="text-[7px] uppercase font-black tracking-widest text-slate-400 leading-none mb-0.5 landscape:hidden">Contexto</span>
                 <span className="text-[11px] font-black text-slate-900 dark:text-white tracking-tight truncate max-w-[120px] xs:max-w-none text-left flex items-center gap-1.5 landscape:text-[10px]">
@@ -386,7 +402,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         <div>
           <MobileBottomNav onMoreClick={() => setIsMobileMenuOpen(true)} />
         </div>
-      </div>
+      </motion.div>
 
     </div>
   );

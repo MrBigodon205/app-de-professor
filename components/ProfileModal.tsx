@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { supabase } from '../lib/supabase';
+import { ImageCropperModal } from './ImageCropperModal';
 
 interface ProfileModalProps {
     isOpen: boolean;
@@ -19,6 +20,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     const [activeTab, setActiveTab] = useState<Tab>('profile');
     const [uploading, setUploading] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    // Cropper State
+    const [isCropperOpen, setIsCropperOpen] = useState(false);
+    const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
     // Form State
     const [name, setName] = useState('');
@@ -65,22 +70,41 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // Validate that it is an image
+        if (!file.type.startsWith('image/')) {
+            alert('Por favor, selecione um arquivo de imagem válido.');
+            return;
+        }
+
         if (file.size > 5 * 1024 * 1024) {
             alert('A imagem deve ter no máximo 5MB.');
             return;
         }
 
+        // Read file as Data URL for cropper
+        const reader = new FileReader();
+        reader.addEventListener('load', () => {
+            setCropImageSrc(reader.result?.toString() || null);
+            setIsCropperOpen(true);
+        });
+        reader.readAsDataURL(file);
+
+        // Reset input so same file can be selected again if needed
+        e.target.value = '';
+    };
+
+    const handleUploadCroppedImage = async (blob: Blob) => {
         setUploading(true);
         try {
             // 1. Create a unique path
-            const fileExt = file.name.split('.').pop();
+            const fileExt = 'jpeg'; // Cropper returns jpeg
             const fileName = `${currentUser.id}_${Date.now()}.${fileExt}`;
             const filePath = `${fileName}`;
 
             // 2. Upload to Supabase Storage
             const { error: uploadError } = await supabase.storage
                 .from('avatars')
-                .upload(filePath, file);
+                .upload(filePath, blob, { contentType: 'image/jpeg' });
 
             if (uploadError) {
                 throw uploadError;
@@ -94,12 +118,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
             // 4. Update Profile with URL
             await updateProfile({ photoUrl: publicUrl });
 
+            // Force refresh of image in UI if needed (React checks URL change usually)
+
         } catch (error: any) {
             console.error('Error uploading image:', error);
             alert('Erro ao fazer upload da imagem: ' + error.message);
         } finally {
             setUploading(false);
-            e.target.value = '';
+            setIsCropperOpen(false);
+            setCropImageSrc(null);
         }
     };
 
@@ -153,216 +180,226 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     };
 
     return (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                onClick={onClose}
-            ></div>
-
-            <div className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-auto md:max-h-[80vh] landscape:h-[95dvh] landscape:md:h-auto">
-
-                {/* Close Button Mobile */}
-                <button
+        <>
+            <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 animate-in fade-in duration-200">
+                <div
+                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                     onClick={onClose}
-                    className="absolute top-4 right-4 md:hidden p-2 rounded-full hover:bg-white/10 transition-colors z-10"
-                >
-                    <span className="material-symbols-outlined text-white/70 hover:text-white">close</span>
-                </button>
+                ></div>
 
-                {/* Sidebar (Left) */}
-                <div className="w-full md:w-80 bg-slate-50 dark:bg-slate-800/50 p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 shrink-0 landscape:p-4 landscape:w-64 landscape:md:w-80">
+                <div className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-auto md:max-h-[80vh] landscape:h-[95dvh] landscape:md:h-auto">
 
-                    {/* Avatar Upload */}
-                    <div className="relative group mb-4">
-                        <div className="size-32 rounded-full border-4 border-white dark:border-slate-700 shadow-xl bg-slate-200 dark:bg-slate-700 overflow-hidden relative">
-                            {currentUser.photoUrl ? (
-                                <img
-                                    src={currentUser.photoUrl}
-                                    alt={currentUser.name}
-                                    className="size-full object-cover"
-                                />
-                            ) : (
-                                <div className={`size-full flex items-center justify-center text-4xl font-bold text-${theme.primaryColor} bg-white dark:bg-slate-800`}>
-                                    {currentUser.name.substring(0, 2).toUpperCase()}
+                    {/* Close Button Mobile */}
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 md:hidden size-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-red-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors z-20 shadow-sm"
+                    >
+                        <span className="material-symbols-outlined text-lg">close</span>
+                    </button>
+
+                    {/* Sidebar (Left) */}
+                    <div className="w-full md:w-80 bg-slate-50 dark:bg-slate-800/50 p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 shrink-0 landscape:p-4 landscape:w-64 landscape:md:w-80">
+
+                        {/* Avatar Upload */}
+                        <div className="relative group mb-4">
+                            <div className="size-32 rounded-full border-4 border-white dark:border-slate-700 shadow-xl bg-slate-200 dark:bg-slate-700 overflow-hidden relative">
+                                {currentUser.photoUrl ? (
+                                    <img
+                                        src={currentUser.photoUrl}
+                                        alt={currentUser.name}
+                                        className="size-full object-cover"
+                                    />
+                                ) : (
+                                    <div className={`size-full flex items-center justify-center text-4xl font-bold text-${theme.primaryColor} bg-white dark:bg-slate-800`}>
+                                        {currentUser.name.substring(0, 2).toUpperCase()}
+                                    </div>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploading}
+                                className="absolute bottom-0 right-0 p-2.5 bg-primary text-white rounded-full shadow-lg hover:bg-primary-dark transition-all hover:scale-110 active:scale-95"
+                            >
+                                <span className="material-symbols-outlined text-lg">
+                                    {uploading ? 'sync' : 'photo_camera'}
+                                </span>
+                            </button>
+                            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="*/*" title="Upload de foto de perfil" />
+                        </div>
+
+                        <div className="flex flex-col items-center landscape:flex-row landscape:gap-4 landscape:md:flex-col landscape:md:gap-0">
+                            <div className="flex flex-col items-center">
+                                <h2 className="text-xl font-bold text-slate-800 dark:text-white text-center leading-tight mb-1 landscape:text-lg">
+                                    {currentUser.name}
+                                </h2>
+                                <p className="text-sm text-slate-500 font-medium mb-6 text-center landscape:mb-2">{currentUser.email}</p>
+                            </div>
+                        </div>
+
+                        <nav className="w-full space-y-2">
+                            <button
+                                onClick={() => setActiveTab('profile')}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'profile'
+                                    ? `bg-white dark:bg-slate-700 shadow-sm text-${theme.primaryColor}`
+                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                    }`}
+                            >
+                                <span className="material-symbols-outlined">person</span>
+                                Dados Pessoais
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('security')}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'security'
+                                    ? `bg-white dark:bg-slate-700 shadow-sm text-${theme.primaryColor}`
+                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                    }`}
+                            >
+                                <span className="material-symbols-outlined">lock</span>
+                                Segurança
+                            </button>
+                        </nav>
+
+                        <div className="mt-auto pt-6 w-full">
+                            <button
+                                onClick={() => { logout(); onClose(); }}
+                                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/20 transition-all"
+                            >
+                                <span className="material-symbols-outlined">logout</span>
+                                Sair da Conta
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Main Content (Right) */}
+                    <div className="flex-1 p-6 md:p-10 overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900">
+                        <div className="max-w-xl mx-auto">
+                            <div className="flex justify-between items-center mb-8">
+                                <div>
+                                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                                        {activeTab === 'profile' ? 'Editar Perfil' : 'Segurança'}
+                                    </h1>
+                                    <p className="text-slate-500 mt-1">
+                                        {activeTab === 'profile' ? 'Gerencie suas informações pessoais' : 'Atualize sua senha de acesso'}
+                                    </p>
+                                </div>
+                                <button onClick={onClose} className="hidden md:flex size-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700">
+                                    <span className="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+
+                            {activeTab === 'profile' && (
+                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    <div className="grid grid-cols-1 gap-6">
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Nome Completo</label>
+                                            <input
+                                                value={name}
+                                                onChange={e => setName(e.target.value)}
+                                                placeholder="Seu nome completo"
+                                                title="Nome Completo"
+                                                className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Email</label>
+                                            <input
+                                                value={email}
+                                                onChange={e => setEmail(e.target.value)}
+                                                placeholder="seu@email.com"
+                                                title="Email"
+                                                className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Disciplina Principal</label>
+                                            <select
+                                                value={subject}
+                                                onChange={(e) => setSubject(e.target.value)}
+                                                title="Disciplina Principal"
+                                                className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all mb-4"
+                                            >
+                                                {availableSubjects.map(subj => (
+                                                    <option key={subj} value={subj}>{subj}</option>
+                                                ))}
+                                            </select>
+
+                                            <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Minhas Disciplinas (Múltipla escolha)</label>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                                {availableSubjects.map(subj => (
+                                                    <button
+                                                        key={subj}
+                                                        onClick={() => toggleSubject(subj)}
+                                                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all truncate ${selectedSubjects.includes(subj) || subject === subj
+                                                            ? `bg-${theme.primaryColor}/10 border-${theme.primaryColor} text-${theme.primaryColor}`
+                                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
+                                                            }`}
+                                                    >
+                                                        {subj} {(subject === subj) && '(Principal)'}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                                        <button
+                                            onClick={handleSaveProfile}
+                                            disabled={loading}
+                                            className="px-8 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:bg-primary-dark hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+                                        >
+                                            {loading && <span className="material-symbols-outlined animate-spin text-lg">refresh</span>}
+                                            Salvar Alterações
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'security' && (
+                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Nova Senha</label>
+                                        <input
+                                            type="password"
+                                            value={password}
+                                            onChange={e => setPassword(e.target.value)}
+                                            placeholder="Digite a nova senha"
+                                            className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Confirmar Senha</label>
+                                        <input
+                                            type="password"
+                                            value={confirmPassword}
+                                            onChange={e => setConfirmPassword(e.target.value)}
+                                            placeholder="Repita a nova senha"
+                                            className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all"
+                                        />
+                                    </div>
+
+                                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                                        <button
+                                            onClick={handleUpdatePassword}
+                                            disabled={loading || !password}
+                                            className="px-8 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:bg-primary-dark hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
+                                        >
+                                            Atualizar Senha
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
-                        <button
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={uploading}
-                            className="absolute bottom-0 right-0 p-2.5 bg-primary text-white rounded-full shadow-lg hover:bg-primary-dark transition-all hover:scale-110 active:scale-95"
-                        >
-                            <span className="material-symbols-outlined text-lg">
-                                {uploading ? 'sync' : 'photo_camera'}
-                            </span>
-                        </button>
-                        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" title="Upload de foto de perfil" />
-                    </div>
-
-                    <div className="flex flex-col items-center landscape:flex-row landscape:gap-4 landscape:md:flex-col landscape:md:gap-0">
-                        <div className="flex flex-col items-center">
-                            <h2 className="text-xl font-bold text-slate-800 dark:text-white text-center leading-tight mb-1 landscape:text-lg">
-                                {currentUser.name}
-                            </h2>
-                            <p className="text-sm text-slate-500 font-medium mb-6 text-center landscape:mb-2">{currentUser.email}</p>
-                        </div>
-                    </div>
-
-                    <nav className="w-full space-y-2">
-                        <button
-                            onClick={() => setActiveTab('profile')}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'profile'
-                                ? `bg-white dark:bg-slate-700 shadow-sm text-${theme.primaryColor}`
-                                : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
-                                }`}
-                        >
-                            <span className="material-symbols-outlined">person</span>
-                            Dados Pessoais
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('security')}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'security'
-                                ? `bg-white dark:bg-slate-700 shadow-sm text-${theme.primaryColor}`
-                                : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
-                                }`}
-                        >
-                            <span className="material-symbols-outlined">lock</span>
-                            Segurança
-                        </button>
-                    </nav>
-
-                    <div className="mt-auto pt-6 w-full">
-                        <button
-                            onClick={() => { logout(); onClose(); }}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/20 transition-all"
-                        >
-                            <span className="material-symbols-outlined">logout</span>
-                            Sair da Conta
-                        </button>
-                    </div>
-                </div>
-
-                {/* Main Content (Right) */}
-                <div className="flex-1 p-6 md:p-10 overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900">
-                    <div className="max-w-xl mx-auto">
-                        <div className="flex justify-between items-center mb-8">
-                            <div>
-                                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                                    {activeTab === 'profile' ? 'Editar Perfil' : 'Segurança'}
-                                </h1>
-                                <p className="text-slate-500 mt-1">
-                                    {activeTab === 'profile' ? 'Gerencie suas informações pessoais' : 'Atualize sua senha de acesso'}
-                                </p>
-                            </div>
-                            <button onClick={onClose} className="hidden md:flex size-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700">
-                                <span className="material-symbols-outlined">close</span>
-                            </button>
-                        </div>
-
-                        {activeTab === 'profile' && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="grid grid-cols-1 gap-6">
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Nome Completo</label>
-                                        <input
-                                            value={name}
-                                            onChange={e => setName(e.target.value)}
-                                            placeholder="Seu nome completo"
-                                            title="Nome Completo"
-                                            className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Email</label>
-                                        <input
-                                            value={email}
-                                            onChange={e => setEmail(e.target.value)}
-                                            placeholder="seu@email.com"
-                                            title="Email"
-                                            className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Disciplina Principal</label>
-                                        <select
-                                            value={subject}
-                                            onChange={(e) => setSubject(e.target.value)}
-                                            title="Disciplina Principal"
-                                            className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all mb-4"
-                                        >
-                                            {availableSubjects.map(subj => (
-                                                <option key={subj} value={subj}>{subj}</option>
-                                            ))}
-                                        </select>
-
-                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Minhas Disciplinas (Múltipla escolha)</label>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                            {availableSubjects.map(subj => (
-                                                <button
-                                                    key={subj}
-                                                    onClick={() => toggleSubject(subj)}
-                                                    className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all truncate ${selectedSubjects.includes(subj) || subject === subj
-                                                        ? `bg-${theme.primaryColor}/10 border-${theme.primaryColor} text-${theme.primaryColor}`
-                                                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
-                                                        }`}
-                                                >
-                                                    {subj} {(subject === subj) && '(Principal)'}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                                    <button
-                                        onClick={handleSaveProfile}
-                                        disabled={loading}
-                                        className="px-8 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:bg-primary-dark hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
-                                    >
-                                        {loading && <span className="material-symbols-outlined animate-spin text-lg">refresh</span>}
-                                        Salvar Alterações
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'security' && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div>
-                                    <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Nova Senha</label>
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        onChange={e => setPassword(e.target.value)}
-                                        placeholder="Digite a nova senha"
-                                        className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Confirmar Senha</label>
-                                    <input
-                                        type="password"
-                                        value={confirmPassword}
-                                        onChange={e => setConfirmPassword(e.target.value)}
-                                        placeholder="Repita a nova senha"
-                                        className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all"
-                                    />
-                                </div>
-
-                                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                                    <button
-                                        onClick={handleUpdatePassword}
-                                        disabled={loading || !password}
-                                        className="px-8 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:bg-primary-dark hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
-                                    >
-                                        Atualizar Senha
-                                    </button>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* CROPPER MODAL */}
+            <ImageCropperModal
+                isOpen={isCropperOpen}
+                imageSrc={cropImageSrc}
+                onClose={() => { setIsCropperOpen(false); setCropImageSrc(null); }}
+                onCropComplete={handleUploadCroppedImage}
+            />
+        </>
     );
 };
