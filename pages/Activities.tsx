@@ -1132,17 +1132,61 @@ export const Activities: React.FC = () => {
                                             <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
                                                 Toque ou arraste arquivos aqui
                                             </p>
-                                            <p className="text-xs text-slate-400 mt-1">PDF, Imagens, Word, PowerPoint (Máx 20MB)</p>
+                                            <p className="text-xs text-slate-400 mt-1 mb-2">PDF, Imagens, Word, PowerPoint (Máx 20MB)</p>
+
+                                            {/* Cloud Platforms Visual Cue */}
+                                            <div className="flex items-center justify-center gap-3 mt-2 opacity-60">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-[18px] text-blue-500">add_to_drive</span>
+                                                    <span className="text-[10px] font-bold text-slate-500 uppercase">Drive</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-[18px] text-blue-400">cloud</span>
+                                                    <span className="text-[10px] font-bold text-slate-500 uppercase">OneDrive</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-[18px] text-slate-500">folder_open</span>
+                                                    <span className="text-[10px] font-bold text-slate-500 uppercase">Arquivos</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
+
+                                    {/* Link Input Section */}
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const url = prompt("Cole o link do arquivo (Google Drive, Docs, site, etc):");
+                                                if (url) {
+                                                    const name = prompt("Nome para este link:", "Novo Link") || "Link Externo";
+                                                    setFormFiles(prev => [...prev, {
+                                                        id: generateUUID(),
+                                                        name: name,
+                                                        size: "Link",
+                                                        url: url
+                                                    }]);
+                                                }
+                                            }}
+                                            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-200"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">link</span>
+                                            Adicionar Link Externo
+                                        </button>
+                                    </div>
+
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
                                         {formFiles.map(file => (
                                             <div key={file.id} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 group relative">
-                                                <div className={`size-10 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0`}>
-                                                    <span className="material-symbols-outlined">description</span>
+                                                <div className={`size-10 rounded-lg ${file.size === 'Link' ? 'bg-indigo-100 text-indigo-600' : `bg-${theme.primaryColor}/10 text-${theme.primaryColor}`} flex items-center justify-center shrink-0`}>
+                                                    <span className="material-symbols-outlined">{file.size === 'Link' ? 'link' : 'description'}</span>
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="text-sm font-bold truncate text-slate-700 dark:text-slate-200">{file.name}</div>
+                                                    <div className="text-sm font-bold truncate text-slate-700 dark:text-slate-200">
+                                                        {file.size === 'Link' ? (
+                                                            <a href={file.url} target="_blank" rel="noopener noreferrer" className="hover:underline">{file.name}</a>
+                                                        ) : file.name}
+                                                    </div>
                                                     <div className="text-xs text-slate-400">{file.size}</div>
                                                 </div>
                                                 <button onClick={() => handleRemoveFile(file.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
@@ -1150,6 +1194,7 @@ export const Activities: React.FC = () => {
                                                 </button>
                                             </div>
                                         ))}
+
                                     </div>
                                 </div>
                             </div>
