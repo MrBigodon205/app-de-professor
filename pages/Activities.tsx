@@ -803,7 +803,7 @@ export const Activities: React.FC = () => {
     }
 
     return (
-        <div className="flex h-full gap-4 md:gap-6 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden landscape:overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 p-3 md:p-8 pb-32 lg:pb-8 landscape:pb-0 relative">
+        <div className="flex h-full gap-4 md:gap-6 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden landscape:overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 p-3 md:p-8 pb-6 lg:pb-8 landscape:pb-0 relative">
             {/* Landscape FAB for New Activity */}
             <button
                 onClick={handleNewActivity}

@@ -596,7 +596,7 @@ export const Grades: React.FC = () => {
     });
 
     return (
-        <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32 lg:pb-12">
+        <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6 lg:pb-12">
             {/* Header Controls */}
             <div className="glass-card-soft fluid-p-s flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
                 <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg overflow-x-auto max-w-full" data-tour="grades-units">

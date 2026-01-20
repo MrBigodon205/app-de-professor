@@ -8,7 +8,7 @@ import { ProfileModal } from './ProfileModal';
 import { PasswordSetupModal } from './PasswordSetupModal';
 
 import { NotificationCenter } from './NotificationCenter';
-import { MobileBottomNav } from './MobileBottomNav';
+
 
 import { MobileClassSelector } from './MobileClassSelector';
 import { ClassManager } from './ClassManager';
@@ -321,7 +321,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           {/* Centered Container for Landscape */}
           <div className="contents landscape:flex landscape:w-full landscape:max-w-5xl landscape:items-center landscape:justify-between landscape:mx-auto">
             <div className="flex items-center gap-4 flex-1">
-              <button className="lg:hidden landscape:hidden text-text-main dark:text-white p-2 hover:bg-white/10 rounded-lg transition-colors" onClick={() => setIsMobileMenuOpen(true)}>
+              <button className="lg:hidden landscape:hidden text-text-main dark:text-white p-2 hover:bg-white/10 rounded-lg transition-colors" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
                 <span className="material-symbols-outlined">menu</span>
               </button>
               <div className="lg:hidden landscape:hidden flex items-center gap-2">
@@ -453,7 +453,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </main>
 
         <div>
-          <MobileBottomNav onMoreClick={() => setIsMobileMenuOpen(true)} />
+          {/* Mobile Bottom Nav Removed */}
         </div>
       </motion.div>
 

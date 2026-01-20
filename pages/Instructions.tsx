@@ -149,7 +149,7 @@ export const Instructions: React.FC = () => {
     );
 
     return (
-        <div className="min-h-full w-full pb-32 bg-slate-50/50 dark:bg-transparent">
+        <div className="min-h-full w-full pb-6 bg-slate-50/50 dark:bg-transparent">
             {/* Hero Section */}
             <div className={`relative overflow-hidden bg-gradient-to-br from-white to-slate-100 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700`}>
                 <div className={`absolute top-0 right-0 w-[500px] h-[500px] bg-${theme.primaryColor}/5 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2 pointer-events-none`}></div>
