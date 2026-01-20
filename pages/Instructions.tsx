@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../hooks/useTheme';
-import { useTutorial } from '../contexts/TutorialContext';
+
 
 interface SectionProps {
     id: string;
@@ -80,7 +80,7 @@ const InstructionSection: React.FC<SectionProps> = ({ id, title, icon, isOpen, o
 
 export const Instructions: React.FC = () => {
     const theme = useTheme();
-    const { startTutorial } = useTutorial();
+    // const { startTutorial } = useTutorial(); // Removed
     const [openSection, setOpenSection] = useState<string | null>('classes');
 
     const toggleSection = (id: string) => {
@@ -168,17 +168,10 @@ export const Instructions: React.FC = () => {
                             <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight mb-2">
                                 Manual do Professor
                             </h1>
+
                             <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 font-medium">
                                 Guia completo para dominar o <strong>Prof. Acerta+</strong>
                             </p>
-
-                            <button
-                                onClick={startTutorial}
-                                className={`mt-4 px-8 py-3 rounded-xl bg-${theme.primaryColor} text-white font-bold shadow-lg shadow-${theme.primaryColor}/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-3`}
-                            >
-                                <span className="material-symbols-outlined">play_circle</span>
-                                Iniciar Tour Interativo
-                            </button>
                         </div>
                     </motion.div>
                 </div>
@@ -194,6 +187,51 @@ export const Instructions: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col gap-6">
+
+                    {/* 0. NAVEGAÇÃO */}
+                    <InstructionSection
+                        id="navigation"
+                        title="0. Navegação e Menus"
+                        icon="explore"
+                        isOpen={openSection === 'navigation'}
+                        onToggle={() => toggleSection('navigation')}
+                    >
+                        <div className="space-y-6">
+                            <TipCard type="info">
+                                <strong>Nova Navegação Móvel:</strong> Agora tudo fica no menu lateral. Toque no botão de menu (três risquinhos) no topo esquerdo para acessar todas as funções.
+                            </TipCard>
+
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 className="font-bold mb-2 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-primary">menu</span>
+                                        Menu Lateral
+                                    </h4>
+                                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                                        É aqui que você encontra todas as páginas do app. No computador ele fica sempre visível, e no celular ele abre ao tocar no ícone de menu.
+                                    </p>
+                                    <ul className="space-y-2 text-sm">
+                                        <li className="flex items-center gap-2"><IconInline icon="dashboard" /> <strong>Início:</strong> Visão geral do dia.</li>
+                                        <li className="flex items-center gap-2"><IconInline icon="calendar_month" /> <strong>Planejamento:</strong> Seus planos de aula.</li>
+                                        <li className="flex items-center gap-2"><IconInline icon="assignment" /> <strong>Atividades:</strong> Cadastro de provas/trabalhos.</li>
+                                        <li className="flex items-center gap-2"><IconInline icon="grade" /> <strong>Notas:</strong> Lançamento de notas.</li>
+                                    </ul>
+                                </div>
+                                <div className="bg-slate-100 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                                    <h4 className="font-bold mb-2 text-xs uppercase tracking-widest text-slate-500">Dica de Produtividade</h4>
+                                    <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                                        Use o <strong>Seletor de Turmas</strong> no topo (as pílulas arredondadas) para trocar de turma rapidamente sem sair da tela que você está.
+                                    </p>
+                                    <div className="mt-4 flex justify-center">
+                                        <div className="flex gap-1 p-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm scale-90">
+                                            <div className={`px-3 py-1 rounded-full bg-${theme.primaryColor} text-white text-[10px] font-bold`}>6º A</div>
+                                            <div className="px-3 py-1 rounded-full text-slate-400 text-[10px] font-bold">6º B</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </InstructionSection>
 
                     {/* 1. SEU PRIMEIRO PASSO */}
                     <InstructionSection

@@ -13,7 +13,7 @@ import { NotificationCenter } from './NotificationCenter';
 import { MobileClassSelector } from './MobileClassSelector';
 import { ClassManager } from './ClassManager';
 import { BackgroundPattern } from './BackgroundPattern';
-import { TutorialRunner } from './Onboarding/TutorialRunner';
+
 
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -186,7 +186,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         orientation={backgroundOrientation}
       />
 
-      <TutorialRunner />
+
 
       <ProfileModal
         isOpen={isProfileModalOpen}

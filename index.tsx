@@ -4,7 +4,7 @@ import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ClassProvider } from './contexts/ClassContext';
-import { TutorialProvider } from './contexts/TutorialContext';
+
 
 import { HashRouter } from 'react-router-dom';
 
@@ -20,9 +20,7 @@ root.render(
       <HashRouter>
         <ThemeProvider>
           <ClassProvider>
-            <TutorialProvider>
-              <App />
-            </TutorialProvider>
+            <App />
           </ClassProvider>
         </ThemeProvider>
       </HashRouter>
