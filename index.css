@@ -425,6 +425,22 @@ body {
         /* Ensure touch scrolling feels native */
         touch-action: pan-y;
         -webkit-overflow-scrolling: touch;
+
+        /* Reduce heavy GPU effects on mobile */
+        backdrop-filter: blur(8px) !important;
+        /* Reduced from 3xl (approx 64px) to 8px */
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        /* Simple shadow */
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        /* Simpler border */
+    }
+
+    /* Disable some heavy animations if user prefers reduced motion or just generically on mobile to save battery */
+    .animate-blob {
+        animation-duration: 10s;
+        /* Slower animation */
+        opacity: 0.5;
+        /* Reduce visibility of heavy blob layers */
     }
 }
 
