@@ -9,6 +9,7 @@ interface TutorialContextType {
     currentStepIndex: number;
     setStepIndex: (index: number) => void;
     completed: boolean;
+    deviceMode: 'desktop' | 'mobile_portrait' | 'mobile_landscape';
 }
 
 const TutorialContext = createContext<TutorialContextType | undefined>(undefined);
@@ -53,6 +54,25 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
     };
 
+
+    const [deviceMode, setDeviceMode] = useState<'desktop' | 'mobile_portrait' | 'mobile_landscape'>('desktop');
+
+    useEffect(() => {
+        const checkDeviceMode = () => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            if (width < 768) {
+                setDeviceMode(height > width ? 'mobile_portrait' : 'mobile_landscape');
+            } else {
+                setDeviceMode('desktop');
+            }
+        };
+
+        checkDeviceMode();
+        window.addEventListener('resize', checkDeviceMode);
+        return () => window.removeEventListener('resize', checkDeviceMode);
+    }, []);
+
     return (
         <TutorialContext.Provider value={{
             isActive,
@@ -60,7 +80,8 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             stopTutorial,
             currentStepIndex,
             setStepIndex: setCurrentStepIndex,
-            completed
+            completed,
+            deviceMode
         }}>
             {children}
         </TutorialContext.Provider>

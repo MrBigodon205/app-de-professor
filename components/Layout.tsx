@@ -12,126 +12,12 @@ import { MobileBottomNav } from './MobileBottomNav';
 import { MobileClassSelector } from './MobileClassSelector';
 import { ClassManager } from './ClassManager';
 import { BackgroundPattern } from './BackgroundPattern';
+import { TutorialRunner } from './Onboarding/TutorialRunner';
 
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, logout, activeSubject, updateActiveSubject } = useAuth();
-  const theme = useTheme();
-  const { classes, activeSeries, selectedSeriesId, selectedSection, selectSeries, selectSection, deleteSeries, addSeries, removeSection, addSection } = useClass();
-  const location = useLocation();
-
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
-  const [isSeriesDropdownOpen, setIsSeriesDropdownOpen] = useState(false);
-  const [newSeriesName, setNewSeriesName] = useState('');
-  const [newSectionName, setNewSectionName] = useState('');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isClassSelectorOpen, setIsClassSelectorOpen] = useState(false);
-  const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebar_collapsed') === 'true');
-
-  const toggleSidebar = useCallback(() => {
-    setIsSidebarCollapsed(prev => {
-      const newState = !prev;
-      localStorage.setItem('sidebar_collapsed', String(newState));
-      return newState;
-    });
-  }, []);
-
-  const isActive = (path: string) => location.pathname === path;
-
-  const navItems = [
-    { path: '/instructions', label: 'Manual de Uso', icon: 'menu_book' }, // MOVED TO TOP
-    { path: '/dashboard', label: 'Início', icon: 'dashboard' },
-    { path: '/planning', label: 'Planejamento', icon: 'calendar_month' },
-    { path: '/activities', label: 'Atividades', icon: 'assignment' },
-    { path: '/grades', label: 'Notas', icon: 'grade' },
-    { path: '/attendance', label: 'Frequência', icon: 'co_present' },
-    { path: '/students', label: 'Alunos', icon: 'groups' },
-    { path: '/observations', label: 'Ocorrências', icon: 'warning' },
-    { path: '/reports', label: 'Relatórios', icon: 'description' },
-  ];
-
-  const handleSelectSeries = (id: string) => {
-    selectSeries(id);
-    setIsSeriesDropdownOpen(false);
-  };
-
-  const handleDeleteSeries = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    if (window.confirm('Tem certeza que deseja excluir esta série?')) {
-      try {
-        await deleteSeries(id);
-      } catch (e: any) {
-        alert('Erro ao excluir série: ' + e.message);
-      }
-    }
-  };
-
-  const handleAddSeries = async () => {
-    if (!newSeriesName.trim()) return;
-    await addSeries(newSeriesName);
-    setNewSeriesName('');
-  };
-
-  const handleSwitchSection = (section: string) => {
-    selectSection(section);
-  };
-
-  const handleRemoveSectionOneClick = async (e: React.MouseEvent, section: string) => {
-    e.stopPropagation();
-    if (window.confirm(`Excluir turma ${section}?`)) {
-      await removeSection(activeSeries!.id, section);
-    }
-  };
-
-  const handleAddSectionOneClick = async () => {
-    if (!activeSeries) return;
-    const next = String.fromCharCode(activeSeries.sections.length > 0
-      ? activeSeries.sections[activeSeries.sections.length - 1].charCodeAt(0) + 1
-      : 65);
-    await addSection(activeSeries.id, next);
-  };
-
-  const { scrollY } = useScroll();
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const orientX = useMotionValue(0);
-  const orientY = useMotionValue(0);
-
-  const springConfig = { damping: 20, stiffness: 100 };
-  const springX = useSpring(mouseX, springConfig);
-  const springY = useSpring(mouseY, springConfig);
-  const springOrientX = useSpring(orientX, springConfig);
-  const springOrientY = useSpring(orientY, springConfig);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const { clientX, clientY } = e;
-      const x = (clientX / window.innerWidth - 0.5) * 40;
-      const y = (clientY / window.innerHeight - 0.5) * 40;
-      mouseX.set(x);
-      mouseY.set(y);
-    };
-
-    const handleOrientation = (e: DeviceOrientationEvent) => {
-      if (e.beta && e.gamma) {
-        const x = (e.gamma / 45) * 30;
-        const y = ((e.beta - 45) / 45) * 30;
-        orientX.set(x);
-        orientY.set(y);
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('deviceorientation', handleOrientation);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('deviceorientation', handleOrientation);
-    };
-  }, [mouseX, mouseY, orientX, orientY]);
-
-  const backgroundOrientation = useMemo(() => ({ x: springOrientX, y: springOrientY }), [springOrientX, springOrientY]);
+  // ... existing hooks ...
 
   return (
     <div className="flex h-dvh w-full bg-background-light dark:bg-background-dark overflow-hidden lg:overflow-hidden selection:bg-primary/10 selection:text-primary">
@@ -142,6 +28,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         mouseY={springY}
         orientation={backgroundOrientation}
       />
+
+      <TutorialRunner />
 
       <ProfileModal
         isOpen={isProfileModalOpen}
