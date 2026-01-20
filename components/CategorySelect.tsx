@@ -78,7 +78,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({ value, onChange,
                         onClick={() => setIsOpen(false)}
                     />
 
-                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 z-50 w-[90%] max-w-[320px] lg:max-w-[400px] landscape:max-w-3xl landscape:w-[95%] animate-in fade-in zoom-in-95 duration-200 landscape:max-h-[90vh] landscape:overflow-y-auto custom-scrollbar">
+                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 z-50 w-[90%] max-w-[320px] lg:max-w-[400px] landscape:max-w-3xl landscape:w-[95%] animate-in fade-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto custom-scrollbar">
                         <div className="flex items-center justify-between mb-4 px-1">
                             <span className="font-black text-slate-800 dark:text-white uppercase tracking-widest text-[10px] lg:text-xs">
                                 Selecione uma Categoria
