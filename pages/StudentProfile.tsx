@@ -214,7 +214,7 @@ export const StudentProfile: React.FC = () => {
 
             const doc = new jsPDF();
             const studentOccurrences = occurrences.filter(o => o.studentId === student.id);
-            const studentAttendance = attendance.filter(a => a.studentId === student.id);
+            const studentAttendance = attendance.filter(a => a.studentId === student.id && a.status !== 'S');
             const totalClasses = studentAttendance.length;
             const presentCount = studentAttendance.filter(a => a.status === 'P').length;
             const attendancePercentage = totalClasses > 0 ? ((presentCount / totalClasses) * 100).toFixed(0) : '100';
@@ -594,7 +594,7 @@ export const StudentProfile: React.FC = () => {
     const getStudentOccurrences = () => occurrences.filter(o => o.studentId === selectedStudentId);
 
     const getAttendanceStats = () => {
-        const studentAtt = attendance.filter(a => a.studentId === selectedStudentId);
+        const studentAtt = attendance.filter(a => a.studentId === selectedStudentId && a.status !== 'S');
         const total = studentAtt.length;
         const present = studentAtt.filter(a => a.status === 'P').length;
         const percentage = total === 0 ? '100' : ((present / total) * 100).toFixed(0);
