@@ -814,6 +814,7 @@ export const Activities: React.FC = () => {
             </button>
             {/* Hidden File Input */}
             <input
+                id="activity-file-upload"
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
@@ -1136,22 +1137,22 @@ export const Activities: React.FC = () => {
 
                                             {/* Explicit Cloud Options */}
                                             <div className="grid grid-cols-2 gap-2 mt-3 w-full max-w-sm px-4">
-                                                <button type="button" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 hover:bg-blue-100 transition-colors">
+                                                <label htmlFor="activity-file-upload" className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 hover:bg-blue-100 transition-colors cursor-pointer">
                                                     <span className="material-symbols-outlined text-xl">add_to_drive</span>
                                                     <span className="text-[9px] font-bold uppercase tracking-wide">Google Drive</span>
-                                                </button>
-                                                <button type="button" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-800 hover:bg-sky-100 transition-colors">
+                                                </label>
+                                                <label htmlFor="activity-file-upload" className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-800 hover:bg-sky-100 transition-colors cursor-pointer">
                                                     <span className="material-symbols-outlined text-xl">cloud</span>
                                                     <span className="text-[9px] font-bold uppercase tracking-wide">OneDrive</span>
-                                                </button>
-                                                <button type="button" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-100 dark:border-orange-800 hover:bg-orange-100 transition-colors">
+                                                </label>
+                                                <label htmlFor="activity-file-upload" className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-100 dark:border-orange-800 hover:bg-orange-100 transition-colors cursor-pointer">
                                                     <span className="material-symbols-outlined text-xl">folder_shared</span>
-                                                    <span className="text-[9px] font-bold uppercase tracking-wide">iCloud / Arqs</span>
-                                                </button>
-                                                <button type="button" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-colors">
+                                                    <span className="text-[9px] font-bold uppercase tracking-wide">Arquivos</span>
+                                                </label>
+                                                <label htmlFor="activity-file-upload" className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
                                                     <span className="material-symbols-outlined text-xl">image</span>
                                                     <span className="text-[9px] font-bold uppercase tracking-wide">Galeria</span>
-                                                </button>
+                                                </label>
                                             </div>
                                         </div>
                                     </div>

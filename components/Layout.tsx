@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
 import { ProfileModal } from './ProfileModal';
+import { PasswordSetupModal } from './PasswordSetupModal';
 
 import { NotificationCenter } from './NotificationCenter';
 import { MobileBottomNav } from './MobileBottomNav';
@@ -28,8 +29,18 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [newSectionName, setNewSectionName] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isClassSelectorOpen, setIsClassSelectorOpen] = useState(false);
+  const [isPasswordSetupOpen, setIsPasswordSetupOpen] = useState(false);
   const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebar_collapsed') === 'true');
+
+
+  useEffect(() => {
+    if (currentUser && currentUser.isPasswordSet === false) {
+      // Small timeout to not be jarring
+      const timer = setTimeout(() => setIsPasswordSetupOpen(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [currentUser]);
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarCollapsed(prev => {
@@ -180,6 +191,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
+      />
+
+      <PasswordSetupModal
+        isOpen={isPasswordSetupOpen}
+        onClose={() => setIsPasswordSetupOpen(false)}
       />
 
       {/* Mobile Notifications Modal */}

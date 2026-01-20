@@ -16,8 +16,8 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <HashRouter>
-      <AuthProvider>
+    <AuthProvider>
+      <HashRouter>
         <ThemeProvider>
           <ClassProvider>
             <TutorialProvider>
@@ -25,7 +25,7 @@ root.render(
             </TutorialProvider>
           </ClassProvider>
         </ThemeProvider>
-      </AuthProvider>
-    </HashRouter>
+      </HashRouter>
+    </AuthProvider>
   </React.StrictMode>
 );

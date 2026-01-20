@@ -129,4 +129,5 @@ export interface User {
   subject: Subject;
   photoUrl?: string;
   subjects?: string[];
+  isPasswordSet?: boolean;
 }

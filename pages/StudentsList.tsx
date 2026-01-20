@@ -402,7 +402,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                         type="file"
                                         ref={fileInputRef}
                                         onChange={handleFileImport}
-                                        accept=".txt,.csv"
+                                        accept="text/plain,text/csv,application/vnd.ms-excel"
                                         className="hidden"
                                     />
                                 </div>

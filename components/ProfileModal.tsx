@@ -224,7 +224,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                                     {uploading ? 'sync' : 'photo_camera'}
                                 </span>
                             </button>
-                            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="*/*" title="Upload de foto de perfil" />
+                            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" title="Upload de foto de perfil" />
                         </div>
 
                         <div className="flex flex-col items-center landscape:flex-row landscape:gap-4 landscape:md:flex-col landscape:md:gap-0">

@@ -10,8 +10,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
     auth: {
         persistSession: true,
-        autoRefreshToken: false, // DISABLE TO FIX LOCKUP
-        detectSessionInUrl: false, // PREVENT HASH ROUTER CONFLICT
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
     },
     db: {
         schema: 'public'

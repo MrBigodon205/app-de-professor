@@ -84,7 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     email: profile.email,
                     photoUrl: profile.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=random`,
                     subject: profile.subject,
-                    subjects: profile.subjects || []
+                    subjects: profile.subjects || [],
+                    isPasswordSet: profile.is_password_set
                 };
 
                 localStorage.setItem(`cached_profile_${finalUser.id}`, JSON.stringify(finalUser));
@@ -114,18 +115,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [withTimeout]);
 
-    useEffect(() => {
+
+
+
+
+    // Initial session check
+    React.useLayoutEffect(() => {
         let mounted = true;
-
-        // Safety timeout to prevent infinite loading
-        const safetyTimeout = setTimeout(() => {
-            if (mounted && loading) {
-                console.warn("Auth check timed out (4s limit). Forcing app load.");
-                setLoading(false);
-            }
-        }, 4000);
-
-        // Flag to prevent redundant fetches during initial load
         let initialLoadDone = false;
 
         // Initial session check
@@ -134,6 +130,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // Try to restore session from Supabase locally first (very fast)
                 let { data: { session }, error } = await supabase.auth.getSession();
                 if (error) console.error("Session init error:", error);
+
+                // OAUTH HASH CHECK - Delegated to Supabase Client (detectSessionInUrl: true)
+                // We trust the SDK to handle the hash parsing now.
+                // The previous manual logic has been removed to avoid conflicts.
+
+                // FALLBACK: Se o SDK não achou a sessão, tentamos ler do localStorage manualmente
 
                 // FALLBACK: Se o SDK não achou a sessão, tentamos ler do localStorage manualmente
                 // (Já que salvamos manualmente no login para evitar travamento)
@@ -183,8 +185,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } catch (err) {
                 console.error("Unexpected auth error:", err);
             } finally {
-                if (mounted) setLoading(false);
-                clearTimeout(safetyTimeout);
+                // INTEGRITY CHECK:
+                // If the URL contains an OAuth hash (access_token), we MUST NOT clear the loading state yet.
+                // We must wait for Supabase `onAuthStateChange` to fire the SIGNED_IN event.
+                // Otherwise, the router will mount, clear the hash, and the login will be lost.
+                const hasAuthHash = window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery'));
+
+                if (mounted && !hasAuthHash) {
+                    setLoading(false);
+                } else if (hasAuthHash) {
+                    console.log("[AUTH] Hash detected, holding loading state for Supabase processing...");
+                    // Optional: Add a 'backup' timeout here in case Supabase fails to fire
+                    setTimeout(() => {
+                        if (mounted) setLoading(false);
+                    }, 5000); // 5s grace period for Supabase to process hash
+                }
             }
         };
 
@@ -259,7 +274,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         return () => {
             mounted = false;
-            clearTimeout(safetyTimeout);
             subscription.unsubscribe();
         };
     }, []);
@@ -308,7 +322,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             name: newProfile.name,
                             subject: newProfile.subject,
                             subjects: newProfile.subjects || [],
-                            photoUrl: newProfile.photo_url
+                            photoUrl: newProfile.photo_url,
+                            isPasswordSet: newProfile.is_password_set
                         };
                     });
 
@@ -644,6 +659,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         activeSubject,
         updateActiveSubject
     }), [currentUser, userId, login, register, logout, updateProfile, loading, activeSubject, updateActiveSubject]);
+
+    // CRITICAL FIX: Do not render Router (children) until Auth is determined.
+    // This prevents HashRouter from stripping the OAuth hash before Supabase can read it.
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="relative w-16 h-16">
+                        <div className="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-800"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+                    </div>
+                    <div className="text-slate-500 dark:text-slate-400 font-medium text-sm animate-pulse">
+                        Iniciando sistema...
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <AuthContext.Provider value={contextValue}>

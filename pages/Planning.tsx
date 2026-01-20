@@ -763,7 +763,7 @@ export const Planning: React.FC = () => {
             >
                 <span className="material-symbols-outlined text-3xl">add</span>
             </button>
-            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} title="Adicionar anexo" aria-label="Adicionar anexo" />
+            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain" title="Adicionar anexo" aria-label="Adicionar anexo" />
 
             {/* AI MODAL */}
 
