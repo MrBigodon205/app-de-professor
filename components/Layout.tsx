@@ -18,7 +18,7 @@ import { TutorialRunner } from './Onboarding/TutorialRunner';
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, logout, activeSubject, updateActiveSubject } = useAuth();
   const theme = useTheme();
-  const { classes, activeSeries, selectedSeriesId, selectedSection, selectSeries, selectSection, deleteSeries, addSeries, removeSection, addSection } = useClass();
+  const { classes, activeSeries, selectedSeriesId, selectedSection, selectSeries, selectSection, removeClass: deleteSeries, addClass: addSeries, removeSection, addSection } = useClass();
   const location = useLocation();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -134,30 +134,32 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   // Enhanced Orientation & Resize Handler
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+
     const handleResizeAndOrientation = () => {
-      const isLandscape = window.innerWidth > window.innerHeight;
-      const isLargeScreen = window.innerWidth >= 1024; // lg breakpoint
+      // Clear existing timeout
+      if (timeoutId) clearTimeout(timeoutId);
 
-      // If rotating to Portrait Mobile, force sidebar closed
-      if (!isLandscape && !isLargeScreen) {
-        setIsSidebarCollapsed(true);
-        setIsMobileMenuOpen(false);
-      }
+      // Debounce execution
+      timeoutId = setTimeout(() => {
+        const isLandscape = window.innerWidth > window.innerHeight;
+        const isLargeScreen = window.innerWidth >= 1024; // lg breakpoint
 
-      // Optional: If rotating to Landscape on Mobile, we might want to default to 'open' or 'collapsed'
-      // dependent on user preference, but let's respect the persisted state or default to collapsed if screen is smallish
+        // If rotating to Portrait Mobile, force sidebar closed
+        if (!isLandscape && !isLargeScreen) {
+          setIsSidebarCollapsed(true);
+          setIsMobileMenuOpen(false);
+        }
+      }, 150); // 150ms debounce
     };
 
     window.addEventListener('resize', handleResizeAndOrientation);
     window.addEventListener('orientationchange', handleResizeAndOrientation);
 
-    // Initial check
-    // handleResizeAndOrientation(); // Avoid running on mount to prevent overriding stored preference immediately, 
-    // or run checks carefully. Let's rely on user interaction mostly, but auto-close on portrait is key.
-
     return () => {
       window.removeEventListener('resize', handleResizeAndOrientation);
       window.removeEventListener('orientationchange', handleResizeAndOrientation);
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, []);
 

@@ -817,7 +817,7 @@ export const Activities: React.FC = () => {
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
-                accept="image/*,application/pdf,.doc,.docx,.ppt,.pptx"
+                accept="*/*"
                 multiple
                 onChange={handleFileChange}
                 title="Upload de arquivo"

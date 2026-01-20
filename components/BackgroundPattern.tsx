@@ -5,7 +5,7 @@ interface BackgroundPatternProps {
     theme: any;
     mouseX?: any;
     mouseY?: any;
-    orientation?: { x: number; y: number };
+    orientation?: { x: any; y: any };
 }
 
 export const BackgroundPattern: React.FC<BackgroundPatternProps> = React.memo(({

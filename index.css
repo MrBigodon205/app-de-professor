@@ -427,6 +427,7 @@ body {
         -webkit-overflow-scrolling: touch;
 
         /* Reduce heavy GPU effects on mobile */
+        -webkit-backdrop-filter: blur(8px) !important;
         backdrop-filter: blur(8px) !important;
         /* Reduced from 3xl (approx 64px) to 8px */
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
