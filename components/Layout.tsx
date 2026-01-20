@@ -433,7 +433,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </div>
 
               <div className="flex flex-col items-start gap-0">
-                <span className="text-[7px] uppercase font-black tracking-widest text-slate-400 leading-none mb-0.5 landscape:hidden">Contexto</span>
+                <span className="text-[7px] uppercase font-black tracking-widest text-slate-400 leading-none mb-0.5 landscape:hidden">Seletor de Turma</span>
                 <span className="text-[11px] font-black text-slate-900 dark:text-white tracking-tight truncate max-w-[120px] xs:max-w-none text-left flex items-center gap-1.5 landscape:text-[10px]">
                   {activeSeries?.name || 'Selecione...'}
                   {selectedSection && <span className={`px-1 py-0.5 rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[8px] font-black shadow-sm`}>{selectedSection}</span>}

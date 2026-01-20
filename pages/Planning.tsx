@@ -12,6 +12,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { jsPDF } from 'jspdf';
 import { DynamicSelect } from '../components/DynamicSelect';
 import FileViewerModal from '../components/FileViewerModal';
+import { FileImporterModal } from '../components/FileImporterModal';
 
 export const Planning: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
@@ -53,10 +54,53 @@ export const Planning: React.FC = () => {
     const [formSubject, setFormSubject] = useState('');
     const [filterSection, setFilterSection] = useState('');
     const [viewerFile, setViewerFile] = useState<{ name: string; url: string; } | null>(null);
+    const [isImporterOpen, setIsImporterOpen] = useState(false);
 
     // Bulk Delete State
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+    // File Helpers (Moved up/Refactored)
+    const formatBytes = (bytes: number, decimals = 2) => {
+        if (!+bytes) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+    };
+
+    const processFiles = async (files: File[]) => {
+        if (files.length === 0) return;
+
+        const newFiles = await Promise.all(files.map(async (file) => {
+            const reader = new FileReader();
+            const fileData = await new Promise((resolve) => {
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(file);
+            });
+
+            if (fileData === null) return null;
+
+            return {
+                id: crypto.randomUUID(),
+                name: file.name,
+                size: formatBytes(file.size),
+                type: file.type,
+                url: fileData as string,
+                file: file
+            };
+        }));
+
+        setFormFiles(prevFiles => [...prevFiles, ...newFiles.filter(f => f !== null) as typeof formFiles]);
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        await processFiles(files);
+        e.target.value = '';
+    };
 
     const toggleSelection = (id: string) => {
         setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -405,19 +449,7 @@ export const Planning: React.FC = () => {
 
 
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        if (file.size > 20 * 1024 * 1024) { alert("Limite 20MB"); return; }
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            if (ev.target?.result) {
-                setFormFiles([...formFiles, { id: crypto.randomUUID(), name: file.name, size: `${(file.size / 1024).toFixed(1)} KB`, url: ev.target.result as string }]);
-            }
-        };
-        reader.readAsDataURL(file);
-        e.target.value = '';
-    };
+
 
     const handleDownload = (file: AttachmentFile) => {
         if (file.url.startsWith('data:')) {
@@ -1073,7 +1105,7 @@ export const Planning: React.FC = () => {
                                     <div className="flex items-center justify-between mb-4">
                                         <div className="text-xs font-black uppercase text-slate-400 ml-1 tracking-widest">Materiais de Apoio</div>
                                         <button
-                                            onClick={() => fileInputRef.current?.click()}
+                                            onClick={() => setIsImporterOpen(true)}
                                             type="button"
                                             className={`flex items-center gap-2 px-5 py-3 bg-${theme.primaryColor}/10 text-${theme.primaryColor} rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-${theme.primaryColor} hover:text-white transition-all active:scale-95 border border-${theme.primaryColor}/20 hover:border-transparent shadow-sm`}
                                         >
@@ -1541,11 +1573,24 @@ export const Planning: React.FC = () => {
                 )}
             </div>
             {/* FILE VIEWER MODAL */}
-            <FileViewerModal
-                isOpen={!!viewerFile}
-                onClose={() => setViewerFile(null)}
-                file={viewerFile}
+            {viewerFile && (
+                <FileViewerModal
+                    isOpen={!!viewerFile}
+                    onClose={() => setViewerFile(null)}
+                    file={viewerFile as any}
+                />
+            )}
+
+            <FileImporterModal
+                isOpen={isImporterOpen}
+                onClose={() => setIsImporterOpen(false)}
+                onFileSelect={(files) => {
+                    if (files) processFiles(Array.from(files));
+                }}
+                multiple
             />
+
+
         </main >
     );
 };

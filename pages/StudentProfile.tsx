@@ -595,9 +595,9 @@ export const StudentProfile: React.FC = () => {
 
     const getAttendanceStats = () => {
         const studentAtt = attendance.filter(a => a.studentId === selectedStudentId);
-        const total = studentAtt.length || 1;
+        const total = studentAtt.length;
         const present = studentAtt.filter(a => a.status === 'P').length;
-        const percentage = ((present / total) * 100).toFixed(0);
+        const percentage = total === 0 ? '100' : ((present / total) * 100).toFixed(0);
         return { present, total, percentage };
     };
 

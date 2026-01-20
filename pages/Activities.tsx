@@ -13,6 +13,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { DynamicSelect } from '../components/DynamicSelect';
 import FileViewerModal from '../components/FileViewerModal';
+import { FileImporterModal } from '../components/FileImporterModal';
 
 // Fallback types if fetch fails
 const DEFAULT_ACTIVITY_TYPES = ['Prova', 'Trabalho', 'Dever de Casa', 'Seminário', 'Pesquisa', 'Conteúdo', 'Outro'];
@@ -47,6 +48,7 @@ export const Activities: React.FC = () => {
     const [formSection, setFormSection] = useState('');
     const [filterSection, setFilterSection] = useState('');
     const [isDragging, setIsDragging] = useState(false);
+    const [isImporterOpen, setIsImporterOpen] = useState(false);
 
     // Generate UUID Helper
     const generateUUID = () => {
@@ -1124,7 +1126,7 @@ export const Activities: React.FC = () => {
                                             const files = Array.from(e.dataTransfer.files);
                                             if (files.length > 0) handleFiles(files);
                                         }}
-                                        onClick={() => fileInputRef.current?.click()}
+                                        onClick={() => setIsImporterOpen(true)}
                                     >
                                         <div className={`size-16 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-2 ${isDragging ? 'animate-bounce' : ''}`}>
                                             <span className={`material-symbols-outlined text-3xl ${isDragging ? `text-${theme.primaryColor}` : 'text-slate-400'}`}>cloud_upload</span>
@@ -1137,22 +1139,22 @@ export const Activities: React.FC = () => {
 
                                             {/* Explicit Cloud Options */}
                                             <div className="grid grid-cols-2 gap-2 mt-3 w-full max-w-sm px-4">
-                                                <label htmlFor="activity-file-upload" className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 hover:bg-blue-100 transition-colors cursor-pointer">
+                                                <button type="button" onClick={(e) => { e.stopPropagation(); setIsImporterOpen(true); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 hover:bg-blue-100 transition-colors cursor-pointer">
                                                     <span className="material-symbols-outlined text-xl">add_to_drive</span>
                                                     <span className="text-[9px] font-bold uppercase tracking-wide">Google Drive</span>
-                                                </label>
-                                                <label htmlFor="activity-file-upload" className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-800 hover:bg-sky-100 transition-colors cursor-pointer">
+                                                </button>
+                                                <button type="button" onClick={(e) => { e.stopPropagation(); setIsImporterOpen(true); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-800 hover:bg-sky-100 transition-colors cursor-pointer">
                                                     <span className="material-symbols-outlined text-xl">cloud</span>
                                                     <span className="text-[9px] font-bold uppercase tracking-wide">OneDrive</span>
-                                                </label>
-                                                <label htmlFor="activity-file-upload" className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-100 dark:border-orange-800 hover:bg-orange-100 transition-colors cursor-pointer">
+                                                </button>
+                                                <button type="button" onClick={(e) => { e.stopPropagation(); setIsImporterOpen(true); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-100 dark:border-orange-800 hover:bg-orange-100 transition-colors cursor-pointer">
                                                     <span className="material-symbols-outlined text-xl">folder_shared</span>
                                                     <span className="text-[9px] font-bold uppercase tracking-wide">Arquivos</span>
-                                                </label>
-                                                <label htmlFor="activity-file-upload" className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
+                                                </button>
+                                                <button type="button" onClick={(e) => { e.stopPropagation(); setIsImporterOpen(true); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
                                                     <span className="material-symbols-outlined text-xl">image</span>
                                                     <span className="text-[9px] font-bold uppercase tracking-wide">Galeria</span>
-                                                </label>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -1525,6 +1527,17 @@ export const Activities: React.FC = () => {
                     file={viewerFile}
                 />
             )}
+
+            <FileImporterModal
+                isOpen={isImporterOpen}
+                onClose={() => setIsImporterOpen(false)}
+                onFileSelect={(files) => {
+                    if (files) handleFiles(Array.from(files));
+                }}
+                multiple
+            />
+
+
         </div>
     );
 };

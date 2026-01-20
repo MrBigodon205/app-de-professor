@@ -81,10 +81,25 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             setClasses(uniqueClasses);
 
-            if (formattedClasses.length > 0 && !selectedSeriesId) {
-                setSelectedSeriesId(formattedClasses[0].id);
-                if (formattedClasses[0].sections.length > 0) {
-                    setSelectedSection(formattedClasses[0].sections[0]);
+            // Load from localStorage if available
+            const storedSeriesId = localStorage.getItem(`selectedSeriesId_${currentUser.id}`);
+            const storedSection = localStorage.getItem(`selectedSection_${currentUser.id}`);
+
+            if (formattedClasses.length > 0) {
+                if (storedSeriesId && formattedClasses.find(c => c.id === storedSeriesId)) {
+                    setSelectedSeriesId(storedSeriesId);
+                    if (storedSection && formattedClasses.find(c => c.id === storedSeriesId && c.sections.includes(storedSection))) {
+                        setSelectedSection(storedSection);
+                    } else {
+                        // Default to first section if stored is invalid
+                        const cls = formattedClasses.find(c => c.id === storedSeriesId);
+                        if (cls && cls.sections.length > 0) setSelectedSection(cls.sections[0]);
+                    }
+                } else if (!selectedSeriesId) {
+                    setSelectedSeriesId(formattedClasses[0].id);
+                    if (formattedClasses[0].sections.length > 0) {
+                        setSelectedSection(formattedClasses[0].sections[0]);
+                    }
                 }
             }
 
@@ -101,21 +116,28 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const selectSeries = useCallback((id: string) => {
         setSelectedSeriesId(id);
+        if (currentUser) localStorage.setItem(`selectedSeriesId_${currentUser.id}`, id);
+
         const target = classes.find(c => c.id === id);
         if (target) {
+            // Check if we have a stored section for this series? 
+            // Ideally we stick to the current logic but maybe check if valid.
             if (selectedSection && target.sections.includes(selectedSection)) {
                 // keep
             } else if (target.sections.length > 0) {
                 setSelectedSection(target.sections[0]);
+                if (currentUser) localStorage.setItem(`selectedSection_${currentUser.id}`, target.sections[0]);
             } else {
                 setSelectedSection('');
+                if (currentUser) localStorage.setItem(`selectedSection_${currentUser.id}`, '');
             }
         }
-    }, [classes, selectedSection]);
+    }, [classes, selectedSection, currentUser]);
 
     const selectSection = useCallback((section: string) => {
         setSelectedSection(section);
-    }, []);
+        if (currentUser) localStorage.setItem(`selectedSection_${currentUser.id}`, section);
+    }, [currentUser]);
 
     const addClass = useCallback(async (name: string) => {
         if (!currentUser) return;
