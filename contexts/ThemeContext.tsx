@@ -26,8 +26,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'slate-400',
         bgGradient: 'from-slate-600 to-slate-800',
         icon: 'school',
-        description: 'Visão geral da escola.',
-        illustrations: ['school', 'domain', 'location_city', 'apartment'],
+        description: 'Gestão acadêmica e visão estratégica.',
+        illustrations: ['school', 'domain', 'meeting_room', 'corporate_fare'],
         softBg: 'bg-slate-50 dark:bg-slate-900/10'
     },
     'Filosofia': {
@@ -39,8 +39,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'indigo-400',
         bgGradient: 'from-indigo-600 to-violet-700',
         icon: 'psychology',
-        description: 'Amor pela sabedoria e busca pela verdade.',
-        illustrations: ['menu_book', 'lightbulb', 'auto_stories', 'history_edu'],
+        description: 'Investigação rigorosa sobre existência, conhecimento e ética.',
+        illustrations: ['psychology', 'balance', 'forum', 'self_improvement', 'lightbulb'],
         softBg: 'bg-indigo-50 dark:bg-indigo-900/10'
     },
     'Educação Física': {
@@ -52,8 +52,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'emerald-400',
         bgGradient: 'from-emerald-600 to-teal-700',
         icon: 'sports_soccer',
-        description: 'Desenvolvimento físico e bem-estar através do esporte.',
-        illustrations: ['sports_basketball', 'fitness_center', 'sports_volleyball', 'directions_run'],
+        description: 'Cinesiologia, fisiologia do exercício e cultura corporal.',
+        illustrations: ['monitor_heart', 'directions_run', 'fitness_center', 'sports_score', 'cardiology'],
         softBg: 'bg-emerald-50 dark:bg-emerald-900/10'
     },
     'Matemática': {
@@ -65,8 +65,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'blue-400',
         bgGradient: 'from-blue-600 to-indigo-700',
         icon: 'functions',
-        description: 'O estudo das quantidades, estruturas e espaços.',
-        illustrations: ['calculate', 'analytics', 'architecture', 'show_chart'],
+        description: 'Análise lógica, estruturas algébricas e modelagem quantitativa.',
+        illustrations: ['functions', 'data_object', 'timeline', 'architecture', 'view_in_ar'],
         softBg: 'bg-blue-50 dark:bg-blue-900/10'
     },
     'Física': {
@@ -78,8 +78,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'slate-400',
         bgGradient: 'from-slate-600 to-slate-800',
         icon: 'rocket_launch',
-        description: 'O estudo da matéria, energia e tempo.',
-        illustrations: ['bolt', 'star', 'speed', 'settings_backup_restore'],
+        description: 'Mecânica, termodinâmica, eletromagnetismo e física moderna.',
+        illustrations: ['electric_bolt', 'speed', 'lens', 'waves', 'settings_system_daydream'],
         softBg: 'bg-slate-100 dark:bg-slate-800/30'
     },
     'História': {
@@ -91,8 +91,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'amber-400',
         bgGradient: 'from-amber-600 to-orange-700',
         icon: 'fort',
-        description: 'Explorando as raízes e eventos do passado.',
-        illustrations: ['temple_hindu', 'public', 'history', 'castle'],
+        description: 'Historiografia, análise documental e processos civilizatórios.',
+        illustrations: ['history_edu', 'hourglass_top', 'account_balance', 'museum', 'temple_hindu'],
         softBg: 'bg-amber-50 dark:bg-amber-900/10'
     },
     'Geografia': {
@@ -104,8 +104,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'cyan-400',
         bgGradient: 'from-cyan-600 to-blue-700',
         icon: 'public',
-        description: 'O estudo da Terra e sua relação com o homem.',
-        illustrations: ['map', 'terrain', 'explore', 'layers'],
+        description: 'Geopolítica, cartografia digital, climatologia e demografia.',
+        illustrations: ['satellite_alt', 'landscape', 'map', 'public', 'wrong_location'],
         softBg: 'bg-cyan-50 dark:bg-cyan-900/10'
     },
     'Artes': {
@@ -117,8 +117,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'pink-400',
         bgGradient: 'from-pink-600 to-rose-700',
         icon: 'palette',
-        description: 'Expressão criativa através das artes visuais.',
-        illustrations: ['brush', 'format_paint', 'imagesearch_roller', 'architecture'],
+        description: 'Estética, história da arte e poéticas contemporâneas.',
+        illustrations: ['palette', 'brush', 'auto_awesome_mosaic', 'theater_comedy', 'contrast'],
         softBg: 'bg-pink-50 dark:bg-pink-900/10'
     },
     'Projeto de Vida': {
@@ -130,8 +130,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'teal-400',
         bgGradient: 'from-teal-600 to-cyan-700',
         icon: 'flag',
-        description: 'Planejando seu futuro e seus sonhos.',
-        illustrations: ['stairs', 'emoji_objects', 'verified', 'rocket'],
+        description: 'Competências socioemocionais e gestão de carreira.',
+        illustrations: ['route', 'diversity_3', 'emoji_objects', 'verified', 'flag'],
         softBg: 'bg-teal-50 dark:bg-teal-900/10'
     },
     'Literatura': {
@@ -143,8 +143,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'rose-400',
         bgGradient: 'from-rose-600 to-red-700',
         icon: 'auto_stories',
-        description: 'A arte da palavra e dos grandes clássicos.',
-        illustrations: ['history_edu', 'menu_book', 'collections_bookmark', 'library_books'],
+        description: 'Teoria literária, estilos de época e hermenêutica.',
+        illustrations: ['auto_stories', 'history_edu', 'style', 'local_library', 'format_quote'],
         softBg: 'bg-rose-50 dark:bg-rose-900/10'
     },
     'Português': {
@@ -155,9 +155,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         secondaryColorHex: '#0369a1',
         accentColor: 'sky-400',
         bgGradient: 'from-sky-600 to-blue-700',
-        icon: 'school',
-        description: 'O domínio da nossa língua materna.',
-        illustrations: ['abc', 'font_download', 'spellcheck', 'translate'],
+        icon: 'translate',
+        description: 'Morfossintaxe, semântica e linguística textual.',
+        illustrations: ['spellcheck', 'text_fields', 'record_voice_over', 'translate', 'article'],
         softBg: 'bg-sky-50 dark:bg-sky-900/10'
     },
     'Redação': {
@@ -169,8 +169,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'violet-400',
         bgGradient: 'from-violet-600 to-purple-700',
         icon: 'edit_note',
-        description: 'Estruturação do pensamento e escrita.',
-        illustrations: ['pen_size_2', 'article', 'description', 'rate_review'],
+        description: 'Argumentação lógica, coesão, coerência e estrutura.',
+        illustrations: ['edit_document', 'post_add', 'fact_check', 'ink_pen', 'plagiarism'],
         softBg: 'bg-violet-50 dark:bg-violet-900/10'
     },
     'Química': {
@@ -182,8 +182,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'lime-400',
         bgGradient: 'from-lime-600 to-green-700',
         icon: 'science',
-        description: 'A ciência das transformações da matéria.',
-        illustrations: ['biotech', 'vaccines', 'medical_services', 'blur_on'],
+        description: 'Estequiometria, termoquímica e ligações moleculares.',
+        illustrations: ['science', 'bubble_chart', 'hexagon', 'science_off', 'vaccines'],
         softBg: 'bg-lime-50 dark:bg-lime-900/10'
     },
     'Ciências': {
@@ -195,8 +195,8 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         accentColor: 'green-400',
         bgGradient: 'from-green-600 to-emerald-700',
         icon: 'eco',
-        description: 'Descobrindo o world natural e a vida.',
-        illustrations: ['nature', 'microscope', 'dna', 'forest'],
+        description: 'Biologia celular, ecossistemas e método científico.',
+        illustrations: ['biotech', 'nature_people', 'coronavirus', 'compost', 'water_drop'],
         softBg: 'bg-green-50 dark:bg-green-900/10'
     },
     'Inglês': {
@@ -207,9 +207,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         secondaryColorHex: '#4f46e5',
         accentColor: 'indigo-300',
         bgGradient: 'from-indigo-500 to-blue-600',
-        icon: 'translate',
-        description: 'Communication and global connection through English.',
-        illustrations: ['public', 'language', 'forum', 'chat'],
+        icon: 'language',
+        description: 'Linguística aplicada, fonologia e proficiência global.',
+        illustrations: ['language', 'interpreter_mode', 'headphones', 'chat', 'public'],
         softBg: 'bg-indigo-50 dark:bg-indigo-900/10'
     },
     'Ensino Religioso': {
@@ -220,9 +220,9 @@ const THEME_MAP: Record<string, ThemeConfig> = {
         secondaryColorHex: '#d97706',
         accentColor: 'amber-300',
         bgGradient: 'from-amber-500 to-yellow-600',
-        icon: 'church',
-        description: 'Ética, valores e o fenômeno religioso.',
-        illustrations: ['favorite', 'volunteer_activism', 'temple_hindu', 'self_improvement'],
+        icon: 'self_improvement',
+        description: 'Fenômeno religioso, antropologia e ética aplicada.',
+        illustrations: ['self_improvement', 'diversity_1', 'volunteer_activism', 'menu_book', 'handshake'],
         softBg: 'bg-amber-50 dark:bg-amber-900/10'
     }
 };

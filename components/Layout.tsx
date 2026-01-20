@@ -253,7 +253,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <div className="fixed inset-0 bg-black/60 z-[55] lg:hidden backdrop-blur-sm transition-all" onClick={() => setIsMobileMenuOpen(false)}></div>
         )}
 
-        <header className={`flex items-center justify-between mx-4 mt-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-md px-4 md:px-6 py-2 md:py-3 z-[40] shrink-0 gap-4 sticky top-4 transition-all duration-300 shadow-lg shadow-black/5`}>
+        <header className={`flex items-center justify-between mx-4 mt-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-md px-4 md:px-6 py-2 md:py-3 z-[40] shrink-0 gap-4 sticky top-4 transition-all duration-300 shadow-lg shadow-black/5 bg-${theme.primaryColor}/5 border border-${theme.primaryColor}/10`}>
           {/* Centered Container for Landscape */}
           <div className="contents landscape:flex landscape:w-full landscape:max-w-5xl landscape:items-center landscape:justify-between landscape:mx-auto">
             <div className="flex items-center gap-4 flex-1">
