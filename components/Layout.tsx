@@ -167,7 +167,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <motion.aside
         layout
         transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-        className={`fixed top-4 bottom-4 left-4 z-[60] w-72 glass-card-premium border-r-0 transform flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[110%]'} ${isSidebarCollapsed ? 'lg:-translate-x-[110%] landscape:-translate-x-[110%]' : 'lg:translate-x-0 landscape:translate-x-0'}`}
+        className={`fixed top-4 bottom-4 left-4 z-[60] glass-card-premium border-r-0 transform flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden ${isMobileMenuOpen ? 'translate-x-0 w-72' : '-translate-x-[110%] w-72'} ${isSidebarCollapsed ? 'lg:translate-x-0 landscape:translate-x-0 lg:w-[5.5rem] landscape:w-[5.5rem]' : 'lg:translate-x-0 landscape:translate-x-0 lg:w-72 landscape:w-72'}`}
       >
         <div className="flex flex-col h-full justify-between bg-white/40 dark:bg-black/20">
           <div className="lg:hidden landscape:hidden absolute top-4 right-4 z-50">
@@ -223,7 +223,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               {navItems.map((item) => (
                 <Link key={item.path} to={item.path} onClick={() => setIsMobileMenuOpen(false)} className={`relative flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group hover:scale-[1.02] active:scale-95 ${isActive(item.path) ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-white shadow-sm dark:shadow-neon border border-primary/10 dark:border-primary/20' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary dark:hover:text-white border border-transparent'} ${isSidebarCollapsed && !isMobileMenuOpen ? 'justify-center px-0' : ''}`} title={isSidebarCollapsed && !isMobileMenuOpen ? item.label : ''}>
                   <span className={`material-symbols-outlined text-2xl transition-transform duration-300 group-hover:rotate-12 ${isActive(item.path) ? 'icon-filled text-primary dark:text-white scale-110' : 'group-hover:text-primary group-hover:scale-110'}`}>{item.icon}</span>
-                  {(!isSidebarCollapsed || isMobileMenuOpen) && <span className={`text-sm tracking-wide transition-all animate-in fade-in duration-300 ${isActive(item.path) ? 'font-bold' : 'font-medium'}`}>{item.label}</span>}
+                  {(!isSidebarCollapsed || isMobileMenuOpen) && <span className={`text-sm tracking-wide transition-all animate-in fade-in duration-300 whitespace-nowrap ${isActive(item.path) ? 'font-bold' : 'font-medium'}`}>{item.label}</span>}
                   {isActive(item.path) && (!isSidebarCollapsed || isMobileMenuOpen) && <span className="absolute right-3 w-1.5 h-1.5 bg-primary rounded-full animate-pulse shadow-neon" />}
                 </Link>
               ))}
@@ -231,13 +231,13 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </div>
 
           <div className="p-4 border-t border-slate-200 dark:border-white/10 flex flex-col gap-2">
-            <button onClick={() => { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); }} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-amber-500 dark:hover:text-amber-400 transition-all active:scale-95 hover:scale-[1.01] group border border-transparent hover:border-slate-200 dark:hover:border-white/5 ${isSidebarCollapsed ? 'lg:justify-center' : ''}`}>
+            <button onClick={() => { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); }} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-amber-500 dark:hover:text-amber-400 transition-all active:scale-95 hover:scale-[1.01] group border border-transparent hover:border-slate-200 dark:hover:border-white/5 ${isSidebarCollapsed ? 'justify-center lg:justify-center' : ''}`}>
               <span className="material-symbols-outlined text-[24px] font-medium transition-transform duration-500 lg:group-hover:rotate-[180deg]">dark_mode</span>
-              <span className={`text-sm font-medium animate-in fade-in duration-300 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>Alternar Tema</span>
+              {!isSidebarCollapsed && <span className={`text-sm font-medium animate-in fade-in duration-300 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>Alternar Tema</span>}
             </button>
-            <button onClick={logout} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-500/20 border border-transparent transition-all active:scale-95 hover:scale-[1.01] group ${isSidebarCollapsed ? 'lg:justify-center' : ''}`}>
+            <button onClick={logout} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-500/20 border border-transparent transition-all active:scale-95 hover:scale-[1.01] group ${isSidebarCollapsed ? 'justify-center lg:justify-center' : ''}`}>
               <span className="material-symbols-outlined text-[24px] font-medium transition-transform group-hover:-translate-x-1">logout</span>
-              <span className={`text-sm font-medium animate-in fade-in duration-300 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>Sair</span>
+              {!isSidebarCollapsed && <span className={`text-sm font-medium animate-in fade-in duration-300 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>Sair</span>}
             </button>
           </div>
         </div>
@@ -245,17 +245,17 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       <button
         onClick={toggleSidebar}
-        className={`hidden lg:flex landscape:flex fixed z-[70] top-8 size-12 bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'}`}
+        className={`hidden lg:flex landscape:flex fixed z-[70] top-8 size-12 bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1) ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 ${isSidebarCollapsed ? 'left-[2.25rem]' : 'left-[17rem]'}`}
         title={isSidebarCollapsed ? "Expandir" : "Recolher"}
       >
-        <span className={`material-symbols-outlined text-3xl font-bold transition-transform duration-150 ease-out ${isSidebarCollapsed ? '' : 'rotate-180'}`}>chevron_right</span>
+        <span className={`material-symbols-outlined text-3xl font-bold transition-transform duration-300 ease-out ${isSidebarCollapsed ? '' : 'rotate-180'}`}>chevron_right</span>
       </button>
 
       {/* Main Content Area */}
       <motion.div
         layout
         transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-        className={`flex-1 flex flex-col min-w-0 h-full relative z-10 ${isSidebarCollapsed ? 'lg:ml-0 landscape:ml-0' : 'lg:ml-72 landscape:ml-72'}`}
+        className={`flex-1 flex flex-col min-w-0 h-full relative z-10 ${isSidebarCollapsed ? 'lg:ml-[5.5rem] landscape:ml-[5.5rem]' : 'lg:ml-72 landscape:ml-72'}`}
       >
         {isMobileMenuOpen && (
           <div className="fixed inset-0 bg-black/60 z-[55] lg:hidden backdrop-blur-sm transition-all" onClick={() => setIsMobileMenuOpen(false)}></div>
