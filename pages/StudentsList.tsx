@@ -635,7 +635,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                                 type="text"
                                                                 value={editName}
                                                                 onChange={(e) => setEditName(e.target.value)}
-                                                                className={`px-4 py-2 border-2 border-primary/30 rounded-xl text-sm w-full max-w-md font-bold dark:bg-slate-900 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all`}
+                                                                className={`px-4 py-2 border-2 border-primary/30 rounded-xl text-sm w-24 focus:w-64 max-w-md font-bold dark:bg-slate-900 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-300 ease-out`}
                                                                 autoFocus
                                                             />
                                                             <div className="flex gap-1">
