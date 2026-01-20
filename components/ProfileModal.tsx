@@ -142,9 +142,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                 {/* Close Button Mobile */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 md:hidden p-2 bg-slate-100 rounded-full z-10"
+                    className="absolute top-4 right-4 md:hidden p-2 rounded-full hover:bg-white/10 transition-colors z-10"
                 >
-                    <span className="material-symbols-outlined">close</span>
+                    <span className="material-symbols-outlined text-white/70 hover:text-white">close</span>
                 </button>
 
                 {/* Sidebar (Left) */}
