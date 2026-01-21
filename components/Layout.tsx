@@ -35,24 +35,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 
   useEffect(() => {
-    // SECURITY Enforce: GOOGLE LOGIN TRAP
-    // If a user logs in via Google but DOES NOT have a password set (meaning they are a NEW user via Google),
-    // we MUST deny access and force them to register manually.
+    // SECURITY CHECK:
+    // If user is logged in but has no password (e.g., initial Google Login),
+    // we allow them to stay but FORCE the password setup modal.
     if (currentUser) {
-      if (!currentUser.isPasswordSet) {
-        // 1. Kick them out
-        logout();
-
-        // 2. Set an error message for the login page
-        localStorage.setItem('login_error', 'Você precisa criar uma conta primeiro. Faça o cadastro com disciplina e senha.');
-
-        // 3. Redirect to registration
-        // (We can't easily switch tabs via strict URL here without modifying Login.tsx, so we just go to login)
-        // Actually, we can pass a query param if Login supports it, or just let them see the error.
-        window.location.href = '/#/login';
+      if (!currentUser.isPasswordSet && !isPasswordSetupOpen) {
+        setIsPasswordSetupOpen(true);
       }
     }
-  }, [currentUser, logout]);
+  }, [currentUser, isPasswordSetupOpen]);
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarCollapsed(prev => {
