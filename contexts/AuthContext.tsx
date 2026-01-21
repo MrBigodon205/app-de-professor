@@ -423,7 +423,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [userId]);
 
     const login = useCallback(async (email: string, password: string) => {
-        setLoading(true);
+        // Removed setLoading(true) to avoid unmounting Login form
         const rawLogin = async () => {
             const supabaseUrl = (supabase as any).supabaseUrl;
             const supabaseKey = (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -468,7 +468,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (authResult?.user) {
                 const cached = localStorage.getItem(`cached_profile_${authResult.user.id}`);
                 if (cached) {
-                    try { setCurrentUser(JSON.parse(cached)); setLoading(false); } catch (e) { }
+                    try { setCurrentUser(JSON.parse(cached)); } catch (e) { }
                 }
                 supabase.auth.updateUser({ data: { is_password_set: true } });
                 fetchProfile(authResult.user.id, authResult.user);
@@ -477,7 +477,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return { success: false, error: 'Erro ao autenticar.' };
         } catch (e: any) {
             console.error("Falha final no login:", e);
-            setLoading(false);
             return { success: false, error: 'Erro ao realizar login. Verifique suas credenciais.' };
         }
     }, [currentUser]);
