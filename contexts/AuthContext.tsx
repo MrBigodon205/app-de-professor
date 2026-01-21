@@ -602,6 +602,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (Object.prototype.hasOwnProperty.call(data, 'photoUrl')) profileUpdate.photo_url = data.photoUrl;
             if (Object.prototype.hasOwnProperty.call(data, 'subjects')) profileUpdate.subjects = data.subjects;
             if (Object.prototype.hasOwnProperty.call(data, 'email')) profileUpdate.email = data.email;
+            if (Object.prototype.hasOwnProperty.call(data, 'isPasswordSet')) profileUpdate.is_password_set = data.isPasswordSet;
 
             // console.log("Supabase profile payload:", JSON.stringify(profileUpdate, null, 2));
 
