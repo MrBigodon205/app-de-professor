@@ -621,3 +621,45 @@ export const useAuth = () => {
     }
     return context;
 };
+register,
+    logout,
+    updateProfile,
+    resetPassword,
+    updatePassword,
+    loading,
+    activeSubject,
+    updateActiveSubject
+    }), [currentUser, userId, login, register, logout, updateProfile, loading, activeSubject, updateActiveSubject]);
+
+// CRITICAL FIX: Do not render Router (children) until Auth is determined.
+// This prevents HashRouter from stripping the OAuth hash before Supabase can read it.
+if (loading) {
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
+            <div className="flex flex-col items-center gap-4">
+                <div className="relative w-16 h-16">
+                    <div className="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-800"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+                </div>
+                <div className="text-slate-500 dark:text-slate-400 font-medium text-sm animate-pulse">
+                    Iniciando sistema...
+                </div>
+            </div>
+        </div>
+    );
+}
+
+return (
+    <AuthContext.Provider value={contextValue}>
+        {children}
+    </AuthContext.Provider>
+);
+};
+
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+};
