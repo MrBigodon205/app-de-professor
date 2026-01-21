@@ -359,8 +359,11 @@ export const Login: React.FC = () => {
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full relative group overflow-hidden rounded-2xl shadow-lg shadow-primary/20"
+                  disabled={isSubmitting || (activeTab === 'register' && (selectedSubjects.length === 0 || !password || !confirmPassword || !name || !email)) || (activeTab === 'login' && (!email || !password))}
+                  className={`w-full relative group overflow-hidden rounded-2xl shadow-lg shadow-primary/20 ${(isSubmitting || (activeTab === 'register' && (selectedSubjects.length === 0 || !password || !confirmPassword || !name || !email)) || (activeTab === 'login' && (!email || !password)))
+                      ? 'opacity-50 cursor-not-allowed grayscale'
+                      : ''
+                    }`}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-primary to-emerald-500 transition-all group-hover:scale-105" />
                   <div className="relative h-14 flex items-center justify-center gap-3 text-white font-black uppercase tracking-widest text-sm">
