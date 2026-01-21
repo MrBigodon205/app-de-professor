@@ -71,7 +71,7 @@ export const Login: React.FC = () => {
         if (result.success) {
           navigate('/');
         } else {
-          setError(result.error || 'E-mail ou senha incorretos.');
+          setError(result.error || 'Não encontramos uma conta com este e-mail ou a senha está incorreta.');
         }
       } else { // This is the 'register' block
         if (password !== confirmPassword) {

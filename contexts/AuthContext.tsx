@@ -453,7 +453,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error("Falha final no login:", e);
             let msg = e.message;
             if (msg === 'Email not confirmed') msg = 'Por favor, confirme seu e-mail para entrar.';
-            if (msg === 'Invalid login credentials' || msg === 'Erro no login via HTTP') msg = 'E-mail ou senha inválidos.';
+            if (msg === 'Invalid login credentials' || msg === 'Erro no login via HTTP') msg = 'Não encontramos uma conta com este e-mail ou a senha está incorreta.';
             if (msg.includes('expirou') || msg.includes('timed out')) msg = 'Tempo esgotado. Verifique sua conexão.';
 
             setLoading(false);
