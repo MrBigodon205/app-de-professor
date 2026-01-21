@@ -12,6 +12,7 @@ interface AuthContextType {
     updateProfile: (data: Partial<User>) => Promise<boolean>;
     resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
     updatePassword: (password: string) => Promise<{ success: boolean; error?: string }>;
+    completeRegistration: (name: string, password: string, subject: Subject, subjects: Subject[]) => Promise<{ success: boolean; error?: string }>;
     loading: boolean;
     activeSubject: string;
     updateActiveSubject: (subject: string) => void;
@@ -538,6 +539,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return { success: false, error: e.message || "Erro ao realizar o cadastro." };
         }
     }, []);
+
+    const completeRegistration = useCallback(async (name: string, password: string, subject: Subject, subjects: Subject[]) => {
+        if (!userId) return { success: false, error: "Usuário não autenticado." };
+
+        try {
+            // 1. Update Password
+            const { error: passError } = await supabase.auth.updateUser({ password });
+            if (passError) throw passError;
+
+            // 2. Update Profile
+            await updateProfile({
+                name,
+                subject,
+                subjects,
+                isPasswordSet: true // Important
+            });
+
+            return { success: true };
+        } catch (e: any) {
+            console.error("Complete registration error:", e);
+            return { success: false, error: e.message || "Erro ao completar cadastro." };
+        }
+    }, [userId, updateProfile]);
 
     const logout = useCallback(async () => {
         try {

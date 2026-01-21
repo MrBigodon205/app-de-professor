@@ -10,9 +10,12 @@ import { ForgotPasswordModal } from '../components/ForgotPasswordModal';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, register } = useAuth();
-  const { isDarkMode, toggleTheme } = useTheme(); // Destructure new props
+  const { login, register, completeRegistration, currentUser } = useAuth(); // Import completeRegistration and currentUser
+  const { isDarkMode, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+
+  // State for completion mode
+  const [isCompletionMode, setIsCompletionMode] = useState(false);
 
   // State for forms
   const [email, setEmail] = useState('');
@@ -28,14 +31,29 @@ export const Login: React.FC = () => {
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
   useEffect(() => {
-    // Check for forced logout error
+    // Check for forced logout error from previous sessions
     const errorMsg = localStorage.getItem('login_error');
     if (errorMsg) {
+      // If we have an error msg, show it. 
+      // Note: In the new flow, we might NOT have thrown them out, so this is fallback.
       setError(errorMsg);
       localStorage.removeItem('login_error');
-      setActiveTab('register'); // Redirect logic as requested
     }
-  }, []);
+
+    // CHECK FOR INCOMPLETE USER (The "Zombie" Flow)
+    if (currentUser && !currentUser.isPasswordSet) {
+      setIsCompletionMode(true);
+      setActiveTab('register');
+      setError('Complete seu cadastro para continuar. Defina sua senha e disciplina.');
+
+      // Pre-fill
+      if (currentUser.name) setName(currentUser.name);
+      if (currentUser.email) setEmail(currentUser.email);
+    } else if (currentUser && currentUser.isPasswordSet) {
+      // If user is fully complete, go to dashboard
+      navigate('/');
+    }
+  }, [currentUser]);
 
   const handleGoogleLogin = async () => {
     setIsSubmitting(true);
@@ -105,16 +123,29 @@ export const Login: React.FC = () => {
         }
 
         const mainSubject = selectedSubjects[0];
-        const result = await register(name, email, password, mainSubject, selectedSubjects);
+
+        // IF COMPLETION MODE: Use completeRegistration instead of register
+        let result;
+        if (isCompletionMode) {
+          result = await completeRegistration(name, password, mainSubject, selectedSubjects);
+        } else {
+          result = await register(name, email, password, mainSubject, selectedSubjects);
+        }
+
         if (result.success) {
-          setSuccess('Cadastro realizado! Por favor, confirme seu e-mail.');
-          // Optionally clear fields or redirect
-          setEmail('');
-          setPassword('');
-          setName('');
-          setSelectedSubjects([]);
-          setConfirmPassword('');
-          setActiveTab('login'); // Often redirect to login after successful registration
+          if (isCompletionMode) {
+            setSuccess('Cadastro completado com sucesso!');
+            navigate('/'); // Go straight to dashboard
+          } else {
+            setSuccess('Cadastro realizado! Por favor, confirme seu e-mail.');
+            // ... clear fields logic
+            setEmail('');
+            setPassword('');
+            setName('');
+            setSelectedSubjects([]);
+            setConfirmPassword('');
+            setActiveTab('login');
+          }
         } else {
           setError(result.error || 'Erro ao realizar cadastro.');
         }
