@@ -5,9 +5,9 @@ const TEMPLATE_CLASSES = [
     { name: '7º Ano', sections: ['A', 'B', 'C'] },
     { name: '8º Ano', sections: ['A', 'B'] },
     { name: '9º Ano', sections: ['A', 'B'] },
-    { name: '1º Ano Ensino Médio', sections: ['A'] },
-    { name: '2º Ano Ensino Médio', sections: ['A'] },
-    { name: '3º Ano Ensino Médio', sections: ['A'] }
+    { name: '1º Ano', sections: ['A'] },
+    { name: '2º Ano', sections: ['A'] },
+    { name: '3º Ano', sections: ['A'] }
 ];
 
 export const seedUserData = async (userId: string) => {
