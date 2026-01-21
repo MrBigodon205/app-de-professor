@@ -104,11 +104,11 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                 {/* Header */}
                 <div className="relative p-5 sm:p-6 shrink-0 border-b border-slate-100 dark:border-white/5">
                     {/* Abstract design elements */}
-                    <div className={`absolute top-0 right-0 w-64 h-64 bg-${theme.primaryColor}/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2`}></div>
+                    <div className={`absolute top-0 right-0 w-64 h-64 bg-[var(--theme-primary)]/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2`}></div>
 
                     <div className="relative z-10 flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <div className={`size-10 rounded-xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white flex items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
+                            <div className={`size-10 rounded-xl bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] text-white flex items-center justify-center shadow-lg shadow-[var(--theme-primary)]/20`}>
                                 <span className="material-symbols-outlined text-xl">school</span>
                             </div>
                             <div>
@@ -135,7 +135,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
 
                         {/* Series Creation Area */}
                         <div className="relative group">
-                            <div className={`absolute -inset-1 bg-gradient-to-r from-${theme.primaryColor} to-${theme.secondaryColor} rounded-2xl blur opacity-5 group-focus-within:opacity-20 transition duration-500`}></div>
+                            <div className={`absolute -inset-1 bg-gradient-to-r from-[var(--theme-primary)] to-[var(--theme-secondary)] rounded-2xl blur opacity-5 group-focus-within:opacity-20 transition duration-500`}></div>
                             <div className="relative bg-slate-50 dark:bg-slate-950 rounded-xl p-1.5 pr-2 border border-slate-200 dark:border-white/10 flex items-center gap-2">
                                 <input
                                     value={newSeriesName}
@@ -147,7 +147,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                 <button
                                     onClick={handleCreateSeries}
                                     disabled={!newSeriesName.trim()}
-                                    className={`h-9 px-4 rounded-lg bg-${theme.primaryColor} text-white font-black text-[10px] shadow-lg shadow-${theme.primaryColor}/30 hover:shadow-${theme.primaryColor}/50 transition-all disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:shadow-none disabled:scale-100 flex items-center gap-1.5`}
+                                    className={`h-9 px-4 rounded-lg bg-[var(--theme-primary)] text-white font-black text-[10px] shadow-lg shadow-[var(--theme-primary)]/30 hover:shadow-[var(--theme-primary)]/50 transition-all disabled:opacity-30 disabled:grayscale disabled:scale-100 disabled:shadow-none flex items-center gap-1.5`}
                                 >
                                     <span className="material-symbols-outlined text-base">add</span>
                                     <span>ADICIONAR</span>
@@ -158,7 +158,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                         {/* Series List */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 px-1">
-                                <span className={`size-1 rounded-full bg-${theme.primaryColor}`}></span>
+                                <span className={`size-1 rounded-full bg-[var(--theme-primary)]`}></span>
                                 <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                                     Séries e Turmas
                                 </label>
@@ -187,7 +187,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                                         onClick={() => selectSeries(cls.id)}
                                                         className="flex-1 flex items-center gap-3 text-left group/btn"
                                                     >
-                                                        <div className={`size-10 rounded-xl flex items-center justify-center transition-all duration-300 ${activeSeries?.id === cls.id ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white shadow-md shadow-${theme.primaryColor}/20` : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500'}`}>
+                                                        <div className={`size-10 rounded-xl flex items-center justify-center transition-all duration-300 ${activeSeries?.id === cls.id ? `bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] text-white shadow-md shadow-[var(--theme-primary)]/20` : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500'}`}>
                                                             <span className="material-symbols-outlined text-xl">
                                                                 {activeSeries?.id === cls.id ? 'folder_managed' : 'folder'}
                                                             </span>
@@ -218,13 +218,13 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                                                     <button
                                                                         onClick={() => selectSection(sec)}
                                                                         className={`relative h-10 min-w-[3.5rem] px-4 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center active:scale-90 ${selectedSection === sec
-                                                                            ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white shadow-md shadow-${theme.primaryColor}/30 ring-1 ring-${theme.primaryColor}`
+                                                                            ? `bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] text-white shadow-md shadow-[var(--theme-primary)]/30 ring-1 ring-[var(--theme-primary)]`
                                                                             : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-white/5'
                                                                             }`}
                                                                     >
                                                                         {sec}
                                                                         {selectedSection === sec && (
-                                                                            <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-${theme.primaryColor}`}></span>
+                                                                            <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-[var(--theme-primary)]`}></span>
                                                                         )}
                                                                     </button>
                                                                     <button
@@ -260,7 +260,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                                                         await addSection(activeSeries.id, nextLetter);
                                                                     }
                                                                 }}
-                                                                className={`h-10 px-4 rounded-xl border-2 border-dashed border-slate-200 dark:border-white/5 bg-transparent text-slate-400 hover:border-${theme.primaryColor} hover:text-${theme.primaryColor} flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 group/nova`}
+                                                                className={`h-10 px-4 rounded-xl border-2 border-dashed border-slate-200 dark:border-white/5 bg-transparent text-slate-400 hover:border-[var(--theme-primary)] hover:text-[var(--theme-primary)] flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 group/nova`}
                                                                 title="Nova Turma"
                                                             >
                                                                 <span className="material-symbols-outlined text-base">add</span>
