@@ -37,9 +37,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ]);
     }, []);
 
-    const fetchProfile = useCallback(async (uid: string, retryCount = 0) => {
+    const fetchProfile = useCallback(async (uid: string, authUser?: any) => {
         // Raw Fetch Helper for Profile
         const rawProfileFetch = async () => {
+            // ... (rest of rawProfileFetch)
             // console.log("Tentando buscar perfil via Raw Fetch...");
             const supabaseUrl = (supabase as any).supabaseUrl;
             const supabaseKey = (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -78,6 +79,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             if (profile) {
+                // AUTO-DETECT PASSWORD (LEGACY FIX)
+                // If the user has 'email' in their providers logic, they HAVE a password.
+                // We trust this over the DB flag for legacy users.
+                let hasPasswordConfirmed = profile.is_password_set;
+
+                if (authUser && !hasPasswordConfirmed) {
+                    const providers = authUser.app_metadata?.providers || [];
+                    if (providers.includes('email')) {
+                        // console.log("Legacy user detected with Email provider. Forcing isPasswordSet=true.");
+                        hasPasswordConfirmed = true;
+
+                        // Self-healing: Update DB in background
+                        supabase.from('profiles').update({ is_password_set: true }).eq('id', uid);
+                    }
+                }
+
                 const finalUser: User = {
                     id: profile.id,
                     name: profile.name,
@@ -85,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     photoUrl: profile.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=random`,
                     subject: profile.subject,
                     subjects: profile.subjects || [],
-                    isPasswordSet: profile.is_password_set
+                    isPasswordSet: hasPasswordConfirmed
                 };
 
                 localStorage.setItem(`cached_profile_${finalUser.id}`, JSON.stringify(finalUser));
@@ -175,7 +192,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                     // CRITICAL: Await profile fetch
                     try {
-                        await fetchProfile(session.user.id);
+                        await fetchProfile(session.user.id, session.user);
                     } catch (e) {
                         console.error("Fetch profile failed explicitly in init:", e);
                     }
@@ -249,7 +266,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         }
                     }
 
-                    fetchProfile(session.user.id);
+                    fetchProfile(session.user.id, session.user);
                     initialLoadDone = true;
                 }
 
