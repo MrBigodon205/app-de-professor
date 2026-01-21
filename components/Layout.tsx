@@ -35,10 +35,13 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 
   useEffect(() => {
-    if (currentUser && currentUser.isPasswordSet === false) {
-      // Small timeout to not be jarring
-      const timer = setTimeout(() => setIsPasswordSetupOpen(true), 1500);
-      return () => clearTimeout(timer);
+    // SECURITY Enforce: Check if user has both Password and Subject (if not, force modal)
+    if (currentUser) {
+      if (!currentUser.isPasswordSet || !currentUser.subject) {
+        // Force open and prevent closing
+        const timer = setTimeout(() => setIsPasswordSetupOpen(true), 1000);
+        return () => clearTimeout(timer);
+      }
     }
   }, [currentUser]);
 
@@ -196,6 +199,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <PasswordSetupModal
         isOpen={isPasswordSetupOpen}
         onClose={() => setIsPasswordSetupOpen(false)}
+        mandatory={currentUser ? (!currentUser.isPasswordSet || !currentUser.subject) : false}
       />
 
       {/* Mobile Notifications Modal */}

@@ -5,15 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { supabase } from '../lib/supabase';
 import { BackgroundPattern } from '../components/BackgroundPattern';
-import { Subject } from '../types';
+import { Subject, SUBJECTS } from '../types';
 import { ForgotPasswordModal } from '../components/ForgotPasswordModal';
-
-
-const SUBJECTS: Subject[] = [
-  'Filosofia', 'Educação Física', 'Matemática', 'Física', 'História', 'Geografia',
-  'Artes', 'Projeto de Vida', 'Literatura', 'Português', 'Redação', 'Química', 'Ciências',
-  'Biologia', 'Sociologia', 'Inglês', 'Espanhol', 'Ensino Religioso'
-];
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -361,8 +354,8 @@ export const Login: React.FC = () => {
                   type="submit"
                   disabled={isSubmitting || (activeTab === 'register' && (selectedSubjects.length === 0 || !password || !confirmPassword || !name || !email)) || (activeTab === 'login' && (!email || !password))}
                   className={`w-full relative group overflow-hidden rounded-2xl shadow-lg shadow-primary/20 ${(isSubmitting || (activeTab === 'register' && (selectedSubjects.length === 0 || !password || !confirmPassword || !name || !email)) || (activeTab === 'login' && (!email || !password)))
-                      ? 'opacity-50 cursor-not-allowed grayscale'
-                      : ''
+                    ? 'opacity-50 cursor-not-allowed grayscale'
+                    : ''
                     }`}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-primary to-emerald-500 transition-all group-hover:scale-105" />

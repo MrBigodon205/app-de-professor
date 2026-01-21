@@ -1,54 +1,79 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { SUBJECTS } from '../types';
 
 interface PasswordSetupModalProps {
     isOpen: boolean;
     onClose: () => void;
+    mandatory?: boolean;
 }
 
-export const PasswordSetupModal: React.FC<PasswordSetupModalProps> = ({ isOpen, onClose }) => {
-    const { updatePassword, updateProfile } = useAuth();
+export const PasswordSetupModal: React.FC<PasswordSetupModalProps> = ({ isOpen, onClose, mandatory = false }) => {
+    const { currentUser, updatePassword, updateProfile } = useAuth();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [selectedSubject, setSelectedSubject] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+
+    // Determine what needs to be set
+    const needsPassword = !currentUser?.isPasswordSet;
+    const needsSubject = !currentUser?.subject;
+
+    useEffect(() => {
+        if (!isOpen) {
+            setPassword('');
+            setConfirmPassword('');
+            setSelectedSubject('');
+            setError(null);
+            setSuccess(false);
+        }
+    }, [isOpen]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         setLoading(true);
 
-        if (password.length < 6) {
-            setError('A senha deve ter pelo menos 6 caracteres.');
-            setLoading(false);
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            setError('As senhas não coincidem.');
-            setLoading(false);
-            return;
-        }
-
         try {
-            const result = await updatePassword(password);
-            if (result.success) {
-                // Mark locally that password is set to prevent modal from reopening
-                await updateProfile({ isPasswordSet: true } as any);
-                setSuccess(true);
-                setTimeout(() => {
-                    onClose();
-                    setSuccess(false);
-                    setPassword('');
-                    setConfirmPassword('');
-                }, 2000);
-            } else {
-                setError(result.error || 'Erro ao definir senha.');
+            // 1. Validate Password if needed
+            if (needsPassword) {
+                if (password.length < 6) {
+                    throw new Error('A senha deve ter pelo menos 6 caracteres.');
+                }
+                if (password !== confirmPassword) {
+                    throw new Error('As senhas não coincidem.');
+                }
             }
-        } catch (err) {
-            setError('Erro inesperado. Tente novamente.');
+
+            // 2. Validate Subject if needed
+            if (needsSubject && !selectedSubject) {
+                throw new Error('Selecione uma disciplina para continuar.');
+            }
+
+            // 3. Update Password
+            if (needsPassword) {
+                const passResult = await updatePassword(password);
+                if (!passResult.success) throw new Error(passResult.error || 'Erro ao definir senha.');
+            }
+
+            // 4. Update Profile (Subject + Mark Password Set)
+            const updates: any = {};
+            if (needsSubject) updates.subject = selectedSubject;
+            if (needsPassword) updates.isPasswordSet = true;
+
+            const profileResult = await updateProfile(updates);
+            if (!profileResult) throw new Error('Erro ao atualizar perfil.');
+
+            setSuccess(true);
+            setTimeout(() => {
+                onClose();
+            }, 1500);
+
+        } catch (err: any) {
+            setError(err.message || 'Erro inesperado. Tente novamente.');
         } finally {
             setLoading(false);
         }
@@ -58,78 +83,123 @@ export const PasswordSetupModal: React.FC<PasswordSetupModalProps> = ({ isOpen, 
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl ${mandatory ? 'cursor-not-allowed' : ''}`}>
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl p-8 shadow-2xl border border-slate-200 dark:border-white/10 relative overflow-hidden"
+                    className={`bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl p-8 shadow-2xl border border-slate-200 dark:border-white/10 relative overflow-hidden ${mandatory ? 'cursor-default' : ''}`}
+                    onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header Decoration */}
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500" />
+                    <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-secondary" />
 
-                    <div className="text-center mb-6">
-                        <div className="w-16 h-16 rounded-full bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
-                            <span className="material-symbols-outlined text-[32px] text-amber-500">lock_reset</span>
+                    <div className="text-center mb-8">
+                        <div className="w-20 h-20 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4 border-4 border-white dark:border-slate-900 shadow-neon">
+                            <span className="material-symbols-outlined text-4xl text-primary animate-pulse">
+                                {needsPassword && needsSubject ? 'admin_panel_settings' : (needsSubject ? 'school' : 'lock_reset')}
+                            </span>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Definir Senha</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                            Complete seu cadastro definindo uma senha segura para acessar sua conta em qualquer dispositivo.
-                        </p>
+                        <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2">
+                            {success ? 'Tudo Pronto!' : 'Complete seu Perfil'}
+                        </h2>
+                        {!success && (
+                            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-xs mx-auto">
+                                Para garantir sua segurança e personalizar sua experiência, precisamos de algumas informações finais.
+                            </p>
+                        )}
                     </div>
 
                     {success ? (
-                        <div className="flex flex-col items-center justify-center py-8 animate-in fade-in">
+                        <div className="flex flex-col items-center justify-center py-4 animate-in fade-in zoom-in duration-300">
                             <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4 text-emerald-600 dark:text-emerald-400">
                                 <span className="material-symbols-outlined text-4xl">check</span>
                             </div>
-                            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">Senha definida com sucesso!</p>
+                            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">Perfil atualizado!</p>
+                            <p className="text-xs text-slate-400 mt-2">Redirecionando...</p>
                         </div>
                     ) : (
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Nova Senha</label>
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
-                                    placeholder="••••••••"
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Confirmar Senha</label>
-                                <input
-                                    type="password"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
-                                    placeholder="••••••••"
-                                    required
-                                />
-                            </div>
+                        <form onSubmit={handleSubmit} className="space-y-6">
+
+                            {/* Subject Selection Section */}
+                            {needsSubject && (
+                                <div className="space-y-3">
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-sm">subject</span>
+                                        Sua Disciplina Principal
+                                    </label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[160px] overflow-y-auto custom-scrollbar p-1">
+                                        {SUBJECTS.map(s => (
+                                            <button
+                                                key={s}
+                                                type="button"
+                                                onClick={() => setSelectedSubject(s)}
+                                                className={`px-2 py-2.5 rounded-xl text-[10px] font-bold uppercase transition-all border ${selectedSubject === s
+                                                    ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20 scale-[1.02]'
+                                                    : 'bg-slate-50 dark:bg-slate-800 border-transparent text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-400'
+                                                    }`}
+                                            >
+                                                {s}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Password Section */}
+                            {needsPassword && (
+                                <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-sm">key</span>
+                                            Definir Senha de Acesso
+                                        </label>
+                                        <input
+                                            type="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 text-slate-800 dark:text-white focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium"
+                                            placeholder="Mínimo 6 caracteres"
+                                            required={needsPassword}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <input
+                                            type="password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 text-slate-800 dark:text-white focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium"
+                                            placeholder="Confirme sua senha"
+                                            required={needsPassword}
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             {error && (
-                                <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg text-center">
+                                <div className="p-4 bg-red-50 dark:bg-red-900/10 border-l-4 border-red-500 text-red-600 dark:text-red-400 text-xs font-bold rounded-r-lg shadow-sm flex items-center gap-3 animate-in slide-in-from-top-2">
+                                    <span className="material-symbols-outlined">warning</span>
                                     {error}
                                 </div>
                             )}
 
-                            <div className="pt-2 flex gap-3">
-                                <button
-                                    type="button"
-                                    onClick={onClose}
-                                    className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                                >
-                                    Agora não
-                                </button>
+                            <div className="pt-4 flex gap-3">
+                                {!mandatory && (
+                                    <button
+                                        type="button"
+                                        onClick={onClose}
+                                        className="px-6 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                    >
+                                        Pular
+                                    </button>
+                                )}
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold shadow-lg shadow-orange-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    className="flex-1 py-3.5 bg-gradient-to-r from-primary to-secondary text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
-                                    {loading ? <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span> : 'Salvar Senha'}
+                                    {loading ? <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span> : 'Salvar e Continuar'}
+                                    <span className="material-symbols-outlined text-lg">arrow_forward</span>
                                 </button>
                             </div>
                         </form>

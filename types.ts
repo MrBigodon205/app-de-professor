@@ -121,6 +121,12 @@ export type Subject =
   | 'Espanhol'
   | 'Geral';
 
+export const SUBJECTS: Subject[] = [
+  'Filosofia', 'Educação Física', 'Matemática', 'Física', 'História', 'Geografia',
+  'Artes', 'Projeto de Vida', 'Literatura', 'Português', 'Redação', 'Química', 'Ciências',
+  'Biologia', 'Sociologia', 'Inglês', 'Espanhol', 'Ensino Religioso', 'Geral'
+];
+
 export interface User {
   id: string;
   name: string;
