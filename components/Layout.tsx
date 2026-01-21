@@ -217,7 +217,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {/* Floating Sidebar */}
       <motion.aside
         layout
-        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+        transition={{ type: "spring", stiffness: 280, damping: 30, mass: 0.6 }}
         className={`fixed top-4 bottom-4 left-4 z-[60] glass-card-premium transform flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden transition-all duration-300
           ${isMobileMenuOpen ? 'translate-x-0 w-72 border-r-0' : ''} 
           ${!isMobileMenuOpen && isSidebarCollapsed ? 'lg:-translate-x-full landscape:-translate-x-full w-0 border-0 p-0 opacity-0 pointer-events-none' : 'lg:translate-x-0 landscape:translate-x-0 w-72 border-r-0'}
@@ -312,7 +312,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {/* Main Content Area */}
       <motion.div
         layout
-        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+        transition={{ type: "spring", stiffness: 280, damping: 30, mass: 0.6 }}
         className={`flex-1 flex flex-col min-w-0 h-full relative z-10 
           ${isSidebarCollapsed ? 'lg:ml-0 landscape:ml-0' : 'lg:ml-72 landscape:ml-72'}
         `}
