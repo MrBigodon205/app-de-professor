@@ -444,7 +444,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } catch (e) { console.warn("Erro ao salvar token manual:", e); }
             if (data.user) {
                 setUserId(data.user.id);
-                await fetchProfile(data.user.id);
+                await fetchProfile(data.user.id, data.user);
             }
             return { user: data.user, session: data };
         };
@@ -471,7 +471,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     try { setCurrentUser(JSON.parse(cached)); setLoading(false); } catch (e) { }
                 }
                 supabase.auth.updateUser({ data: { is_password_set: true } });
-                fetchProfile(authResult.user.id);
+                fetchProfile(authResult.user.id, authResult.user);
                 return { success: true };
             }
             return { success: false, error: 'Erro ao autenticar.' };
