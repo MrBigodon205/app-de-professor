@@ -262,7 +262,28 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 })
                 .eq('id', studentId);
 
-            if (error) throw error;
+            if (error) {
+                // Check for Unique Constraint Violation (Code 23505)
+                // This happens if we transfer a legacy student (e.g. "01") to a class that already has "01"
+                if (error.code === '23505') {
+                    console.log("Collision detected. Generating new matricula for legacy student...");
+                    // Generate new unique matricula (5-6 digits) to resolve collision
+                    const newMatricula = Math.floor(10000 + Math.random() * 90000).toString();
+
+                    const { error: retryError } = await supabase
+                        .from('students')
+                        .update({
+                            series_id: seriesIdNum,
+                            section: targetSection,
+                            number: newMatricula // Update number to resolve collision
+                        })
+                        .eq('id', studentId);
+
+                    if (retryError) throw retryError;
+                    return true;
+                }
+                throw error;
+            }
             return true;
         } catch (e) {
             console.error("Failed to transfer student", e);

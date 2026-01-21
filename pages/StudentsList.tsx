@@ -175,6 +175,9 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
         }
     };
 
+    // Helper to generate unique matricula (5 digits)
+    const generateMatricula = () => Math.floor(10000 + Math.random() * 90000).toString();
+
     const handleAddStudent = async () => {
         if (!newStudentName.trim() || !currentUser) return;
         if (!selectedSeriesId || !selectedSection) {
@@ -184,10 +187,8 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
         const initials = newStudentName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
-        const maxNumber = students.length > 0
-            ? Math.max(...students.map(s => parseInt(s.number || '0')))
-            : 0;
-        const newNumber = (maxNumber + 1).toString().padStart(2, '0');
+        // FIX: Use random unique matricula instead of sequential number
+        const newNumber = generateMatricula();
 
         const newStudentData = {
             name: newStudentName,
@@ -258,18 +259,15 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             const sortedList = Array.from(combinedMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
             const operations = sortedList.map((item, index) => {
-                const newNumber = (index + 1).toString().padStart(2, '0');
 
                 if (item.existing) {
-                    if (item.original.number !== newNumber) {
-                        return supabase
-                            .from('students')
-                            .update({ number: newNumber })
-                            .eq('id', item.id);
-                    }
+                    // FIX: Do NOT re-sequence existing students. Keep their number.
                     return null;
                 } else {
                     const initials = item.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+                    // FIX: Generate unique matricula for new students
+                    const newNumber = generateMatricula();
+
                     return supabase
                         .from('students')
                         .insert({
