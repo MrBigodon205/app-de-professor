@@ -240,8 +240,61 @@ export const Observations: React.FC = () => {
         setOccurrenceDate(occ.date);
         setSelectedUnit(occ.unit);
         setEditingOccId(occ.id);
-        setActiveTab('occurrences');
+        // Removed setActiveTab to allow inline editing in current context
     };
+
+    const renderInlineEdit = (occ: Occurrence) => (
+        <div key={occ.id} className="bg-white dark:bg-slate-900 shadow-xl rounded-[24px] p-6 border-2 border-amber-500/50 animate-in fade-in zoom-in duration-300">
+            <div className="flex items-center gap-3 mb-4 text-amber-600 font-bold uppercase text-xs tracking-widest">
+                <span className="material-symbols-outlined">edit_note</span>
+                Editando Ocorrência
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <CategorySelect
+                    label="Categoria"
+                    value={type}
+                    onChange={(val) => setType(val as Occurrence['type'])}
+                    compact
+                />
+                <DatePicker
+                    label="Data"
+                    value={occurrenceDate}
+                    onChange={setOccurrenceDate}
+                    className="w-full"
+                    compact
+                />
+            </div>
+
+            <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Descrição..."
+                className="w-full h-24 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/50 text-sm mb-4 focus:ring-2 focus:ring-amber-500/20 outline-none resize-none"
+                autoFocus
+            />
+
+            <div className="flex gap-2">
+                <button
+                    onClick={handleSaveOccurrence}
+                    disabled={saving}
+                    className="flex-1 h-10 bg-amber-500 text-white rounded-xl font-bold uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 hover:bg-amber-600 transition-colors"
+                >
+                    {saving ? <span className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <span className="material-symbols-outlined text-base">save</span>}
+                    Salvar
+                </button>
+                <button
+                    onClick={() => {
+                        setEditingOccId(null);
+                        setDescription('');
+                    }}
+                    className="flex-1 h-10 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-xl font-bold uppercase text-[10px] tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                >
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    );
 
     const handleDeleteOccurrence = async (id: string) => {
         if (!window.confirm("Deseja realmente excluir este registro?")) return;
@@ -472,48 +525,50 @@ export const Observations: React.FC = () => {
                                             </div>
                                         ) : (
                                             studentOccurrences.map((occ, idx) => (
-                                                <div
-                                                    key={occ.id}
-                                                    onClick={() => toggleOccurrenceSelection(occ.id)}
-                                                    className={`bg-white dark:bg-slate-900/50 p-6 rounded-3xl border shadow-sm hover:shadow-md transition-all flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300 cursor-pointer group/card ${selectedOccIds.has(occ.id) ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'}`}
-                                                    style={{ animationDelay: `${idx * 30}ms` }}
-                                                >
-                                                    <div className="flex justify-between items-start gap-4">
-                                                        <div className="flex items-center gap-4 min-w-0">
-                                                            <div className={`size-10 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0 ${occ.type === 'Elogio' ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-500/20' : 'bg-gradient-to-br from-rose-500 to-rose-700 shadow-rose-500/20'}`}>
-                                                                <span className="material-symbols-outlined text-lg">{selectedOccIds.has(occ.id) ? 'check_circle' : getOccurrenceIcon(occ.type)}</span>
+                                                editingOccId === occ.id ? renderInlineEdit(occ) : (
+                                                    <div
+                                                        key={occ.id}
+                                                        onClick={() => toggleOccurrenceSelection(occ.id)}
+                                                        className={`bg-white dark:bg-slate-900/50 p-6 rounded-3xl border shadow-sm hover:shadow-md transition-all flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300 cursor-pointer group/card ${selectedOccIds.has(occ.id) ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'}`}
+                                                        style={{ animationDelay: `${idx * 30}ms` }}
+                                                    >
+                                                        <div className="flex justify-between items-start gap-4">
+                                                            <div className="flex items-center gap-4 min-w-0">
+                                                                <div className={`size-10 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0 ${occ.type === 'Elogio' ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-500/20' : 'bg-gradient-to-br from-rose-500 to-rose-700 shadow-rose-500/20'}`}>
+                                                                    <span className="material-symbols-outlined text-lg">{selectedOccIds.has(occ.id) ? 'check_circle' : getOccurrenceIcon(occ.type)}</span>
+                                                                </div>
+                                                                <div className="flex flex-col min-w-0">
+                                                                    <span className="text-sm font-black text-slate-900 dark:text-white truncate">{occ.student_name}</span>
+                                                                    <span className={`text-[10px] font-black uppercase tracking-widest ${occ.type === 'Elogio' ? 'text-emerald-500' : 'text-rose-500'}`}>{occ.type}</span>
+                                                                </div>
                                                             </div>
-                                                            <div className="flex flex-col min-w-0">
-                                                                <span className="text-sm font-black text-slate-900 dark:text-white truncate">{occ.student_name}</span>
-                                                                <span className={`text-[10px] font-black uppercase tracking-widest ${occ.type === 'Elogio' ? 'text-emerald-500' : 'text-rose-500'}`}>{occ.type}</span>
+                                                            <div className="flex flex-col items-end shrink-0">
+                                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                                                                <div className="flex items-center gap-1 mt-2">
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleEditOccurrence(occ);
+                                                                        }}
+                                                                        className="p-1.5 hover:bg-amber-500/10 hover:text-amber-600 rounded-lg transition-all"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-lg">edit</span>
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleDeleteOccurrence(occ.id);
+                                                                        }}
+                                                                        className="p-1.5 hover:bg-rose-500/10 hover:text-rose-600 rounded-lg transition-all"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-lg">delete</span>
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <div className="flex flex-col items-end shrink-0">
-                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
-                                                            <div className="flex items-center gap-1 mt-2">
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleEditOccurrence(occ);
-                                                                    }}
-                                                                    className="p-1.5 hover:bg-amber-500/10 hover:text-amber-600 rounded-lg transition-all"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-lg">edit</span>
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleDeleteOccurrence(occ.id);
-                                                                    }}
-                                                                    className="p-1.5 hover:bg-rose-500/10 hover:text-rose-600 rounded-lg transition-all"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-lg">delete</span>
-                                                                </button>
-                                                            </div>
-                                                        </div>
+                                                        <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed italic pr-4">"{occ.description}"</p>
                                                     </div>
-                                                    <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed italic pr-4">"{occ.description}"</p>
-                                                </div>
+                                                )
                                             ))
                                         )}
                                     </div>
@@ -521,97 +576,90 @@ export const Observations: React.FC = () => {
                             ) : (
                                 <div className="max-w-4xl mx-auto flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                     {/* Premium Form */}
-                                    <div className="bg-slate-50 dark:bg-slate-950/50 rounded-[32px] border-2 border-dashed border-slate-200 dark:border-slate-800 p-4 sm:p-8 landscape:p-4 relative group/form" data-tour="obs-form">
-                                        <div className="absolute inset-0 rounded-[30px] overflow-hidden pointer-events-none">
-                                            <div className={`absolute top-0 left-0 w-2 h-full bg-${theme.primaryColor} opacity-20`}></div>
-                                        </div>
+                                    {/* Premium Form - Only visible when NOT editing inside a card */}
+                                    {!editingOccId && (
+                                        <div className="bg-slate-50 dark:bg-slate-950/50 rounded-[32px] border-2 border-dashed border-slate-200 dark:border-slate-800 p-4 sm:p-8 landscape:p-4 relative group/form" data-tour="obs-form">
+                                            <div className="absolute inset-0 rounded-[30px] overflow-hidden pointer-events-none">
+                                                <div className={`absolute top-0 left-0 w-2 h-full bg-${theme.primaryColor} opacity-20`}></div>
+                                            </div>
 
-                                        <h3 className="font-black text-base sm:text-lg text-slate-800 dark:text-white mb-4 sm:mb-8 landscape:mb-4 flex items-center gap-3 sm:gap-4 relative z-10">
-                                            <div className={`hidden sm:flex size-11 rounded-1.5xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} items-center justify-center landscape:hidden`}>
-                                                <span className="material-symbols-outlined text-2xl">{editingOccId ? 'edit_note' : 'add_moderator'}</span>
-                                            </div>
-                                            {editingOccId ? 'Editar Registro' : 'Registrar Novo Ponto de Atenção'}
-                                        </h3>
+                                            <h3 className="font-black text-base sm:text-lg text-slate-800 dark:text-white mb-4 sm:mb-8 landscape:mb-4 flex items-center gap-3 sm:gap-4 relative z-10">
+                                                <div className={`hidden sm:flex size-11 rounded-1.5xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} items-center justify-center landscape:hidden`}>
+                                                    <span className="material-symbols-outlined text-2xl">add_moderator</span>
+                                                </div>
+                                                Registrar Novo Ponto de Atenção
+                                            </h3>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 landscape:gap-2">
-                                            <div className="md:col-span-4 landscape:flex-1">
-                                                <CategorySelect
-                                                    label="Categoria"
-                                                    value={type}
-                                                    onChange={(val) => setType(val as Occurrence['type'])}
-                                                    compact
-                                                />
-                                            </div>
-                                            <div className="md:col-span-4">
-                                                <DatePicker
-                                                    label="Data"
-                                                    value={occurrenceDate}
-                                                    onChange={setOccurrenceDate}
-                                                    className="w-full"
-                                                    compact
-                                                />
-                                            </div>
-                                            <div className="md:col-span-4 landscape:flex-1">
-                                                <label className="block text-[9px] sm:text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1.5 sm:mb-3 landscape:mb-1 ml-1">Unidade</label>
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {['1', '2', '3'].map((u) => (
-                                                        <button
-                                                            key={u}
-                                                            onClick={() => setSelectedUnit(u)}
-                                                            className={`h-11 sm:h-14 landscape:h-10 rounded-2xl border-2 font-black text-sm transition-all ${selectedUnit === u
-                                                                ? `bg-${theme.primaryColor} text-white shadow-lg`
-                                                                : 'border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
-                                                                }`}
-                                                            style={selectedUnit === u ? { borderColor: theme.primaryColorHex, backgroundColor: theme.primaryColorHex } : undefined}
-                                                        >
-                                                            {u}U
-                                                        </button>
-                                                    ))}
+                                            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 landscape:gap-2">
+                                                <div className="md:col-span-4 landscape:flex-1">
+                                                    <CategorySelect
+                                                        label="Categoria"
+                                                        value={type}
+                                                        onChange={(val) => setType(val as Occurrence['type'])}
+                                                        compact
+                                                    />
+                                                </div>
+                                                <div className="md:col-span-4">
+                                                    <DatePicker
+                                                        label="Data"
+                                                        value={occurrenceDate}
+                                                        onChange={setOccurrenceDate}
+                                                        className="w-full"
+                                                        compact
+                                                    />
+                                                </div>
+                                                <div className="md:col-span-4 landscape:flex-1">
+                                                    <label className="block text-[9px] sm:text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1.5 sm:mb-3 landscape:mb-1 ml-1">Unidade</label>
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        {['1', '2', '3'].map((u) => (
+                                                            <button
+                                                                key={u}
+                                                                onClick={() => setSelectedUnit(u)}
+                                                                className={`h-11 sm:h-14 landscape:h-10 rounded-2xl border-2 font-black text-sm transition-all ${selectedUnit === u
+                                                                    ? `bg-${theme.primaryColor} text-white shadow-lg`
+                                                                    : 'border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                                                                    }`}
+                                                                style={selectedUnit === u ? { borderColor: theme.primaryColorHex, backgroundColor: theme.primaryColorHex } : undefined}
+                                                            >
+                                                                {u}U
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div className="md:col-span-12">
+                                                    <label className="block text-[9px] sm:text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1.5 sm:mb-3 landscape:mb-1 ml-1">Relato Detalhado</label>
+                                                    <textarea
+                                                        value={description}
+                                                        onChange={(e) => setDescription(e.target.value)}
+                                                        placeholder="Descreva o ocorrido com detalhes pedágogicos..."
+                                                        className={`w-full h-24 sm:h-32 landscape:h-20 p-4 sm:p-6 rounded-2xl sm:rounded-[28px] border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-${theme.primaryColor} focus:ring-4 focus:ring-${theme.primaryColor}/10 text-xs sm:text-sm font-medium transition-all resize-none custom-scrollbar`}
+                                                    />
                                                 </div>
                                             </div>
 
-                                            <div className="md:col-span-12">
-                                                <label className="block text-[9px] sm:text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1.5 sm:mb-3 landscape:mb-1 ml-1">Relato Detalhado</label>
-                                                <textarea
-                                                    value={description}
-                                                    onChange={(e) => setDescription(e.target.value)}
-                                                    placeholder="Descreva o ocorrido com detalhes pedágogicos..."
-                                                    className={`w-full h-24 sm:h-32 landscape:h-20 p-4 sm:p-6 rounded-2xl sm:rounded-[28px] border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-${theme.primaryColor} focus:ring-4 focus:ring-${theme.primaryColor}/10 text-xs sm:text-sm font-medium transition-all resize-none custom-scrollbar`}
-                                                />
+                                            <div className="mt-4 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 relative z-10">
+                                                <button
+                                                    onClick={handleSaveOccurrence}
+                                                    disabled={saving || !description}
+                                                    className={`flex-1 h-12 sm:h-16 landscape:h-10 rounded-xl sm:rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs flex items-center justify-center gap-3 transition-all shadow-xl shadow-${theme.primaryColor}/20 ${saving || !description ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'text-white active:scale-95'}`}
+                                                    style={!(saving || !description) ? { backgroundColor: theme.primaryColorHex } : undefined}
+                                                >
+                                                    {saving ? (
+                                                        <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                                    ) : (
+                                                        <span className="material-symbols-outlined text-lg sm:text-xl">add_circle</span>
+                                                    )}
+                                                    Confirmar Registro
+                                                </button>
                                             </div>
                                         </div>
-
-                                        <div className="mt-4 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 relative z-10">
-                                            <button
-                                                onClick={handleSaveOccurrence}
-                                                disabled={saving || !description}
-                                                className={`flex-1 h-12 sm:h-16 landscape:h-10 rounded-xl sm:rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs flex items-center justify-center gap-3 transition-all shadow-xl shadow-${theme.primaryColor}/20 ${saving || !description ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : `bg-${theme.primaryColor} text-white active:scale-95`}`}
-                                            >
-                                                {saving ? (
-                                                    <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                                                ) : (
-                                                    <span className="material-symbols-outlined text-lg sm:text-xl">{editingOccId ? 'save' : 'add_circle'}</span>
-                                                )}
-                                                {editingOccId ? 'Salvar Alterações' : 'Confirmar Registro'}
-                                            </button>
-                                            {editingOccId && (
-                                                <button
-                                                    onClick={() => {
-                                                        setEditingOccId(null);
-                                                        setDescription('');
-                                                    }}
-                                                    className="h-12 sm:h-16 landscape:h-10 px-6 sm:px-8 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl sm:rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs active:scale-95 transition-all"
-                                                >
-                                                    Cancelar
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
+                                    )}
 
                                     {/* Recent List */}
                                     <div className="space-y-4">
                                         <h4 className="font-black text-[10px] sm:text-xs text-slate-400 uppercase tracking-[0.3em] ml-2 flex items-center gap-3">
-                                            <span className={`w-8 h-[2px] rounded-full bg-${theme.primaryColor}/20`}></span>
+                                            <span className="w-8 h-[2px] rounded-full" style={{ backgroundColor: `${theme.primaryColorHex}33` }}></span>
                                             Registros Recentes da Disciplina
                                         </h4>
                                         <div className="grid grid-cols-1 gap-4">
@@ -621,42 +669,44 @@ export const Observations: React.FC = () => {
                                                 </div>
                                             ) : (
                                                 studentOccurrences.map((occ) => (
-                                                    <div
-                                                        key={occ.id}
-                                                        className="group/occ relative"
-                                                    >
-                                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 opacity-0 group-hover/occ:opacity-100 transition-all">
-                                                            <div className={`size-2 rounded-full bg-${theme.primaryColor}`}></div>
-                                                        </div>
-                                                        <div className={`bg-white dark:bg-slate-900/50 p-6 rounded-3xl border shadow-xl shadow-slate-200/40 dark:shadow-none hover:border-slate-200 dark:hover:border-slate-700 transition-all flex flex-col gap-3 group-hover/occ:translate-x-2 ${selectedOccIds.has(occ.id) ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-100 dark:border-slate-800'}`}>
-                                                            <div className="flex justify-between items-center">
-                                                                <span className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-xl border-2 ${occ.type === 'Elogio' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10' : 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-500/10'}`}>
-                                                                    {occ.type}
-                                                                </span>
-                                                                <div className="flex items-center gap-4">
-                                                                    <div className="flex items-center gap-2 text-slate-400">
-                                                                        <span className="material-symbols-outlined text-sm">calendar_today</span>
-                                                                        <span className="text-[10px] font-black font-mono tracking-tighter">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-1 opacity-0 group-hover/occ:opacity-100 transition-opacity">
-                                                                        <button
-                                                                            onClick={() => handleEditOccurrence(occ)}
-                                                                            className="p-2 hover:bg-amber-500/10 hover:text-amber-600 rounded-lg transition-all"
-                                                                        >
-                                                                            <span className="material-symbols-outlined text-lg">edit</span>
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => handleDeleteOccurrence(occ.id)}
-                                                                            className="p-2 hover:bg-rose-500/10 hover:text-rose-600 rounded-lg transition-all"
-                                                                        >
-                                                                            <span className="material-symbols-outlined text-lg">delete</span>
-                                                                        </button>
+                                                    editingOccId === occ.id ? renderInlineEdit(occ) : (
+                                                        <div
+                                                            key={occ.id}
+                                                            className="group/occ relative"
+                                                        >
+                                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 opacity-0 group-hover/occ:opacity-100 transition-all">
+                                                                <div className="size-2 rounded-full" style={{ backgroundColor: theme.primaryColorHex }}></div>
+                                                            </div>
+                                                            <div className={`bg-white dark:bg-slate-900/50 p-6 rounded-3xl border shadow-xl shadow-slate-200/40 dark:shadow-none hover:border-slate-200 dark:hover:border-slate-700 transition-all flex flex-col gap-3 group-hover/occ:translate-x-2 ${selectedOccIds.has(occ.id) ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-100 dark:border-slate-800'}`}>
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-xl border-2 ${occ.type === 'Elogio' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10' : 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-500/10'}`}>
+                                                                        {occ.type}
+                                                                    </span>
+                                                                    <div className="flex items-center gap-4">
+                                                                        <div className="flex items-center gap-2 text-slate-400">
+                                                                            <span className="material-symbols-outlined text-sm">calendar_today</span>
+                                                                            <span className="text-[10px] font-black font-mono tracking-tighter">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1 opacity-0 group-hover/occ:opacity-100 transition-opacity">
+                                                                            <button
+                                                                                onClick={() => handleEditOccurrence(occ)}
+                                                                                className="p-2 hover:bg-amber-500/10 hover:text-amber-600 rounded-lg transition-all"
+                                                                            >
+                                                                                <span className="material-symbols-outlined text-lg">edit</span>
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => handleDeleteOccurrence(occ.id)}
+                                                                                className="p-2 hover:bg-rose-500/10 hover:text-rose-600 rounded-lg transition-all"
+                                                                            >
+                                                                                <span className="material-symbols-outlined text-lg">delete</span>
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
+                                                                <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed italic pr-4 landscape:line-clamp-2">"{occ.description}"</p>
                                                             </div>
-                                                            <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed italic pr-4 landscape:line-clamp-2">"{occ.description}"</p>
                                                         </div>
-                                                    </div>
+                                                    )
                                                 ))
                                             )}
                                         </div>

@@ -1322,11 +1322,11 @@ export const Activities: React.FC = () => {
                                             <div className="grid grid-cols-2 gap-x-8 gap-y-2">
                                                 {students.map((s, idx) => (
                                                     <div key={s.id}
-                                                        className="flex items-center justify-between border-b border-slate-100 py-1 animate-in slide-in-from-bottom-2 fade-in duration-500 fill-mode-backwards"
+                                                        className="flex items-center justify-between gap-3 border-b border-slate-100 py-1 animate-in slide-in-from-bottom-2 fade-in duration-500 fill-mode-backwards"
                                                         style={{ animationDelay: `${idx * 50}ms` }}
                                                     >
-                                                        <span className="text-xs">{s.number}. {s.name}</span>
-                                                        <div className="size-4 border border-slate-300 flex items-center justify-center">
+                                                        <span className="text-xs truncate min-w-0 flex-1">{s.number}. {s.name}</span>
+                                                        <div className="size-4 border border-slate-300 flex items-center justify-center shrink-0">
                                                             {currentActivity.completions?.includes(s.id) && <span className="material-symbols-outlined text-[12px]">check</span>}
                                                         </div>
                                                     </div>

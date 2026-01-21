@@ -87,7 +87,7 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                 </div>
 
                 {/* List - Vertical but optimized for Landscape with Grid */}
-                <div className="grid grid-cols-1 gap-2 landscape:grid-cols-2 lg:landscape:grid-cols-3 landscape:gap-1.5">
+                <div className="grid grid-cols-1 gap-2 landscape:grid-cols-2 lg:landscape:grid-cols-3 landscape:gap-4">
                     {options.map((opt) => (
                         <button
                             key={opt.value}
@@ -96,14 +96,22 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                                 onChange(opt.value);
                                 setIsOpen(false);
                             }}
+                            style={value === opt.value ? {
+                                backgroundColor: `${theme.primaryColorHex}1a`, // 10% opacity
+                                color: theme.primaryColorHex,
+                                boxShadow: `0 0 0 2px ${theme.primaryColorHex}33` // ring
+                            } : {}}
                             className={`flex items-center gap-4 p-3 lg:p-4 landscape:p-2.5 rounded-xl transition-all duration-200 text-left
                                 ${value === opt.value
-                                    ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor} ring-2 ring-${theme.primaryColor}/20`
+                                    ? ''
                                     : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
                                 }`}
                         >
                             {opt.icon && (
-                                <div className={`size-10 lg:size-12 landscape:size-9 rounded-full flex items-center justify-center ${value === opt.value ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/30` : `bg-slate-100 dark:bg-slate-800 text-slate-500`}`}>
+                                <div
+                                    className={`size-10 lg:size-12 landscape:size-9 rounded-full flex items-center justify-center ${value === opt.value ? `shadow-lg` : `bg-slate-100 dark:bg-slate-800 text-slate-500`}`}
+                                    style={value === opt.value ? { backgroundColor: theme.primaryColorHex, color: 'white', boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}4d` } : {}}
+                                >
                                     <span className="material-symbols-outlined text-xl lg:text-2xl landscape:text-lg">{opt.icon}</span>
                                 </div>
                             )}
@@ -111,7 +119,7 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                                 {opt.label}
                             </span>
                             {value === opt.value && (
-                                <span className={`material-symbols-outlined ml-auto text-${theme.primaryColor}`}>check_circle</span>
+                                <span className="material-symbols-outlined ml-auto" style={{ color: theme.primaryColorHex }}>check_circle</span>
                             )}
                         </button>
                     ))}

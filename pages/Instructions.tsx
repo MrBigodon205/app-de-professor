@@ -224,7 +224,7 @@ export const Instructions: React.FC = () => {
                                     </p>
                                     <div className="mt-4 flex justify-center">
                                         <div className="flex gap-1 p-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm scale-90">
-                                            <div className={`px-3 py-1 rounded-full bg-${theme.primaryColor} text-white text-[10px] font-bold`}>6º A</div>
+                                            <div className="px-3 py-1 rounded-full text-white text-[10px] font-bold" style={{ backgroundColor: theme.primaryColorHex }}>6º A</div>
                                             <div className="px-3 py-1 rounded-full text-slate-400 text-[10px] font-bold">6º B</div>
                                         </div>
                                     </div>
@@ -258,7 +258,7 @@ export const Instructions: React.FC = () => {
                             <div className="bg-slate-100 dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-4">
                                 <div className="text-[10px] font-black uppercase text-slate-400">Exemplo de Navegação</div>
                                 <div className="flex gap-2 p-2 bg-white dark:bg-black/40 rounded-full border border-slate-200 dark:border-slate-700">
-                                    <div className={`px-4 py-1.5 rounded-full bg-${theme.primaryColor} text-white text-xs font-bold shadow-sm`}>6º Ano A</div>
+                                    <div className={`px-4 py-1.5 rounded-full text-white text-xs font-bold shadow-sm`} style={{ backgroundColor: theme.primaryColorHex }}>6º Ano A</div>
                                     <div className="px-4 py-1.5 rounded-full text-slate-400 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">B</div>
                                     <div className="px-4 py-1.5 rounded-full text-slate-400 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">C</div>
                                 </div>
@@ -358,24 +358,24 @@ export const Instructions: React.FC = () => {
                                 </ul>
                             </div>
 
-                            <div className="bg-slate-800 text-white p-6 rounded-3xl relative overflow-hidden shadow-lg border border-slate-700">
+                            <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl relative overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700">
                                 <div className="relative z-10 flex flex-col md:flex-row gap-6 items-center">
                                     <div className="flex-1">
-                                        <h4 className="text-lg font-black text-white mb-2 flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-blue-400">auto_awesome</span>
+                                        <h4 className="text-lg font-black text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-blue-500">auto_awesome</span>
                                             Automação BNCC
                                         </h4>
-                                        <p className="text-sm text-slate-300 mb-4 leading-relaxed">
+                                        <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">
                                             Não perca tempo copiando textos da Base Nacional. Apenas digite o código e o sistema preenche para você.
                                         </p>
-                                        <div className="bg-black/30 p-3 rounded-xl border border-white/10 font-mono text-xs flex gap-3 items-center">
-                                            <span className="text-emerald-400 font-bold bg-emerald-400/10 px-2 py-0.5 rounded">EF05MA01</span>
+                                        <div className="bg-slate-100 dark:bg-black/30 p-3 rounded-xl border border-slate-200 dark:border-white/10 font-mono text-xs flex gap-3 items-center">
+                                            <span className="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-100 dark:bg-emerald-400/10 px-2 py-0.5 rounded">EF05MA01</span>
                                             <span className="material-symbols-outlined text-sm text-slate-400">arrow_forward</span>
-                                            <span className="text-slate-300 truncate">Ler, escrever e ordenar números naturais...</span>
+                                            <span className="text-slate-500 dark:text-slate-300 truncate">Ler, escrever e ordenar números naturais...</span>
                                         </div>
                                     </div>
-                                    <div className="size-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-2xl shadow-blue-500/30">
-                                        <span className="material-symbols-outlined text-3xl text-white">smart_toy</span>
+                                    <div className="size-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-2xl shadow-blue-500/30 text-white">
+                                        <span className="material-symbols-outlined text-3xl">smart_toy</span>
                                     </div>
                                 </div>
                             </div>

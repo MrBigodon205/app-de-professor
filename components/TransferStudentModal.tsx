@@ -99,8 +99,9 @@ export const TransferStudentModal: React.FC<TransferStudentModalProps> = ({ isOp
                                         <button
                                             key={section}
                                             onClick={() => setTargetSection(section)}
+                                            style={targetSection === section ? { backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}4d` } : {}}
                                             className={`size-12 rounded-xl flex items-center justify-center font-black transition-all ${targetSection === section
-                                                ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/30`
+                                                ? `text-white shadow-lg`
                                                 : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
                                                 }`}
                                         >

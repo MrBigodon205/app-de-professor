@@ -488,8 +488,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             if (data.user) {
-                // Background seeding
-                seedUserData(data.user.id);
+                // Background seeding (Awaited to ensure classes exist on first load)
+                await seedUserData(data.user.id);
 
                 // FORCE UPDATE PROFILE to ensure metadata is synced
                 // The trigger might miss proper mapping sometimes, so we enforce it here.
