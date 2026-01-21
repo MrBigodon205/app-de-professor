@@ -99,18 +99,9 @@ export const Login: React.FC = () => {
         if (result.success) {
           navigate('/');
         } else {
-          // INTELLIGENT ERROR HANDLING
-          // Check if the user actually exists to give better feedback/redirect
-          const { data: profile } = await supabase.from('profiles').select('id').eq('email', email).maybeSingle();
-
-          if (!profile) {
-            // User NOT FOUND -> Redirect to Register
-            setError('Não encontramos uma conta com este e-mail. Complete seu cadastro abaixo.');
-            setActiveTab('register');
-          } else {
-            // User EXISTS -> Wrong Password
-            setError('Senha incorreta. Tente novamente.');
-          }
+          // Provide clear feedback for invalid credentials
+          // Note: We avoid checking profile existence directly to respect RLS and prevent enumeration
+          setError('E-mail ou senha incorretos.');
         }
       } else { // This is the 'register' block
         if (password !== confirmPassword) {
@@ -496,12 +487,22 @@ export const Login: React.FC = () => {
                   </p>
                 </div>
 
-                <button
-                  onClick={() => setError(null)}
-                  className="w-full py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-bold uppercase tracking-wide text-xs hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-slate-900/10"
-                >
-                  Entendi
-                </button>
+                <div className="flex gap-3 w-full">
+                  <button
+                    onClick={() => setError(null)}
+                    className="flex-1 py-3.5 bg-slate-200 dark:bg-white/10 text-slate-800 dark:text-white rounded-2xl font-bold uppercase tracking-wide text-xs hover:bg-slate-300 dark:hover:bg-white/20 transition-all"
+                  >
+                    Tentar Novamente
+                  </button>
+                  {error === 'E-mail ou senha incorretos.' && (
+                    <button
+                      onClick={() => { setError(null); setActiveTab('register'); }}
+                      className="flex-1 py-3.5 bg-primary text-white rounded-2xl font-bold uppercase tracking-wide text-xs hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20 transition-all"
+                    >
+                      Criar Conta
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           </div>
