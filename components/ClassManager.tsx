@@ -147,7 +147,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                 <button
                                     onClick={handleCreateSeries}
                                     disabled={!newSeriesName.trim()}
-                                    className={`h-9 px-4 rounded-lg bg-${theme.primaryColor} text-white font-black text-[10px] shadow-lg shadow-${theme.primaryColor}/30 hover:shadow-${theme.primaryColor}/50 transition-all disabled:opacity-30 disabled:grayscale disabled:scale-100 disabled:shadow-none flex items-center gap-1.5`}
+                                    className={`h-9 px-4 rounded-lg bg-${theme.primaryColor} text-white font-black text-[10px] shadow-lg shadow-${theme.primaryColor}/30 hover:shadow-${theme.primaryColor}/50 transition-all disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:shadow-none disabled:scale-100 flex items-center gap-1.5`}
                                 >
                                     <span className="material-symbols-outlined text-base">add</span>
                                     <span>ADICIONAR</span>
