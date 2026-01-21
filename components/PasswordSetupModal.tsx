@@ -56,10 +56,25 @@ export const PasswordSetupModal: React.FC<PasswordSetupModalProps> = ({ isOpen, 
             // 3. Update Password
             if (needsPassword) {
                 const passResult = await updatePassword(password);
-                if (!passResult.success) throw new Error(passResult.error || 'Erro ao definir senha.');
+                if (!passResult.success) {
+                    // EDGE CASE: User has a password but isPasswordSet is false locally/in DB.
+                    // If Supabase says "new password should be different from the old password", 
+                    // it means the user DOES have a password. We treat this as success.
+                    const isSamePasswordError =
+                        passResult.error?.includes('same as the old') ||
+                        passResult.error?.includes('diferente da senha antiga');
+
+                    if (isSamePasswordError) {
+                        // User has password, just needs flag update
+                        // console.log("Password confirmed via 'same password' error. Updating flag.");
+                    } else {
+                        throw new Error(passResult.error || 'Erro ao definir senha.');
+                    }
+                }
             }
 
             // 4. Update Profile (Subject + Mark Password Set)
+            // ...
             const updates: any = {};
             if (needsSubject) updates.subject = selectedSubject;
             if (needsPassword) updates.isPasswordSet = true;

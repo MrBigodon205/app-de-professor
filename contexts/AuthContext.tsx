@@ -604,6 +604,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (!newState.id) newState.id = userId;
                 setCurrentUser(newState as User);
 
+                // FIX: If subject was updated, immediately reflect it in activeSubject
+                // This ensures the dashboard updates instantly
+                if (data.subject) {
+                    setActiveSubject(data.subject);
+                    localStorage.setItem('active_subject', data.subject);
+                }
+
                 // Local backup removed
 
             }
