@@ -27,6 +27,16 @@ export const Login: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
 
+  useEffect(() => {
+    // Check for forced logout error
+    const errorMsg = localStorage.getItem('login_error');
+    if (errorMsg) {
+      setError(errorMsg);
+      localStorage.removeItem('login_error');
+      setActiveTab('register'); // Redirect logic as requested
+    }
+  }, []);
+
   const handleGoogleLogin = async () => {
     setIsSubmitting(true);
     setError(null);

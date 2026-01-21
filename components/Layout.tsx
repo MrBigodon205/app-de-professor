@@ -35,15 +35,24 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 
   useEffect(() => {
-    // SECURITY Enforce: Check if user has both Password and Subject (if not, force modal)
+    // SECURITY Enforce: GOOGLE LOGIN TRAP
+    // If a user logs in via Google but DOES NOT have a password set (meaning they are a NEW user via Google),
+    // we MUST deny access and force them to register manually.
     if (currentUser) {
-      if (!currentUser.isPasswordSet || !currentUser.subject) {
-        // Force open and prevent closing
-        const timer = setTimeout(() => setIsPasswordSetupOpen(true), 1000);
-        return () => clearTimeout(timer);
+      if (!currentUser.isPasswordSet) {
+        // 1. Kick them out
+        logout();
+
+        // 2. Set an error message for the login page
+        localStorage.setItem('login_error', 'Você precisa criar uma conta primeiro. Faça o cadastro com disciplina e senha.');
+
+        // 3. Redirect to registration
+        // (We can't easily switch tabs via strict URL here without modifying Login.tsx, so we just go to login)
+        // Actually, we can pass a query param if Login supports it, or just let them see the error.
+        window.location.href = '/#/login';
       }
     }
-  }, [currentUser]);
+  }, [currentUser, logout]);
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarCollapsed(prev => {
