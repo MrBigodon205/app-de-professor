@@ -442,7 +442,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
 
                 // Ensure profile is fetched (ALWAYS in background to not block navigation)
-                fetchProfile(authResult.user.id);
+                // Also, since this is a PASSWORD login, we can guarantee is_password_set is true.
+                // We update this in the background to fix any legacy data issues.
+                supabase.from('profiles').update({ is_password_set: true }).eq('id', authResult.user.id).then(() => {
+                    fetchProfile(authResult.user.id);
+                });
 
                 return { success: true };
             }
@@ -498,7 +502,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     .update({
                         name: name,
                         subject: subject,
-                        subjects: subjects
+                        subjects: subjects,
+                        is_password_set: true // Manual registration always sets a password
                     })
                     .eq('id', data.user.id);
 
