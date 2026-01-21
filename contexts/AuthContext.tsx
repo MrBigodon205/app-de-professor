@@ -540,28 +540,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, []);
 
-    const completeRegistration = useCallback(async (name: string, password: string, subject: Subject, subjects: Subject[]) => {
-        if (!userId) return { success: false, error: "Usuário não autenticado." };
-
-        try {
-            // 1. Update Password
-            const { error: passError } = await supabase.auth.updateUser({ password });
-            if (passError) throw passError;
-
-            // 2. Update Profile
-            await updateProfile({
-                name,
-                subject,
-                subjects,
-                isPasswordSet: true // Important
-            });
-
-            return { success: true };
-        } catch (e: any) {
-            console.error("Complete registration error:", e);
-            return { success: false, error: e.message || "Erro ao completar cadastro." };
-        }
-    }, [userId, updateProfile]);
+    // completeRegistration removed from here to fix TDZ error
 
     const logout = useCallback(async () => {
         try {
