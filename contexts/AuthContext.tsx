@@ -298,6 +298,283 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [userId]);
 
+    const login = useCallback(async (email: string, password: string) => {
+        setLoading(true); // Prevent redirect race condition
+        // Helper for Raw Fetch Login (Fallback)
+        const rawLogin = async () => {
+            const supabaseUrl = (supabase as any).supabaseUrl;
+            const supabaseKey = (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+            const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+                method: 'POST',
+                headers: {
+                    'apikey': supabaseKey,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error_description || errData.msg || 'Erro no login via HTTP');
+            }
+
+            const data = await response.json();
+
+            // SESSÃO MANUAL (BYPASS DE TRAVAMENTO)
+            try {
+                const projectRef = supabaseUrl.split('//')[1].split('.')[0];
+                const storageKey = `sb-${projectRef}-auth-token`;
+                localStorage.setItem(storageKey, JSON.stringify(data));
+            } catch (e) {
+                console.warn("Erro ao salvar token manual:", e);
+            }
+
+            if (data.user) {
+                setUserId(data.user.id);
+                await fetchProfile(data.user.id);
+            }
+
+            return { user: data.user, session: data };
+        };
+
+        try {
+            let authResult;
+            try {
+                // Race against 10s timeout
+                authResult = await Promise.race([
+                    rawLogin(),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Login timed out (10s)')), 10000))
+                ]);
+            } catch (rawErr: any) {
+                if (rawErr.message === 'Email not confirmed' || rawErr.message === 'Invalid login credentials') {
+                    throw rawErr;
+                }
+                console.warn("Raw Login failed, trying SDK fallback:", rawErr.message);
+
+                const { data, error } = await Promise.race([
+                    supabase.auth.signInWithPassword({ email, password }),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('SDK Login timed out (10s)')), 10000)) as Promise<any>
+                ]);
+
+                if (error) throw error;
+                authResult = { user: data.user, session: data.session };
+            }
+
+            if (authResult?.user) {
+                const cached = localStorage.getItem(`cached_profile_${authResult.user.id}`);
+                if (cached) {
+                    try {
+                        setCurrentUser(JSON.parse(cached));
+                        setLoading(false);
+                    } catch (e) { }
+                }
+
+                // Ensure is_password_set is true in metadata for password logins
+                supabase.auth.updateUser({ data: { is_password_set: true } });
+                fetchProfile(authResult.user.id);
+
+                return { success: true };
+            }
+
+            return { success: false, error: 'Erro ao autenticar.' };
+
+        } catch (e: any) {
+            console.error("Falha final no login:", e);
+            let msg = e.message;
+            if (msg === 'Email not confirmed') msg = 'Por favor, confirme seu e-mail para entrar.';
+            if (msg === 'Invalid login credentials' || msg === 'Erro no login via HTTP') msg = 'Não encontramos uma conta com este e-mail ou a senha está incorreta.';
+            if (msg.includes('expirou') || msg.includes('timed out')) msg = 'Tempo esgotado. Verifique sua conexão.';
+
+            setLoading(false);
+            return { success: false, error: msg };
+        }
+    }, [currentUser]);
+
+    const register = useCallback(async (name: string, email: string, password: string, subject: Subject, subjects: Subject[] = []) => {
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    emailRedirectTo: `${window.location.origin}/#/login`,
+                    data: {
+                        name,
+                        subject,
+                        subjects,
+                        is_password_set: true // Save to User Metadata immediately
+                    }
+                }
+            });
+
+            if (error) {
+                if (error.message.includes("already registered")) return { success: false, error: "Este e-mail já está cadastrado." };
+                return { success: false, error: error.message };
+            }
+
+            if (data.user) {
+                await seedUserData(data.user.id);
+
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .update({
+                        name: name,
+                        subject: subject,
+                        subjects: subjects
+                    })
+                    .eq('id', data.user.id);
+
+                if (profileError) console.warn("Manual profile update failed:", profileError);
+
+                return { success: true };
+            }
+
+            return { success: false, error: "Erro ao criar usuário." };
+        } catch (e: any) {
+            console.error("Registration error:", e);
+            return { success: false, error: e.message || "Erro ao realizar o cadastro." };
+        }
+    }, []);
+
+    const updateProfile = useCallback(async (data: Partial<User>) => {
+        if (!userId) {
+            console.error("Falha ao atualizar perfil: userId não encontrado");
+            return false;
+        }
+
+        try {
+            // 1. Update Password (Auth)
+            if (data.password) {
+                const { error: authError } = await supabase.auth.updateUser({ password: data.password });
+                if (authError) throw authError;
+            }
+
+            // 2. Update IsPasswordSet Flag (User Metadata)
+            if (data.isPasswordSet === true) {
+                await supabase.auth.updateUser({
+                    data: { is_password_set: true }
+                });
+            }
+
+            // 3. Update Profile Table (Standard Fields)
+            const profileUpdate: any = {};
+            if (Object.prototype.hasOwnProperty.call(data, 'name')) profileUpdate.name = data.name;
+            if (Object.prototype.hasOwnProperty.call(data, 'subject')) profileUpdate.subject = data.subject;
+            if (Object.prototype.hasOwnProperty.call(data, 'photoUrl')) profileUpdate.photo_url = data.photoUrl;
+            if (Object.prototype.hasOwnProperty.call(data, 'subjects')) profileUpdate.subjects = data.subjects;
+            if (Object.prototype.hasOwnProperty.call(data, 'email')) profileUpdate.email = data.email;
+
+            if (Object.keys(profileUpdate).length > 0) {
+                const { error } = await supabase
+                    .from('profiles')
+                    .update(profileUpdate)
+                    .eq('id', userId);
+                if (error) throw error;
+            }
+
+            // 4. Update Local State
+            const { password, ...cleanData } = data;
+            const newState = currentUser ? { ...currentUser, ...cleanData } : null;
+            if (newState) {
+                if (!newState.id) newState.id = userId;
+                setCurrentUser(newState as User);
+
+                if (data.subject) {
+                    setActiveSubject(data.subject);
+                    localStorage.setItem('active_subject', data.subject);
+                }
+            }
+
+            return true;
+        } catch (e: any) {
+            console.error("Falha ao atualizar perfil", e);
+            alert(`Erro ao atualizar perfil: ${e.message || 'Erro desconhecido'}`);
+            return false;
+        }
+    }, [userId, currentUser]);
+
+    const completeRegistration = useCallback(async (name: string, password: string, subject: Subject, subjects: Subject[]) => {
+        if (!userId) return { success: false, error: "Usuário não autenticado." };
+
+        try {
+            // 1. Update Password
+            const { error: passError } = await supabase.auth.updateUser({ password });
+            if (passError) throw passError;
+
+            // 2. Update Profile
+            await updateProfile({
+                name,
+                subject,
+                subjects,
+                isPasswordSet: true // User Metadata update handled inside updateProfile
+            });
+
+            return { success: true };
+        } catch (e: any) {
+            console.error("Complete registration error:", e);
+            return { success: false, error: e.message || "Erro ao completar cadastro." };
+        }
+    }, [userId, updateProfile]);
+
+    const logout = useCallback(async () => {
+        try {
+            await Promise.race([
+                supabase.auth.signOut(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Logout timed out')), 1000))
+            ]);
+        } catch (error) {
+            console.warn("Logout upstream falhou ou demorou muito:", error);
+        } finally {
+            setCurrentUser(null);
+            setUserId(null);
+            localStorage.removeItem('sb-' + (import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0] || '') + '-auth-token');
+            localStorage.removeItem('supabase.auth.token');
+            const keys = Object.keys(localStorage);
+            keys.forEach(k => {
+                if (k.startsWith('cached_profile_') || k.startsWith('sb-') || k.startsWith('supabase.')) {
+                    localStorage.removeItem(k);
+                }
+            });
+            sessionStorage.clear();
+            window.location.href = '/';
+        }
+    }, []);
+
+    const resetPassword = useCallback(async (email: string) => {
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/`,
+            });
+            if (error) throw error;
+            return { success: true };
+        } catch (e: any) {
+            console.error("Reset password failed:", e);
+            return { success: false, error: e.message || "Erro ao enviar e-mail de recuperação." };
+        }
+    }, []);
+
+    const updatePassword = useCallback(async (password: string) => {
+        try {
+            const { error } = await supabase.auth.updateUser({ password });
+            if (error) throw error;
+            return { success: true };
+        } catch (e: any) {
+            console.error("Erro ao atualizar senha:", e);
+            let msg = e.message;
+            if (msg === 'New password should be different from the old password.') {
+                msg = 'A nova senha deve ser diferente da senha antiga.';
+            }
+            return { success: false, error: msg || "Erro ao atualizar senha." };
+        }
+    }, []);
+
+    const updateActiveSubject = useCallback((subject: string) => {
+        setActiveSubject(subject);
+        if (userId) {
+            localStorage.setItem(`activeSubject_${userId}`, subject);
+        }
+    }, [userId]);
+
     const contextValue = useMemo(() => ({
         currentUser,
         userId,
