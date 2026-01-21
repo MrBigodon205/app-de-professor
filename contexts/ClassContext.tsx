@@ -251,10 +251,13 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const transferStudent = useCallback(async (studentId: string, targetSeriesId: string, targetSection: string) => {
         try {
+            // FIX: database expects BIGINT, ensure it's a number
+            const seriesIdNum = parseInt(targetSeriesId, 10);
+
             const { error } = await supabase
                 .from('students')
                 .update({
-                    series_id: targetSeriesId,
+                    series_id: seriesIdNum,
                     section: targetSection
                 })
                 .eq('id', studentId);
@@ -269,10 +272,13 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const bulkTransferStudents = useCallback(async (studentIds: string[], targetSeriesId: string, targetSection: string) => {
         try {
+            // FIX: database expects BIGINT, ensure it's a number
+            const seriesIdNum = parseInt(targetSeriesId, 10);
+
             const { error } = await supabase
                 .from('students')
                 .update({
-                    series_id: targetSeriesId,
+                    series_id: seriesIdNum,
                     section: targetSection
                 })
                 .in('id', studentIds);
