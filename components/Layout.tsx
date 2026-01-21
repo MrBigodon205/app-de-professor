@@ -376,8 +376,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </div>
             </div>
 
+            {/* Subject Selector - Always visible if user is logged in */}
             <div className="flex items-center gap-4 pl-4 border-l border-white/10">
-              {currentUser?.subjects && currentUser.subjects.length > 0 && (
+              {currentUser && (
                 <div className="relative hidden md:block landscape:block">
                   <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-white/10 hover:text-primary transition-colors">
                     <span className={`size-2 rounded-full bg-primary shadow-neon`}></span>
