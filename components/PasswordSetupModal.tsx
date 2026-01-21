@@ -32,6 +32,14 @@ export const PasswordSetupModal: React.FC<PasswordSetupModalProps> = ({ isOpen, 
         }
     }, [isOpen]);
 
+    // AUTO-CLOSE: If requirements are met externally (e.g. background fetch updates profile), close the modal.
+    useEffect(() => {
+        if (isOpen && !needsPassword && !needsSubject) {
+            // console.log("Requirements met externally. Closing modal.");
+            onClose();
+        }
+    }, [isOpen, needsPassword, needsSubject, onClose]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
