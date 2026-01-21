@@ -81,7 +81,18 @@ export const Login: React.FC = () => {
         if (result.success) {
           navigate('/');
         } else {
-          setError(result.error || 'Não encontramos uma conta com este e-mail ou a senha está incorreta.');
+          // INTELLIGENT ERROR HANDLING
+          // Check if the user actually exists to give better feedback/redirect
+          const { data: profile } = await supabase.from('profiles').select('id').eq('email', email).maybeSingle();
+
+          if (!profile) {
+            // User NOT FOUND -> Redirect to Register
+            setError('Não encontramos uma conta com este e-mail. Complete seu cadastro abaixo.');
+            setActiveTab('register');
+          } else {
+            // User EXISTS -> Wrong Password
+            setError('Senha incorreta. Tente novamente.');
+          }
         }
       } else { // This is the 'register' block
         if (password !== confirmPassword) {
