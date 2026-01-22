@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
 import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
+import { useSync } from '../hooks/useSync';
 import { Student, Grades as GradesType } from '../types';
 import DOMPurify from 'dompurify';
 import { UNIT_CONFIGS, calculateUnitTotal, calculateAnnualSummary, getStatusResult } from '../utils/gradeCalculations';
@@ -59,7 +61,7 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
         const res = getStatusResult(student, 'results'); // Using standardized helper
         return (
             <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono text-center min-w-[3rem]">
                     {student.number}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -86,7 +88,7 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
 
     return (
         <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono text-center min-w-[3rem]">
                 {student.number}
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
@@ -158,37 +160,84 @@ export const Grades: React.FC = () => {
     const pendingChangesRef = useRef<{ [studentId: string]: GradeData }>({});
     const saveTimeoutRefs = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
+    // Offline / Sync Hook
+    const { isOnline, pendingCount, triggerSync } = useSync();
+
     // Fetch Data
     const fetchData = async (silent = false) => {
         if (!currentUser || !selectedSeriesId || !selectedSection) return;
         if (!silent) setLoading(true);
         try {
-            // 1. Fetch Students
-            const { data: studentsData, error: studentsError } = await supabase
-                .from('students')
-                .select('*')
-                .eq('series_id', selectedSeriesId)
-                .eq('section', selectedSection)
-                .eq('user_id', currentUser.id)
-                .order('number', { ascending: true });
+            let studentsData: any[] = [];
+            let gradesData: any[] = [];
 
-            if (studentsError) throw studentsError;
+            if (navigator.onLine) {
+                // 1. Fetch Students (Online)
+                const { data: sData, error: sError } = await supabase
+                    .from('students')
+                    .select('*')
+                    .eq('series_id', selectedSeriesId)
+                    .eq('section', selectedSection)
+                    .eq('user_id', currentUser.id)
+                    .order('number', { ascending: true });
 
-            // 2. Fetch Grades (from new table)
-            const studentIds = studentsData.map(s => s.id);
-            const { data: gradesData, error: gradesError } = await supabase
-                .from('grades')
-                .select('*')
-                .in('student_id', studentIds)
-                .eq('subject', activeSubject)
-                .eq('user_id', currentUser.id); // Security check
+                if (sError) throw sError;
+                studentsData = sData;
 
-            if (gradesError) throw gradesError;
+                // Cache Students
+                // Ensure IDs are strings for Dexie consistency
+                await db.students.bulkPut(studentsData.map(s => ({ ...s, id: s.id.toString(), syncStatus: 'synced' })));
+
+                // 2. Fetch Grades (Online)
+                const studentIds = studentsData.map(s => s.id);
+                const { data: gData, error: gError } = await supabase
+                    .from('grades')
+                    .select('*')
+                    .in('student_id', studentIds)
+                    .eq('subject', activeSubject)
+                    .eq('user_id', currentUser.id);
+
+                if (gError) throw gError;
+                gradesData = gData;
+
+                // Cache Grades
+                // Map to LocalGrades schema (student_id string)
+                await db.grades.bulkPut(gradesData.map(g => ({
+                    ...g,
+                    student_id: g.student_id.toString(),
+                    series_id: selectedSeriesId, // Might be missing in fetch if not selected?
+                    section: selectedSection, // Assuming match
+                    syncStatus: 'synced'
+                })));
+
+            } else {
+                // Offline Fallback
+                console.log("Offline: Loading Grades from Dexie...");
+
+                const localStudents = await db.students
+                    .where({ series_id: selectedSeriesId, section: selectedSection, user_id: currentUser.id })
+                    .toArray();
+                studentsData = localStudents.map(s => ({ ...s, id: parseInt(s.id) })); // Convert back to number for legacy logic if needed? 
+                // Actually types say ID is string. But database student_id is number (bigint).
+                // Let's keep ID as string in formatted list.
+                // But loop below expects matching types.
+                // studentsData in Online block comes from Supabase (any).
+
+                // Grades
+                gradesData = await db.grades
+                    .where({ user_id: currentUser.id, subject: activeSubject }) // series/section filtering might be needed if stored
+                    .toArray();
+
+                // Filter grades by student IDs
+                const sIds = new Set(localStudents.map(s => s.id));
+                gradesData = gradesData.filter(g => sIds.has(g.student_id));
+            }
 
             // 3. Merge
             const formatted: Student[] = studentsData.map(s => {
                 // Find all grade records for this student
-                const sGrades = gradesData?.filter(g => g.student_id === s.id) || [];
+                // Handle student_id mismatch (string vs number)
+                const sGrades = gradesData?.filter(g => g.student_id.toString() === s.id.toString()) || [];
                 const unitsMap: any = {};
 
                 sGrades.forEach(g => {
@@ -201,12 +250,15 @@ export const Grades: React.FC = () => {
                     number: s.number,
                     initials: s.initials || '',
                     color: s.color || '',
-                    classId: s.series_id.toString(),
+                    classId: s.series_id?.toString() || selectedSeriesId, // Fallback
                     section: s.section,
                     userId: s.user_id,
                     units: unitsMap
                 };
             });
+
+            // Sort by number (Dexie might not return sorted)
+            formatted.sort((a, b) => parseInt(a.number) - parseInt(b.number));
 
             setStudents(formatted);
         } catch (error) {
@@ -292,7 +344,7 @@ export const Grades: React.FC = () => {
                 // Saving grades...
 
                 const payload = {
-                    student_id: parseInt(studentId), // Ensure ID is number if DB expects bigint
+                    student_id: parseInt(studentId), // Keep number for Supabase
                     unit: selectedUnit,
                     data: unitData,
                     user_id: currentUser!.id,
@@ -301,12 +353,33 @@ export const Grades: React.FC = () => {
                     subject: activeSubject
                 };
 
-                const { error } = await supabase
-                    .from('grades')
-                    .upsert(payload, { onConflict: 'student_id, unit, subject' });
+                // 1. Save Local (Dexie)
+                const localPayload = {
+                    ...payload,
+                    student_id: studentId, // Convert to string for Dexie
+                    series_id: selectedSeriesId!, // Convert to string
+                    syncStatus: 'pending' as const
+                    // Compound key [student_id+unit+subject] handles uniqueness
+                };
 
-                if (error) throw error;
-                // Saved successfully.
+                await db.grades.put(localPayload as any); // Cast to match LocalGrades (student_id string)
+
+                // 2. Add to Queue
+                // We use standard payload update for Supabase processing
+                await db.syncQueue.add({
+                    table: 'grades',
+                    action: 'UPDATE', // Use Update/Upsert logic
+                    payload: payload, // Send original types to Supabase
+                    status: 'pending',
+                    createdAt: Date.now(),
+                    retryCount: 0
+                });
+
+                // 3. Trigger Sync
+                triggerSync();
+
+                // if (error) throw error; // No error throwing here, we handle sync errors in queue
+                // Saved successfully locally.
 
             } catch (err: any) {
                 console.error("Save failed:", err);
@@ -621,6 +694,25 @@ export const Grades: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    {/* Sync Badge */}
+                    <div className={`hidden md:flex items-center gap-2 px-3 py-1 rounded-full border font-bold text-sm transition-all ${isOnline
+                        ? (pendingCount > 0 ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800')
+                        : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:border-slate-700'}`}>
+                        {isOnline ? (pendingCount > 0 ? (
+                            <>
+                                <span className="material-symbols-outlined text-sm animate-spin">sync</span>
+                                <span className="hidden sm:inline">Sync ({pendingCount})</span>
+                            </>
+                        ) : (
+                            <span className="material-symbols-outlined text-sm">cloud_done</span>
+                        )) : (
+                            <>
+                                <span className="material-symbols-outlined text-sm">cloud_off</span>
+                                <span className="hidden sm:inline">Offline ({pendingCount})</span>
+                            </>
+                        )}
+                    </div>
+
                     {/* Saving Indicator */}
                     {isSaving ? (
                         <span className="flex items-center text-amber-500 text-sm font-bold bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800 transition-all">

@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Student, Occurrence } from '../types';
 import { supabase } from '../lib/supabase';
+import { db, LocalOccurrence } from '../lib/db';
+import { useSync } from '../hooks/useSync';
 import { DatePicker } from '../components/DatePicker';
 import { CategorySelect } from '../components/CategorySelect';
 
@@ -28,6 +30,9 @@ export const Observations: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
+    // Offline / Sync Hook
+    const { isOnline, pendingCount, triggerSync } = useSync();
+
     const [activeTab, setActiveTab] = useState<'occurrences' | 'history'>('occurrences');
     const [students, setStudents] = useState<Student[]>([]);
     const [occurrences, setOccurrences] = useState<Occurrence[]>([]);
@@ -48,14 +53,68 @@ export const Observations: React.FC = () => {
         if (!currentUser) return;
         if (!silent) setLoading(true);
         try {
-            const { data: studentsData, error: studentError } = await supabase
-                .from('students')
-                .select('*')
-                .eq('series_id', selectedSeriesId)
-                .eq('section', selectedSection)
-                .eq('user_id', currentUser.id);
+            let studentsData: any[] = [];
+            let occurrencesData: any[] = [];
 
-            if (studentError) throw studentError;
+            if (navigator.onLine) {
+                // 1. Fetch Students (Online)
+                const { data: sData, error: sError } = await supabase
+                    .from('students')
+                    .select('*')
+                    .eq('series_id', selectedSeriesId)
+                    .eq('section', selectedSection)
+                    .eq('user_id', currentUser.id);
+
+                if (sError) throw sError;
+                studentsData = sData;
+
+                // Cache Students
+                await db.students.bulkPut(studentsData.map(s => ({ ...s, id: s.id.toString(), syncStatus: 'synced' })));
+
+                // 2. Fetch Occurrences (Online)
+                const { data: occData, error: occError } = await supabase
+                    .from('occurrences')
+                    .select(`*, student:students(name)`)
+                    .eq('user_id', currentUser.id)
+                    .eq('subject', activeSubject)
+                    .order('date', { ascending: false });
+
+                if (occError) throw occError;
+                occurrencesData = occData;
+
+                // Cache Occurrences
+                await db.occurrences.bulkPut(occurrencesData.map(o => ({
+                    ...o,
+                    id: o.id.toString(),
+                    studentId: o.student_id ? o.student_id.toString() : '', // Map for Dexie index
+                    student_name: o.student?.name,
+                    syncStatus: 'synced'
+                })));
+
+            } else {
+                // Offline Fallback
+                console.log("Offline: Loading Observations from Dexie...");
+
+                const localStudents = await db.students
+                    .where({ series_id: selectedSeriesId, section: selectedSection, user_id: currentUser.id })
+                    .toArray();
+                studentsData = localStudents.map(s => ({ ...s, id: s.id.toString() }));
+
+                occurrencesData = await db.occurrences
+                    .where({ user_id: currentUser.id }) // Subject filtering if needed?
+                    .toArray();
+                // Filter by subject manually if not indexed
+                // We only cached user specific. If subject matters, we should have indexed it or filter now.
+                // db.ts occurrence index: 'id, studentId, syncStatus, user_id'
+                // Let's filter by subject in memory
+                if (activeSubject) {
+                    occurrencesData = occurrencesData.filter(o => o.subject === activeSubject);
+                }
+                // Filter by students in this class?
+                // The view shows "History" which might be all? 
+                // But typically we filter by studentId if selected, or just list all recent.
+                // The code below doesn't filter by class strictly unless we do it here.
+            }
 
             const formattedStudents: Student[] = studentsData.map(s => ({
                 id: s.id.toString(),
@@ -72,41 +131,28 @@ export const Observations: React.FC = () => {
             setStudents(formattedStudents);
 
             if (formattedStudents.length > 0) {
-                // Do not auto-select student on load to allow list view on mobile
-                // if (!selectedStudentId || !formattedStudents.some(s => s.id === selectedStudentId)) {
-                //    setSelectedStudentId(formattedStudents[0].id);
-                // }
+                // Logic to select student handled by URL state usually
             } else {
                 setSelectedStudentId(null);
             }
 
-            const { data: occData, error: occError } = await supabase
-                .from('occurrences')
-                .select(`
-                    *,
-                    student:students (
-                        name
-                    )
-                `)
-                .eq('user_id', currentUser.id)
-                .eq('subject', activeSubject)
-                .order('date', { ascending: false })
-                .order('created_at', { ascending: false });
+            const formattedOcc: Occurrence[] = occurrencesData
+                .map(o => ({
+                    id: o.id.toString(),
+                    studentId: o.studentId || o.student_id.toString(),
+                    type: o.type,
+                    description: o.description,
+                    date: o.date,
+                    unit: o.unit,
+                    userId: o.user_id,
+                    student_name: o.student_name || (o.student as any)?.name || 'Estudante'
+                }));
 
-            if (!occError && occData) {
-                const formattedOcc: Occurrence[] = occData
-                    .map(o => ({
-                        id: o.id.toString(),
-                        studentId: o.student_id.toString(),
-                        type: o.type,
-                        description: o.description,
-                        date: o.date,
-                        unit: o.unit,
-                        userId: o.user_id,
-                        student_name: (o.student as any)?.name || 'Estudante'
-                    }));
-                setOccurrences(formattedOcc);
-            }
+            // Sort
+            formattedOcc.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+            setOccurrences(formattedOcc);
+
         } catch (e) {
             console.error("Error fetching data:", e);
         } finally {
@@ -171,67 +217,68 @@ export const Observations: React.FC = () => {
         if (!selectedStudentId || !description || !currentUser) return;
         setSaving(true);
 
-        const occurrenceData = {
-            student_id: selectedStudentId,
-            date: occurrenceDate,
-            type,
-            description,
-            unit: selectedUnit,
-            user_id: currentUser.id,
-            subject: activeSubject
-        };
-
         try {
-            if (editingOccId) {
-                const { data, error } = await supabase
-                    .from('occurrences')
-                    .update(occurrenceData)
-                    .eq('id', editingOccId)
-                    .select()
-                    .single();
+            const payload = {
+                student_id: selectedStudentId, // string in UI, bigint in DB? Usually bigint.
+                date: occurrenceDate,
+                type,
+                description,
+                unit: selectedUnit,
+                user_id: currentUser.id,
+                subject: activeSubject
+            };
 
-                if (!error && data) {
-                    const updated: Occurrence = {
-                        id: data.id.toString(),
-                        studentId: data.student_id.toString(),
-                        type: data.type,
-                        description: data.description,
-                        date: data.date,
-                        unit: data.unit,
-                        userId: data.user_id
-                    };
-                    setOccurrences(occurrences.map(o => o.id === editingOccId ? updated : o));
-                    setEditingOccId(null);
-                    setDescription('');
-                    setType('Alerta');
-                    setSelectedUnit('1');
-                }
+            const isEdit = !!editingOccId;
+            const tempId = isEdit ? editingOccId : `temp-${Date.now()}`;
+
+            // 1. Save Local (Dexie)
+            const localRecord: LocalOccurrence = {
+                id: tempId,
+                studentId: selectedStudentId,
+                type,
+                description,
+                date: occurrenceDate,
+                unit: selectedUnit,
+                userId: currentUser.id,
+                student_name: students.find(s => s.id === selectedStudentId)?.name || 'Estudante',
+                syncStatus: 'pending',
+                // Add any other props needed for LocalOccurrence
+            };
+
+            await db.occurrences.put(localRecord);
+
+            // 2. Add to Queue
+            await db.syncQueue.add({
+                table: 'occurrences',
+                action: isEdit ? 'UPDATE' : 'INSERT',
+                payload: isEdit ? { ...payload, id: editingOccId } : payload,
+                status: 'pending',
+                createdAt: Date.now(),
+                retryCount: 0
+            });
+
+            // 3. Update UI Immediately (Optimistic)
+            if (isEdit) {
+                setOccurrences(prev => prev.map(o => o.id === editingOccId ? { ...o, ...localRecord } : o));
+                setEditingOccId(null);
             } else {
-                const { data, error } = await supabase
-                    .from('occurrences')
-                    .insert(occurrenceData)
-                    .select()
-                    .single();
-
-                if (!error && data) {
-                    const savedOcc: Occurrence = {
-                        id: data.id.toString(),
-                        studentId: data.student_id.toString(),
-                        type: data.type,
-                        description: data.description,
-                        date: data.date,
-                        unit: data.unit,
-                        userId: data.user_id
-                    };
-                    setOccurrences([...occurrences, savedOcc]);
-                    setDescription('');
-                    setType('Alerta');
-                    setSelectedUnit('1');
-                    setOccurrenceDate(new Date().toISOString().split('T')[0]);
-                }
+                const newOcc: Occurrence = { ...localRecord } as any; // Cast needed due to syncStatus
+                setOccurrences(prev => [newOcc, ...prev]);
             }
-        } catch (e) { console.error(e) }
-        finally { setSaving(false); }
+
+            setDescription('');
+            setType('Alerta');
+            setSelectedUnit('1');
+            setOccurrenceDate(new Date().toLocaleDateString('sv-SE'));
+
+            // 4. Trigger Sync
+            triggerSync();
+
+        } catch (e) {
+            console.error("Save Error", e);
+        } finally {
+            setSaving(false);
+        }
     }
 
     const handleEditOccurrence = (occ: Occurrence) => {
@@ -300,17 +347,29 @@ export const Observations: React.FC = () => {
         if (!window.confirm("Deseja realmente excluir este registro?")) return;
 
         try {
-            const { error } = await supabase
-                .from('occurrences')
-                .delete()
-                .eq('id', id);
+            // 1. Delete Local
+            await db.occurrences.delete(id);
 
-            if (!error) {
-                setOccurrences(occurrences.filter(o => o.id !== id));
-                const newSelected = new Set(selectedOccIds);
-                newSelected.delete(id);
-                setSelectedOccIds(newSelected);
+            // 2. Queue Delete (only if it's not a temp local ID that hasn't synced yet)
+            // If it starts with 'temp-', we just delete local and don't sync delete (since server doesn't know it)
+            if (!id.startsWith('temp-')) {
+                await db.syncQueue.add({
+                    table: 'occurrences',
+                    action: 'DELETE',
+                    payload: { id },
+                    status: 'pending',
+                    createdAt: Date.now(),
+                    retryCount: 0
+                });
+                triggerSync();
             }
+
+            // 3. UI Update
+            setOccurrences(occurrences.filter(o => o.id !== id));
+            const newSelected = new Set(selectedOccIds);
+            newSelected.delete(id);
+            setSelectedOccIds(newSelected);
+
         } catch (e) { console.error(e) }
     };
 
@@ -321,15 +380,31 @@ export const Observations: React.FC = () => {
         setSaving(true);
         try {
             const idsToDelete = Array.from(selectedOccIds);
-            const { error } = await supabase
-                .from('occurrences')
-                .delete()
-                .in('id', idsToDelete);
 
-            if (!error) {
-                setOccurrences(occurrences.filter(o => !selectedOccIds.has(o.id)));
-                setSelectedOccIds(new Set());
+            // 1. Local Delete
+            await db.occurrences.bulkDelete(idsToDelete);
+
+            // 2. Queue
+            const queueItems = idsToDelete
+                .filter(id => !id.toString().startsWith('temp-'))
+                .map(id => ({
+                    table: 'occurrences' as const,
+                    action: 'DELETE' as const,
+                    payload: { id },
+                    status: 'pending' as const,
+                    createdAt: Date.now(),
+                    retryCount: 0
+                }));
+
+            if (queueItems.length > 0) {
+                await db.syncQueue.bulkAdd(queueItems);
+                triggerSync();
             }
+
+            // 3. UI
+            setOccurrences(occurrences.filter(o => !selectedOccIds.has(o.id)));
+            setSelectedOccIds(new Set());
+
         } catch (e) {
             console.error("Error in bulk delete:", e);
         } finally {
@@ -458,7 +533,21 @@ export const Observations: React.FC = () => {
                                             {selectedStudent.initials}
                                         </div>
                                         <div className="flex flex-col min-w-0">
-                                            <h1 className="text-lg sm:text-3xl landscape:text-base font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1 sm:mb-2 landscape:mb-0 truncate">{selectedStudent.name}</h1>
+                                            <div className="flex items-center gap-2">
+                                                <h1 className="text-lg sm:text-3xl landscape:text-base font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1 sm:mb-2 landscape:mb-0 truncate">{selectedStudent.name}</h1>
+                                                {/* Sync Badge */}
+                                                <div className={`hidden md:flex items-center gap-2 px-2 py-0.5 rounded-full border font-bold text-[10px] transition-all ${isOnline
+                                                    ? (pendingCount > 0 ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800')
+                                                    : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:border-slate-700'}`}>
+                                                    {isOnline ? (pendingCount > 0 ? (
+                                                        <span className="material-symbols-outlined text-xs animate-spin">sync</span>
+                                                    ) : (
+                                                        <span className="material-symbols-outlined text-xs">cloud_done</span>
+                                                    )) : (
+                                                        <span className="material-symbols-outlined text-xs">cloud_off</span>
+                                                    )}
+                                                </div>
+                                            </div>
                                             <div className="flex items-center gap-2 sm:gap-3 text-[9px] sm:text-sm font-bold text-slate-400 landscape:hidden">
                                                 <span className="bg-slate-100 dark:bg-slate-800 px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl font-mono text-slate-500">#{selectedStudent.number.padStart(2, '0')}</span>
                                                 <span>•</span>

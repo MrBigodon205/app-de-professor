@@ -7,6 +7,8 @@ import { supabase } from '../lib/supabase';
 import { BackgroundPattern } from '../components/BackgroundPattern';
 import { Subject, SUBJECTS } from '../types';
 import { ForgotPasswordModal } from '../components/ForgotPasswordModal';
+import { DesktopTitleBar } from '../components/DesktopTitleBar';
+import logoSrc from '../assets/logo.svg';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -147,7 +149,8 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-4 md:p-8 font-display bg-slate-50 dark:bg-slate-950 overflow-hidden relative selection:bg-primary/30 selection:text-white transition-colors duration-500">
+    <div className={`flex min-h-screen w-full items-center justify-center p-4 md:p-8 font-display bg-slate-50 dark:bg-slate-950 overflow-hidden relative selection:bg-primary/30 selection:text-white transition-colors duration-500 ${window.electronAPI?.isElectron ? 'pt-10' : ''}`}>
+      <DesktopTitleBar />
       {/* Immersive Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <motion.div
@@ -195,19 +198,21 @@ export const Login: React.FC = () => {
             whileHover={{ scale: 1.05, rotate: 5 }}
             className="relative z-10 mb-10 shadow-2xl shadow-primary/30 rounded-[2.5rem]"
           >
-            <img src="/logo.svg" alt="Acerta+" className="w-40 h-40 object-contain drop-shadow-md" />
+            <img src={logoSrc} alt="Acerta+" className="w-40 h-40 object-contain drop-shadow-md" />
           </motion.div>
 
           <div className="relative z-10 text-center space-y-4">
             <h1 className="text-4xl lg:text-5xl font-bold text-slate-800 dark:text-white tracking-tight leading-tight">
               Prof. Acerta<span className="bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent font-black">+</span>
             </h1>
-            <div className="flex items-center justify-center gap-3">
-              <span className="h-px w-8 bg-slate-300 dark:bg-slate-600"></span>
-              <p className="text-[12px] tracking-[0.4em] text-slate-500 dark:text-slate-400 font-bold uppercase whitespace-nowrap">
-                v3.1 Intelligence
-              </p>
-              <span className="h-px w-8 bg-slate-300 dark:bg-slate-600"></span>
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 shadow-sm animate-pulse-slow">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-primary"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+                <span className="text-[10px] tracking-[0.2em] text-primary font-black uppercase">v3.1 Intelligence</span>
+              </div>
             </div>
             <p className="text-slate-600 dark:text-slate-500 text-sm max-w-[280px] mx-auto leading-relaxed font-light">
               Transforme dados em conquistas pedagógicas com IA.

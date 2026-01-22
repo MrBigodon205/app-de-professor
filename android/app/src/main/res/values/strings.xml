@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Prof. Acerta+</string>
+    <string name="title_activity_main">Prof. Acerta+</string>
+    <string name="package_name">com.profacerta.app</string>
+    <string name="custom_url_scheme">com.profacerta.app</string>
+</resources>

@@ -1477,7 +1477,7 @@ export const Activities: React.FC = () => {
                                                         style={{ animationDelay: `${students.indexOf(s) * 30}ms`, ...(isDone ? { backgroundColor: `${theme.primaryColorHex}0D`, borderColor: `${theme.primaryColorHex}33` } : {}) }}
                                                     >
                                                         <div className="flex items-center gap-3 min-w-0">
-                                                            <span className="text-xs font-mono text-slate-400 w-5 shrink-0">{s.number}</span>
+                                                            <span className="text-xs font-mono text-slate-400 shrink-0 min-w-[1.5rem]">{s.number}</span>
                                                             <span className={`text-sm font-bold truncate ${isDone ? `text-${theme.primaryColor}` : 'text-slate-600 dark:text-slate-300'}`}>{s.name}</span>
                                                         </div>
                                                         <div className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 shrink-0`} style={isDone ? { backgroundColor: theme.primaryColorHex, borderColor: theme.primaryColorHex, color: 'white', transform: 'scale(1.1)', boxShadow: `0 1px 2px 0 ${theme.primaryColorHex}4d` } : { borderColor: '#e2e8f0' /* slate-200 */ }}>

@@ -13,6 +13,7 @@ import { NotificationCenter } from './NotificationCenter';
 import { MobileClassSelector } from './MobileClassSelector';
 import { ClassManager } from './ClassManager';
 import { BackgroundPattern } from './BackgroundPattern';
+import { DesktopTitleBar } from './DesktopTitleBar';
 
 
 
@@ -180,7 +181,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const backgroundOrientation = useMemo(() => ({ x: springOrientX, y: springOrientY }), [springOrientX, springOrientY]);
 
   return (
-    <div className="flex h-dvh w-full bg-background-light dark:bg-background-dark overflow-hidden lg:overflow-hidden selection:bg-primary/10 selection:text-primary">
+    <div className={`flex h-dvh w-full bg-background-light dark:bg-background-dark overflow-hidden lg:overflow-hidden selection:bg-primary/10 selection:text-primary ${window.electronAPI?.isElectron ? 'pt-10' : ''}`}>
+      <DesktopTitleBar />
       {/* Dynamic Background Pattern - Fixed and isolated */}
       <BackgroundPattern
         theme={theme}
@@ -233,7 +235,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 landscape:p-2 flex flex-col gap-4 landscape:gap-2">
             <div className={`flex gap-3 items-center px-2 py-4 landscape:py-2 border-b border-slate-200 dark:border-white/10 mb-2 shrink-0 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-              <img src="/logo.svg" alt="Acerta+" className="size-12 object-contain drop-shadow-md shrink-0" />
+              <img src="./logo.png" alt="Acerta+" className="size-12 object-contain drop-shadow-lg shrink-0 rounded-xl" />
               {!isSidebarCollapsed && (
                 <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500 min-w-0">
                   <h1 className="text-slate-800 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:to-white/70 text-2xl font-black leading-none tracking-tight truncate filter drop-shadow-sm">Prof. Acerta<span className="text-primary">+</span></h1>

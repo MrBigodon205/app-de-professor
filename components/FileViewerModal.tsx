@@ -38,9 +38,14 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({ file, isOpen, onClose
     // Safety check
     if (!file) return null;
 
-    const isImage = file.url.match(/\.(jpg|jpeg|png|webp)$/i) || file.url.startsWith('data:image');
-    const isPDF = file.url.match(/\.pdf$/i) || file.url.startsWith('data:application/pdf');
-    const isPPT = file.url.match(/\.(ppt|pptx)$/i);
+    // Mobile Detection
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    const isImage = file.url.toLowerCase().split('?')[0].match(/\.(jpg|jpeg|png|webp|gif|svg)$/i) || file.url.startsWith('data:image');
+    const isPDF = file.url.toLowerCase().split('?')[0].match(/\.pdf$/i) || file.url.startsWith('data:application/pdf');
+    const isPPT = file.url.toLowerCase().split('?')[0].match(/\.(ppt|pptx)$/i);
+    const isWord = file.url.toLowerCase().split('?')[0].match(/\.(doc|docx)$/i);
+    const isExcel = file.url.toLowerCase().split('?')[0].match(/\.(xls|xlsx)$/i);
 
     // Reset state when file changes or modal opens
     useEffect(() => {
@@ -115,6 +120,12 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({ file, isOpen, onClose
                 ctx.strokeStyle = drawingColor;
                 ctx.lineWidth = dynamicWidth;
                 contextRef.current = ctx;
+            }
+            if (transformRef.current) {
+                // Wait for a frame to ensure the DOM has updated with the new canvas size
+                requestAnimationFrame(() => {
+                    transformRef.current?.centerView();
+                });
             }
             redrawCanvas();
         }
@@ -316,12 +327,12 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({ file, isOpen, onClose
                     >
                         {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
                             <TransformComponent
-                                wrapperClass="size-full flex items-center justify-center"
-                                contentClass="relative flex items-center justify-center"
-                                wrapperStyle={{ width: '100%', height: '100%' }}
+                                wrapperClass="!w-full !h-full flex items-center justify-center bg-black/5"
+                                contentClass="flex items-center justify-center p-4"
+                                wrapperStyle={{ width: '100%', height: '100%', cursor: isDrawingMode ? 'crosshair' : 'grab' }}
                             >
                                 <div
-                                    className="relative shadow-2xl"
+                                    className="relative shadow-2xl flex items-center justify-center bg-white/5 rounded-lg overflow-hidden"
                                 // Touch handlers for drawing must be on this container AND canvas
                                 // Actually canvas covers image, so we put handlers on canvas or wrapper
                                 >
@@ -329,7 +340,7 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({ file, isOpen, onClose
                                         ref={imgRef}
                                         src={file.url}
                                         alt="Visualização"
-                                        className="max-w-[95vw] max-h-[85vh] object-contain block pointer-events-none select-none"
+                                        className="max-w-[95vw] max-h-[85vh] object-contain block pointer-events-none select-none shadow-black/50 shadow-2xl"
                                         onLoad={handleImageLoad}
                                     />
                                     <canvas
@@ -353,8 +364,8 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({ file, isOpen, onClose
                 {isPDF && (
                     <div className="size-full flex flex-col items-center justify-center p-4">
                         <iframe
-                            src={file.url}
-                            className="w-full h-full md:w-[90%] md:h-[95%] rounded-lg shadow-2xl bg-white"
+                            src={isMobile && !file.url.startsWith('data:') ? `https://docs.google.com/viewer?url=${encodeURIComponent(file.url)}&embedded=true` : file.url}
+                            className="w-full h-full md:w-[90%] md:h-[95%] rounded-lg shadow-2xl bg-white border-0"
                             title="PDF Viewer"
                         />
                         {/* Mobile Warning/Tip */}
@@ -369,7 +380,7 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({ file, isOpen, onClose
                     <div className="size-full flex flex-col items-center justify-center p-4">
                         <iframe
                             src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.url)}`}
-                            className="w-full h-full md:w-[90%] md:h-[95%] rounded-lg shadow-2xl bg-white"
+                            className="w-full h-full md:w-[90%] md:h-[95%] rounded-lg shadow-2xl bg-white border-0"
                             title="Apresentação PPT"
                         />
                     </div>
@@ -378,8 +389,9 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({ file, isOpen, onClose
                 {/* Unsupported Mode */}
                 {!isImage && !isPDF && !isPPT && (
                     <div className="text-white text-center p-6">
-                        <span className="material-symbols-outlined text-6xl text-slate-600 mb-4">sentiment_dissatisfied</span>
-                        <p>Formato não suportado para visualização rápida.</p>
+                        <span className="material-symbols-outlined text-6xl text-slate-600 mb-4">description_off</span>
+                        <p className="font-bold text-lg mb-2">Visualização não disponível</p>
+                        <p className="text-slate-400 max-w-xs mx-auto">Este formato de arquivo não pode ser visualizado diretamente no navegador.</p>
                         <a href={file.url} download className="mt-4 inline-block px-4 py-2 bg-indigo-600 rounded-lg text-white font-bold">Baixar Arquivo</a>
                     </div>
                 )}
