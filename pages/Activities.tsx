@@ -923,7 +923,7 @@ export const Activities: React.FC = () => {
                 )}
 
                 {/* List Items */}
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0">
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-0">
                     {loading ? (
 
                         Array.from({ length: 5 }).map((_, i) => (
