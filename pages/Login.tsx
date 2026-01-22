@@ -162,7 +162,7 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className={`flex min-h-screen w-full items-center justify-center p-4 md:p-8 font-display bg-slate-50 dark:bg-slate-950 overflow-hidden relative selection:bg-primary/30 selection:text-white transition-colors duration-500 ${window.electronAPI?.isElectron ? 'pt-8' : ''}`}>
+    <div className={`flex min-h-screen w-full items-center justify-center p-4 md:p-8 font-display bg-slate-50 dark:bg-slate-950 overflow-hidden relative selection:bg-primary/30 selection:text-white transition-colors duration-500 ${window.electronAPI?.isElectron ? 'pt-10' : ''}`}>
       <DesktopTitleBar />
       {/* Immersive Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">

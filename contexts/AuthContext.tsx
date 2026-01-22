@@ -116,11 +116,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 setUserId(finalUser.id);
 
-                const storedSubject = localStorage.getItem(`activeSubject_${finalUser.id}`);
+                const storedSubject = localStorage.getItem('last_active_subject');
                 if (storedSubject && (finalUser.subject === storedSubject || finalUser.subjects?.includes(storedSubject))) {
                     setActiveSubject(storedSubject);
                 } else {
-                    setActiveSubject(finalUser.subject || 'Matemática');
+                    const defaultSubject = finalUser.subject || 'Matemática';
+                    setActiveSubject(defaultSubject);
+                    localStorage.setItem('last_active_subject', defaultSubject);
                 }
             }
         } catch (err: any) {
@@ -206,6 +208,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         } catch (e) { }
                     }
                 }
+
+                // Force explicit persistence for Electron
+                try {
+                    const supabaseUrl = (supabase as any).supabaseUrl;
+                    const projectRef = supabaseUrl.split('//')[1].split('.')[0];
+                    const storageKey = `sb-${projectRef}-auth-token`;
+                    localStorage.setItem(storageKey, JSON.stringify(session));
+                } catch (e) { }
 
                 if (!initialLoadDone || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
                     const pendingSubs = localStorage.getItem('pending_subs');
@@ -347,7 +357,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setCurrentUser(newState as User);
                 if (data.subject) {
                     setActiveSubject(data.subject);
-                    localStorage.setItem('active_subject', data.subject);
+                    localStorage.setItem('last_active_subject', data.subject);
                 }
             }
             return true;
@@ -417,8 +427,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updateActiveSubject = useCallback((subject: string) => {
         setActiveSubject(subject);
         localStorage.setItem('last_active_subject', subject);
-        if (userId) localStorage.setItem(`activeSubject_${userId}`, subject);
-    }, [userId]);
+    }, []);
 
     const login = useCallback(async (email: string, password: string) => {
         // Removed setLoading(true) to avoid unmounting Login form

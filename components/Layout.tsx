@@ -181,7 +181,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const backgroundOrientation = useMemo(() => ({ x: springOrientX, y: springOrientY }), [springOrientX, springOrientY]);
 
   return (
-    <div className={`flex h-dvh w-full bg-background-light dark:bg-background-dark overflow-hidden lg:overflow-hidden selection:bg-primary/10 selection:text-primary ${window.electronAPI?.isElectron ? 'pt-8' : ''}`}>
+    <div className={`flex h-dvh w-full bg-background-light dark:bg-background-dark overflow-hidden lg:overflow-hidden selection:bg-primary/10 selection:text-primary ${window.electronAPI?.isElectron ? 'pt-10' : ''}`}>
       <DesktopTitleBar />
       {/* Dynamic Background Pattern - Fixed and isolated */}
       <BackgroundPattern
@@ -220,7 +220,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <motion.aside
         layout
         transition={{ type: "spring", stiffness: 280, damping: 30, mass: 0.6 }}
-        className={`fixed top-4 bottom-4 left-4 z-[60] glass-card-premium transform flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden transition-all duration-300
+        className={`fixed ${window.electronAPI?.isElectron ? 'top-14' : 'top-4'} bottom-4 left-4 z-[60] glass-card-premium transform flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden transition-all duration-300
           ${isMobileMenuOpen ? 'translate-x-0 w-72 border-r-0' : ''} 
           ${!isMobileMenuOpen && isSidebarCollapsed ? 'lg:-translate-x-full landscape:-translate-x-full w-0 border-0 p-0 opacity-0 pointer-events-none' : 'lg:translate-x-0 landscape:translate-x-0 w-72 border-r-0'}
           ${!isMobileMenuOpen && !isSidebarCollapsed ? '-translate-x-[120%]' : ''}
@@ -306,7 +306,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {!isProfileModalOpen && !isPasswordSetupOpen && !isClassSelectorOpen && (
         <button
           onClick={toggleSidebar}
-          className={`hidden lg:flex landscape:flex fixed z-[70] top-8 size-12 bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'}`}
+          className={`hidden lg:flex landscape:flex fixed z-[70] ${window.electronAPI?.isElectron ? 'top-16' : 'top-8'} size-12 bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'}`}
           title={isSidebarCollapsed ? "Expandir" : "Recolher"}
         >
           <span className={`material-symbols-outlined text-3xl font-bold transition-transform duration-150 ease-out ${isSidebarCollapsed ? '' : 'rotate-180'}`}>chevron_right</span>

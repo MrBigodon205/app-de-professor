@@ -24,7 +24,7 @@ export const DesktopTitleBar: React.FC = () => {
 
     return (
         <div
-            className="fixed top-0 left-0 right-0 h-8 bg-[#0f172a] border-b border-white/10 flex items-center justify-between px-4 z-[999] select-none shadow-md overflow-hidden"
+            className="fixed top-0 left-0 right-0 h-[28px] bg-[#0f172a] border-b border-white/10 flex items-center justify-between px-4 z-[999] select-none shadow-md overflow-hidden"
             style={{ WebkitAppRegion: 'drag' } as any}
             onDoubleClick={handleDoubleClick}
         >
