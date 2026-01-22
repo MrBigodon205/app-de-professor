@@ -337,27 +337,27 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </div>
 
               <div className={`hidden md:block landscape:block transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ml-4`}>
-                <button onClick={() => setIsClassSelectorOpen(true)} className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 rounded-xl bg-white/50 dark:bg-black/20 hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 group border border-white/20 dark:border-white/5 hover:border-primary/30 shadow-sm hover:shadow-neon active:scale-95 backdrop-blur-sm" title="Gerenciar Turmas">
-                  <div className={`size-10 rounded-lg bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-all duration-500`}>
-                    <span className="material-symbols-outlined text-lg font-black">{theme.icon}</span>
+                <button onClick={() => setIsClassSelectorOpen(true)} className="flex items-center gap-3 pl-2 pr-5 py-2 rounded-xl bg-white/50 dark:bg-black/20 hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 group border border-white/20 dark:border-white/5 hover:border-primary/30 shadow-sm hover:shadow-neon active:scale-95 backdrop-blur-sm" title="Gerenciar Turmas">
+                  <div className={`size-11 rounded-lg bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-all duration-500`}>
+                    <span className="material-symbols-outlined text-xl font-black">{theme.icon}</span>
                   </div>
                   <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none font-mono">Série</span>
+                    <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none font-mono">Série</span>
                     <div className="flex items-center gap-1">
-                      <span className="font-black text-base text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-primary transition-colors">{activeSeries?.name || 'Selecione...'}</span>
-                      <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-[10px] group-hover:text-primary transition-all">expand_more</span>
+                      <span className="font-black text-lg text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-primary transition-colors">{activeSeries?.name || 'Selecione...'}</span>
+                      <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-[12px] group-hover:text-primary transition-all">expand_more</span>
                     </div>
                   </div>
                 </button>
               </div>
 
-              <div className="h-8 w-px bg-gradient-to-b from-transparent via-slate-200 dark:via-white/10 to-transparent mx-2 hidden md:block landscape:block"></div>
+              <div className="h-10 w-px bg-gradient-to-b from-transparent via-slate-200 dark:via-white/10 to-transparent mx-2 hidden md:block landscape:block"></div>
 
               <div className="flex-1 min-w-0 mx-2 md:mx-0 overflow-hidden hidden md:block landscape:block">
                 <div className="flex items-center gap-3 overflow-x-auto no-scrollbar mask-linear-fade py-1 pr-4">
                   {activeSeries?.sections.map(sec => (
                     <div key={sec} className="relative group/tab shrink-0">
-                      <button onClick={() => handleSwitchSection(sec)} className={`relative min-w-[3.5rem] h-10 px-5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center border active:scale-90 ${selectedSection === sec ? `bg-gradient-to-br from-primary to-secondary text-white border-transparent shadow-lg shadow-semimary/30 ring-1 ring-white/20` : 'bg-white/50 dark:bg-white/5 border-white/10 text-slate-500 dark:text-slate-400 hover:bg-white hover:text-primary hover:border-primary/30'}`}>
+                      <button onClick={() => handleSwitchSection(sec)} className={`relative min-w-[3.5rem] h-11 px-6 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center border active:scale-90 ${selectedSection === sec ? `bg-gradient-to-br from-primary to-secondary text-white border-transparent shadow-lg shadow-semimary/30 ring-1 ring-white/20` : 'bg-white/50 dark:bg-white/5 border-white/10 text-slate-500 dark:text-slate-400 hover:bg-white hover:text-primary hover:border-primary/30'}`}>
                         {sec}
                         {selectedSection === sec && <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-white animate-pulse shadow-neon`}></span>}
                       </button>
@@ -367,9 +367,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     </div>
                   ))}
                   {activeSeries && (
-                    <button onClick={handleAddSectionOneClick} className={`h-10 pl-3 pr-4 rounded-xl flex items-center gap-2 border border-dashed border-slate-300 dark:border-white/20 text-slate-400 hover:border-primary hover:text-white hover:bg-primary transition-all duration-300 hover:scale-105 active:scale-95 group/nova shadow-sm hover:shadow-neon`} title="Adicionar Turma">
-                      <span className="material-symbols-outlined text-sm font-black">add</span>
-                      <span className="text-[10px] font-black uppercase tracking-widest font-mono">Nova</span>
+                    <button onClick={handleAddSectionOneClick} className={`h-11 pl-4 pr-5 rounded-xl flex items-center gap-2 border border-dashed border-slate-300 dark:border-white/20 text-slate-400 hover:border-primary hover:text-white hover:bg-primary transition-all duration-300 hover:scale-105 active:scale-95 group/nova shadow-sm hover:shadow-neon`} title="Adicionar Turma">
+                      <span className="material-symbols-outlined text-base font-black">add</span>
+                      <span className="text-[11px] font-black uppercase tracking-widest font-mono">Nova</span>
                     </button>
                   )}
                 </div>

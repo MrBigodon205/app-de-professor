@@ -897,7 +897,7 @@ export const Activities: React.FC = () => {
                         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
                             <button
                                 onClick={() => setFilterSection('')}
-                                className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all border-2 ${filterSection === ''
+                                className={`shrink-0 px-5 py-2.5 rounded-xl text-sm font-black transition-all border-2 ${filterSection === ''
                                     ? `bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-transparent shadow-md`
                                     : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
                                     }`}
@@ -909,7 +909,7 @@ export const Activities: React.FC = () => {
                                 <button
                                     key={sec}
                                     onClick={() => setFilterSection(sec)}
-                                    className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all border-2 ${filterSection === sec
+                                    className={`shrink-0 px-5 py-2.5 rounded-xl text-sm font-black transition-all border-2 ${filterSection === sec
                                         ? `bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-transparent shadow-md`
                                         : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
                                         }`}
@@ -943,7 +943,7 @@ export const Activities: React.FC = () => {
                                 <button
                                     key={act.id}
                                     onClick={() => isSelectionMode ? toggleSelection(act.id) : handleSelectActivity(act)}
-                                    className={`w-full text-left p-4 landscape:p-3 landscape:py-2 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${isSelectionMode
+                                    className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${isSelectionMode
                                         ? (selectedIds.includes(act.id) ? 'bg-indigo-50 border-indigo-500 dark:bg-indigo-900/20 dark:border-indigo-500' : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800')
                                         : (selectedActivityId === act.id ? `bg-white/60 dark:bg-surface-dark/60 backdrop-blur-md shadow-lg ring-1` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600')
                                         }`}
@@ -957,7 +957,7 @@ export const Activities: React.FC = () => {
                                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedActivityId === act.id ? '' : 'bg-transparent group-hover:bg-slate-200'} transition-all`} style={{ backgroundColor: selectedActivityId === act.id ? theme.primaryColorHex : undefined }}></div>
                                     <div className={`pl-4 w-full ${isSelectionMode ? 'pl-16 landscape:pl-16' : 'landscape:pl-0'}`}>
                                         <div className="flex justify-between items-center mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
-                                            <h4 className={`font-bold text-base landscape:text-sm truncate pr-2 flex-1 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
+                                            <h4 className={`font-bold text-base md:text-lg truncate pr-2 flex-1 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
                                             <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
                                         </div>
                                         <div className="flex flex-wrap gap-2 landscape:hidden">
@@ -974,7 +974,7 @@ export const Activities: React.FC = () => {
                                             </span>
                                         </div>
                                         {/* Mobile Landscape Only Date */}
-                                        <div className="hidden landscape:block text-[0.65rem] text-slate-400 mt-0.5">
+                                        <div className="hidden landscape:block text-xs text-slate-400 mt-1">
                                             {new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                                         </div>
                                     </div>

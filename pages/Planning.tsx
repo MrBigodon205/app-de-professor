@@ -857,7 +857,7 @@ export const Planning: React.FC = () => {
                         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
                             <button
                                 onClick={() => setFilterSection('')}
-                                className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all border-2 ${filterSection === ''
+                                className={`shrink-0 px-5 py-2.5 rounded-xl text-sm font-black transition-all border-2 ${filterSection === ''
                                     ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-md shadow-${theme.primaryColor}/20`
                                     : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
                                     }`}
@@ -868,7 +868,7 @@ export const Planning: React.FC = () => {
                                 <button
                                     key={sec}
                                     onClick={() => setFilterSection(sec)}
-                                    className={`shrink-0 px-4 py-1.5 rounded-xl text-xs font-black transition-all border-2 ${filterSection === sec
+                                    className={`shrink-0 px-5 py-2.5 rounded-xl text-sm font-black transition-all border-2 ${filterSection === sec
                                         ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-md shadow-${theme.primaryColor}/20`
                                         : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
                                         }`}
@@ -880,7 +880,7 @@ export const Planning: React.FC = () => {
                     </div>
                 )}
 
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-[400px] landscape:space-y-1">
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-[400px]">
 
                     {loading ? (
                         Array.from({ length: 5 }).map((_, i) => (
@@ -900,7 +900,7 @@ export const Planning: React.FC = () => {
                                 key={plan.id}
                                 onClick={() => isSelectionMode ? toggleSelection(plan.id) : handleSelectPlan(plan)}
                                 style={{ '--delay': `${idx * 100}ms` } as React.CSSProperties}
-                                className={`w-full text-left p-5 landscape:p-2 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm animate-in fade-in md:slide-in-from-left duration-500 fill-mode-backwards animate-delay-[var(--delay)] ${isSelectionMode
+                                className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm animate-in fade-in md:slide-in-from-left duration-500 fill-mode-backwards animate-delay-[var(--delay)] ${isSelectionMode
                                     ? (selectedIds.includes(plan.id) ? `bg-${theme.primaryColor}/5 border-${theme.primaryColor} dark:bg-${theme.primaryColor}/20` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800')
                                     : (selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600')
                                     }`}
@@ -914,7 +914,7 @@ export const Planning: React.FC = () => {
                                 <div className={`pl-4 w-full transition-all duration-300 ${isSelectionMode ? 'pl-16 landscape:pl-16' : 'landscape:pl-0'}`}>
 
                                     <div className="flex justify-between items-start mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
-                                        <h4 className={`font-bold text-base landscape:text-sm truncate pr-2 flex-1 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
+                                        <h4 className={`font-bold text-base md:text-lg truncate pr-2 flex-1 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
                                         <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
                                     </div>
                                     <div className="flex flex-wrap gap-2 landscape:hidden">
@@ -945,7 +945,7 @@ export const Planning: React.FC = () => {
                                         </span>
                                     </div>
                                     {/* Mobile Landscape Only Date */}
-                                    <div className="hidden landscape:block text-[10px] text-slate-400 mt-0.5">
+                                    <div className="hidden landscape:block text-xs text-slate-400 mt-1">
                                         {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                                     </div>
                                 </div>

@@ -187,13 +187,13 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                                         onClick={() => selectSeries(cls.id)}
                                                         className="flex-1 flex items-center gap-3 text-left group/btn"
                                                     >
-                                                        <div className={`size-10 rounded-xl flex items-center justify-center transition-all duration-300 ${activeSeries?.id === cls.id ? `bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] text-white shadow-md shadow-[var(--theme-primary)]/20` : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500'}`}>
-                                                            <span className="material-symbols-outlined text-xl">
+                                                        <div className={`size-12 rounded-xl flex items-center justify-center transition-all duration-300 ${activeSeries?.id === cls.id ? `bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] text-white shadow-md shadow-[var(--theme-primary)]/20` : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500'}`}>
+                                                            <span className="material-symbols-outlined text-2xl">
                                                                 {activeSeries?.id === cls.id ? 'folder_managed' : 'folder'}
                                                             </span>
                                                         </div>
                                                         <div className="flex flex-col leading-tight">
-                                                            <span className={`text-base font-black tracking-tight ${activeSeries?.id === cls.id ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
+                                                            <span className={`text-lg font-black tracking-tight ${activeSeries?.id === cls.id ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
                                                                 {cls.name}
                                                             </span>
                                                             <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{cls.sections.length} turmas</span>
@@ -217,7 +217,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                                                 <div key={sec} className="relative group/pill">
                                                                     <button
                                                                         onClick={() => selectSection(sec)}
-                                                                        className={`relative h-10 min-w-[3.5rem] px-4 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center active:scale-90 ${selectedSection === sec
+                                                                        className={`relative h-11 min-w-[3.5rem] px-6 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center active:scale-90 ${selectedSection === sec
                                                                             ? `bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] text-white shadow-md shadow-[var(--theme-primary)]/30 ring-1 ring-[var(--theme-primary)]`
                                                                             : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-white/5'
                                                                             }`}
@@ -260,7 +260,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                                                         await addSection(activeSeries.id, nextLetter);
                                                                     }
                                                                 }}
-                                                                className={`h-10 px-4 rounded-xl border-2 border-dashed border-slate-200 dark:border-white/5 bg-transparent text-slate-400 hover:border-[var(--theme-primary)] hover:text-[var(--theme-primary)] flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 group/nova`}
+                                                                className={`h-11 px-6 rounded-xl border-2 border-dashed border-slate-200 dark:border-white/5 bg-transparent text-slate-400 hover:border-[var(--theme-primary)] hover:text-[var(--theme-primary)] flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 group/nova`}
                                                                 title="Nova Turma"
                                                             >
                                                                 <span className="material-symbols-outlined text-base">add</span>
