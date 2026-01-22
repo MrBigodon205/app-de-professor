@@ -431,7 +431,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </div> {/* End of Centered Container */}
         </motion.header>
 
-        <div className="xl:hidden px-3 pt-2.5 -mb-0.5 z-30 landscape:pt-1 landscape:px-2">
+        <div className="xl:hidden landscape:hidden px-3 pt-2.5 -mb-0.5 z-30">
           <button onClick={() => setIsClassSelectorOpen(true)} className="w-full bg-white/90 dark:bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl border border-slate-200 dark:border-white/5 shadow-lg dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all landscape:p-1.5 landscape:rounded-xl">
             <div className="flex items-center gap-2.5">
 
