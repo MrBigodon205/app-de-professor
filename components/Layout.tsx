@@ -181,7 +181,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const backgroundOrientation = useMemo(() => ({ x: springOrientX, y: springOrientY }), [springOrientX, springOrientY]);
 
   return (
-    <div className={`flex h-dvh w-full bg-background-light dark:bg-background-dark overflow-hidden lg:overflow-hidden selection:bg-primary/10 selection:text-primary ${window.electronAPI?.isElectron ? 'pt-10' : ''}`}>
+    <div className={`flex h-dvh w-full bg-background-light dark:bg-background-dark overflow-hidden lg:overflow-hidden selection:bg-primary/10 selection:text-primary ${window.electronAPI?.isElectron ? 'pt-8' : ''}`}>
       <DesktopTitleBar />
       {/* Dynamic Background Pattern - Fixed and isolated */}
       <BackgroundPattern
@@ -239,7 +239,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               {!isSidebarCollapsed && (
                 <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500 min-w-0">
                   <h1 className="text-slate-800 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:to-white/70 text-2xl font-black leading-none tracking-tight truncate filter drop-shadow-sm">Prof. Acerta<span className="text-primary">+</span></h1>
-                  <p className="text-primary-hover text-[10px] font-mono font-bold uppercase tracking-[0.2em] mt-1 truncate ml-0.5">Gestão 3.1</p>
+                  <p className="text-primary-hover text-[10px] font-mono font-bold uppercase tracking-[0.2em] mt-1 truncate ml-0.5">Gestão 3.0</p>
                 </div>
               )}
             </div>
@@ -304,7 +304,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {!isProfileModalOpen && !isPasswordSetupOpen && !isClassSelectorOpen && (
         <button
           onClick={toggleSidebar}
-          className={`hidden lg:flex landscape:flex fixed z-[70] size-12 bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'} ${window.electronAPI?.isElectron ? 'top-14' : 'top-8'}`}
+          className={`hidden lg:flex landscape:flex fixed z-[70] top-8 size-12 bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'}`}
           title={isSidebarCollapsed ? "Expandir" : "Recolher"}
         >
           <span className={`material-symbols-outlined text-3xl font-bold transition-transform duration-150 ease-out ${isSidebarCollapsed ? '' : 'rotate-180'}`}>chevron_right</span>
@@ -325,7 +325,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
         <motion.header
           layout
-          className={`flex items-center justify-between mx-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-none px-4 md:px-6 py-2 md:py-3 z-[40] shrink-0 gap-4 sticky shadow-lg shadow-black/5 ${window.electronAPI?.isElectron ? 'top-12 mt-2' : 'top-4 mt-4'}`}
+          className={`flex items-center justify-between mx-4 mt-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-none px-4 md:px-6 py-2 md:py-3 z-[40] shrink-0 gap-4 sticky top-4 shadow-lg shadow-black/5`}
         >
           {/* Centered Container for Landscape */}
           <div className="contents landscape:flex landscape:w-full landscape:max-w-5xl landscape:items-center landscape:justify-between landscape:mx-auto">
