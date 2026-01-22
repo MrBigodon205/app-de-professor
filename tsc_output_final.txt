@@ -1,3 +1,0 @@
-pages/Planning.tsx(551,14): error TS17008: JSX element 'div' has no corresponding closing tag.
-pages/Planning.tsx(924,34): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-pages/Planning.tsx(928,9): error TS1005: ')' expected.

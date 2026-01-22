@@ -1,7 +1,0 @@
-components/Layout.tsx(70,13): error TS2304: Cannot find name 'removeSectionFromSeries'.
-components/Layout.tsx(79,11): error TS2304: Cannot find name 'addSectionToSeries'.
-components/Layout.tsx(369,27): error TS2304: Cannot find name 'addSectionToSeries'.
-components/Layout.tsx(377,33): error TS2304: Cannot find name 'addSectionToSeries'.
-hooks/useTheme.ts(15,7): error TS2741: Property 'Geral' is missing in type '{ Filosofia: { primaryColor: string; secondaryColor: string; accentColor: string; bgGradient: string; icon: string; description: string; illustrations: string[]; softBg: string; }; 'Educa\u00E7\u00E3o F\u00EDsica': { ...; }; ... 12 more ...; 'Ensino Religioso': { ...; }; }' but required in type 'Record<Subject, ThemeConfig>'.
-pages/Attendance.tsx(368,23): error TS2350: Only a void function can be called with the 'new' keyword.
-pages/Attendance.tsx(371,23): error TS2350: Only a void function can be called with the 'new' keyword.

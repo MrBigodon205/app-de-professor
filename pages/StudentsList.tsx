@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Student } from '../types';
 import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { TransferStudentModal } from '../components/TransferStudentModal';
 import { BulkTransferModal } from '../components/BulkTransferModal';
 
@@ -225,6 +226,16 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             setStudents([...students, saved]);
             setNewStudentName('');
             setIsAdding(false);
+
+            // Add to sync queue for cloud update
+            await db.syncQueue.add({
+                table: 'students',
+                action: 'INSERT',
+                payload: newStudentData,
+                status: 'pending',
+                createdAt: Date.now(),
+                retryCount: 0
+            });
         } catch (error) {
             console.error("Error adding student:", error);
         }
@@ -258,36 +269,41 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
             const sortedList = Array.from(combinedMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
-            const operations = sortedList.map((item, index) => {
+            const operations = sortedList.map(async (item) => {
+                if (item.existing) return null;
 
-                if (item.existing) {
-                    // FIX: Do NOT re-sequence existing students. Keep their number.
-                    return null;
-                } else {
-                    const initials = item.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
-                    // FIX: Generate unique matricula for new students
-                    const newNumber = generateMatricula();
+                const initials = item.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+                const newNumber = generateMatricula();
+                const newStudentData = {
+                    name: item.name,
+                    number: newNumber,
+                    series_id: selectedSeriesId,
+                    section: selectedSection,
+                    initials: initials,
+                    color: `from-${theme.primaryColor} to-${theme.secondaryColor}`,
+                    units: {},
+                    user_id: currentUser.id
+                };
 
-                    return supabase
-                        .from('students')
-                        .insert({
-                            name: item.name,
-                            number: newNumber,
-                            series_id: selectedSeriesId,
-                            section: selectedSection,
-                            initials: initials,
-                            color: `from-${theme.primaryColor} to-${theme.secondaryColor}`,
-                            units: {},
-                            user_id: currentUser.id
-                        });
-                }
+                // Add to sync queue for redundancy/offline
+                await db.syncQueue.add({
+                    table: 'students',
+                    action: 'INSERT',
+                    payload: newStudentData,
+                    status: 'pending',
+                    createdAt: Date.now(),
+                    retryCount: 0
+                });
+
+                // Also try direct insert for immediate feedback
+                return supabase.from('students').insert(newStudentData);
             }).filter(op => op !== null);
 
             await Promise.all(operations);
             await fetchStudents();
             setIsImporting(false);
             setImportText('');
-            alert('Importação concluída com sucesso!');
+            alert('Importação concluída! Os alunos estão sendo sincronizados com a nuvem.');
         } catch (error) {
             console.error("Import error:", error);
             alert("Erro na importação.");

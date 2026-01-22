@@ -158,7 +158,7 @@ export const Grades: React.FC = () => {
 
     // Track pending changes: { studentId: { field: value } }
     const pendingChangesRef = useRef<{ [studentId: string]: GradeData }>({});
-    const saveTimeoutRefs = useRef<{ [key: string]: NodeJS.Timeout }>({});
+    const saveTimeoutRefs = useRef<{ [key: string]: any }>({});
 
     // Offline / Sync Hook
     const { isOnline, pendingCount, triggerSync } = useSync();
@@ -813,7 +813,7 @@ export const Grades: React.FC = () => {
                             <span className="text-slate-300">|</span>
                             <select
                                 value={selectedUnit}
-                                onChange={(e) => setSelectedUnit(Number(e.target.value))}
+                                onChange={(e) => setSelectedUnit(e.target.value)}
                                 className="bg-transparent text-xs font-bold text-indigo-600 dark:text-indigo-400 border-none outline-none p-0 cursor-pointer"
                                 aria-label="Seletor de Unidade"
                             >

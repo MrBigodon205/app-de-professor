@@ -62,29 +62,23 @@ export const useSync = () => {
 
                     // Execute against Supabase
                     if (action === 'INSERT') {
-                        const { error: e } = await supabase.from(table).insert(payload);
+                        const { error: e } = await supabase.from(table as any).insert(payload);
                         error = e;
                     } else if (action === 'UPDATE') {
-                        // Assuming payload has ID and the rest is data
                         const { id, ...data } = payload;
-                        // Special handling for compound keys if needed, but usually we handle by ID or match fields
-                        // For attendance/grades we might rely on specific matchers.
-                        // Let's assume standard update for simple rows, or special logic for others.
-
-                        // Fix: Attendance/Grades don't always have a single ID in payload if we are using upsert logic.
-                        // Ideally we use UPSERT for everything to be safe.
 
                         const match = payload.id ? { id: payload.id } :
                             (table === 'attendance' ? { student_id: payload.student_id, date: payload.date, subject: payload.subject, unit: payload.unit } :
-                                (table === 'grades' ? { student_id: payload.student_id, unit: payload.unit, subject: payload.subject } : {}));
+                                (table === 'grades' ? { student_id: payload.student_id, unit: payload.unit, subject: payload.subject } :
+                                    ((table as string) === 'students' ? { id: payload.id } : {})));
 
-                        const { error: e } = await supabase.from(table).update(data).match(match);
+                        const { error: e } = await supabase.from(table as any).update(data).match(match);
                         error = e;
                     } else if (action === 'DELETE') {
                         const match = payload.id ? { id: payload.id } :
                             (table === 'attendance' ? { student_id: payload.student_id, date: payload.date } :
-                                {}); // Adjust based on precision
-                        const { error: e } = await supabase.from(table).delete().match(match);
+                                ((table as string) === 'students' ? { id: payload.id } : {}));
+                        const { error: e } = await supabase.from(table as any).delete().match(match);
                         error = e;
                     }
 
