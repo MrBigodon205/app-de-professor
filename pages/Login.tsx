@@ -31,6 +31,14 @@ export const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [rememberEmail, setRememberEmail] = useState(true);
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('remembered_email');
+    if (savedEmail) {
+      setEmail(savedEmail);
+    }
+  }, []);
 
   useEffect(() => {
     // Check for forced logout error from previous sessions
@@ -99,6 +107,11 @@ export const Login: React.FC = () => {
       if (activeTab === 'login') {
         const result = await login(email, password);
         if (result.success) {
+          if (rememberEmail) {
+            localStorage.setItem('remembered_email', email);
+          } else {
+            localStorage.removeItem('remembered_email');
+          }
           navigate('/');
         } else {
           // Provide clear feedback for invalid credentials
@@ -335,7 +348,16 @@ export const Login: React.FC = () => {
                       onChange={e => setEmail(e.target.value)}
                       required
                     />
-                    <div className="flex justify-end pr-1 mt-1">
+                    <div className="flex items-center justify-between px-1 mt-1">
+                      <label className="flex items-center gap-2 cursor-pointer group/rem">
+                        <input
+                          type="checkbox"
+                          checked={rememberEmail}
+                          onChange={(e) => setRememberEmail(e.target.checked)}
+                          className="rounded border-slate-300 text-primary focus:ring-primary/20"
+                        />
+                        <span className="text-[10px] font-bold text-slate-400 group-hover/rem:text-slate-600 transition-colors uppercase tracking-widest">Lembrar-me</span>
+                      </label>
                       <a
                         href="https://wa.me/557187599246/?text=Ol%C3%A1!%20Esqueci%20meu%20e-mail%20de%20acesso%20ao%20sistema%20Prof.%20Acerta%2B.%20Poderia%20me%20ajudar%3F"
                         target="_blank"

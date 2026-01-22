@@ -288,8 +288,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </div>
 
           <div className="p-4 border-t border-slate-200 dark:border-white/10 flex flex-col gap-2">
-            <button onClick={() => { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); }} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-amber-500 dark:hover:text-amber-400 transition-all active:scale-95 hover:scale-[1.01] group border border-transparent hover:border-slate-200 dark:hover:border-white/5 ${isSidebarCollapsed ? 'lg:justify-center' : ''}`}>
-              <span className="material-symbols-outlined text-[24px] font-medium transition-transform duration-500 lg:group-hover:rotate-[180deg]">dark_mode</span>
+            <button onClick={theme.toggleTheme} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-amber-500 dark:hover:text-amber-400 transition-all active:scale-95 hover:scale-[1.01] group border border-transparent hover:border-slate-200 dark:hover:border-white/5 ${isSidebarCollapsed ? 'lg:justify-center' : ''}`}>
+              <span className="material-symbols-outlined text-[24px] font-medium transition-transform duration-500 lg:group-hover:rotate-[180deg]">
+                {theme.isDarkMode ? 'light_mode' : 'dark_mode'}
+              </span>
               <span className={`text-sm font-medium animate-in fade-in duration-300 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>Alternar Tema</span>
             </button>
             <button onClick={logout} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-500/20 border border-transparent transition-all active:scale-95 hover:scale-[1.01] group ${isSidebarCollapsed ? 'lg:justify-center' : ''}`}>

@@ -24,7 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [activeSubject, setActiveSubject] = useState<string>('');
+    const [activeSubject, setActiveSubject] = useState<string>(() => localStorage.getItem('last_active_subject') || '');
     const [profileChannel, setProfileChannel] = useState<any>(null);
 
     // Local API fallback logic removed to ensure Single Source of Truth from Supabase
@@ -150,6 +150,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             const parsed = JSON.parse(raw);
                             if (parsed.user && parsed.access_token) {
                                 session = parsed;
+                                // Recover SDK session state
+                                await supabase.auth.setSession({
+                                    access_token: parsed.access_token,
+                                    refresh_token: parsed.refresh_token || ""
+                                });
                             }
                         }
                     } catch (e) {
@@ -241,16 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, []);
 
-    useEffect(() => {
-        const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const updateTheme = (e: MediaQueryListEvent | MediaQueryList) => {
-            if (e.matches) document.documentElement.classList.add('dark');
-            else document.documentElement.classList.remove('dark');
-        };
-        updateTheme(darkModeMediaQuery);
-        darkModeMediaQuery.addEventListener('change', updateTheme);
-        return () => darkModeMediaQuery.removeEventListener('change', updateTheme);
-    }, []);
+    // Theme logic removed here - handled by ThemeContext
 
     useEffect(() => {
         if (!userId) {
@@ -387,6 +383,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUserId(null);
             localStorage.removeItem('sb-' + (import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0] || '') + '-auth-token');
             localStorage.removeItem('supabase.auth.token');
+            localStorage.removeItem('last_active_subject');
             Object.keys(localStorage).forEach(k => {
                 if (k.startsWith('cached_profile_') || k.startsWith('sb-') || k.startsWith('supabase.')) localStorage.removeItem(k);
             });
@@ -419,6 +416,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updateActiveSubject = useCallback((subject: string) => {
         setActiveSubject(subject);
+        localStorage.setItem('last_active_subject', subject);
         if (userId) localStorage.setItem(`activeSubject_${userId}`, subject);
     }, [userId]);
 
@@ -482,8 +480,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [currentUser]);
 
     const contextValue = useMemo(() => ({
-        currentUser, userId, login, register, logout, updateProfile, resetPassword, updatePassword, loading, activeSubject, updateActiveSubject
-    }), [currentUser, userId, login, register, logout, updateProfile, loading, activeSubject, updateActiveSubject]);
+        currentUser, userId, login, register, logout, updateProfile, resetPassword, updatePassword, completeRegistration, loading, activeSubject, updateActiveSubject
+    }), [currentUser, userId, login, register, logout, updateProfile, resetPassword, updatePassword, completeRegistration, loading, activeSubject, updateActiveSubject]);
 
     if (loading) {
         return (
