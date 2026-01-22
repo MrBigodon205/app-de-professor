@@ -98,6 +98,7 @@ export interface Occurrence {
   date: string;
   userId: string;
   unit?: string;
+  student_name?: string;
 }
 
 export type Subject =

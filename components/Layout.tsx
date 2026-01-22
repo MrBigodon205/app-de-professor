@@ -226,7 +226,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       >
         <div className="flex flex-col h-full justify-between bg-white/40 dark:bg-black/20">
           <div className="lg:hidden landscape:hidden absolute top-4 right-4 z-50">
-            <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-slate-100 dark:bg-white/5 rounded-full text-slate-500 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white backdrop-blur-md transition-colors shadow-sm">
+            <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-slate-100 dark:bg-white/5 rounded-full text-slate-500 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white backdrop-blur-none transition-colors shadow-sm">
               <span className="material-symbols-outlined">close</span>
             </button>
           </div>
@@ -242,7 +242,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               )}
             </div>
 
-            <div className="lg:hidden landscape:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5 shrink-0 backdrop-blur-md shadow-sm">
+            <div className="lg:hidden landscape:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5 shrink-0 backdrop-blur-none shadow-sm">
               <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setIsProfileModalOpen(true); setIsMobileMenuOpen(false); }}>
                 <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden shrink-0 border-2 border-primary/50 shadow-neon">
                   {currentUser?.photoUrl ? (
@@ -263,7 +263,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
             <div className="lg:hidden landscape:hidden px-3 mb-2 shrink-0">
               <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block px-1 font-mono">Matéria Atual</label>
-              <div className="bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 overflow-hidden backdrop-blur-md shadow-sm">
+              <div className="bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 overflow-hidden backdrop-blur-none shadow-sm">
                 <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="w-full flex items-center justify-between p-3 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
                   <div className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-primary shadow-neon"></span>
@@ -323,7 +323,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
         <motion.header
           layout
-          className={`flex items-center justify-between mx-4 mt-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-md px-4 md:px-6 py-2 md:py-3 z-[40] shrink-0 gap-4 sticky top-4 shadow-lg shadow-black/5`}
+          className={`flex items-center justify-between mx-4 mt-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-none px-4 md:px-6 py-2 md:py-3 z-[40] shrink-0 gap-4 sticky top-4 shadow-lg shadow-black/5`}
         >
           {/* Centered Container for Landscape */}
           <div className="contents landscape:flex landscape:w-full landscape:max-w-5xl landscape:items-center landscape:justify-between landscape:mx-auto">
@@ -432,7 +432,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </motion.header>
 
         <div className="xl:hidden landscape:hidden px-3 pt-2.5 -mb-0.5 z-30">
-          <button onClick={() => setIsClassSelectorOpen(true)} className="w-full bg-white/90 dark:bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl border border-slate-200 dark:border-white/5 shadow-lg dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all landscape:p-1.5 landscape:rounded-xl">
+          <button onClick={() => setIsClassSelectorOpen(true)} className="w-full bg-white/90 dark:bg-slate-900/95 backdrop-blur-none p-2 rounded-2xl border border-slate-200 dark:border-white/5 shadow-lg dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all landscape:p-1.5 landscape:rounded-xl">
             <div className="flex items-center gap-2.5">
 
               {/* Dynamic Theme Icon instead of static logo */}
