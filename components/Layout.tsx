@@ -304,7 +304,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {!isProfileModalOpen && !isPasswordSetupOpen && !isClassSelectorOpen && (
         <button
           onClick={toggleSidebar}
-          className={`hidden lg:flex landscape:flex fixed z-[70] top-8 size-12 bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'}`}
+          className={`hidden lg:flex landscape:flex fixed z-[70] size-12 bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'} ${window.electronAPI?.isElectron ? 'top-14' : 'top-8'}`}
           title={isSidebarCollapsed ? "Expandir" : "Recolher"}
         >
           <span className={`material-symbols-outlined text-3xl font-bold transition-transform duration-150 ease-out ${isSidebarCollapsed ? '' : 'rotate-180'}`}>chevron_right</span>
@@ -325,7 +325,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
         <motion.header
           layout
-          className={`flex items-center justify-between mx-4 mt-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-none px-4 md:px-6 py-2 md:py-3 z-[40] shrink-0 gap-4 sticky top-4 shadow-lg shadow-black/5`}
+          className={`flex items-center justify-between mx-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-none px-4 md:px-6 py-2 md:py-3 z-[40] shrink-0 gap-4 sticky shadow-lg shadow-black/5 ${window.electronAPI?.isElectron ? 'top-12 mt-2' : 'top-4 mt-4'}`}
         >
           {/* Centered Container for Landscape */}
           <div className="contents landscape:flex landscape:w-full landscape:max-w-5xl landscape:items-center landscape:justify-between landscape:mx-auto">
