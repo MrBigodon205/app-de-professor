@@ -215,7 +215,7 @@ export const Login: React.FC = () => {
           </div>
 
           {/* Micro Footer for Brand */}
-          <div className="absolute bottom-10 text-center opacity-40 dark:opacity-30">
+          <div className="relative mt-8 lg:mt-0 lg:absolute lg:bottom-10 text-center opacity-40 dark:opacity-30">
             <p className="text-[10px] text-slate-500 uppercase tracking-widest">
               © 2026 PROF. ACERTA+ CORE
             </p>
