@@ -1167,11 +1167,11 @@ export const Planning: React.FC = () => {
                                     </div>
                                     <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 bg-gradient-to-t from-black/50 to-transparent">
                                         <div className="flex gap-2 mb-2">
-                                            <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-[10px] md:text-xs font-bold border border-white/20 hover:bg-white/30 transition-all">
+                                            <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-none text-white text-[10px] md:text-xs font-bold border border-white/20 hover:bg-white/30 transition-all">
                                                 {activeSeries?.name}
                                             </span>
                                             {currentPlan.section && (
-                                                <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-[10px] md:text-xs font-bold border border-white/20 hover:bg-white/30 transition-all">
+                                                <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-none text-white text-[10px] md:text-xs font-bold border border-white/20 hover:bg-white/30 transition-all">
                                                     Turma {currentPlan.section}
                                                 </span>
                                             )}
@@ -1186,7 +1186,7 @@ export const Planning: React.FC = () => {
                                     <div className="absolute top-6 left-6 lg:hidden">
                                         <button
                                             onClick={() => { setSelectedPlanId(null); setIsEditing(false); setShowForm(false); }}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg"
+                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-none border border-white/20 transition-all shadow-lg"
                                             title="Voltar para Lista"
                                         >
                                             <span className="material-symbols-outlined">arrow_back</span>
@@ -1195,35 +1195,35 @@ export const Planning: React.FC = () => {
                                     <div className="absolute top-6 right-6 flex gap-2">
                                         <button
                                             onClick={handleExportPDF}
-                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
+                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-none border border-white/20 transition-all shadow-lg flex items-center justify-center"
                                             title="Baixar PDF"
                                         >
                                             <span className="material-symbols-outlined landscape:text-2xl">picture_as_pdf</span>
                                         </button>
                                         <button
                                             onClick={handleExportWord}
-                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
+                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-none border border-white/20 transition-all shadow-lg flex items-center justify-center"
                                             title="Baixar Word"
                                         >
                                             <span className="material-symbols-outlined landscape:text-2xl">description</span>
                                         </button>
                                         <button
                                             onClick={() => currentPlan && handleClone(currentPlan)}
-                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
+                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/40 text-white rounded-xl backdrop-blur-none border border-white/20 transition-all shadow-lg flex items-center justify-center"
                                             title="Clonar Aula"
                                         >
                                             <span className="material-symbols-outlined landscape:text-2xl">content_copy</span>
                                         </button>
                                         <button
                                             onClick={() => { setIsEditing(true); setShowForm(true); }}
-                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
+                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-none border border-white/20 transition-all shadow-lg flex items-center justify-center"
                                             title="Editar Aula"
                                         >
                                             <span className="material-symbols-outlined landscape:text-2xl">edit</span>
                                         </button>
                                         <button
                                             onClick={handleDelete}
-                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center"
+                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-none border border-white/20 transition-all shadow-lg flex items-center justify-center"
                                             title="Excluir Aula"
                                         >
                                             <span className="material-symbols-outlined text-red-200 landscape:text-2xl text-lg">delete</span>

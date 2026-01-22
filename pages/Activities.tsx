@@ -945,7 +945,7 @@ export const Activities: React.FC = () => {
                                     onClick={() => isSelectionMode ? toggleSelection(act.id) : handleSelectActivity(act)}
                                     className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${isSelectionMode
                                         ? (selectedIds.includes(act.id) ? 'bg-indigo-50 border-indigo-500 dark:bg-indigo-900/20 dark:border-indigo-500' : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800')
-                                        : (selectedActivityId === act.id ? `bg-white/60 dark:bg-surface-dark/60 backdrop-blur-md shadow-lg ring-1` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600')
+                                        : (selectedActivityId === act.id ? `bg-white dark:bg-surface-dark shadow-lg ring-1` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600')
                                         }`}
                                     style={!isSelectionMode && selectedActivityId === act.id ? { borderColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}1a`, '--tw-ring-color': theme.primaryColorHex } as React.CSSProperties : {}}
                                 >

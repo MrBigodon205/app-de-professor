@@ -519,8 +519,15 @@ export const Dashboard: React.FC = () => {
               ></div>
 
               {/* Pulse Orbs */}
-              <div className="absolute top-0 right-0 p-32 rounded-full blur-[100px] -mr-20 -mt-20 mix-blend-screen pointer-events-none animate-pulse-slow" style={{ backgroundColor: `${theme.accentColor}33` }}></div>
-              <div className="absolute bottom-0 left-0 p-32 rounded-full blur-[100px] -ml-20 -mb-20 mix-blend-screen pointer-events-none" style={{ backgroundColor: `${theme.secondaryColorHex}33` }}></div>
+              {/* Pulse Orbs - OPTIMIZED: Using radial-gradient instead of heavy blur filter */}
+              <div
+                className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] rounded-full opacity-30 pointer-events-none animate-pulse-slow"
+                style={{ background: `radial-gradient(circle, ${theme.accentColor}33 0%, transparent 70%)` }}
+              ></div>
+              <div
+                className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] rounded-full opacity-30 pointer-events-none"
+                style={{ background: `radial-gradient(circle, ${theme.secondaryColorHex}33 0%, transparent 70%)` }}
+              ></div>
 
               {/* Decorative Theme Watermark */}
               <div className="absolute top-6 right-6 z-10 opacity-10">
@@ -530,7 +537,7 @@ export const Dashboard: React.FC = () => {
               <div className="relative z-10 w-full flex flex-col gap-6">
                 {/* Header Badge */}
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/20 border border-white/10 backdrop-blur-md shadow-inner">
+                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/40 border border-white/10 shadow-inner">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-white"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
@@ -554,7 +561,7 @@ export const Dashboard: React.FC = () => {
 
                 <div className="flex flex-col gap-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Roteiro do Planejamento</span>
-                  <div className="max-w-3xl bg-black/20 backdrop-blur-md border border-white/20 p-4 rounded-xl">
+                  <div className="max-w-3xl bg-black/40 border border-white/20 p-4 rounded-xl">
                     <p className="text-white text-sm md:text-base font-medium leading-relaxed font-body line-clamp-2 mix-blend-plus-lighter">
                       "{todaysPlan.description.replace(/<[^>]*>/g, '')}"
                     </p>
@@ -605,7 +612,8 @@ export const Dashboard: React.FC = () => {
       <motion.div variants={itemVariants} className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-500 to-purple-600 p-[1px] shadow-lg shadow-indigo-500/20 group">
         <div className="relative bg-white dark:bg-slate-900 rounded-[23px] p-6 flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden">
           {/* Background decoration */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+          {/* Background decoration - OPTIMIZED */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2" style={{ background: 'radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%)' }}></div>
 
           <div className="flex items-center gap-6 relative z-10">
             <div className="size-16 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm shrink-0">
@@ -640,13 +648,14 @@ export const Dashboard: React.FC = () => {
         {/* Total Students (Large Card) */}
         <motion.div variants={itemVariants} className="col-span-1 landscape:col-span-2 md:col-span-2 xl:col-span-2 glass-card-premium p-8 relative overflow-hidden group transition-all duration-500 flex flex-col justify-between h-auto min-h-[380px] md:min-h-[260px] border-white/20">
           {/* Ambient Glows */}
+          {/* Ambient Glows - OPTIMIZED */}
           <div
-            className="absolute -top-20 -right-20 p-40 rounded-full blur-[80px] opacity-10 group-hover:opacity-20 transition-opacity duration-700"
-            style={{ backgroundColor: theme.primaryColorHex }}
+            className="absolute -top-20 -right-20 w-[400px] h-[400px] opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none"
+            style={{ background: `radial-gradient(circle, ${theme.primaryColorHex} 0%, transparent 70%)` }}
           ></div>
           <div
-            className="absolute -bottom-20 -left-20 p-40 rounded-full blur-[80px] opacity-10 group-hover:opacity-20 transition-opacity duration-700"
-            style={{ backgroundColor: theme.secondaryColorHex }}
+            className="absolute -bottom-20 -left-20 w-[400px] h-[400px] opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none"
+            style={{ background: `radial-gradient(circle, ${theme.secondaryColorHex} 0%, transparent 70%)` }}
           ></div>
 
           <div className="relative flex flex-col md:flex-row items-start justify-between h-full gap-6 md:gap-0">
@@ -669,7 +678,7 @@ export const Dashboard: React.FC = () => {
 
             <div className="flex-1 w-full md:w-auto flex flex-col items-end h-full justify-between">
               <span
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border mb-6 backdrop-blur-sm"
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border mb-6"
                 style={{
                   color: theme.primaryColorHex,
                   backgroundColor: `${theme.primaryColorHex}15`,
@@ -733,7 +742,8 @@ export const Dashboard: React.FC = () => {
             )}
           </div>
           {/* Bg decoration */}
-          <div className="absolute -bottom-10 -right-10 size-32 rounded-full blur-[40px] opacity-10 group-hover:opacity-20 transition-colors" style={{ backgroundColor: theme.secondaryColorHex }}></div>
+          {/* Bg decoration - OPTIMIZED */}
+          <div className="absolute -bottom-10 -right-10 size-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none" style={{ background: `radial-gradient(circle, ${theme.secondaryColorHex} 0%, transparent 70%)` }}></div>
         </MotionLink>
 
         {/* Attendance (Small Card) */}
@@ -769,7 +779,8 @@ export const Dashboard: React.FC = () => {
             )}
           </div>
           {/* Bg decoration */}
-          <div className="absolute -bottom-10 -right-10 size-32 rounded-full blur-[40px] opacity-10 group-hover:opacity-20 transition-colors" style={{ backgroundColor: theme.primaryColorHex }}></div>
+          {/* Bg decoration - OPTIMIZED */}
+          <div className="absolute -bottom-10 -right-10 size-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none" style={{ background: `radial-gradient(circle, ${theme.primaryColorHex} 0%, transparent 70%)` }}></div>
         </MotionLink>
 
         {/* Activities and Plans (Wide Card) */}
