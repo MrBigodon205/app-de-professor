@@ -1,4 +1,4 @@
-import React from 'react';
+import logoSrc from '../assets/logo.svg';
 
 declare global {
     interface Window {
@@ -12,7 +12,9 @@ declare global {
 }
 
 export const DesktopTitleBar: React.FC = () => {
-    const isElectron = !!window.electronAPI?.isElectron;
+    // Robust check for Electron
+    const isElectron = !!window.electronAPI?.isElectron ||
+        (typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().includes('electron'));
 
     if (!isElectron) return null;
 
@@ -27,7 +29,7 @@ export const DesktopTitleBar: React.FC = () => {
             onDoubleClick={handleDoubleClick}
         >
             <div className="flex items-center gap-3">
-                <img src="/logo.png" alt="Logo" className="size-5 object-contain" />
+                <img src={logoSrc} alt="Logo" className="size-6 object-contain" />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80 font-mono">
                     Prof. Acerta+ <span className="text-primary-hover">Core 3.1</span>
                 </span>
@@ -39,21 +41,21 @@ export const DesktopTitleBar: React.FC = () => {
                     className="h-full px-4 hover:bg-white/10 text-white/80 hover:text-white transition-colors"
                     title="Minimizar"
                 >
-                    <span className="material-symbols-outlined text-[18px]">minimize</span>
+                    <span className="material-symbols-outlined text-[18px] opacity-70">minimize</span>
                 </button>
                 <button
                     onClick={() => window.electronAPI?.maximize()}
                     className="h-full px-4 hover:bg-white/10 text-white/80 hover:text-white transition-colors"
                     title="Maximizar/Restaurar"
                 >
-                    <span className="material-symbols-outlined text-[18px]">crop_square</span>
+                    <span className="material-symbols-outlined text-[18px] opacity-70">crop_square</span>
                 </button>
                 <button
                     onClick={() => window.electronAPI?.close()}
                     className="h-full px-4 hover:bg-red-500 text-white/80 hover:text-white transition-colors"
                     title="Fechar"
                 >
-                    <span className="material-symbols-outlined text-[18px]">close</span>
+                    <span className="material-symbols-outlined text-[18px] opacity-70">close</span>
                 </button>
             </div>
         </div>

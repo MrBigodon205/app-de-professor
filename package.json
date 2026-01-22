@@ -26,6 +26,8 @@
     "files": [
       "dist/**/*",
       "electron-main.cjs",
+      "preload.cjs",
+      "assets/**/*",
       "public/logo.png"
     ],
     "electronVersion": "33.0.0",
