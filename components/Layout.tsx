@@ -239,7 +239,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               {!isSidebarCollapsed && (
                 <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500 min-w-0">
                   <h1 className="text-slate-800 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:to-white/70 text-2xl font-black leading-none tracking-tight truncate filter drop-shadow-sm">Prof. Acerta<span className="text-primary">+</span></h1>
-                  <p className="text-primary-hover text-[10px] font-mono font-bold uppercase tracking-[0.2em] mt-1 truncate ml-0.5">Gestão 3.0</p>
+                  <p className="text-primary-hover text-[10px] font-mono font-bold uppercase tracking-[0.2em] mt-1 truncate ml-0.5">Gestão 3.1</p>
                 </div>
               )}
             </div>
