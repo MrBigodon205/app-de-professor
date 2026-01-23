@@ -187,9 +187,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (mounted && !hasAuthHash) {
                     setLoading(false);
                 } else if (hasAuthHash) {
+                    // Reduce timeout from 5s to 1.5s for faster Google Login feedback
                     setTimeout(() => {
                         if (mounted) setLoading(false);
-                    }, 5000);
+                    }, 1500);
                 }
             }
         };
@@ -246,6 +247,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         if (k.startsWith('cached_profile_')) localStorage.removeItem(k);
                     });
                     setLoading(false);
+                    // Force redirect if not already on login
+                    if (!window.location.hash.includes('/login')) {
+                        window.location.hash = '/login';
+                    }
                 }
             }
         });
@@ -397,8 +402,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (k.startsWith('cached_profile_') || k.startsWith('sb-') || k.startsWith('supabase.')) localStorage.removeItem(k);
             });
             sessionStorage.clear();
-            // Core Fix: Use hash for HashRouter in Electron to avoid blue screen
-            window.location.hash = '/login';
+            // Core Fix: Hard reload to clear all state and go to login
+            window.location.href = window.location.origin + window.location.pathname + '#/login';
+            window.location.reload();
         }
     }, []);
 
