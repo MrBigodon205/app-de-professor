@@ -26,8 +26,7 @@ if not exist "%~dp0mobile-app" (
     exit
 )
 
-cd mobile-app
-
+:: O script ja esta no diretorio raiz. Removida a mudanca para mobile-app.
 echo [1/2] Compilando versao Web para Mobile...
 echo Isso garante que as ultimas mudancas aparecam no celular.
 echo.

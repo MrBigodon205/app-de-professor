@@ -1,13 +1,18 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 
+// ⚠️ MODO ESPELHO (WEBVIEW)
+// Coloque o link do seu site aqui (ex: 'https://seu-site.vercel.app')
+// Se deixar como null, o app continuará carregando os arquivos locais do PC.
+const WEB_APP_URL = null;
+
 function createWindow() {
     const win = new BrowserWindow({
         width: 1360,
         height: 900,
-        backgroundColor: '#0f172a', // Dark slate background to avoid white flashes
+        backgroundColor: '#0f172a',
         show: false,
-        frame: false, // Frameless for premium look
+        frame: false,
         titleBarStyle: 'hidden',
         webPreferences: {
             nodeIntegration: false,
@@ -19,8 +24,13 @@ function createWindow() {
         title: "Prof. Acerta+"
     });
 
-    // Load the production build
-    win.loadFile(path.join(__dirname, 'dist/index.html'));
+    if (WEB_APP_URL) {
+        // Carrega o site diretamente (Modo Espelho)
+        win.loadURL(WEB_APP_URL);
+    } else {
+        // Carrega os arquivos locais gerados (Modo Offline/Tradicional)
+        win.loadFile(path.join(__dirname, 'dist/index.html'));
+    }
 
     // Handle external links to open in system browser
     win.webContents.setWindowOpenHandler(({ url }) => {

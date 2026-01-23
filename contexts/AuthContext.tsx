@@ -143,24 +143,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (error) console.error("Session init error:", error);
 
                 if (!session) {
-                    try {
-                        const supabaseUrl = (supabase as any).supabaseUrl;
-                        const projectRef = supabaseUrl.split('//')[1].split('.')[0];
-                        const storageKey = `sb-${projectRef}-auth-token`;
-                        const raw = localStorage.getItem(storageKey) || localStorage.getItem('supabase.auth.token');
-                        if (raw) {
-                            const parsed = JSON.parse(raw);
-                            if (parsed.user && (parsed.access_token || parsed.currentSession?.access_token)) {
-                                session = parsed.currentSession || parsed;
-                                // Recover SDK session state
-                                await supabase.auth.setSession({
-                                    access_token: session.access_token,
-                                    refresh_token: session.refresh_token || ""
+                    // Try to detect session in Hash (typical for Google Login redirects)
+                    if (window.location.hash && window.location.hash.includes('access_token=')) {
+                        try {
+                            const hash = window.location.hash.substring(1);
+                            const params = new URLSearchParams(hash);
+                            const accessToken = params.get('access_token');
+                            const refreshToken = params.get('refresh_token');
+                            if (accessToken) {
+                                const { data: { session: newSession }, error: setErr } = await supabase.auth.setSession({
+                                    access_token: accessToken,
+                                    refresh_token: refreshToken || ""
                                 });
+                                if (newSession) session = newSession;
                             }
+                        } catch (e) { console.warn("Erro ao extrair session do hash:", e); }
+                    }
+
+                    if (!session) {
+                        try {
+                            const supabaseUrl = (supabase as any).supabaseUrl;
+                            const projectRef = supabaseUrl.split('//')[1].split('.')[0];
+                            const storageKey = `sb-${projectRef}-auth-token`;
+                            const raw = localStorage.getItem(storageKey) || localStorage.getItem('supabase.auth.token');
+                            if (raw) {
+                                const parsed = JSON.parse(raw);
+                                if (parsed.user && (parsed.access_token || parsed.currentSession?.access_token)) {
+                                    session = parsed.currentSession || parsed;
+                                    await supabase.auth.setSession({
+                                        access_token: session.access_token,
+                                        refresh_token: session.refresh_token || ""
+                                    });
+                                }
+                            }
+                        } catch (e) {
+                            console.warn("Erro ao ler fallback session:", e);
                         }
-                    } catch (e) {
-                        console.warn("Erro ao ler fallback session:", e);
                     }
                 }
 
@@ -235,6 +253,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     }
                     fetchProfile(session.user.id, session.user);
                     initialLoadDone = true;
+                    // Resolve loading fast if we have a user
+                    setLoading(false);
                 }
 
                 if (event === 'PASSWORD_RECOVERY') window.location.hash = '/reset-password';
