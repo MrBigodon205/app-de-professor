@@ -90,13 +90,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const initSession = async () => {
             try {
-                // Get session from Supabase SDK (handles storage automatically)
-                const { data: { session }, error } = await supabase.auth.getSession();
+                // Safety timeout: If Supabase takes > 3s, we force finish to allow offline mode or login
+                const timeoutDetails = new Promise<{ timeout: true }>(resolve => setTimeout(() => resolve({ timeout: true }), 3000));
 
-                if (session?.user) {
-                    if (mounted) {
-                        setUserId(session.user.id);
-                        await fetchProfile(session.user.id, session.user);
+                // Get session from Supabase SDK (handles storage automatically)
+                // We race against the timeout
+                const result = await Promise.race([
+                    supabase.auth.getSession(),
+                    timeoutDetails
+                ]);
+
+                if ('timeout' in result) {
+                    console.warn("Auth session check timed out - forcing offline/login flow");
+                    // We could try to recover session from local storage manually if needed, 
+                    // but usually getSession is fast. If it timed out, something is stuck.
+                    // We just proceed to finally block to remove spinner.
+                } else {
+                    const { data: { session }, error } = result;
+
+                    if (session?.user) {
+                        if (mounted) {
+                            setUserId(session.user.id);
+                            // Also race fetchProfile so it doesn't hang
+                            const profilePromise = fetchProfile(session.user.id, session.user);
+                            await Promise.race([profilePromise, timeoutDetails]);
+                        }
                     }
                 }
             } catch (err) {
