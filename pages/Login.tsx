@@ -130,11 +130,7 @@ export const Login: React.FC = () => {
             transition={{ delay: 0.2 }}
             className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center mb-8 text-primary shadow-xl shadow-primary/10"
           >
-            <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M16 2L4 8L16 14L28 8L16 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M4 14L16 20L28 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M4 20L16 26L28 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <img src="/logo_transparent.png" alt="Logo Prof. Acerta+" className="w-16 h-16 object-contain" />
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -166,11 +162,7 @@ export const Login: React.FC = () => {
           <div className="text-center mb-8 lg:mb-10">
             <div className="lg:hidden w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-primary">
               {/* Mobile Logo Icon */}
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16 2L4 8L16 14L28 8L16 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M4 14L16 20L28 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M4 20L16 26L28 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <img src="/logo_transparent.png" alt="Logo Prof. Acerta+" className="w-10 h-10 object-contain" />
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
               {activeTab === 'login' ? 'Bem-vindo de volta!' : 'Crie sua conta'}
