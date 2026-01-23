@@ -130,7 +130,7 @@ export const Login: React.FC = () => {
             transition={{ delay: 0.2 }}
             className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center mb-8 text-primary shadow-xl shadow-primary/10"
           >
-            <img src="/logo_transparent.png" alt="Logo Prof. Acerta+" className="w-16 h-16 object-contain" />
+            <img src="/logo.png" alt="Logo Prof. Acerta+" className="w-16 h-16 object-contain" />
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -162,7 +162,7 @@ export const Login: React.FC = () => {
           <div className="text-center mb-8 lg:mb-10">
             <div className="lg:hidden w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-primary">
               {/* Mobile Logo Icon */}
-              <img src="/logo_transparent.png" alt="Logo Prof. Acerta+" className="w-10 h-10 object-contain" />
+              <img src="/logo.png" alt="Logo Prof. Acerta+" className="w-10 h-10 object-contain" />
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
               {activeTab === 'login' ? 'Bem-vindo de volta!' : 'Crie sua conta'}
