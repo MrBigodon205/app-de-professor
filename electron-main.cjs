@@ -4,7 +4,7 @@ const path = require('path');
 // ⚠️ MODO ESPELHO (WEBVIEW)
 // Coloque o link do seu site aqui (ex: 'https://seu-site.vercel.app')
 // Se deixar como null, o app continuará carregando os arquivos locais do PC.
-const WEB_APP_URL = null;
+const WEB_APP_URL = 'https://www.profacerta.com.br';
 
 function createWindow() {
     const win = new BrowserWindow({

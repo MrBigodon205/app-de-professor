@@ -85,9 +85,7 @@ export const Login: React.FC = () => {
         options: {
           // If we're on a local Capacitor build, origin will be 'http://localhost'
           // We must ensure the redirectTo is a valid web URL for Google to return to.
-          redirectTo: window.location.origin.includes('localhost')
-            ? 'https://app-de-professor.vercel.app/'
-            : `${window.location.origin}/`,
+          redirectTo: 'https://www.profacerta.com.br/',
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
