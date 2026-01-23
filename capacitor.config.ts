@@ -10,7 +10,12 @@ const config: CapacitorConfig = {
     // Se quiser que o app ja abra direto no seu site (igual ao PC),
     // descomente a linha abaixo e coloque o link do seu site:
     url: 'https://www.profacerta.com.br',
-    cleartext: true
+    cleartext: true,
+    allowNavigation: [
+      'www.profacerta.com.br',
+      '*.supabase.co',
+      'accounts.google.com'
+    ]
   }
 };
 
