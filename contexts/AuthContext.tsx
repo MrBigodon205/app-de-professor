@@ -504,7 +504,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     try { setCurrentUser(JSON.parse(cached)); } catch (e) { }
                 }
                 supabase.auth.updateUser({ data: { is_password_set: true } });
-                fetchProfile(authResult.user.id, authResult.user);
+                await fetchProfile(authResult.user.id, authResult.user);
+                // Explicitly set loading to false to trigger ProtectedRoute
+                setLoading(false);
                 return { success: true };
             }
             return { success: false, error: 'Erro ao autenticar.' };
