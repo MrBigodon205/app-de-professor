@@ -4,6 +4,7 @@ import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
+import { useSync } from '../hooks/useSync';
 import { ProfileModal } from './ProfileModal';
 import { PasswordSetupModal } from './PasswordSetupModal';
 
@@ -22,6 +23,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const theme = useTheme();
   const { classes, activeSeries, selectedSeriesId, selectedSection, selectSeries, selectSection, removeClass: deleteSeries, addClass: addSeries, removeSection, addSection } = useClass();
   const location = useLocation();
+
+  // 🔄 BACKGROUND SYNC: Active whenever Layout is mounted (Logged In)
+  // This ensures that if the user logs in with pending data, it syncs immediately.
+  const { isSyncing, pendingCount } = useSync();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
@@ -339,6 +344,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 <img src="/logo.svg" alt="Acerta+" className="size-8 object-contain drop-shadow-md" />
                 <span className="font-bold text-slate-800 dark:text-white text-xs landscape:hidden">Prof. Acerta+</span>
               </div>
+
+              {/* ☁️ SYNC STATUS INDICATOR ☁️ */}
+              {(pendingCount > 0 || isSyncing) && (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-widest animate-pulse">
+                  <span className={`material-symbols-outlined text-sm ${isSyncing ? 'animate-spin' : ''}`}>{isSyncing ? 'sync' : 'cloud_upload'}</span>
+                  <span className="hidden sm:inline">{isSyncing ? 'ENVIANDO...' : `${pendingCount} PENDENTE(S)`}</span>
+                </div>
+              )}
 
               <div className={`hidden md:block landscape:block transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ml-4`}>
                 <button onClick={() => setIsClassSelectorOpen(true)} className="flex items-center gap-3 pl-2 pr-5 py-2 rounded-xl bg-white/50 dark:bg-black/20 hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 group border border-white/20 dark:border-white/5 hover:border-primary/30 shadow-sm hover:shadow-neon active:scale-95 backdrop-blur-sm" title="Gerenciar Turmas">

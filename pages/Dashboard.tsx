@@ -6,6 +6,7 @@ import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../contexts/AuthContext';
 import { Student, AttendanceRecord, Occurrence, Activity } from '../types';
 import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { DashboardHeader } from '../components/DashboardHeader';
@@ -238,10 +239,7 @@ export const Dashboard: React.FC = () => {
       const { data, error } = await query;
       if (error) throw error;
 
-      // For the recent list, we take the top 5
-      const recentData = (data || []).slice(0, 5);
-
-      setRecentOccurrences((data || []).map(o => ({
+      const formatted = (data || []).slice(0, 5).map(o => ({
         id: o.id.toString(),
         studentId: o.student_id.toString(),
         student_name: (o.student as any)?.name || 'Estudante',
@@ -250,11 +248,52 @@ export const Dashboard: React.FC = () => {
         description: o.description,
         unit: o.unit,
         userId: o.user_id
-      })));
+      }));
 
+      // [CACHE] Save to local DB
+      try {
+        await db.occurrences.bulkPut((data || []).map(o => ({
+          ...o,
+          id: o.id,
+          studentId: o.student_id, // Map for local schema
+          user_id: o.user_id,
+          syncStatus: 'synced'
+        } as any)));
+      } catch (err) { console.warn("Cache occurrences failed", err) }
+
+      setRecentOccurrences(formatted);
       setStats(prev => ({ ...prev, newObservations: (data || []).length }));
+
     } catch (e) {
-      console.error("Error fetching occurrences:", e);
+      console.error("Error fetching occurrences (online):", e);
+      // [OFFLINE] Fallback
+      try {
+        const cached = await db.occurrences
+          .where('user_id').equals(currentUser.id)
+          .reverse() // Sort by ID/Created desc usually
+          .limit(20) // Get some recent ones
+          .toArray();
+
+        const filtered = cached.filter((o: any) => {
+          // Basic filtering if needed, e.g. date
+          return o.date === new Date().toLocaleDateString('sv-SE');
+        });
+
+        const mapped = filtered.slice(0, 5).map((o: any) => ({
+          id: o.id.toString(),
+          studentId: o.studentId?.toString() || o.student_id?.toString(),
+          student_name: 'Estudante', // We might not have join data handy without complex query
+          date: o.date,
+          type: o.type,
+          description: o.description,
+          unit: o.unit,
+          userId: o.user_id
+        }));
+        setRecentOccurrences(mapped);
+        setStats(prev => ({ ...prev, newObservations: filtered.length }));
+      } catch (dbErr) {
+        console.error("Offline occurrences failed", dbErr);
+      }
     } finally {
       if (!silent) setLoadingOccurrences(false);
     }
@@ -310,8 +349,42 @@ export const Dashboard: React.FC = () => {
       setTodaysPlan(activePlan || null);
       // Show up to 10 most recent plans
       setClassPlans(formatted.slice(0, 10));
+
+      // [CACHE]
+      try {
+        await db.plans.bulkPut(formatted.map(p => ({
+          ...p,
+          // Flatten for storage if needed, or keep structure
+          start_date: p.startDate,
+          end_date: p.endDate,
+          series_id: p.seriesId
+        })));
+      } catch (e) { console.warn("Cache plans failed", e); }
+
     } catch (e) {
-      console.error("Error fetching plans:", e);
+      console.error("Error fetching plans (online):", e);
+      // [OFFLINE]
+      try {
+        const cached = await db.plans.where('user_id').equals(currentUser.id).toArray();
+        const today = new Date().toLocaleDateString('sv-SE');
+
+        const active = cached.find((p: any) => today >= p.start_date && today <= p.end_date);
+
+        setTodaysPlan(active ? {
+          ...active,
+          startDate: active.start_date,
+          endDate: active.end_date,
+          seriesId: active.series_id
+        } : null);
+
+        setClassPlans(cached.slice(0, 10).map((p: any) => ({
+          ...p,
+          startDate: p.start_date,
+          endDate: p.end_date,
+          seriesId: p.series_id
+        })));
+
+      } catch (dbErr) { console.error("Offline plans failed", dbErr); }
     } finally {
       if (!silent) setLoadingPlans(false);
     }
@@ -350,22 +423,30 @@ export const Dashboard: React.FC = () => {
       // Show up to 50 items (effectively "all" for the dashboard widget)
       const { data } = await query.limit(50);
 
-      setUpcomingActivities((data || []).map(a => ({
-        id: a.id.toString(),
-        title: a.title,
-        type: a.type,
-        seriesId: a.series_id.toString(),
-        section: a.section || '',
-        date: a.date,
-        startDate: a.start_date,
-        endDate: a.end_date,
-        description: a.description,
-        files: a.files || [],
-        completions: a.completions || [],
-        userId: a.user_id
-      })));
+      setUpcomingActivities(formattedActivities);
+
+      // [CACHE]
+      try {
+        await db.activities.bulkPut(formattedActivities.map(a => ({
+          ...a,
+          series_id: a.seriesId,
+          start_date: a.startDate,
+          end_date: a.endDate
+        })));
+      } catch (e) { console.warn("Cache activities failed", e); }
+
     } catch (e) {
-      console.error("Error fetching activities:", e);
+      console.error("Error fetching activities (online):", e);
+      // [OFFLINE]
+      try {
+        const cached = await db.activities.where('user_id').equals(currentUser.id).toArray();
+        const today = new Date().toLocaleDateString('sv-SE');
+        // Simple filter mimicking the online query
+        const relevant = cached.filter((a: any) => {
+          return a.date >= today || (a.start_date <= today && a.end_date >= today);
+        });
+        setUpcomingActivities(relevant.slice(0, 50));
+      } catch (dbErr) { console.error("Offline activities failed", dbErr); }
     } finally {
       if (!silent) setLoadingActivities(false);
     }

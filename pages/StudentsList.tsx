@@ -108,6 +108,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
         if (!currentUser) return;
         setLoading(true);
         try {
+            // 1. Try Online Fetch
             const { data, error } = await supabase
                 .from('students')
                 .select('*')
@@ -131,8 +132,50 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
             formatted.sort((a, b) => parseInt(a.number) - parseInt(b.number));
             setStudents(formatted);
+
+            // [OFFLINE] Cache to Dexie
+            try {
+                // Clear old cache for this section to avoid dupes? 
+                // Better: Bulk Put (Upsert). 
+                // To properly "Sync", we might need to remove students that were deleted remotely?
+                // For now, simple caching:
+                // We map formatted to LocalStudent format (needs series_id as number or string? DB schema says series_id)
+                const toCache = formatted.map(s => ({
+                    ...s,
+                    // Map keys for Dexie Indexing (as defined in db.ts)
+                    series_id: s.classId,
+                    user_id: s.userId,
+                    syncStatus: 'synced'
+                }));
+                await db.students.bulkPut(toCache as any);
+            } catch (e) {
+                console.warn("Cache students failed", e);
+            }
+
         } catch (error) {
-            console.error('Error fetching students:', error);
+            console.error('Error fetching students (Online):', error);
+            // [OFFLINE] Fallback
+            try {
+                const cached = await db.students
+                    .where({ series_id: selectedSeriesId, section: selectedSection })
+                    .filter((s: any) => s.user_id === currentUser.id) // Extra safety
+                    .toArray();
+
+                if (cached.length > 0) {
+                    console.log("Loaded students from offline cache");
+                    // Map back to Student interface if needed (cached is likely compatible)
+                    const formatted = cached.map(s => ({
+                        ...s,
+                        classId: (s as any).series_id?.toString() || selectedSeriesId,
+                        // Ensure required fields
+                    })) as Student[];
+
+                    formatted.sort((a, b) => parseInt(a.number) - parseInt(b.number));
+                    setStudents(formatted);
+                }
+            } catch (dbErr) {
+                console.error("Offline students fetch failed", dbErr);
+            }
         } finally {
             setLoading(false);
         }
@@ -146,15 +189,30 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
     const saveEdit = async () => {
         if (!editingId) return;
         try {
+            // Optimistic Update
+            setStudents(students.map(s => s.id === editingId ? { ...s, name: editName } : s));
+            setEditingId(null);
+
+            // Offline Write
+            try {
+                await db.students.update(editingId, { name: editName, syncStatus: 'pending' });
+                // Queue Sync
+                await db.syncQueue.add({
+                    table: 'students',
+                    action: 'UPDATE',
+                    payload: { id: editingId, name: editName },
+                    status: 'pending',
+                    createdAt: Date.now(),
+                    retryCount: 0
+                });
+            } catch (e) { console.warn("Offline edit failed", e); }
+
             const { error } = await supabase
                 .from('students')
                 .update({ name: editName })
                 .eq('id', editingId);
 
             if (error) throw error;
-
-            setStudents(students.map(s => s.id === editingId ? { ...s, name: editName } : s));
-            setEditingId(null);
         } catch (error) {
             console.error('Error updating student:', error);
         }
@@ -163,14 +221,28 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
     const handleDelete = async (id: string) => {
         if (!confirm('Tem certeza que deseja remover este aluno?')) return;
         try {
+            // Optimistic
+            setStudents(students.filter(s => s.id !== id));
+
+            // Offline delete
+            try {
+                await db.students.delete(id);
+                await db.syncQueue.add({
+                    table: 'students',
+                    action: 'DELETE',
+                    payload: { id },
+                    status: 'pending',
+                    createdAt: Date.now(),
+                    retryCount: 0
+                });
+            } catch (e) { console.warn("Offline delete failed", e); }
+
             const { error } = await supabase
                 .from('students')
                 .delete()
                 .eq('id', id);
 
             if (error) throw error;
-
-            setStudents(students.filter(s => s.id !== id));
         } catch (error) {
             console.error('Error deleting student:', error);
         }
@@ -191,6 +263,15 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
         // FIX: Use random unique matricula instead of sequential number
         const newNumber = generateMatricula();
 
+        // Common ID for offline/online (using timestamp or random if offline, but supabase returns ID)
+        // If offline, we generate a temp ID.
+        // But 'id' in DB is often INT. In our case it looks like BIGINT?
+        // If we use random number for ID, it might collide or be weird.
+        // Best practice: Use UUIDs or negative numbers for temp IDs?
+        // Since Supabase returns ID, we need to handle "Pending ID".
+        // Let's use a large random number string for offline ID.
+        const tempId = Date.now().toString();
+
         const newStudentData = {
             name: newStudentName,
             number: newNumber,
@@ -202,7 +283,37 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             user_id: currentUser.id
         };
 
+        const optimisticStudent: Student = {
+            id: tempId, // Temporary ID
+            ...newStudentData,
+            classId: selectedSeriesId,
+            userId: currentUser.id // Explicitly add userId (camelCase) required by Student interface
+        };
+
         try {
+            setStudents([...students, optimisticStudent]);
+            setNewStudentName('');
+            setIsAdding(false);
+
+            // Offline Save FIRST (or Parallel)
+            try {
+                await db.students.add({
+                    ...optimisticStudent,
+                    id: tempId as any, // Dexie might complain if schema says number? Schema says 'id'.
+                    syncStatus: 'pending'
+                } as any);
+
+                await db.syncQueue.add({
+                    table: 'students',
+                    action: 'INSERT',
+                    payload: newStudentData, // Payload without ID so Supabase gens it? Or with temp ID?
+                    // Ideally we let Supabase gen ID.
+                    status: 'pending',
+                    createdAt: Date.now(),
+                    retryCount: 0
+                });
+            } catch (e) { console.warn("Offline add failed", e); }
+
             const { data, error } = await supabase
                 .from('students')
                 .insert(newStudentData)
@@ -211,33 +322,24 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
             if (error) throw error;
 
-            const saved: Student = {
-                id: data.id.toString(),
-                name: data.name,
-                number: data.number,
-                initials: data.initials,
-                color: data.color,
-                classId: data.series_id.toString(),
-                section: data.section,
-                userId: data.user_id,
-                units: data.units || {}
-            };
+            // Update with Real ID
+            const realId = data.id.toString();
+            setStudents(prev => prev.map(s => s.id === tempId ? { ...s, id: realId } : s));
 
-            setStudents([...students, saved]);
-            setNewStudentName('');
-            setIsAdding(false);
+            // Clean up old temp ID from Dexie and put new one?
+            // Yes, swap temp for real in Dexie
+            try {
+                await db.students.delete(tempId as any);
+                await db.students.put({
+                    ...optimisticStudent,
+                    id: realId,
+                    syncStatus: 'synced'
+                } as any);
+            } catch { }
 
-            // Add to sync queue for cloud update
-            await db.syncQueue.add({
-                table: 'students',
-                action: 'INSERT',
-                payload: newStudentData,
-                status: 'pending',
-                createdAt: Date.now(),
-                retryCount: 0
-            });
         } catch (error) {
             console.error("Error adding student:", error);
+            // If online failed, we keep the temp offline version (optimisticStudent is already in list and Dexie)
         }
     };
 

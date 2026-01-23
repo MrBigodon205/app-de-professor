@@ -42,16 +42,29 @@ class ProfAcertaDB extends Dexie {
     attendance!: Table<LocalAttendance>;
     grades!: Table<LocalGrades>;
     occurrences!: Table<LocalOccurrence>;
+    plans!: Table<any>; // Using any for simplicity or define LocalPlan
+    activities!: Table<any>; // Using any for simplicity or define LocalActivity
     syncQueue!: Table<SyncQueueItem>;
 
     constructor() {
         super('ProfAcertaDB');
         this.version(1).stores({
             students: 'id, series_id, section, user_id',
-            attendance: '[studentId+date+subject+unit], date, syncStatus, user_id', // Compound Index for uniqueness
+            attendance: '[studentId+date+subject+unit], date, syncStatus, user_id',
             grades: '[student_id+unit+subject], syncStatus, user_id',
             occurrences: 'id, studentId, syncStatus, user_id',
             syncQueue: '++id, table, status, createdAt'
+        });
+
+        // Version 2: Add classes caching
+        this.version(2).stores({
+            classes: 'id, user_id'
+        });
+
+        // Version 3: Add plans and activities for Dashboard caching
+        this.version(3).stores({
+            plans: 'id, user_id, series_id, start_date, end_date',
+            activities: 'id, user_id, series_id, date, start_date, end_date'
         });
     }
 }

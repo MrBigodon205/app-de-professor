@@ -48,14 +48,17 @@ export default defineConfig(({ mode }) => {
       }
     },
     build: {
-      chunkSizeWarningLimit: 2000,
+      target: 'es2020',
+      chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
           manualChunks: {
             'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-            'vendor-utils': ['canvas-confetti', 'dompurify'],
-            'vendor-ui': ['react-quill-new', 'recharts', 'react-joyride'],
-            'vendor-db': ['@supabase/supabase-js']
+            'vendor-ui-core': ['framer-motion', 'lucide-react'],
+            'vendor-charts': ['recharts'],
+            'vendor-editor': ['react-quill-new'],
+            'vendor-db': ['@supabase/supabase-js', 'dexie'],
+            'vendor-utils': ['canvas-confetti', 'dompurify', 'react-joyride']
           }
         }
       }

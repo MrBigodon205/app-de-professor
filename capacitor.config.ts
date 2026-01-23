@@ -6,16 +6,21 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     androidScheme: 'https',
-    // ⚠️ MODO ESPELHO (WEBVIEW)
-    // Se quiser que o app ja abra direto no seu site (igual ao PC),
-    // descomente a linha abaixo e coloque o link do seu site:
-    url: 'https://www.profacerta.com.br',
     cleartext: true,
     allowNavigation: [
-      'www.profacerta.com.br',
       '*.supabase.co',
-      'accounts.google.com'
+      '*.supabase.in',
+      '*.google.com',
+      '*.googleapis.com',
+      '*.gstatic.com'
     ]
+  },
+  android: {
+    // Configurações padrão do Android
+    buildOptions: {
+      keystorePath: undefined,
+      keystoreAlias: undefined,
+    }
   }
 };
 

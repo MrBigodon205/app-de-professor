@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import { User, Subject } from '../types';
 import { supabase } from '../lib/supabase';
 import { seedUserData } from '../utils/seeding';
 
+// --- TYPES & INTERFACES ---
 interface AuthContextType {
     currentUser: User | null;
     userId: string | null;
@@ -20,80 +21,28 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// --- AUTH PROVIDER COMPONENT ---
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    // Standard Web State Initialization
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeSubject, setActiveSubject] = useState<string>(() => localStorage.getItem('last_active_subject') || '');
-    const [profileChannel, setProfileChannel] = useState<any>(null);
 
-    // Local API fallback logic removed to ensure Single Source of Truth from Supabase
-
-
-    // Helper to race a promise against a timeout
-    const withTimeout = useCallback(<T,>(promise: PromiseLike<T>, ms: number, label: string): Promise<T> => {
-        return Promise.race([
-            promise,
-            new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`${label} expirou`)), ms))
-        ]);
-    }, []);
-
+    // --- PROFILE FETCHING (With Offline Fallback) ---
     const fetchProfile = useCallback(async (uid: string, authUser?: any) => {
-        // Raw Fetch Helper for Profile
-        const rawProfileFetch = async () => {
-            // ... (rest of rawProfileFetch)
-            const supabaseUrl = (supabase as any).supabaseUrl;
-            const supabaseKey = (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-            const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${uid}&select=*`, {
-                method: 'GET',
-                headers: {
-                    'apikey': supabaseKey,
-                    'Authorization': `Bearer ${supabaseKey}`,
-                }
-            });
-
-            if (!response.ok) throw new Error('Falha no Raw Fetch Profile');
-            const data = await response.json();
-            return data && data.length > 0 ? data[0] : null;
-        };
-
         try {
-            let profile = null;
-            // 1. Try SDK (with timeout)
-            try {
-                const { data, error } = await withTimeout(
-                    supabase.from('profiles').select('*').eq('id', uid).single(),
-                    8000,
-                    "Busca de Perfil"
-                );
-                if (error) throw error;
-                profile = data;
-            } catch (e) {
-                try {
-                    profile = await withTimeout(rawProfileFetch(), 6000, "Raw Profile Fetch");
-                } catch (rawErr) {
-                    console.warn("Raw fetch also failed/timed out", rawErr);
-                }
-            }
+            // 1. Try Network Fetch first (Standard Web)
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', uid)
+                .single();
 
             if (profile) {
-                // Determine isPasswordSet from User Metadata (primary) or Legacy Providers (fallback)
-                let hasPasswordConfirmed = false;
-
-                // 1. Check User Metadata (New Standard)
-                if (authUser?.user_metadata?.is_password_set === true) {
-                    hasPasswordConfirmed = true;
-                }
-                // 2. Fallback: Check Providers (Legacy Google Users w/ Password)
-                else if (authUser) {
-                    const providers = authUser.app_metadata?.providers || [];
-                    if (providers.includes('email')) {
-                        hasPasswordConfirmed = true;
-                        // Self-healing: Save to metadata for future speed
-                        supabase.auth.updateUser({ data: { is_password_set: true } });
-                    }
-                }
+                // Determine hasPassword from metadata
+                const hasPasswordConfirmed = authUser?.user_metadata?.is_password_set === true ||
+                    authUser?.app_metadata?.providers?.includes('email');
 
                 const finalUser: User = {
                     id: profile.id,
@@ -105,176 +54,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     isPasswordSet: hasPasswordConfirmed
                 };
 
-                localStorage.setItem(`cached_profile_${finalUser.id}`, JSON.stringify(finalUser));
-
-                setCurrentUser(prev => {
-                    if (prev && JSON.stringify(prev) === JSON.stringify(finalUser)) {
-                        return prev;
-                    }
-                    return finalUser;
-                });
-
+                // SUCCESS: Save to State AND Cache
+                setCurrentUser(finalUser);
                 setUserId(finalUser.id);
+                localStorage.setItem(`offline_profile_${finalUser.id}`, JSON.stringify(finalUser));
 
+                // Handle Subject Persistence
                 const storedSubject = localStorage.getItem('last_active_subject');
-                if (storedSubject && (finalUser.subject === storedSubject || finalUser.subjects?.includes(storedSubject))) {
-                    setActiveSubject(storedSubject);
-                } else {
+                if (!storedSubject || (finalUser.subject !== storedSubject && !finalUser.subjects?.includes(storedSubject))) {
                     const defaultSubject = finalUser.subject || 'Matemática';
                     setActiveSubject(defaultSubject);
                     localStorage.setItem('last_active_subject', defaultSubject);
                 }
             }
-        } catch (err: any) {
-            console.error(`fetchProfile error:`, err.message);
-        } finally {
-            setLoading(false);
+        } catch (err) {
+            console.warn("Fetch profile failed (likely offline). Trying cache...", err);
+            // 2. OFFLINE FALLBACK: Load from Cache
+            try {
+                const cached = localStorage.getItem(`offline_profile_${uid}`);
+                if (cached) {
+                    const savedUser = JSON.parse(cached);
+                    console.log("Restored user from offline cache:", savedUser.name);
+                    setCurrentUser(savedUser);
+                    setUserId(savedUser.id);
+                }
+            } catch (e) {
+                console.error("Offline cache restore failed:", e);
+            }
         }
-    }, [withTimeout]);
+    }, []);
 
-    // Initial session check
-    React.useLayoutEffect(() => {
+    // --- INITIALIZATION EFFECT (STANDARD WEB) ---
+    useEffect(() => {
         let mounted = true;
-        let initialLoadDone = false;
 
         const initSession = async () => {
             try {
-                let { data: { session }, error } = await supabase.auth.getSession();
-                if (error) console.error("Session init error:", error);
-
-                if (!session) {
-                    // Try to detect session in Hash (typical for Google Login redirects)
-                    if (window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('refresh_token='))) {
-                        try {
-                            // Extract just the tokens, ignoring route path like #/login?
-                            const hashContent = window.location.hash.substring(1);
-                            const searchPart = hashContent.includes('?') ? hashContent.split('?')[1] : hashContent;
-                            const params = new URLSearchParams(searchPart.startsWith('/') ? searchPart.substring(1) : searchPart);
-
-                            const accessToken = params.get('access_token');
-                            const refreshToken = params.get('refresh_token');
-                            if (accessToken) {
-                                const { data: { session: newSession } } = await supabase.auth.setSession({
-                                    access_token: accessToken,
-                                    refresh_token: refreshToken || ""
-                                });
-                                if (newSession) session = newSession;
-                            }
-                        } catch (e) { console.warn("Erro ao extrair session do hash:", e); }
-                    }
-
-                    if (!session) {
-                        try {
-                            const supabaseUrl = (supabase as any).supabaseUrl;
-                            const projectRef = supabaseUrl.split('//')[1].split('.')[0];
-                            const storageKey = `sb-${projectRef}-auth-token`;
-                            const raw = localStorage.getItem(storageKey) || localStorage.getItem('supabase.auth.token');
-                            if (raw) {
-                                const parsed = JSON.parse(raw);
-                                if (parsed.user && (parsed.access_token || parsed.currentSession?.access_token)) {
-                                    session = parsed.currentSession || parsed;
-                                    await supabase.auth.setSession({
-                                        access_token: session.access_token,
-                                        refresh_token: session.refresh_token || ""
-                                    });
-                                }
-                            }
-                        } catch (e) {
-                            console.warn("Erro ao ler fallback session:", e);
-                        }
-                    }
-                }
+                // Get session from Supabase SDK (handles storage automatically)
+                const { data: { session }, error } = await supabase.auth.getSession();
 
                 if (session?.user) {
-                    setUserId(session.user.id);
-                    const cached = localStorage.getItem(`cached_profile_${session.user.id}`);
-                    if (cached) {
-                        try {
-                            const parsed = JSON.parse(cached);
-                            setCurrentUser(parsed);
-                        } catch (e) { console.error("Erro ao ler cache:", e); }
-                    }
-                    try {
+                    if (mounted) {
+                        setUserId(session.user.id);
                         await fetchProfile(session.user.id, session.user);
-                    } catch (e) {
-                        console.error("Fetch profile failed explicitly in init:", e);
                     }
-                    initialLoadDone = true;
                 }
             } catch (err) {
-                console.error("Unexpected auth error:", err);
+                console.error("Init error:", err);
             } finally {
-                const hasAuthHash = window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('type=recovery'));
-                if (mounted && !hasAuthHash) {
-                    setLoading(false);
-                } else if (hasAuthHash) {
-                    // Reduce timeout from 5s to 1.5s for faster Google Login feedback
-                    setTimeout(() => {
-                        if (mounted) setLoading(false);
-                    }, 1500);
-                }
+                if (mounted) setLoading(false);
             }
         };
 
         initSession();
 
+        // Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (session?.user) {
-                setUserId(session.user.id);
-                if (!currentUser) {
-                    const cached = localStorage.getItem(`cached_profile_${session.user.id}`);
-                    if (cached) {
-                        try {
-                            setCurrentUser(JSON.parse(cached));
-                            setLoading(false);
-                        } catch (e) { }
-                    }
-                }
-
-                // Force explicit persistence for Electron
-                try {
-                    const supabaseUrl = (supabase as any).supabaseUrl;
-                    const projectRef = supabaseUrl.split('//')[1].split('.')[0];
-                    const storageKey = `sb-${projectRef}-auth-token`;
-                    localStorage.setItem(storageKey, JSON.stringify(session));
-                } catch (e) { }
-
-                if (!initialLoadDone || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-                    const pendingSubs = localStorage.getItem('pending_subs');
-                    if (pendingSubs && event === 'SIGNED_IN') {
-                        try {
-                            const subjects = JSON.parse(pendingSubs);
-                            if (Array.isArray(subjects) && subjects.length > 0) {
-                                const mainSubject = subjects[0];
-                                await supabase.from('profiles').update({
-                                    subject: mainSubject,
-                                    subjects: subjects
-                                }).eq('id', session.user.id);
-                                localStorage.removeItem('pending_subs');
-                            }
-                        } catch (e) { console.error("Error applying pending subjects:", e); }
-                    }
+                if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
                     await fetchProfile(session.user.id, session.user);
-                    initialLoadDone = true;
-                    // Resolve loading only AFTER profile is definitely in state
                     setLoading(false);
                 }
-
-                if (event === 'PASSWORD_RECOVERY') window.location.hash = '/reset-password';
-            } else {
+            } else if (event === 'SIGNED_OUT') {
                 setCurrentUser(null);
                 setUserId(null);
-                if (event === 'SIGNED_OUT') {
-                    const keys = Object.keys(localStorage);
-                    keys.forEach(k => {
-                        if (k.startsWith('cached_profile_')) localStorage.removeItem(k);
-                    });
-                    setLoading(false);
-                    // Force redirect if not already on login
-                    if (!window.location.hash.includes('/login')) {
-                        window.location.hash = '/login';
-                    }
-                }
+                setLoading(false);
             }
         });
 
@@ -282,42 +126,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             mounted = false;
             subscription.unsubscribe();
         };
-    }, []);
+    }, [fetchProfile]);
 
-    // Theme logic removed here - handled by ThemeContext
+    // --- ACTIONS ---
 
-    useEffect(() => {
-        if (!userId) {
-            if (profileChannel) {
-                supabase.removeChannel(profileChannel);
-                setProfileChannel(null);
-            }
-            return;
+    const login = useCallback(async (email: string, password: string) => {
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            return { success: true };
+        } catch (e: any) {
+            console.error("Login error:", e);
+            return { success: false, error: e.message || "Erro ao realizar login." };
         }
-
-        const channel = supabase.channel(`profile_sync:${userId}`)
-            .on('postgres_changes',
-                { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
-                (payload) => {
-                    const newProfile = payload.new as any;
-                    setCurrentUser(prev => {
-                        if (!prev) return null;
-                        return {
-                            ...prev,
-                            name: newProfile.name,
-                            subject: newProfile.subject,
-                            subjects: newProfile.subjects || [],
-                            photoUrl: newProfile.photo_url,
-                            isPasswordSet: newProfile.is_password_set
-                        };
-                    });
-                }
-            )
-            .subscribe();
-
-        setProfileChannel(channel);
-        return () => { supabase.removeChannel(channel); };
-    }, [userId]);
+    }, []);
 
     const register = useCallback(async (name: string, email: string, password: string, subject: Subject, subjects: Subject[] = []) => {
         try {
@@ -325,215 +147,105 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 email,
                 password,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/#/login`,
                     data: { name, subject, subjects, is_password_set: true }
                 }
             });
 
-            if (error) {
-                if (error.message.includes("already registered")) return { success: false, error: "Este e-mail já está cadastrado." };
-                return { success: false, error: error.message };
-            }
+            if (error) return { success: false, error: error.message };
 
             if (data.user) {
                 await seedUserData(data.user.id);
-                const { error: profileError } = await supabase
-                    .from('profiles')
-                    .update({ name, subject, subjects })
-                    .eq('id', data.user.id);
-
-                if (profileError) console.warn("Manual profile update failed:", profileError);
+                try {
+                    await supabase.from('profiles').update({ name, subject, subjects }).eq('id', data.user.id);
+                } catch { }
                 return { success: true };
             }
             return { success: false, error: "Erro ao criar usuário." };
         } catch (e: any) {
-            console.error("Registration error:", e);
-            return { success: false, error: e.message || "Erro ao realizar o cadastro." };
+            return { success: false, error: e.message };
+        }
+    }, []);
+
+    const logout = useCallback(async () => {
+        try {
+            await supabase.auth.signOut();
+            setCurrentUser(null);
+            setUserId(null);
+            // Optional: window.location.reload() if you want a full refresh
+        } catch (e) {
+            console.error("Logout error", e);
         }
     }, []);
 
     const updateProfile = useCallback(async (data: Partial<User>) => {
-        if (!userId) {
-            console.error("Falha ao atualizar perfil: userId não encontrado");
-            return false;
-        }
+        if (!userId) return false;
         try {
             if (data.password) {
-                const { error: authError } = await supabase.auth.updateUser({ password: data.password });
-                if (authError) throw authError;
-            }
-            if (data.isPasswordSet === true) {
-                await supabase.auth.updateUser({ data: { is_password_set: true } });
-            }
-
-            const profileUpdate: any = {};
-            if (data.name) profileUpdate.name = data.name;
-            if (data.subject) profileUpdate.subject = data.subject;
-            if (data.photoUrl) profileUpdate.photo_url = data.photoUrl;
-            if (data.subjects) profileUpdate.subjects = data.subjects;
-            if (data.email) profileUpdate.email = data.email;
-
-            if (Object.keys(profileUpdate).length > 0) {
-                const { error } = await supabase.from('profiles').update(profileUpdate).eq('id', userId);
+                const { error } = await supabase.auth.updateUser({ password: data.password });
                 if (error) throw error;
             }
 
-            const { password, ...cleanData } = data;
-            const newState = currentUser ? { ...currentUser, ...cleanData } : null;
-            if (newState) {
-                if (!newState.id) newState.id = userId;
-                setCurrentUser(newState as User);
-                if (data.subject) {
-                    setActiveSubject(data.subject);
-                    localStorage.setItem('last_active_subject', data.subject);
-                }
+            const updates: any = {};
+            if (data.name) updates.name = data.name;
+            if (data.subject) updates.subject = data.subject;
+            if (data.subjects) updates.subjects = data.subjects;
+            if (data.photoUrl) updates.photo_url = data.photoUrl;
+
+            if (Object.keys(updates).length > 0) {
+                const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
+                if (error) throw error;
             }
+
+            setCurrentUser(prev => prev ? ({ ...prev, ...data }) : null);
             return true;
         } catch (e: any) {
-            console.error("Falha ao atualizar perfil", e);
-            alert(`Erro ao atualizar perfil: ${e.message || 'Erro desconhecido'}`);
+            alert(`Erro ao atualizar: ${e.message}`);
             return false;
         }
-    }, [userId, currentUser]);
+    }, [userId]);
 
-    const completeRegistration = useCallback(async (name: string, password: string, subject: Subject, subjects: Subject[]) => {
-        if (!userId) return { success: false, error: "Usuário não autenticado." };
-        try {
-            const { error: passError } = await supabase.auth.updateUser({ password });
-            if (passError) throw passError;
-            await updateProfile({ name, subject, subjects, isPasswordSet: true });
-            return { success: true };
-        } catch (e: any) {
-            console.error("Complete registration error:", e);
-            return { success: false, error: e.message || "Erro ao completar cadastro." };
-        }
-    }, [userId, updateProfile]);
-
-    const logout = useCallback(async () => {
-        try {
-            await Promise.race([
-                supabase.auth.signOut(),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Logout timed out')), 1000))
-            ]);
-        } catch (error) { console.warn("Logout upstream falhou:", error); }
-        finally {
-            setCurrentUser(null);
-            setUserId(null);
-            localStorage.removeItem('sb-' + (import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0] || '') + '-auth-token');
-            localStorage.removeItem('supabase.auth.token');
-            Object.keys(localStorage).forEach(k => {
-                if (k.startsWith('cached_profile_') || k.startsWith('sb-') || k.startsWith('supabase.')) localStorage.removeItem(k);
-            });
-            sessionStorage.clear();
-            // Core Fix: Hard reload to clear all state and go to login
-            window.location.href = window.location.origin + window.location.pathname + '#/login';
-            window.location.reload();
-        }
-    }, []);
-
+    // Stubs
     const resetPassword = useCallback(async (email: string) => {
-        try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/` });
-            if (error) throw error;
-            return { success: true };
-        } catch (e: any) {
-            console.error("Reset password failed:", e);
-            return { success: false, error: e.message || "Erro ao enviar e-mail de recuperação." };
-        }
+        const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+        return { success: !error, error: error?.message };
     }, []);
 
     const updatePassword = useCallback(async (password: string) => {
-        try {
-            const { error } = await supabase.auth.updateUser({ password });
-            if (error) throw error;
-            return { success: true };
-        } catch (e: any) {
-            console.error("Erro ao atualizar senha:", e);
-            return { success: false, error: e.message === 'New password should be different from the old password.' ? 'A nova senha deve ser diferente da antiga.' : "Erro ao atualizar senha." };
-        }
+        const { error } = await supabase.auth.updateUser({ password });
+        return { success: !error, error: error?.message };
     }, []);
 
-    const updateActiveSubject = useCallback((subject: string) => {
+    const completeRegistration = useCallback(async (name: string, password: string, subject: Subject, subjects: Subject[]) => {
+        return register(name, "placeholder", password, subject, subjects);
+    }, [register]);
+
+    const completeRegistrationReal = useCallback(async (name: string, password: string, subject: Subject, subjects: Subject[]) => {
+        if (!userId) return { success: false, error: "Não autenticado" };
+        try {
+            await supabase.auth.updateUser({ password, data: { is_password_set: true } });
+            await updateProfile({ name, subject, subjects, isPasswordSet: true });
+            return { success: true };
+        } catch (e: any) { return { success: false, error: e.message }; }
+    }, [userId, updateProfile]);
+
+    const updateActiveSubjectWrapper = useCallback((subject: string) => {
         setActiveSubject(subject);
         localStorage.setItem('last_active_subject', subject);
     }, []);
 
-    const login = useCallback(async (email: string, password: string) => {
-        // Removed setLoading(true) to avoid unmounting Login form
-        const rawLogin = async () => {
-            const supabaseUrl = (supabase as any).supabaseUrl;
-            const supabaseKey = (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
-            const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
-                method: 'POST',
-                headers: { 'apikey': supabaseKey, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.error_description || errData.msg || 'Erro no login via HTTP');
-            }
-            const data = await response.json();
-            try {
-                const projectRef = supabaseUrl.split('//')[1].split('.')[0];
-                const storageKey = `sb-${projectRef}-auth-token`;
-                localStorage.setItem(storageKey, JSON.stringify(data));
-            } catch (e) { console.warn("Erro ao salvar token manual:", e); }
-            if (data.user) {
-                setUserId(data.user.id);
-                await fetchProfile(data.user.id, data.user);
-            }
-            return { user: data.user, session: data };
-        };
-
-        try {
-            let authResult;
-            try {
-                authResult = await Promise.race([
-                    rawLogin(),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Login timed out (10s)')), 10000))
-                ]);
-            } catch (rawErr: any) {
-                if (rawErr.message === 'Email not confirmed' || rawErr.message === 'Invalid login credentials') throw rawErr;
-                const { data, error } = await Promise.race([
-                    supabase.auth.signInWithPassword({ email, password }),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('SDK Login timed out (10s)')), 10000)) as Promise<any>
-                ]);
-                if (error) throw error;
-                authResult = { user: data.user, session: data.session };
-            }
-            if (authResult?.user) {
-                const cached = localStorage.getItem(`cached_profile_${authResult.user.id}`);
-                if (cached) {
-                    try { setCurrentUser(JSON.parse(cached)); } catch (e) { }
-                }
-                supabase.auth.updateUser({ data: { is_password_set: true } });
-                await fetchProfile(authResult.user.id, authResult.user);
-
-                // CRITICAL: Ensure state is flushed before returning
-                // We don't call setLoading(false) here, we let the onAuthStateChange handle it
-                // to avoid double-triggers, but we return TRUE only when profile is ready.
-                return { success: true };
-            }
-            return { success: false, error: 'Erro ao autenticar.' };
-        } catch (e: any) {
-            console.error("Falha final no login:", e);
-            return { success: false, error: 'Erro ao realizar login. Verifique suas credenciais.' };
-        }
-    }, [currentUser]);
-
     const contextValue = useMemo(() => ({
-        currentUser, userId, login, register, logout, updateProfile, resetPassword, updatePassword, completeRegistration, loading, activeSubject, updateActiveSubject
-    }), [currentUser, userId, login, register, logout, updateProfile, resetPassword, updatePassword, completeRegistration, loading, activeSubject, updateActiveSubject]);
+        currentUser, userId,
+        login, register, logout,
+        updateProfile, resetPassword, updatePassword,
+        completeRegistration: completeRegistrationReal,
+        loading, activeSubject, updateActiveSubject: updateActiveSubjectWrapper
+    }), [currentUser, userId, login, register, logout, updateProfile, resetPassword, updatePassword, completeRegistrationReal, loading, activeSubject, updateActiveSubjectWrapper]);
 
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="relative w-16 h-16">
-                        <div className="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-800"></div>
-                        <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-                    </div>
-                    <div className="text-slate-500 dark:text-slate-400 font-medium text-sm animate-pulse">Iniciando sistema...</div>
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                 </div>
             </div>
         );
