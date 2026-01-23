@@ -144,14 +144,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 if (!session) {
                     // Try to detect session in Hash (typical for Google Login redirects)
-                    if (window.location.hash && window.location.hash.includes('access_token=')) {
+                    if (window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('refresh_token='))) {
                         try {
-                            const hash = window.location.hash.substring(1);
-                            const params = new URLSearchParams(hash);
+                            // Extract just the tokens, ignoring route path like #/login?
+                            const hashContent = window.location.hash.substring(1);
+                            const searchPart = hashContent.includes('?') ? hashContent.split('?')[1] : hashContent;
+                            const params = new URLSearchParams(searchPart.startsWith('/') ? searchPart.substring(1) : searchPart);
+
                             const accessToken = params.get('access_token');
                             const refreshToken = params.get('refresh_token');
                             if (accessToken) {
-                                const { data: { session: newSession }, error: setErr } = await supabase.auth.setSession({
+                                const { data: { session: newSession } } = await supabase.auth.setSession({
                                     access_token: accessToken,
                                     refresh_token: refreshToken || ""
                                 });
