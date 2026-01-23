@@ -147,15 +147,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         const supabaseUrl = (supabase as any).supabaseUrl;
                         const projectRef = supabaseUrl.split('//')[1].split('.')[0];
                         const storageKey = `sb-${projectRef}-auth-token`;
-                        const raw = localStorage.getItem(storageKey);
+                        const raw = localStorage.getItem(storageKey) || localStorage.getItem('supabase.auth.token');
                         if (raw) {
                             const parsed = JSON.parse(raw);
-                            if (parsed.user && parsed.access_token) {
-                                session = parsed;
+                            if (parsed.user && (parsed.access_token || parsed.currentSession?.access_token)) {
+                                session = parsed.currentSession || parsed;
                                 // Recover SDK session state
                                 await supabase.auth.setSession({
-                                    access_token: parsed.access_token,
-                                    refresh_token: parsed.refresh_token || ""
+                                    access_token: session.access_token,
+                                    refresh_token: session.refresh_token || ""
                                 });
                             }
                         }
@@ -393,12 +393,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUserId(null);
             localStorage.removeItem('sb-' + (import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0] || '') + '-auth-token');
             localStorage.removeItem('supabase.auth.token');
-            localStorage.removeItem('last_active_subject');
             Object.keys(localStorage).forEach(k => {
                 if (k.startsWith('cached_profile_') || k.startsWith('sb-') || k.startsWith('supabase.')) localStorage.removeItem(k);
             });
             sessionStorage.clear();
-            window.location.href = '/';
+            // Core Fix: Use hash for HashRouter in Electron to avoid blue screen
+            window.location.hash = '/login';
         }
     }, []);
 

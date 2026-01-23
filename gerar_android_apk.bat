@@ -28,20 +28,34 @@ if not exist "%~dp0mobile-app" (
 
 cd mobile-app
 
-echo [1/2] Verificando login da Expo...
-echo Se voce ja estiver logado, ele passara direto.
-echo Caso contrario, digite suas credenciais.
+echo [1/2] Compilando versao Web para Mobile...
+echo Isso garante que as ultimas mudancas aparecam no celular.
 echo.
-call npx -y eas-cli login
+call npm run build
+
+if %ERRORLEVEL% neq 0 (
+    echo [ERRO] Falha ao compilar o projeto Vite!
+    pause
+    exit
+)
 
 echo.
-echo [2/2] Enviando para build na nuvem...
-echo Isso pode levar um tempo. Aguarde o link aparecer.
-echo.
-call npx -y eas-cli build --platform android --profile preview
+echo [2/2] Sincronizando com Android Studio (Capacitor)...
+call npx cap sync
+
+if %ERRORLEVEL% neq 0 (
+    echo [ERRO] Falha na sincronizacao do Capacitor!
+    pause
+    exit
+)
 
 echo.
 echo ==========================================
-echo    PROCESSO FINALIZADO
+echo    PRONTO PARA O ANDROID STUDIO!
 echo ==========================================
+echo.
+echo 1. Abra o Android Studio.
+echo 2. Va em Build > Build Bundle(s) / APK(s) > Build APK(s).
+echo 3. O APK sera gerado e o Android Studio avisara quando terminar!
+echo.
 pause
