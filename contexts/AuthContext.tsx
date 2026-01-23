@@ -251,9 +251,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             }
                         } catch (e) { console.error("Error applying pending subjects:", e); }
                     }
-                    fetchProfile(session.user.id, session.user);
+                    await fetchProfile(session.user.id, session.user);
                     initialLoadDone = true;
-                    // Resolve loading fast if we have a user
+                    // Resolve loading only AFTER profile is definitely in state
                     setLoading(false);
                 }
 
@@ -505,8 +505,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
                 supabase.auth.updateUser({ data: { is_password_set: true } });
                 await fetchProfile(authResult.user.id, authResult.user);
-                // Explicitly set loading to false to trigger ProtectedRoute
-                setLoading(false);
+
+                // CRITICAL: Ensure state is flushed before returning
+                // We don't call setLoading(false) here, we let the onAuthStateChange handle it
+                // to avoid double-triggers, but we return TRUE only when profile is ready.
                 return { success: true };
             }
             return { success: false, error: 'Erro ao autenticar.' };

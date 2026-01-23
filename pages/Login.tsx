@@ -83,7 +83,11 @@ export const Login: React.FC = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          // If we're on a local Capacitor build, origin will be 'http://localhost'
+          // We must ensure the redirectTo is a valid web URL for Google to return to.
+          redirectTo: window.location.origin.includes('localhost')
+            ? 'https://app-de-professor.vercel.app/'
+            : `${window.location.origin}/`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
