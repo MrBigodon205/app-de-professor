@@ -101,7 +101,7 @@ export const Timetable: React.FC = () => {
 
     const handleSlotClick = (day: DayOfWeek, start: string, end: string) => {
         setSelectedSlot({ day, startTime: start, endTime: end });
-        setOverrideSubject(currentUser?.subject || 'Geral');
+        setOverrideSubject(''); // Reset override to allow class default
         setIsModalOpen(true);
     };
 
@@ -119,7 +119,8 @@ export const Timetable: React.FC = () => {
             classId,
             section,
             className: selectedClass?.name,
-            subject: overrideSubject || selectedClass?.subject || 'Geral'
+            // Priority: Manual Override -> Class Subject -> Teacher Subject -> Default
+            subject: overrideSubject || selectedClass?.subject || currentUser?.subject || 'Geral'
         };
 
         const filtered = schedule.filter(s =>
@@ -352,6 +353,7 @@ export const Timetable: React.FC = () => {
                                         onChange={(e) => setOverrideSubject(e.target.value)}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-700 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-primary/50"
                                     >
+                                        <option value="">Automático (Padrão)</option>
                                         {SUBJECTS.map(subject => (
                                             <option key={subject} value={subject}>{subject}</option>
                                         ))}
