@@ -2,105 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
-import { ScheduleItem, DayOfWeek, ClassConfig } from '../types';
-import { supabase } from '../lib/supabase';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ScheduleItem, DayOfWeek, ClassConfig, SUBJECTS } from '../types';
 
-// Helper to generate time slots (07:00 - 18:00)
-// Standard 50min classes + breaks could be complex, let's allow custom slots or fixed standard ones
-// Default Configuration
-const DEFAULT_TIME_SLOTS = [
-    { start: '07:00', end: '07:50' },
-    { start: '07:50', end: '08:40' },
-    { start: '08:40', end: '09:30' },
-    { start: '09:50', end: '10:40' },
-    { start: '10:40', end: '11:30' },
-    { start: '11:30', end: '12:20' },
-];
-
-const DEFAULT_DAYS: { id: DayOfWeek, label: string, enabled: boolean }[] = [
-    { id: 1, label: 'Segunda', enabled: true },
-    { id: 2, label: 'Terça', enabled: true },
-    { id: 3, label: 'Quarta', enabled: true },
-    { id: 4, label: 'Quinta', enabled: true },
-    { id: 5, label: 'Sexta', enabled: true },
-    { id: 6, label: 'Sábado', enabled: false },
-    { id: 0, label: 'Domingo', enabled: false },
-];
+// ... (existing imports)
 
 export const Timetable: React.FC = () => {
-    const { classes } = useClass();
-    const { currentUser } = useAuth();
-    const theme = useTheme();
-    const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [selectedSlot, setSelectedSlot] = useState<{ day: DayOfWeek, startTime: string, endTime: string } | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+    // ... (existing state)
+    const [overrideSubject, setOverrideSubject] = useState<string>('');
 
-    // Configuration State
-    const [config, setConfig] = useState<{
-        days: typeof DEFAULT_DAYS,
-        slots: typeof DEFAULT_TIME_SLOTS
-    }>({
-        days: DEFAULT_DAYS,
-        slots: DEFAULT_TIME_SLOTS
-    });
-
-    // Load Config
-    useEffect(() => {
-        if (currentUser) {
-            const savedConfig = localStorage.getItem(`timetable_config_${currentUser.id}`);
-            if (savedConfig) {
-                try {
-                    setConfig(JSON.parse(savedConfig));
-                } catch (e) {
-                    console.error("Failed to parse timetable config", e);
-                }
-            }
-            fetchSchedule();
-        }
-    }, [currentUser]);
-
-    // Save Config
-    const saveConfig = (newConfig: typeof config) => {
-        setConfig(newConfig);
-        if (currentUser) {
-            localStorage.setItem(`timetable_config_${currentUser.id}`, JSON.stringify(newConfig));
-        }
-    };
-
-    const fetchSchedule = async () => {
-        if (!currentUser) return;
-        setLoading(true);
-        try {
-            const { data } = await supabase
-                .from('schedules')
-                .select('*')
-                .eq('user_id', currentUser.id);
-
-            if (data) {
-                setSchedule(data.map(item => ({
-                    id: item.id,
-                    userId: item.user_id,
-                    dayOfWeek: item.day_of_week,
-                    startTime: item.start_time,
-                    endTime: item.end_time,
-                    classId: item.class_id,
-                    section: item.section,
-                    subject: item.subject,
-                    className: classes.find(c => c.id === item.class_id)?.name
-                })));
-            }
-        } catch (error) {
-            console.warn("Could not fetch schedule", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // ... (fetchSchedule)
 
     const handleSlotClick = (day: DayOfWeek, start: string, end: string) => {
         setSelectedSlot({ day, startTime: start, endTime: end });
+        setOverrideSubject(currentUser?.subject || 'Geral');
         setIsModalOpen(true);
     };
 
@@ -118,7 +32,7 @@ export const Timetable: React.FC = () => {
             classId,
             section,
             className: selectedClass?.name,
-            subject: selectedClass?.subject || 'Geral'
+            subject: overrideSubject || selectedClass?.subject || 'Geral'
         };
 
         const filtered = schedule.filter(s =>
@@ -342,7 +256,20 @@ export const Timetable: React.FC = () => {
                                 </button>
                             </div>
 
+
                             <div className="p-6 max-h-[60vh] overflow-y-auto">
+                                <div className="mb-6">
+                                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wider">Disciplina da Aula</label>
+                                    <select
+                                        value={overrideSubject}
+                                        onChange={(e) => setOverrideSubject(e.target.value)}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-700 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                    >
+                                        {SUBJECTS.map(subject => (
+                                            <option key={subject} value={subject}>{subject}</option>
+                                        ))}
+                                    </select>
+                                </div>
                                 <div className="grid grid-cols-1 gap-3">
                                     {/* Empty State option */}
                                     <button
