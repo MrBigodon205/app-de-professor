@@ -12,82 +12,82 @@ interface PageTransitionProps {
 // Focus: 60FPS Fluidity, Hardware Acceleration, No Layout Thrashing
 // Technique: Use only opacity and transform (translate, scale, rotate)
 
-const iosSpring = { type: 'spring', stiffness: 260, damping: 20 }; // Very responsive, Apple-like
-const smoothEase = [0.4, 0, 0.2, 1]; // Standard Material/iOS easing
+// ULTRA-OPTIMIZED ANIMATIONS (60FPS Target)
+// Strategy: Minimize "paint" time. Quick exits (0.1s) to clear DOM fast. Snappy enters (0.2s).
+const fastSpring = { type: 'spring', stiffness: 400, damping: 30 };
+const quickEase = [0.25, 0.1, 0.25, 1];
 
 const variants = {
     dashboard: {
-        initial: { opacity: 0, scale: 0.98, y: 10 },
+        initial: { opacity: 0, scale: 0.99 },
         animate: {
-            opacity: 1, scale: 1, y: 0,
-            transition: { duration: 0.5, ease: smoothEase, staggerChildren: 0.1 }
+            opacity: 1, scale: 1,
+            transition: { duration: 0.25, ease: quickEase }
         },
         exit: {
-            opacity: 0, scale: 0.98, y: -10,
-            transition: { duration: 0.3, ease: 'easeIn' }
+            opacity: 0, scale: 0.99,
+            transition: { duration: 0.1, ease: 'linear' }
         }
     },
     planning: {
-        initial: { opacity: 0, x: 20 },
+        initial: { opacity: 0, x: 10 },
         animate: {
             opacity: 1, x: 0,
-            transition: iosSpring
+            transition: fastSpring
         },
         exit: {
-            opacity: 0, x: -20,
-            transition: { duration: 0.2 }
+            opacity: 0, x: -10,
+            transition: { duration: 0.1 }
         }
     },
     activities: {
-        initial: { opacity: 0, scale: 0.95, y: 20 },
+        initial: { opacity: 0, y: 10 },
         animate: {
-            opacity: 1, scale: 1, y: 0,
-            transition: { type: 'spring', stiffness: 300, damping: 25 }
+            opacity: 1, y: 0,
+            transition: fastSpring
         },
         exit: {
-            opacity: 0, scale: 1.05,
-            transition: { duration: 0.3 }
+            opacity: 0, y: -10,
+            transition: { duration: 0.1 }
         }
     },
     grades: {
-        initial: { opacity: 0, rotateX: 15, y: 20 },
+        initial: { opacity: 0, x: 10 },
         animate: {
-            opacity: 1, rotateX: 0, y: 0,
-            transition: { duration: 0.6, ease: smoothEase }
+            opacity: 1, x: 0,
+            transition: { duration: 0.25, ease: quickEase }
         },
         exit: {
-            opacity: 0, rotateX: -10,
-            transition: { duration: 0.3 }
+            opacity: 0, x: -10,
+            transition: { duration: 0.1 }
         }
     },
     attendance: {
-        initial: { opacity: 0, x: -20 },
+        initial: { opacity: 0, x: -10 },
         animate: {
             opacity: 1, x: 0,
-            transition: iosSpring
+            transition: fastSpring
         },
         exit: {
-            opacity: 0, x: 20,
-            transition: { duration: 0.2 }
+            opacity: 0, x: 10,
+            transition: { duration: 0.1 }
         }
     },
     students: {
-        // Replaced expensive clipPath with optimized Scale/Blur (blur is still heavy but check usage)
-        // Actually, let's stick to pure Scale/Opacity for "100% optimized" request
-        initial: { opacity: 0, scale: 1.05 },
+        initial: { opacity: 0, scale: 1.02 },
         animate: {
             opacity: 1, scale: 1,
-            transition: { duration: 0.4, ease: smoothEase }
+            transition: { duration: 0.2, ease: quickEase }
         },
         exit: {
-            opacity: 0, scale: 0.95,
-            transition: { duration: 0.3 }
+            opacity: 0, scale: 0.98,
+            transition: { duration: 0.1 }
         }
     },
     default: {
         initial: { opacity: 0 },
-        animate: { opacity: 1, transition: { duration: 0.4 } },
-        exit: { opacity: 0, transition: { duration: 0.2 } }
+        animate: { opacity: 1, transition: { duration: 0.2 } },
+        exit: { opacity: 0, transition: { duration: 0.1 } }
     }
 };
 
@@ -101,14 +101,10 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children, type =
             exit={anim.exit}
             style={{
                 width: '100%',
-                // Hardware acceleration hints
-                willChange: 'transform, opacity',
-                // Perspective for subtle 3D effects (only if needed by variants like 'grades')
-                perspective: '1200px',
-                transformStyle: 'preserve-3d',
-                backfaceVisibility: 'hidden',
+                willChange: 'opacity, transform',
+                // Removed complex 3D transforms for performance
             }}
-            className="h-full" // Ensure it takes height but doesn't block scroll
+            className="h-full"
         >
             {children}
         </motion.div>
