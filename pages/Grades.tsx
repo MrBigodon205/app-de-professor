@@ -284,7 +284,11 @@ export const Grades: React.FC = () => {
     useEffect(() => { studentsRef.current = students; }, [students]);
 
     const handleGradeChange = (studentId: string, field: string, value: string) => {
-        const numericValue = value === '' ? null : parseFloat(value);
+        // Handle Brazilian locale (comma -> dot)
+        const normalizedValue = value.replace(',', '.');
+        const numericValue = value === '' ? null : parseFloat(normalizedValue);
+
+        // Allow if it's a valid number OR if null (clearing)
         if (value !== '' && (numericValue === null || isNaN(numericValue))) return;
 
         // 1. Optimistic Update

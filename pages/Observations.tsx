@@ -451,9 +451,9 @@ export const Observations: React.FC = () => {
     );
 
     return (
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 h-full overflow-hidden pb-6 lg:pb-8">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 h-auto lg:h-[calc(100vh-6rem)] overflow-visible lg:overflow-hidden pb-6 lg:pb-8">
             {/* Sidebar List */}
-            <div className={`w-full lg:w-96 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden shrink-0 ${selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`w-full lg:w-96 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden shrink-0 h-[500px] lg:h-full ${selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
                 <div className={`p-4 sm:p-8 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-slate-50 to-white dark:from-slate-950 dark:to-slate-900`}>
                     <div className="flex items-center gap-3 mb-4 sm:mb-6">
                         <div className={`size-8 sm:size-10 rounded-xl flex items-center justify-center`} style={{ backgroundColor: `${theme.primaryColorHex}1A`, color: theme.primaryColorHex }}>
@@ -502,9 +502,9 @@ export const Observations: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className={`flex-1 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] landscape:rounded-none border border-slate-100 dark:border-slate-800 landscape:border-0 shadow-xl shadow-slate-200/50 dark:shadow-none lg:overflow-hidden relative group ${!selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`flex-1 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] landscape:rounded-none border border-slate-100 dark:border-slate-800 landscape:border-0 shadow-xl shadow-slate-200/50 dark:shadow-none lg:overflow-hidden relative group ${!selectedStudentId ? 'hidden lg:flex' : 'flex'} h-auto lg:h-full`}>
                 {!selectedStudentId ? (
-                    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in duration-500">
+                    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in duration-500 h-[500px] lg:h-auto">
                         <div className={`size-24 rounded-full bg-${theme.primaryColor}/10 flex items-center justify-center mb-6`}>
                             <span className={`material-symbols-outlined text-5xl text-${theme.primaryColor}`}>person_search</span>
                         </div>
@@ -577,7 +577,7 @@ export const Observations: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
+                        <div className="flex-1 h-auto lg:h-full lg:overflow-y-auto p-4 sm:p-8 custom-scrollbar">
                             {activeTab === 'history' ? (
                                 <div className="max-w-4xl mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                     <div className="flex items-center justify-between px-2">

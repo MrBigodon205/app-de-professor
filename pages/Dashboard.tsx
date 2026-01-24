@@ -50,7 +50,8 @@ export const Dashboard: React.FC = () => {
     newObservations: 0
   });
   const [recentOccurrences, setRecentOccurrences] = useState<Occurrence[]>([]);
-  const [todaysPlan, setTodaysPlan] = useState<any | null>(null);
+  const [todaysPlans, setTodaysPlans] = useState<any[]>([]);
+  const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
   const [upcomingActivities, setUpcomingActivities] = useState<Activity[]>([]);
   const [classPlans, setClassPlans] = useState<any[]>([]);
 
@@ -345,8 +346,11 @@ export const Dashboard: React.FC = () => {
         subject: p.subject
       }));
 
-      const activePlan = formatted.find(p => today >= p.startDate && today <= p.endDate);
-      setTodaysPlan(activePlan || null);
+      // CHANGED: Filter ALL active plans instead of finding just one
+      const activePlans = formatted.filter(p => today >= p.startDate && today <= p.endDate);
+      setTodaysPlans(activePlans);
+      setCurrentPlanIndex(0); // Reset carousel
+
       // Show up to 10 most recent plans
       setClassPlans(formatted.slice(0, 10));
 
@@ -584,11 +588,28 @@ export const Dashboard: React.FC = () => {
       </motion.div>
 
       {/* PLAN OF THE DAY - Holographic Glass Design */}
+  // Helper for Carousel
+  const nextPlan = () => {
+     if (currentPlanIndex < todaysPlans.length - 1) setCurrentPlanIndex(curr => curr + 1);
+      else setCurrentPlanIndex(0); // Loop back
+  };
+  
+  const prevPlan = () => {
+     if (currentPlanIndex > 0) setCurrentPlanIndex(curr => curr - 1);
+      else setCurrentPlanIndex(todaysPlans.length - 1); // Loop back
+  };
+
+      const currentPlan = todaysPlans[currentPlanIndex] || null;
+
+      /* ... */
+
+      return (
+      // ...
       <motion.div variants={itemVariants} className="h-auto relative z-10">
         {
           loadingPlans ? (
             <div className="h-[200px] rounded-[2rem] bg-white/5 animate-pulse border border-white/5"></div>
-          ) : todaysPlan ? (
+          ) : currentPlan ? (
             <div
               className={`relative h-auto min-h-[220px] rounded-[2.5rem] p-8 landscape:p-6 overflow-hidden flex flex-col group transition-all duration-500 hover:shadow-lg`}
               style={{ boxShadow: `0 0 20px -5px ${theme.primaryColorHex}40` }}
@@ -600,7 +621,6 @@ export const Dashboard: React.FC = () => {
               ></div>
 
               {/* Pulse Orbs */}
-              {/* Pulse Orbs - OPTIMIZED: Using radial-gradient instead of heavy blur filter */}
               <div
                 className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] rounded-full opacity-30 pointer-events-none animate-pulse-slow"
                 style={{ background: `radial-gradient(circle, ${theme.accentColor}33 0%, transparent 70%)` }}
@@ -617,34 +637,52 @@ export const Dashboard: React.FC = () => {
 
               <div className="relative z-10 w-full flex flex-col gap-6">
                 {/* Header Badge */}
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/40 border border-white/10 shadow-inner">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-white"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                    </span>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white/90">Aula de Hoje</span>
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/40 border border-white/10 shadow-inner">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-white"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                      </span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-white/90">Aula de Hoje</span>
+                    </div>
+                    <span className="text-xs font-bold text-white/60 font-mono">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                   </div>
-                  <span className="text-xs font-bold text-white/60 font-mono">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+
+                  {/* CAROUSEL CONTROLS */}
+                  {todaysPlans.length > 1 && (
+                    <div className="flex items-center gap-2">
+                      <button onClick={prevPlan} className="size-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-all active:scale-95">
+                        <span className="material-symbols-outlined text-sm">arrow_back</span>
+                      </button>
+                      <span className="text-[10px] font-bold text-white/80 font-mono">{currentPlanIndex + 1}/{todaysPlans.length}</span>
+                      <button onClick={nextPlan} className="size-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-all active:scale-95">
+                        <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  {todaysPlan && (
+                  {currentPlan && (
                     <span className="text-xs font-bold text-white/80 uppercase tracking-wider flex items-center gap-2">
                       <span className="material-symbols-outlined text-sm">school</span>
-                      {classes.find(c => c.id === todaysPlan.seriesId)?.name || 'Série Geral'} {todaysPlan.section ? `• Turma ${todaysPlan.section}` : ''}
+                      {classes.find(c => c.id === currentPlan.seriesId)?.name || 'Série Geral'} {currentPlan.section ? `• Turma ${currentPlan.section}` : ''}
                     </span>
                   )}
-                  <h2 className="text-3xl md:text-4xl font-display font-black text-white tracking-tight leading-none drop-shadow-lg">
-                    {todaysPlan.title}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    {/* ANIMATED KEY for transitions */}
+                    <h2 className="text-3xl md:text-4xl font-display font-black text-white tracking-tight leading-none drop-shadow-lg animate-in fade-in slide-in-from-right-4 duration-300" key={currentPlan.id}>
+                      {currentPlan.title}
+                    </h2>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Roteiro do Planejamento</span>
                   <div className="max-w-3xl bg-black/40 border border-white/20 p-4 rounded-xl">
                     <p className="text-white text-sm md:text-base font-medium leading-relaxed font-body line-clamp-2 mix-blend-plus-lighter">
-                      "{todaysPlan.description.replace(/<[^>]*>/g, '')}"
+                      "{currentPlan.description.replace(/<[^>]*>/g, '')}"
                     </p>
                   </div>
                 </div>
@@ -661,12 +699,12 @@ export const Dashboard: React.FC = () => {
                   <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-6 px-6 py-3 rounded-xl bg-black/20 border border-white/10 text-xs text-white/80 font-mono w-full md:w-auto">
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-lg">schedule</span>
-                      <span>Início: <span className="text-white font-bold">{new Date(todaysPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span></span>
+                      <span>Início: <span className="text-white font-bold">{new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span></span>
                     </div>
                     <div className="w-px h-4 bg-white/20 hidden md:block"></div>
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-lg">event</span>
-                      <span>Fim: <span className="text-white font-bold">{new Date(todaysPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span></span>
+                      <span>Fim: <span className="text-white font-bold">{new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span></span>
                     </div>
                   </div>
                 </div>
