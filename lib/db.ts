@@ -1,4 +1,5 @@
 import { Student, AttendanceRecord, Occurrence, Grades } from '../types';
+import Dexie, { Table } from 'dexie';
 
 // Extend types for local storage (optional fields for sync status)
 export interface LocalStudent extends Student {
