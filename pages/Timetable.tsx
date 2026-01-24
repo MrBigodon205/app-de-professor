@@ -380,7 +380,9 @@ export const Timetable: React.FC = () => {
                                             <div className="flex items-center justify-between">
                                                 <div className="flex flex-col">
                                                     <span className="font-black text-slate-700 dark:text-white text-base">{cls.name}</span>
-                                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{cls.subject || 'Geral'}</span>
+                                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                                        {overrideSubject || cls.subject || currentUser?.subject || 'Geral'}
+                                                    </span>
                                                 </div>
                                             </div>
                                             <div className="flex flex-wrap gap-2 mt-1">
