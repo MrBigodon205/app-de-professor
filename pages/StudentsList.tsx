@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Student } from '../types';
 import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { TransferStudentModal } from '../components/TransferStudentModal';
 import { BulkTransferModal } from '../components/BulkTransferModal';
 
@@ -12,33 +13,67 @@ interface StudentsListProps {
     mode?: 'manage' | 'report';
 }
 
+import { useStudentsData } from '../hooks/useStudentsData';
+
 export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) => {
     const navigate = useNavigate();
     const { selectedSeriesId, selectedSection, activeSeries } = useClass();
     const { currentUser } = useAuth();
     const theme = useTheme();
 
-    const [students, setStudents] = useState<Student[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [newStudentName, setNewStudentName] = useState('');
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [editName, setEditName] = useState('');
-    const [isAdding, setIsAdding] = useState(false);
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
-    const [showBulkImport, setShowBulkImport] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
+    // Use the hybrid hook - works for both Online and Offline modes based on config
+    const {
+        students,
+        loading,
+        addStudent,
+        updateStudent,
+        deleteStudent,
+        refresh: refreshStudents
+    } = useStudentsData(selectedSeriesId?.toString(), selectedSection, currentUser?.id);
 
-    // Bulk Import State
+    // Local UI state
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [isAdding, setIsAdding] = useState(false);
+    const [newStudentName, setNewStudentName] = useState('');
     const [isImporting, setIsImporting] = useState(false);
     const [importText, setImportText] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    // Transfer State
+    const [searchQuery, setSearchQuery] = useState('');
     const [transferringStudent, setTransferringStudent] = useState<Student | null>(null);
     const [isBulkTransferring, setIsBulkTransferring] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editName, setEditName] = useState('');
 
-    // Selection Logic
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleEdit = (student: Student) => {
+        setEditingId(student.id);
+        setEditName(student.name);
+    };
+
+    const saveEdit = async () => {
+        if (!editingId) return;
+        try {
+            await updateStudent(editingId, { name: editName });
+            setEditingId(null);
+        } catch (error) {
+            console.error('Error updating student:', error);
+            alert("Erro ao atualizar.");
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Tem certeza que deseja remover este aluno?')) return;
+        try {
+            await deleteStudent(id);
+        } catch (error) {
+            console.error('Error deleting student:', error);
+            alert("Erro ao remover.");
+        }
+    };
+
+    // Helper to generate unique matricula (5 digits)
+    const generateMatricula = () => Math.floor(10000 + Math.random() * 90000).toString();
 
     const toggleSelectAll = () => {
         if (selectedIds.length === students.length) {
@@ -94,90 +129,6 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
         e.target.value = '';
     };
 
-    useEffect(() => {
-        if (selectedSeriesId && selectedSection) {
-            fetchStudents();
-        } else {
-            setStudents([]);
-            setLoading(false);
-        }
-    }, [selectedSeriesId, selectedSection]);
-
-    const fetchStudents = async () => {
-        if (!currentUser) return;
-        setLoading(true);
-        try {
-            const { data, error } = await supabase
-                .from('students')
-                .select('*')
-                .eq('series_id', selectedSeriesId)
-                .eq('section', selectedSection)
-                .eq('user_id', currentUser.id);
-
-            if (error) throw error;
-
-            const formatted: Student[] = data.map(s => ({
-                id: s.id.toString(),
-                name: s.name,
-                number: s.number,
-                initials: s.initials || '',
-                color: s.color || '',
-                classId: s.series_id.toString(),
-                section: s.section,
-                userId: s.user_id,
-                units: s.units || {}
-            }));
-
-            formatted.sort((a, b) => parseInt(a.number) - parseInt(b.number));
-            setStudents(formatted);
-        } catch (error) {
-            console.error('Error fetching students:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleEdit = (student: Student) => {
-        setEditingId(student.id);
-        setEditName(student.name);
-    };
-
-    const saveEdit = async () => {
-        if (!editingId) return;
-        try {
-            const { error } = await supabase
-                .from('students')
-                .update({ name: editName })
-                .eq('id', editingId);
-
-            if (error) throw error;
-
-            setStudents(students.map(s => s.id === editingId ? { ...s, name: editName } : s));
-            setEditingId(null);
-        } catch (error) {
-            console.error('Error updating student:', error);
-        }
-    };
-
-    const handleDelete = async (id: string) => {
-        if (!confirm('Tem certeza que deseja remover este aluno?')) return;
-        try {
-            const { error } = await supabase
-                .from('students')
-                .delete()
-                .eq('id', id);
-
-            if (error) throw error;
-
-            setStudents(students.filter(s => s.id !== id));
-        } catch (error) {
-            console.error('Error deleting student:', error);
-        }
-    };
-
-    // Helper to generate unique matricula (5 digits)
-    const generateMatricula = () => Math.floor(10000 + Math.random() * 90000).toString();
-
     const handleAddStudent = async () => {
         if (!newStudentName.trim() || !currentUser) return;
         if (!selectedSeriesId || !selectedSection) {
@@ -186,47 +137,30 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
         }
 
         const initials = newStudentName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-
-        // FIX: Use random unique matricula instead of sequential number
         const newNumber = generateMatricula();
 
+        // Prepare data - hook handles specific field requirements
         const newStudentData = {
+            id: crypto.randomUUID(), // Always generate ID for consistency
             name: newStudentName,
             number: newNumber,
             series_id: selectedSeriesId,
+            seriesId: selectedSeriesId.toString(), // Provide both for compatibility
             section: selectedSection,
             initials: initials,
             color: `from-${theme.primaryColor} to-${theme.secondaryColor}`,
             units: {},
-            user_id: currentUser.id
+            user_id: currentUser.id,
+            userId: currentUser.id
         };
 
         try {
-            const { data, error } = await supabase
-                .from('students')
-                .insert(newStudentData)
-                .select()
-                .single();
-
-            if (error) throw error;
-
-            const saved: Student = {
-                id: data.id.toString(),
-                name: data.name,
-                number: data.number,
-                initials: data.initials,
-                color: data.color,
-                classId: data.series_id.toString(),
-                section: data.section,
-                userId: data.user_id,
-                units: data.units || {}
-            };
-
-            setStudents([...students, saved]);
+            await addStudent(newStudentData);
             setNewStudentName('');
             setIsAdding(false);
         } catch (error) {
             console.error("Error adding student:", error);
+            alert("Erro ao adicionar.");
         }
     };
 
@@ -261,11 +195,9 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             const operations = sortedList.map((item, index) => {
 
                 if (item.existing) {
-                    // FIX: Do NOT re-sequence existing students. Keep their number.
                     return null;
                 } else {
                     const initials = item.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
-                    // FIX: Generate unique matricula for new students
                     const newNumber = generateMatricula();
 
                     return supabase
@@ -284,7 +216,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             }).filter(op => op !== null);
 
             await Promise.all(operations);
-            await fetchStudents();
+            await refreshStudents();
             setIsImporting(false);
             setImportText('');
             alert('Importação concluída com sucesso!');
@@ -698,7 +630,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                         onClose={() => setTransferringStudent(null)}
                         student={transferringStudent}
                         onSuccess={() => {
-                            fetchStudents();
+                            refreshStudents();
                             setTransferringStudent(null);
                         }}
                     />
@@ -710,7 +642,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                 onClose={() => setIsBulkTransferring(false)}
                 studentIds={selectedIds}
                 onSuccess={() => {
-                    fetchStudents();
+                    refreshStudents();
                     setSelectedIds([]);
                     setIsBulkTransferring(false);
                 }}
