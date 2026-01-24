@@ -601,23 +601,6 @@ export const Dashboard: React.FC = () => {
       </motion.div>
 
       {/* PLAN OF THE DAY - Holographic Glass Design */}
-  // Helper for Carousel
-  const nextPlan = () => {
-     if (currentPlanIndex < todaysPlans.length - 1) setCurrentPlanIndex(curr => curr + 1);
-      else setCurrentPlanIndex(0); // Loop back
-  };
-  
-  const prevPlan = () => {
-     if (currentPlanIndex > 0) setCurrentPlanIndex(curr => curr - 1);
-      else setCurrentPlanIndex(todaysPlans.length - 1); // Loop back
-  };
-
-      const currentPlan = todaysPlans[currentPlanIndex] || null;
-
-      /* ... */
-
-      return (
-      // ...
       <motion.div variants={itemVariants} className="h-auto relative z-10">
         {
           loadingPlans ? (
