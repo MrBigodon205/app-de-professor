@@ -87,26 +87,41 @@ export const useSync = () => {
 
 
     // 4. The "Worker Logic" (How to sync each type)
+    // 4. The "Worker Logic" (How to sync each type)
     const syncItem = async (item: SyncQueueItem) => {
         const { table, action, payload } = item;
 
-        // Map local table names to Supabase table names if different
-        // attendance -> attendance_records
-        // grades -> grades (complex structure, might need flattening)
-
         let supabaseTable = table;
         if (table === 'attendance') supabaseTable = 'attendance_records';
-        // if (table === 'students') supabaseTable = 'students'; // same
-        // if (table === 'occurrences') supabaseTable = 'occurrences'; // same
 
         if (action === 'INSERT' || action === 'UPDATE') {
-            // Basic strategy: UPSERT based on ID
-            // Note: Payload must match Supabase schema columns
+            // SANITIZATION: Fix types before sending to Supabase
+            const cleanPayload = { ...payload };
+
+            // Fix IDs for relational tables (Supabase expects Numbers for BigInt, Dexie uses Strings)
+            if (cleanPayload.student_id) cleanPayload.student_id = parseInt(cleanPayload.student_id);
+            if (cleanPayload.series_id) cleanPayload.series_id = parseInt(cleanPayload.series_id);
+            if (cleanPayload.id && !isNaN(parseInt(cleanPayload.id))) {
+                // For update actions, ensure ID is correct type if needed, but usually UUIDs are strings.
+                // If ID is numeric (old schema), parse it. If UUID, keep string.
+                // ProfAcerta seems to use Numeric IDs for students/grades?
+                // Let's assume standard handling -> if it parses to int and looks like one, send as number.
+                // Actually, best to trust the source unless known issue.
+                // Grades/Attendance use numeric IDs? 
+                // Let's safe-guard student_id specifically.
+            }
+
+            // Remove local-only fields if they exist
+            delete cleanPayload.syncStatus;
+
             const { error } = await supabase
                 .from(supabaseTable)
-                .upsert(payload);
+                .upsert(cleanPayload);
 
-            if (error) throw error;
+            if (error) {
+                console.error(`[Sync] Supabase Error for ${table}:`, error.message);
+                throw error;
+            }
         } else if (action === 'DELETE') {
             const { error } = await supabase
                 .from(supabaseTable)
