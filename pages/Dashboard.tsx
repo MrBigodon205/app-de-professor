@@ -55,6 +55,19 @@ export const Dashboard: React.FC = () => {
   const [upcomingActivities, setUpcomingActivities] = useState<Activity[]>([]);
   const [classPlans, setClassPlans] = useState<any[]>([]);
 
+  // Helper for Carousel
+  const nextPlan = () => {
+    if (currentPlanIndex < todaysPlans.length - 1) setCurrentPlanIndex(curr => curr + 1);
+    else setCurrentPlanIndex(0); // Loop back
+  };
+
+  const prevPlan = () => {
+    if (currentPlanIndex > 0) setCurrentPlanIndex(curr => curr - 1);
+    else setCurrentPlanIndex(todaysPlans.length - 1); // Loop back
+  };
+
+  const currentPlan = todaysPlans[currentPlanIndex] || null;
+
   const totalSelected = 0; // Placeholder to avoid breaking other parts if any
 
   useEffect(() => {
