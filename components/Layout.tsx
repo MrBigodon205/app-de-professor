@@ -5,18 +5,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
 import { useSync } from '../hooks/useSync';
+import { usePredictiveSync } from '../hooks/usePredictiveSync';
 import { ProfileModal } from './ProfileModal';
 import { PasswordSetupModal } from './PasswordSetupModal';
 
 import { NotificationCenter } from './NotificationCenter';
 
-
 import { MobileClassSelector } from './MobileClassSelector';
 import { ClassManager } from './ClassManager';
 import { BackgroundPattern } from './BackgroundPattern';
 import { DesktopTitleBar } from './DesktopTitleBar';
-
-
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, logout, activeSubject, updateActiveSubject } = useAuth();
@@ -25,8 +23,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const location = useLocation();
 
   // 🔄 BACKGROUND SYNC: Active whenever Layout is mounted (Logged In)
-  // This ensures that if the user logs in with pending data, it syncs immediately.
   const { isSyncing, pendingCount } = useSync();
+
+  // 🔮 PREDICTIVE SYNC: The "Clarividente" Robot
+  const { prefetchStatus } = usePredictiveSync();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
@@ -64,6 +64,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const navItems = [
     { path: '/instructions', label: 'Manual de Uso', icon: 'menu_book' }, // MOVED TO TOP
     { path: '/dashboard', label: 'Início', icon: 'dashboard' },
+    { path: '/timetable', label: 'Horário', icon: 'schedule' },
     { path: '/planning', label: 'Planejamento', icon: 'calendar_month' },
     { path: '/activities', label: 'Atividades', icon: 'assignment' },
     { path: '/grades', label: 'Notas', icon: 'grade' },
@@ -340,9 +341,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <button className="lg:hidden landscape:hidden text-text-main dark:text-white p-2 hover:bg-white/10 rounded-lg transition-colors" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
                 <span className="material-symbols-outlined">menu</span>
               </button>
-              <div className="lg:hidden landscape:hidden flex items-center gap-2">
-                <img src="/logo.svg" alt="Acerta+" className="size-8 object-contain drop-shadow-md" />
-                <span className="font-bold text-slate-800 dark:text-white text-xs landscape:hidden">Prof. Acerta+</span>
+              <div className="lg:hidden landscape:hidden flex items-center gap-3">
+                <img src="./logo.png" alt="Acerta+" className="size-10 object-contain drop-shadow-md rounded-lg" />
+                <span className="font-black text-slate-800 dark:text-white text-sm tracking-tight landscape:hidden">Prof. Acerta+</span>
               </div>
 
               {/* ☁️ SYNC STATUS INDICATOR ☁️ */}
@@ -350,6 +351,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-widest animate-pulse">
                   <span className={`material-symbols-outlined text-sm ${isSyncing ? 'animate-spin' : ''}`}>{isSyncing ? 'sync' : 'cloud_upload'}</span>
                   <span className="hidden sm:inline">{isSyncing ? 'ENVIANDO...' : `${pendingCount} PENDENTE(S)`}</span>
+                </div>
+              )}
+
+              {/* 🔮 PREDICTIVE FETCH INDICATOR 🔮 */}
+              {prefetchStatus === 'fetching' && (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400 text-[10px] font-bold uppercase tracking-widest animate-pulse">
+                  <span className="material-symbols-outlined text-sm animate-bounce">download</span>
+                  <span className="hidden sm:inline">BAIXANDO AULA...</span>
                 </div>
               )}
 

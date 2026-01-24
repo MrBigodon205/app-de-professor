@@ -29,7 +29,7 @@ export interface LocalOccurrence extends Occurrence {
 
 export interface SyncQueueItem {
     id?: number; // Auto-increment
-    table: 'attendance' | 'grades' | 'occurrences' | 'students';
+    table: 'attendance' | 'grades' | 'occurrences' | 'students' | 'activities';
     action: 'INSERT' | 'UPDATE' | 'DELETE';
     payload: any;
     status: 'pending' | 'processing' | 'failed';
@@ -45,6 +45,7 @@ class ProfAcertaDB extends Dexie {
     plans!: Table<any>; // Using any for simplicity or define LocalPlan
     activities!: Table<any>; // Using any for simplicity or define LocalActivity
     syncQueue!: Table<SyncQueueItem>;
+    schedules!: Table<any>; // LocalSchedule
 
     constructor() {
         super('ProfAcertaDB');
@@ -65,6 +66,11 @@ class ProfAcertaDB extends Dexie {
         this.version(3).stores({
             plans: 'id, user_id, series_id, start_date, end_date',
             activities: 'id, user_id, series_id, date, start_date, end_date'
+        });
+
+        // Version 4: Timetable (Schedules)
+        this.version(4).stores({
+            schedules: 'id, user_id, day_of_week'
         });
     }
 }

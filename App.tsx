@@ -11,6 +11,7 @@ const Activities = lazy(() => import('./pages/Activities').then(module => ({ def
 const Planning = lazy(() => import('./pages/Planning').then(module => ({ default: module.Planning })));
 const StudentProfile = lazy(() => import('./pages/StudentProfile').then(module => ({ default: module.StudentProfile })));
 const TeacherProfile = lazy(() => import('./pages/TeacherProfile').then(module => ({ default: module.TeacherProfile })));
+const Timetable = lazy(() => import('./pages/Timetable').then(module => ({ default: module.Timetable })));
 const Observations = lazy(() => import('./pages/Observations').then(module => ({ default: module.Observations })));
 const StudentsList = lazy(() => import('./pages/StudentsList').then(module => ({ default: module.StudentsList })));
 import { ResetPassword } from './pages/ResetPassword';
@@ -46,6 +47,7 @@ const App: React.FC = () => {
                     <Route path="/reports/:id" element={<PageTransition type="default"><StudentProfile /></PageTransition>} />
                     <Route path="/students/:id" element={<PageTransition type="default"><StudentProfile /></PageTransition>} />
                     <Route path="/profile" element={<PageTransition type="default"><TeacherProfile /></PageTransition>} />
+                    <Route path="/timetable" element={<PageTransition type="default"><Timetable /></PageTransition>} />
                     <Route path="/observations" element={<PageTransition type="dashboard"><Observations /></PageTransition>} />
                     <Route path="/instructions" element={<PageTransition type="default"><Instructions /></PageTransition>} />
                     <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,21 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db, SyncQueueItem } from '../lib/db';
 import { supabase } from '../lib/supabase';
-// import { useLiveQuery } from 'dexie-react-hooks'; // Removed as not installed
-// Actually, let's write it without dexie-react-hooks first to be safe, or I can install it.
-// Given strict instructions, I should probably stick to what I installed.
-// I'll use standard useEffect and event listeners.
+import { useAuth } from '../contexts/AuthContext';
 
 export const useSync = () => {
+    const { currentUser } = useAuth();
     const [isOnline, setIsOnline] = useState(navigator.onLine);
     const [isSyncing, setIsSyncing] = useState(false);
     const [pendingCount, setPendingCount] = useState(0);
 
-    // Monitor Online Status
+    // 1. Monitor Network Status
     useEffect(() => {
         const handleOnline = () => {
             setIsOnline(true);
-            processQueue();
+            processQueue(); // Trigger sync immediately when back online
         };
         const handleOffline = () => setIsOnline(false);
 
@@ -28,95 +26,109 @@ export const useSync = () => {
         };
     }, []);
 
-    // Monitor Queue Size (Simple Polling or Trigger)
+    // 2. Monitor Queue Size
     useEffect(() => {
-        const checkQueue = async () => {
+        const updateCount = async () => {
             const count = await db.syncQueue.where('status').equals('pending').count();
             setPendingCount(count);
         };
 
-        checkQueue();
-        const interval = setInterval(checkQueue, 2000); // Poll every 2s for queue updates
+        // Poll/Subscribe to changes (Dexie liveQuery style would be better but simple poll works)
+        updateCount();
+        const interval = setInterval(updateCount, 5000);
         return () => clearInterval(interval);
     }, []);
 
+
+    // 3. The "Postal Worker" (Process Queue)
     const processQueue = useCallback(async () => {
         if (!navigator.onLine || isSyncing) return;
+
+        const count = await db.syncQueue.where('status').equals('pending').count();
+        if (count === 0) return;
+
         setIsSyncing(true);
+        console.log(`[Sync] Starting sync of ${count} items...`);
 
         try {
+            // Get batch of pending items
             const pendingItems = await db.syncQueue
                 .where('status')
                 .equals('pending')
+                .limit(50) // Process in chunks
                 .toArray();
-
-            if (pendingItems.length === 0) {
-                setIsSyncing(false);
-                return;
-            }
 
             for (const item of pendingItems) {
                 try {
-                    const { table, action, payload } = item;
-                    let error = null;
-
-                    // Execute against Supabase
-                    if (action === 'INSERT') {
-                        const { error: e } = await supabase.from(table as any).insert(payload);
-                        error = e;
-                    } else if (action === 'UPDATE') {
-                        const { id, ...data } = payload;
-
-                        const match = payload.id ? { id: payload.id } :
-                            (table === 'attendance' ? { student_id: payload.student_id, date: payload.date, subject: payload.subject, unit: payload.unit } :
-                                (table === 'grades' ? { student_id: payload.student_id, unit: payload.unit, subject: payload.subject } :
-                                    ((table as string) === 'students' ? { id: payload.id } : {})));
-
-                        const { error: e } = await supabase.from(table as any).update(data).match(match);
-                        error = e;
-                    } else if (action === 'DELETE') {
-                        const match = payload.id ? { id: payload.id } :
-                            (table === 'attendance' ? { student_id: payload.student_id, date: payload.date } :
-                                ((table as string) === 'students' ? { id: payload.id } : {}));
-                        const { error: e } = await supabase.from(table as any).delete().match(match);
-                        error = e;
-                    }
-
-                    // If Upsert (often better for syncing)
-                    // We might change action to UPSERT in the queue for safety
-
-                    if (!error) {
-                        await db.syncQueue.delete(item.id!);
-                    } else {
-                        console.error("Sync Error Item:", item, error);
-                        // Mark as failed or increment retry?
-                        // For now keep pending but maybe backoff?
-                        // Let's increment retry logic if we had it, or just leave it.
-                    }
-
+                    await syncItem(item);
+                    // Mark compressed/done
+                    // Actually, we delete from queue if successful to keep it clean
+                    await db.syncQueue.delete(item.id!);
                 } catch (err) {
-                    console.error("Process Queue Error", err);
+                    console.error(`[Sync] Failed item ${item.id}`, err);
+                    // Increment retry or mark failed
+                    await db.syncQueue.update(item.id!, {
+                        status: item.retryCount > 3 ? 'failed' : 'pending',
+                        retryCount: item.retryCount + 1
+                    });
                 }
             }
-        } catch (e) {
-            console.error("Queue execution failed", e);
+
+            // Re-check count
+            const remaining = await db.syncQueue.where('status').equals('pending').count();
+            setPendingCount(remaining);
+
+        } catch (error) {
+            console.error("[Sync] Batch process failed", error);
         } finally {
             setIsSyncing(false);
-            // Re-check count
-            const count = await db.syncQueue.where('status').equals('pending').count();
-            setPendingCount(count);
         }
     }, [isSyncing]);
 
-    // Expose a function to manually trigger sync (e.g. after adding item)
-    const triggerSync = () => {
-        if (navigator.onLine) processQueue();
+
+    // 4. The "Worker Logic" (How to sync each type)
+    const syncItem = async (item: SyncQueueItem) => {
+        const { table, action, payload } = item;
+
+        // Map local table names to Supabase table names if different
+        // attendance -> attendance_records
+        // grades -> grades (complex structure, might need flattening)
+
+        let supabaseTable = table;
+        if (table === 'attendance') supabaseTable = 'attendance_records';
+        // if (table === 'students') supabaseTable = 'students'; // same
+        // if (table === 'occurrences') supabaseTable = 'occurrences'; // same
+
+        if (action === 'INSERT' || action === 'UPDATE') {
+            // Basic strategy: UPSERT based on ID
+            // Note: Payload must match Supabase schema columns
+            const { error } = await supabase
+                .from(supabaseTable)
+                .upsert(payload);
+
+            if (error) throw error;
+        } else if (action === 'DELETE') {
+            const { error } = await supabase
+                .from(supabaseTable)
+                .delete()
+                .eq('id', payload.id);
+
+            if (error) throw error;
+        }
     };
+
+    // Auto-trigger sync periodically if online
+    useEffect(() => {
+        if (isOnline) {
+            const timer = setInterval(processQueue, 30000); // Check every 30s
+            return () => clearInterval(timer);
+        }
+    }, [isOnline, processQueue]);
 
     return {
         isOnline,
         isSyncing,
         pendingCount,
-        triggerSync
+        triggerSync: processQueue
     };
 };
