@@ -51,7 +51,42 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const fetchClasses = useCallback(async () => {
         if (!currentUser) return;
-        setLoading(true);
+
+        // 1. CACHE FIRST: Try to load from Dexie immediately
+        try {
+            const cachedClasses = await (db as any).classes.where('userId').equals(currentUser.id).toArray();
+            if (cachedClasses.length > 0) {
+                // Deduplicate logic
+                const finalClasses: ClassConfig[] = [];
+                const seen = new Set();
+                cachedClasses.forEach((c: ClassConfig) => {
+                    const k = `${c.name}-${c.sections.join(',')}`;
+                    if (!seen.has(k)) { seen.add(k); finalClasses.push(c); }
+                });
+
+                setClasses(finalClasses);
+                setLoading(false); // Show cached data immediately!
+
+                // Restore selection if needed
+                const storedSeriesId = localStorage.getItem(`selectedSeriesId_${currentUser.id}`);
+                const storedSection = localStorage.getItem(`selectedSection_${currentUser.id}`);
+
+                if (storedSeriesId && finalClasses.find(c => c.id === storedSeriesId)) {
+                    setSelectedSeriesId(storedSeriesId);
+                    if (storedSection) setSelectedSection(storedSection);
+                } else if (!selectedSeriesId && finalClasses.length > 0) {
+                    setSelectedSeriesId(finalClasses[0].id);
+                    if (finalClasses[0].sections.length > 0) setSelectedSection(finalClasses[0].sections[0]);
+                }
+            } else {
+                setLoading(true); // Only show spinner if no cache
+            }
+        } catch (e) {
+            console.warn("Cache load failed", e);
+            setLoading(true);
+        }
+
+        // 2. NETWORK SYNC: Fetch fresh data in background
         try {
             let query = supabase
                 .from('classes')
@@ -70,17 +105,14 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 subject: c.subject
             }));
 
-            // [OFFLINE] Cache to Dexie
+            // Update Cache
             try {
-                // We can simply clear and rewrite for this user, or use put/bulkPut
-                // To keep it clean, let's clear old classes for this user first
-                // But 'classes' table likely doesn't have complex query indices yet aside from id/user_id
-                // Simple strategy: Save all.
                 await (db as any).classes.bulkPut(formattedClasses);
             } catch (e) {
-                console.warn("Failed to cache classes", e);
+                console.warn("Failed to update cache", e);
             }
 
+            // Update State (Deduplicated)
             const uniqueClasses: ClassConfig[] = [];
             const seenConfigs = new Set();
             formattedClasses.forEach(c => {
@@ -93,57 +125,21 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             setClasses(uniqueClasses);
 
-            // Load from localStorage if available
+            // Re-apply selection logic (incase new classes appeared)
+            // ... (Simple check to ensure current selection is still valid)
             const storedSeriesId = localStorage.getItem(`selectedSeriesId_${currentUser.id}`);
-            const storedSection = localStorage.getItem(`selectedSection_${currentUser.id}`);
-
-            if (formattedClasses.length > 0) {
-                if (storedSeriesId && formattedClasses.find(c => c.id === storedSeriesId)) {
+            if (!selectedSeriesId && uniqueClasses.length > 0) {
+                if (storedSeriesId && uniqueClasses.find(c => c.id === storedSeriesId)) {
                     setSelectedSeriesId(storedSeriesId);
-                    if (storedSection && formattedClasses.find(c => c.id === storedSeriesId && c.sections.includes(storedSection))) {
-                        setSelectedSection(storedSection);
-                    } else {
-                        // Default to first section if stored is invalid
-                        const cls = formattedClasses.find(c => c.id === storedSeriesId);
-                        if (cls && cls.sections.length > 0) setSelectedSection(cls.sections[0]);
-                    }
-                } else if (!selectedSeriesId) {
-                    setSelectedSeriesId(formattedClasses[0].id);
-                    if (formattedClasses[0].sections.length > 0) {
-                        setSelectedSection(formattedClasses[0].sections[0]);
-                    }
+                } else {
+                    setSelectedSeriesId(uniqueClasses[0].id);
+                    if (uniqueClasses[0].sections.length > 0) setSelectedSection(uniqueClasses[0].sections[0]);
                 }
             }
 
-            if (selectedSeriesId && !uniqueClasses.find(c => c.id === selectedSeriesId)) {
-                setSelectedSeriesId('');
-                setSelectedSection('');
-            }
         } catch (e) {
-            console.error("Failed to fetch classes (Online)", e);
-            // [OFFLINE] Fallback to Dexie
-            try {
-                const cachedClasses = await (db as any).classes.where('userId').equals(currentUser.id).toArray();
-                if (cachedClasses.length > 0) {
-                    console.log("Loaded classes from offline cache");
-                    const uniqueClasses: ClassConfig[] = cachedClasses; // Simpler dedup logic if already deduped or just use raw
-                    // Actually let's use the same dedup logic
-                    const finalClasses: ClassConfig[] = [];
-                    const seen = new Set();
-                    cachedClasses.forEach((c: ClassConfig) => {
-                        const k = `${c.name}-${c.sections.join(',')}`;
-                        if (!seen.has(k)) { seen.add(k); finalClasses.push(c); }
-                    });
-                    setClasses(finalClasses);
-                    // Restore selection logic... (Simplified: if we have classes, select first if none selected)
-                    if (!selectedSeriesId && finalClasses.length > 0) {
-                        setSelectedSeriesId(finalClasses[0].id);
-                        if (finalClasses[0].sections.length > 0) setSelectedSection(finalClasses[0].sections[0]);
-                    }
-                }
-            } catch (dbErr) {
-                console.error("Offline fallback failed", dbErr);
-            }
+            console.error("Network fetch classes failed", e);
+            // If we didn't have cache and network failed, we are in trouble
         } finally {
             setLoading(false);
         }
