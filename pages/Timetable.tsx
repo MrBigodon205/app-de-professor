@@ -29,7 +29,7 @@ const DEFAULT_DAYS: { id: DayOfWeek, label: string, enabled: boolean }[] = [
 
 export const Timetable: React.FC = () => {
     const { classes } = useClass();
-    const { currentUser } = useAuth();
+    const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
     const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -119,8 +119,8 @@ export const Timetable: React.FC = () => {
             classId,
             section,
             className: selectedClass?.name,
-            // Priority: Manual Override -> Class Subject -> Teacher Subject -> Default
-            subject: overrideSubject || selectedClass?.subject || currentUser?.subject || 'Geral'
+            // Priority: Manual -> Active Context -> Class Default -> Profile Default -> 'Geral'
+            subject: overrideSubject || activeSubject || selectedClass?.subject || currentUser?.subject || 'Geral'
         };
 
         const filtered = schedule.filter(s =>
@@ -381,7 +381,7 @@ export const Timetable: React.FC = () => {
                                                 <div className="flex flex-col">
                                                     <span className="font-black text-slate-700 dark:text-white text-base">{cls.name}</span>
                                                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                                        {overrideSubject || cls.subject || currentUser?.subject || 'Geral'}
+                                                        {overrideSubject || activeSubject || cls.subject || currentUser?.subject || 'Geral'}
                                                     </span>
                                                 </div>
                                             </div>
