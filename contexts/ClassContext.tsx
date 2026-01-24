@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode, useCa
 import { useAuth } from './AuthContext';
 import { ClassConfig } from '../types';
 import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 
 
@@ -69,6 +70,17 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 subject: c.subject
             }));
 
+            // [OFFLINE] Cache to Dexie
+            try {
+                // We can simply clear and rewrite for this user, or use put/bulkPut
+                // To keep it clean, let's clear old classes for this user first
+                // But 'classes' table likely doesn't have complex query indices yet aside from id/user_id
+                // Simple strategy: Save all.
+                await (db as any).classes.bulkPut(formattedClasses);
+            } catch (e) {
+                console.warn("Failed to cache classes", e);
+            }
+
             const uniqueClasses: ClassConfig[] = [];
             const seenConfigs = new Set();
             formattedClasses.forEach(c => {
@@ -108,7 +120,30 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 setSelectedSection('');
             }
         } catch (e) {
-            console.error("Failed to fetch classes", e);
+            console.error("Failed to fetch classes (Online)", e);
+            // [OFFLINE] Fallback to Dexie
+            try {
+                const cachedClasses = await (db as any).classes.where('userId').equals(currentUser.id).toArray();
+                if (cachedClasses.length > 0) {
+                    console.log("Loaded classes from offline cache");
+                    const uniqueClasses: ClassConfig[] = cachedClasses; // Simpler dedup logic if already deduped or just use raw
+                    // Actually let's use the same dedup logic
+                    const finalClasses: ClassConfig[] = [];
+                    const seen = new Set();
+                    cachedClasses.forEach((c: ClassConfig) => {
+                        const k = `${c.name}-${c.sections.join(',')}`;
+                        if (!seen.has(k)) { seen.add(k); finalClasses.push(c); }
+                    });
+                    setClasses(finalClasses);
+                    // Restore selection logic... (Simplified: if we have classes, select first if none selected)
+                    if (!selectedSeriesId && finalClasses.length > 0) {
+                        setSelectedSeriesId(finalClasses[0].id);
+                        if (finalClasses[0].sections.length > 0) setSelectedSection(finalClasses[0].sections[0]);
+                    }
+                }
+            } catch (dbErr) {
+                console.error("Offline fallback failed", dbErr);
+            }
         } finally {
             setLoading(false);
         }

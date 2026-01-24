@@ -1,0 +1,60 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    # Environment variables for the build
+    # NOTE: For better security, move these to GitHub Repository Secrets
+    env:
+      VITE_SUPABASE_URL: https://znvcxbcuctyeaylttbfr.supabase.co
+      VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpudmN4YmN1Y3R5ZWF5bHR0YmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYyNzk2ODcsImV4cCI6MjA4MTg1NTY4N30.OtLz1dNQlFRDsS_RuCtCSkhAP6GEkJ0Qy65RZqkOH5k
+
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Web App
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Fix Gradlew Permissions & Line Endings
+        run: |
+          chmod +x android/gradlew
+          sudo apt-get install -y dos2unix
+          dos2unix android/gradlew
+
+      - name: Build Android APK (Debug)
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: prof-acerta-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk

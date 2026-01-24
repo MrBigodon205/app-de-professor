@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
+import { DesktopTitleBar } from '../components/DesktopTitleBar';
 
 export const ResetPassword: React.FC = () => {
     const navigate = useNavigate();
@@ -58,7 +59,8 @@ export const ResetPassword: React.FC = () => {
     };
 
     return (
-        <div className="flex min-h-screen w-full items-center justify-center p-4 md:p-8 font-display bg-slate-950 overflow-hidden relative selection:bg-primary/30 selection:text-white">
+        <div className={`flex min-h-screen w-full items-center justify-center p-4 md:p-8 font-display bg-slate-950 overflow-hidden relative selection:bg-primary/30 selection:text-white ${window.electronAPI?.isElectron ? 'pt-10' : ''}`}>
+            <DesktopTitleBar />
             {/* Immersive Background (Same as Login) */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
                 <motion.div

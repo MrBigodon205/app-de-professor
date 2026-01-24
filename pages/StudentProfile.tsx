@@ -740,7 +740,7 @@ export const StudentProfile: React.FC = () => {
 
 
     return (
-        <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 h-[calc(100vh-6rem)] overflow-hidden">
+        <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 h-auto lg:h-[calc(100vh-6rem)] overflow-visible lg:overflow-hidden pb-20 lg:pb-0">
 
             {/* LEFT SIDEBAR: Student List */}
             {/* Desktop: Always distinct. Mobile: Visible only when NO student selected */}
@@ -812,8 +812,7 @@ export const StudentProfile: React.FC = () => {
             </div>
 
             {/* MAIN CONTENT AREA */}
-            {/* Desktop: Always visible. Mobile: Visible only when student IS selected */}
-            <div className={`${!selectedStudentId ? 'hidden lg:flex' : 'flex'} flex-1 flex-col gap-8 h-full overflow-y-auto custom-scrollbar lg:pr-2 pb-20 lg:pb-0`}>
+            <div className={`${!selectedStudentId ? 'hidden lg:flex' : 'flex'} flex-1 flex-col gap-8 h-auto lg:h-full lg:overflow-y-auto custom-scrollbar lg:pr-2 pb-20 lg:pb-0`}>
                 {!student && !loading ? (
                     <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-900 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-800 h-full animate-in fade-in zoom-in duration-500">
                         <div className={`size-24 rounded-3xl bg-${theme.primaryColor}/10 flex items-center justify-center mb-6`}>

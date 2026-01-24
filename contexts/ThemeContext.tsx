@@ -278,7 +278,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
 
     // Sync with HTML class and localStorage
-    React.useEffect(() => {
+    React.useLayoutEffect(() => {
         const root = window.document.documentElement;
         if (isDarkMode) {
             root.classList.add('dark');

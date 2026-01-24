@@ -69,8 +69,8 @@
 
     /* CLS Optimization: Default dimensions for containers */
     --card-min-height: 120px;
-}
 
+<<<<<<< HEAD
 .dark {
     /* Text Colors - Tinted Whites for Comfort */
     --text-primary: #f8fafc;
@@ -78,6 +78,14 @@
     --text-muted: #64748b;
     --text-on-dark: #ffffff;
     --text-on-brand: #ffffff;
+=======
+    /* Safe Area for Mobile */
+    --sat: env(safe-area-inset-top);
+    --sar: env(safe-area-inset-right);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
+}
+>>>>>>> 5caaa26adfac974c18011977d16101f607965507
 
     /* Surfaces - Deep Space & Glass */
     --surface-page: #020617;
@@ -131,6 +139,11 @@ body {
         radial-gradient(circle at 15% 50%, rgba(6, 182, 212, 0.08), transparent 25%),
         radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
     background-attachment: fixed;
+    padding-top: var(--sat);
+    padding-right: var(--sar);
+    padding-bottom: var(--sab);
+    padding-left: var(--sal);
+    min-height: 100vh;
 }
 
 .material-symbols-outlined {
@@ -607,14 +620,25 @@ body {
         touch-action: pan-y;
         -webkit-overflow-scrolling: touch;
 
-        /* Reduce heavy GPU effects on mobile */
-        -webkit-backdrop-filter: blur(8px) !important;
-        backdrop-filter: blur(8px) !important;
+        /* Reduce heavy GPU effects on mobile - AGGRESSIVE OPTIMIZATION */
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+
+        /* Make background slightly more solid since we lost the blur for contrast */
+        background-color: rgba(255, 255, 255, 0.85) !important;
+
         /* Reduced from 3xl (approx 64px) to 8px */
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-        /* Simple shadow */
+        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05) !important;
+        /* Simple border */
+        border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    }
+
+    .dark .glass-card,
+    .dark .glass-card-premium,
+    .dark .glass-card-soft,
+    .dark .card {
+        background-color: rgba(15, 23, 42, 0.9) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        /* Simpler border */
     }
 
     /* Disable some heavy animations if user prefers reduced motion or just generically on mobile to save battery */

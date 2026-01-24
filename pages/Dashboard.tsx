@@ -6,6 +6,7 @@ import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../contexts/AuthContext';
 import { Student, AttendanceRecord, Occurrence, Activity } from '../types';
 import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { DashboardHeader } from '../components/DashboardHeader';
@@ -49,9 +50,23 @@ export const Dashboard: React.FC = () => {
     newObservations: 0
   });
   const [recentOccurrences, setRecentOccurrences] = useState<Occurrence[]>([]);
-  const [todaysPlan, setTodaysPlan] = useState<any | null>(null);
+  const [todaysPlans, setTodaysPlans] = useState<any[]>([]);
+  const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
   const [upcomingActivities, setUpcomingActivities] = useState<Activity[]>([]);
   const [classPlans, setClassPlans] = useState<any[]>([]);
+
+  // Helper for Carousel
+  const nextPlan = () => {
+    if (currentPlanIndex < todaysPlans.length - 1) setCurrentPlanIndex(curr => curr + 1);
+    else setCurrentPlanIndex(0); // Loop back
+  };
+
+  const prevPlan = () => {
+    if (currentPlanIndex > 0) setCurrentPlanIndex(curr => curr - 1);
+    else setCurrentPlanIndex(todaysPlans.length - 1); // Loop back
+  };
+
+  const currentPlan = todaysPlans[currentPlanIndex] || null;
 
   const totalSelected = 0; // Placeholder to avoid breaking other parts if any
 
@@ -238,10 +253,7 @@ export const Dashboard: React.FC = () => {
       const { data, error } = await query;
       if (error) throw error;
 
-      // For the recent list, we take the top 5
-      const recentData = (data || []).slice(0, 5);
-
-      setRecentOccurrences((data || []).map(o => ({
+      const formatted = (data || []).slice(0, 5).map(o => ({
         id: o.id.toString(),
         studentId: o.student_id.toString(),
         student_name: (o.student as any)?.name || 'Estudante',
@@ -250,11 +262,52 @@ export const Dashboard: React.FC = () => {
         description: o.description,
         unit: o.unit,
         userId: o.user_id
-      })));
+      }));
 
+      // [CACHE] Save to local DB
+      try {
+        await db.occurrences.bulkPut((data || []).map(o => ({
+          ...o,
+          id: o.id,
+          studentId: o.student_id, // Map for local schema
+          user_id: o.user_id,
+          syncStatus: 'synced'
+        } as any)));
+      } catch (err) { console.warn("Cache occurrences failed", err) }
+
+      setRecentOccurrences(formatted);
       setStats(prev => ({ ...prev, newObservations: (data || []).length }));
+
     } catch (e) {
-      console.error("Error fetching occurrences:", e);
+      console.error("Error fetching occurrences (online):", e);
+      // [OFFLINE] Fallback
+      try {
+        const cached = await db.occurrences
+          .where('user_id').equals(currentUser.id)
+          .reverse() // Sort by ID/Created desc usually
+          .limit(20) // Get some recent ones
+          .toArray();
+
+        const filtered = cached.filter((o: any) => {
+          // Basic filtering if needed, e.g. date
+          return o.date === new Date().toLocaleDateString('sv-SE');
+        });
+
+        const mapped = filtered.slice(0, 5).map((o: any) => ({
+          id: o.id.toString(),
+          studentId: o.studentId?.toString() || o.student_id?.toString(),
+          student_name: 'Estudante', // We might not have join data handy without complex query
+          date: o.date,
+          type: o.type,
+          description: o.description,
+          unit: o.unit,
+          userId: o.user_id
+        }));
+        setRecentOccurrences(mapped);
+        setStats(prev => ({ ...prev, newObservations: filtered.length }));
+      } catch (dbErr) {
+        console.error("Offline occurrences failed", dbErr);
+      }
     } finally {
       if (!silent) setLoadingOccurrences(false);
     }
@@ -306,12 +359,49 @@ export const Dashboard: React.FC = () => {
         subject: p.subject
       }));
 
-      const activePlan = formatted.find(p => today >= p.startDate && today <= p.endDate);
-      setTodaysPlan(activePlan || null);
+      // CHANGED: Filter ALL active plans instead of finding just one
+      const activePlans = formatted.filter(p => today >= p.startDate && today <= p.endDate);
+      setTodaysPlans(activePlans);
+      setCurrentPlanIndex(0); // Reset carousel
+
       // Show up to 10 most recent plans
       setClassPlans(formatted.slice(0, 10));
+
+      // [CACHE]
+      try {
+        await db.plans.bulkPut(formatted.map(p => ({
+          ...p,
+          // Flatten for storage if needed, or keep structure
+          start_date: p.startDate,
+          end_date: p.endDate,
+          series_id: p.seriesId
+        })));
+      } catch (e) { console.warn("Cache plans failed", e); }
+
     } catch (e) {
-      console.error("Error fetching plans:", e);
+      console.error("Error fetching plans (online):", e);
+      // [OFFLINE]
+      try {
+        const cached = await db.plans.where('user_id').equals(currentUser.id).toArray();
+        const today = new Date().toLocaleDateString('sv-SE');
+
+        const active = cached.find((p: any) => today >= p.start_date && today <= p.end_date);
+
+        setTodaysPlan(active ? {
+          ...active,
+          startDate: active.start_date,
+          endDate: active.end_date,
+          seriesId: active.series_id
+        } : null);
+
+        setClassPlans(cached.slice(0, 10).map((p: any) => ({
+          ...p,
+          startDate: p.start_date,
+          endDate: p.end_date,
+          seriesId: p.series_id
+        })));
+
+      } catch (dbErr) { console.error("Offline plans failed", dbErr); }
     } finally {
       if (!silent) setLoadingPlans(false);
     }
@@ -350,22 +440,30 @@ export const Dashboard: React.FC = () => {
       // Show up to 50 items (effectively "all" for the dashboard widget)
       const { data } = await query.limit(50);
 
-      setUpcomingActivities((data || []).map(a => ({
-        id: a.id.toString(),
-        title: a.title,
-        type: a.type,
-        seriesId: a.series_id.toString(),
-        section: a.section || '',
-        date: a.date,
-        startDate: a.start_date,
-        endDate: a.end_date,
-        description: a.description,
-        files: a.files || [],
-        completions: a.completions || [],
-        userId: a.user_id
-      })));
+      setUpcomingActivities(formattedActivities);
+
+      // [CACHE]
+      try {
+        await db.activities.bulkPut(formattedActivities.map(a => ({
+          ...a,
+          series_id: a.seriesId,
+          start_date: a.startDate,
+          end_date: a.endDate
+        })));
+      } catch (e) { console.warn("Cache activities failed", e); }
+
     } catch (e) {
-      console.error("Error fetching activities:", e);
+      console.error("Error fetching activities (online):", e);
+      // [OFFLINE]
+      try {
+        const cached = await db.activities.where('user_id').equals(currentUser.id).toArray();
+        const today = new Date().toLocaleDateString('sv-SE');
+        // Simple filter mimicking the online query
+        const relevant = cached.filter((a: any) => {
+          return a.date >= today || (a.start_date <= today && a.end_date >= today);
+        });
+        setUpcomingActivities(relevant.slice(0, 50));
+      } catch (dbErr) { console.error("Offline activities failed", dbErr); }
     } finally {
       if (!silent) setLoadingActivities(false);
     }
@@ -507,7 +605,7 @@ export const Dashboard: React.FC = () => {
         {
           loadingPlans ? (
             <div className="h-[200px] rounded-[2rem] bg-white/5 animate-pulse border border-white/5"></div>
-          ) : todaysPlan ? (
+          ) : currentPlan ? (
             <div
               className={`relative h-auto min-h-[220px] rounded-[2.5rem] p-8 landscape:p-6 overflow-hidden flex flex-col group transition-all duration-500 hover:shadow-lg`}
               style={{ boxShadow: `0 0 20px -5px ${theme.primaryColorHex}40` }}
@@ -519,8 +617,14 @@ export const Dashboard: React.FC = () => {
               ></div>
 
               {/* Pulse Orbs */}
-              <div className="absolute top-0 right-0 p-32 rounded-full blur-[100px] -mr-20 -mt-20 mix-blend-screen pointer-events-none animate-pulse-slow" style={{ backgroundColor: `${theme.accentColor}33` }}></div>
-              <div className="absolute bottom-0 left-0 p-32 rounded-full blur-[100px] -ml-20 -mb-20 mix-blend-screen pointer-events-none" style={{ backgroundColor: `${theme.secondaryColorHex}33` }}></div>
+              <div
+                className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] rounded-full opacity-30 pointer-events-none animate-pulse-slow"
+                style={{ background: `radial-gradient(circle, ${theme.accentColor}33 0%, transparent 70%)` }}
+              ></div>
+              <div
+                className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] rounded-full opacity-30 pointer-events-none"
+                style={{ background: `radial-gradient(circle, ${theme.secondaryColorHex}33 0%, transparent 70%)` }}
+              ></div>
 
               {/* Decorative Theme Watermark */}
               <div className="absolute top-6 right-6 z-10 opacity-10">
@@ -529,34 +633,52 @@ export const Dashboard: React.FC = () => {
 
               <div className="relative z-10 w-full flex flex-col gap-6">
                 {/* Header Badge */}
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/20 border border-white/10 backdrop-blur-md shadow-inner">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-white"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                    </span>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white/90">Aula de Hoje</span>
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/40 border border-white/10 shadow-inner">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-white"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                      </span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-white/90">Aula de Hoje</span>
+                    </div>
+                    <span className="text-xs font-bold text-white/60 font-mono">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                   </div>
-                  <span className="text-xs font-bold text-white/60 font-mono">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+
+                  {/* CAROUSEL CONTROLS */}
+                  {todaysPlans.length > 1 && (
+                    <div className="flex items-center gap-2">
+                      <button onClick={prevPlan} className="size-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-all active:scale-95">
+                        <span className="material-symbols-outlined text-sm">arrow_back</span>
+                      </button>
+                      <span className="text-[10px] font-bold text-white/80 font-mono">{currentPlanIndex + 1}/{todaysPlans.length}</span>
+                      <button onClick={nextPlan} className="size-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-all active:scale-95">
+                        <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  {todaysPlan && (
+                  {currentPlan && (
                     <span className="text-xs font-bold text-white/80 uppercase tracking-wider flex items-center gap-2">
                       <span className="material-symbols-outlined text-sm">school</span>
-                      {classes.find(c => c.id === todaysPlan.seriesId)?.name || 'Série Geral'} {todaysPlan.section ? `• Turma ${todaysPlan.section}` : ''}
+                      {classes.find(c => c.id === currentPlan.seriesId)?.name || 'Série Geral'} {currentPlan.section ? `• Turma ${currentPlan.section}` : ''}
                     </span>
                   )}
-                  <h2 className="text-3xl md:text-4xl font-display font-black text-white tracking-tight leading-none drop-shadow-lg">
-                    {todaysPlan.title}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    {/* ANIMATED KEY for transitions */}
+                    <h2 className="text-3xl md:text-4xl font-display font-black text-white tracking-tight leading-none drop-shadow-lg animate-in fade-in slide-in-from-right-4 duration-300" key={currentPlan.id}>
+                      {currentPlan.title}
+                    </h2>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Roteiro do Planejamento</span>
-                  <div className="max-w-3xl bg-black/20 backdrop-blur-md border border-white/20 p-4 rounded-xl">
+                  <div className="max-w-3xl bg-black/40 border border-white/20 p-4 rounded-xl">
                     <p className="text-white text-sm md:text-base font-medium leading-relaxed font-body line-clamp-2 mix-blend-plus-lighter">
-                      "{todaysPlan.description.replace(/<[^>]*>/g, '')}"
+                      "{currentPlan.description.replace(/<[^>]*>/g, '')}"
                     </p>
                   </div>
                 </div>
@@ -573,12 +695,12 @@ export const Dashboard: React.FC = () => {
                   <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-6 px-6 py-3 rounded-xl bg-black/20 border border-white/10 text-xs text-white/80 font-mono w-full md:w-auto">
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-lg">schedule</span>
-                      <span>Início: <span className="text-white font-bold">{new Date(todaysPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span></span>
+                      <span>Início: <span className="text-white font-bold">{new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span></span>
                     </div>
                     <div className="w-px h-4 bg-white/20 hidden md:block"></div>
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-lg">event</span>
-                      <span>Fim: <span className="text-white font-bold">{new Date(todaysPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span></span>
+                      <span>Fim: <span className="text-white font-bold">{new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span></span>
                     </div>
                   </div>
                 </div>
@@ -605,7 +727,8 @@ export const Dashboard: React.FC = () => {
       <motion.div variants={itemVariants} className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-500 to-purple-600 p-[1px] shadow-lg shadow-indigo-500/20 group">
         <div className="relative bg-surface-card rounded-[23px] p-6 flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden">
           {/* Background decoration */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+          {/* Background decoration - OPTIMIZED */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2" style={{ background: 'radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%)' }}></div>
 
           <div className="flex items-center gap-6 relative z-10">
             <div className="size-16 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm shrink-0">
@@ -640,13 +763,14 @@ export const Dashboard: React.FC = () => {
         {/* Total Students (Large Card) */}
         <motion.div variants={itemVariants} className="col-span-1 landscape:col-span-2 md:col-span-2 xl:col-span-2 glass-card-premium p-8 relative overflow-hidden group transition-all duration-500 flex flex-col justify-between h-auto min-h-[380px] md:min-h-[260px]">
           {/* Ambient Glows */}
+          {/* Ambient Glows - OPTIMIZED */}
           <div
-            className="absolute -top-20 -right-20 p-40 rounded-full blur-[80px] opacity-10 group-hover:opacity-20 transition-opacity duration-700"
-            style={{ backgroundColor: theme.primaryColorHex }}
+            className="absolute -top-20 -right-20 w-[400px] h-[400px] opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none"
+            style={{ background: `radial-gradient(circle, ${theme.primaryColorHex} 0%, transparent 70%)` }}
           ></div>
           <div
-            className="absolute -bottom-20 -left-20 p-40 rounded-full blur-[80px] opacity-10 group-hover:opacity-20 transition-opacity duration-700"
-            style={{ backgroundColor: theme.secondaryColorHex }}
+            className="absolute -bottom-20 -left-20 w-[400px] h-[400px] opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none"
+            style={{ background: `radial-gradient(circle, ${theme.secondaryColorHex} 0%, transparent 70%)` }}
           ></div>
 
           <div className="relative flex flex-col md:flex-row items-start justify-between h-full gap-6 md:gap-0">
@@ -669,7 +793,7 @@ export const Dashboard: React.FC = () => {
 
             <div className="flex-1 w-full md:w-auto flex flex-col items-end h-full justify-between">
               <span
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border mb-6 backdrop-blur-sm"
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border mb-6"
                 style={{
                   color: theme.primaryColorHex,
                   backgroundColor: `${theme.primaryColorHex}15`,
@@ -733,7 +857,8 @@ export const Dashboard: React.FC = () => {
             )}
           </div>
           {/* Bg decoration */}
-          <div className="absolute -bottom-10 -right-10 size-32 rounded-full blur-[40px] opacity-10 group-hover:opacity-20 transition-colors" style={{ backgroundColor: theme.secondaryColorHex }}></div>
+          {/* Bg decoration - OPTIMIZED */}
+          <div className="absolute -bottom-10 -right-10 size-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none" style={{ background: `radial-gradient(circle, ${theme.secondaryColorHex} 0%, transparent 70%)` }}></div>
         </MotionLink>
 
         {/* Attendance (Small Card) */}
@@ -769,7 +894,8 @@ export const Dashboard: React.FC = () => {
             )}
           </div>
           {/* Bg decoration */}
-          <div className="absolute -bottom-10 -right-10 size-32 rounded-full blur-[40px] opacity-10 group-hover:opacity-20 transition-colors" style={{ backgroundColor: theme.primaryColorHex }}></div>
+          {/* Bg decoration - OPTIMIZED */}
+          <div className="absolute -bottom-10 -right-10 size-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none" style={{ background: `radial-gradient(circle, ${theme.primaryColorHex} 0%, transparent 70%)` }}></div>
         </MotionLink>
 
         {/* Activities and Plans (Wide Card) */}

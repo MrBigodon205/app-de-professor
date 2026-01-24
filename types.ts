@@ -98,6 +98,7 @@ export interface Occurrence {
   date: string;
   userId: string;
   unit?: string;
+  student_name?: string;
 }
 
 export type Subject =
@@ -136,4 +137,19 @@ export interface User {
   photoUrl?: string;
   subjects?: string[];
   isPasswordSet?: boolean;
+}
+
+export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday, 1 = Monday, etc.
+
+export interface ScheduleItem {
+  id: string;
+  userId: string;
+  dayOfWeek: DayOfWeek;
+  startTime: string; // Format "HH:mm"
+  endTime: string;   // Format "HH:mm"
+  classId: string;
+  section?: string; // Added to support "Class 1A" vs "Class 1B"
+  className?: string; // For display convenience
+  subject: string;
+  color?: string; // For UI visualization
 }
