@@ -148,6 +148,7 @@ export interface ScheduleItem {
   startTime: string; // Format "HH:mm"
   endTime: string;   // Format "HH:mm"
   classId: string;
+  section?: string; // Added to support "Class 1A" vs "Class 1B"
   className?: string; // For display convenience
   subject: string;
   color?: string; // For UI visualization

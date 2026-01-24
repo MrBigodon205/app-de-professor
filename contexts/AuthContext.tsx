@@ -100,17 +100,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     timeoutDetails
                 ]);
 
-                if ('timeout' in result) {
-                    console.warn("Auth session check timed out - forcing offline/login flow");
-                    // We could try to recover session from local storage manually if needed, 
-                    // but usually getSession is fast. If it timed out, something is stuck.
-                    // We just proceed to finally block to remove spinner.
+                if ('timeout' in result || !result.data.session) {
+                    console.warn("Auth session check timed out or failed - checking offline cache");
+
+                    // OFFLINE RECOVERY STRATEGY
+                    // If Supabase fails (offline), try to restore the last known user.
+                    const lastUserId = localStorage.getItem('last_user_id');
+                    if (lastUserId) {
+                        try {
+                            const cached = localStorage.getItem(`offline_profile_${lastUserId}`);
+                            if (cached && mounted) {
+                                const savedUser = JSON.parse(cached);
+                                console.log("Restored user from offline cache (Force):", savedUser.name);
+                                setCurrentUser(savedUser);
+                                setUserId(savedUser.id);
+                                // Set active subject from cache or persistent
+                                const storedSubject = localStorage.getItem('last_active_subject');
+                                if (storedSubject) setActiveSubject(storedSubject);
+                            }
+                        } catch (e) {
+                            console.error("Failed to restore offline user", e);
+                        }
+                    }
                 } else {
                     const { data: { session }, error } = result;
 
                     if (session?.user) {
                         if (mounted) {
                             setUserId(session.user.id);
+                            localStorage.setItem('last_user_id', session.user.id); // Save for offline recovery
                             // Also race fetchProfile so it doesn't hang
                             const profilePromise = fetchProfile(session.user.id, session.user);
                             await Promise.race([profilePromise, timeoutDetails]);
@@ -124,31 +142,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         };
 
-        initSession();
-
-        // Listen for changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        const subscription = supabase.auth.onAuthStateChange(async (event, session) => {
             if (session?.user) {
-                if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
-                    await fetchProfile(session.user.id, session.user);
-                    setLoading(false);
+                if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+                    if (mounted) setLoading(true); // START LOADING
+                    localStorage.setItem('last_user_id', session.user.id);
+
+                    // Race fetchProfile to prevent infinite load
+                    const timeoutPromise = new Promise(resolve => setTimeout(resolve, 5000));
+                    await Promise.race([
+                        fetchProfile(session.user.id, session.user),
+                        timeoutPromise
+                    ]);
+
+                    if (mounted) setLoading(false); // STOP LOADING
                 }
             } else if (event === 'SIGNED_OUT') {
                 setCurrentUser(null);
                 setUserId(null);
-                setLoading(false);
+                localStorage.removeItem('last_user_id');
+                if (mounted) setLoading(false);
             }
         });
 
+        initSession();
+
         return () => {
             mounted = false;
-            subscription.unsubscribe();
+            subscription.data.subscription.unsubscribe();
         };
     }, [fetchProfile]);
 
     // --- ACTIONS ---
 
     const login = useCallback(async (email: string, password: string) => {
+        if (!navigator.onLine) {
+            return { success: false, error: "Você está offline. Conecte-se para entrar." };
+        }
         try {
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;

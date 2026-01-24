@@ -64,6 +64,7 @@ export const Timetable: React.FC = () => {
                     startTime: item.start_time,
                     endTime: item.end_time,
                     classId: item.class_id,
+                    section: item.section, // Map from DB
                     subject: item.subject,
                     className: classes.find(c => c.id === item.class_id)?.name // Enrich display
                 })));
@@ -80,7 +81,7 @@ export const Timetable: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleAssignClass = async (classId: string) => {
+    const handleAssignClass = async (classId: string, section: string) => {
         if (!selectedSlot || !currentUser) return;
 
         const selectedClass = classes.find(c => c.id === classId);
@@ -93,6 +94,7 @@ export const Timetable: React.FC = () => {
             startTime: selectedSlot.startTime,
             endTime: selectedSlot.endTime,
             classId,
+            section, // Save selected section
             className: selectedClass?.name,
             subject: selectedClass?.subject || 'Geral'
         };
@@ -113,6 +115,7 @@ export const Timetable: React.FC = () => {
                 start_time: newItem.startTime,
                 end_time: newItem.endTime,
                 class_id: newItem.classId,
+                section: newItem.section, // Persist section
                 subject: newItem.subject
             }, { onConflict: 'user_id, day_of_week, start_time' });
 
@@ -165,7 +168,7 @@ export const Timetable: React.FC = () => {
 
             {/* Timetable Grid */}
             <div className="overflow-x-auto pb-4 custom-scrollbar">
-                <div className="min-w-[1000px] bg-white dark:bg-slate-900 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-6">
+                <div className="min-w-[800px] bg-white dark:bg-slate-900 rounded-[24px] shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-4">
 
                     {/* Header Row */}
                     <div className="grid grid-cols-6 gap-4 mb-4">
@@ -202,22 +205,22 @@ export const Timetable: React.FC = () => {
                                             whileHover={{ scale: 0.98 }}
                                             whileTap={{ scale: 0.95 }}
                                             onClick={() => handleSlotClick(day.id, slot.start, slot.end)}
-                                            className={`relative h-20 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-1 p-2
+                                            className={`relative h-16 rounded-xl border transition-all flex flex-col items-center justify-center gap-0.5 p-1
                                                 ${item
                                                     ? `bg-${theme.primaryColor}/10 border-${theme.primaryColor}/20`
-                                                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:shadow-lg'
+                                                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:shadow-md'
                                                 }
                                             `}
                                         >
                                             {item ? (
                                                 <>
-                                                    <span className={`text-${theme.primaryColor} font-black text-lg`}>
+                                                    <span className={`text-${theme.primaryColor} font-black text-xs md:text-sm text-center leading-tight truncate w-full`}>
                                                         {assignedClass?.name || 'Aula'}
                                                     </span>
-                                                    <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-                                                        {assignedClass?.sections[0]} • {item.subject.slice(0, 3)}
+                                                    <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider">
+                                                        {item.section} • {item.subject.slice(0, 3)}
                                                     </span>
-                                                    <div className={`absolute top-2 right-2 size-2 rounded-full bg-${theme.primaryColor} shadow-lg shadow-${theme.primaryColor}/50`}></div>
+                                                    <div className={`absolute top-1 right-1 size-1.5 rounded-full bg-${theme.primaryColor}`}></div>
                                                 </>
                                             ) : (
                                                 <span className="material-symbols-outlined text-slate-200 dark:text-slate-800 group-hover:text-slate-300 transition-colors">add</span>
@@ -270,24 +273,28 @@ export const Timetable: React.FC = () => {
                                         </div>
                                     </button>
 
-                                    {/* Class List */}
+                                    {/* Class List with Sections */}
                                     {classes.map(cls => (
-                                        <button
-                                            key={cls.id}
-                                            onClick={() => handleAssignClass(cls.id)}
-                                            className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:shadow-lg transition-all group"
-                                        >
-                                            <div className={`size-12 rounded-xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center font-black text-lg group-hover:scale-110 transition-transform`}>
-                                                {cls.name.charAt(0)}
+                                        <div key={cls.id} className="flex flex-col gap-2 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex flex-col">
+                                                    <span className="font-black text-slate-700 dark:text-white text-base">{cls.name}</span>
+                                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{cls.subject || 'Geral'}</span>
+                                                </div>
                                             </div>
-                                            <div className="flex flex-col items-start">
-                                                <span className="font-black text-slate-700 dark:text-white text-lg">{cls.name}</span>
-                                                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                                                    {cls.sections.length} Turmas • {cls.subject || 'Geral'}
-                                                </span>
+                                            <div className="flex flex-wrap gap-2 mt-1">
+                                                {cls.sections.map(section => (
+                                                    <button
+                                                        key={`${cls.id}-${section}`}
+                                                        onClick={() => handleAssignClass(cls.id, section)}
+                                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all
+                                                            bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 hover:border-${theme.primaryColor} hover:text-${theme.primaryColor} hover:shadow-sm`}
+                                                    >
+                                                        Turma {section}
+                                                    </button>
+                                                ))}
                                             </div>
-                                            <span className="material-symbols-outlined ml-auto text-slate-300 group-hover:text-slate-400">chevron_right</span>
-                                        </button>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
