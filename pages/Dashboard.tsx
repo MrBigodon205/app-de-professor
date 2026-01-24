@@ -70,6 +70,43 @@ export const Dashboard: React.FC = () => {
 
   const totalSelected = 0; // Placeholder to avoid breaking other parts if any
 
+  // [CACHE STRATEGY] Load cached data immediately
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const cacheKey = `dashboard_cache_${currentUser.id}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const data = JSON.parse(cached);
+        setGlobalCount(data.globalCount || 0);
+        setClassCount(data.classCount || 0);
+        setStats(data.stats || { presentToday: 0, gradeAverage: 0, newObservations: 0 });
+        // Don't set loading to false here, let the network request finish to ensure freshness
+        // BUT we can perform a "background update" visual state if we wanted.
+        // For now, let's keep loading spinners but they might be redundant if data shows up.
+        // Actually, better UX: if cache exists, show it and hide main spinners?
+        // Let's decide to HIDE spinners if we have cache, effectively "Stale-While-Revalidate"
+        setLoadingCounts(false);
+        setLoadingStats(false);
+      } catch (e) {
+        console.warn("Failed to load dashboard cache", e);
+      }
+    }
+  }, [currentUser?.id]);
+
+  // [CACHE STRATEGY] Save data when it updates
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const cacheKey = `dashboard_cache_${currentUser.id}`;
+    const dataToCache = {
+      globalCount,
+      classCount,
+      stats,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
+  }, [globalCount, classCount, stats, currentUser?.id]);
+
   useEffect(() => {
     if (currentUser?.id) {
       // Trigger fetches independently to avoid blocking UI
@@ -80,7 +117,9 @@ export const Dashboard: React.FC = () => {
 
   const fetchCounts = React.useCallback(async (silent = false) => {
     if (!currentUser) return;
-    if (!silent) setLoadingCounts(true);
+    // [CACHE STRATEGY] Check if we really need to show spinner
+    if (!silent && globalCount === 0) setLoadingCounts(true);
+
     try {
       const { count: gCount } = await supabase
         .from('students')
