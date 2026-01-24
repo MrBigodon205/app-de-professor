@@ -83,11 +83,11 @@ const MiniCalendar: React.FC<{
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 animate-in fade-in duration-300"
+                className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 animate-in fade-in duration-300"
                 onClick={onClose}
             />
 
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/50 dark:border-slate-700 p-4 lg:p-8 landscape:p-2 z-50 w-[90%] max-w-[320px] lg:max-w-[500px] max-h-[90vh] landscape:max-h-[95vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 landscape:flex landscape:flex-row landscape:items-start landscape:gap-4 landscape:w-auto landscape:max-w-none">
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface-card backdrop-blur-2xl rounded-3xl shadow-2xl border border-border-default p-4 lg:p-8 landscape:p-2 z-50 w-[90%] max-w-[320px] lg:max-w-[500px] max-h-[90vh] landscape:max-h-[95vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 landscape:flex landscape:flex-row landscape:items-start landscape:gap-4 landscape:w-auto landscape:max-w-none">
 
                 {/* Decorative background glow */}
                 <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
@@ -95,15 +95,15 @@ const MiniCalendar: React.FC<{
                     <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full blur-3xl opacity-20" style={{ backgroundColor: theme.secondaryColorHex }}></div>
                 </div>
 
-                <div className="relative flex items-center justify-between mb-4 landscape:mb-0 landscape:flex-col landscape:gap-2 landscape:justify-center landscape:w-32 landscape:border-r landscape:border-slate-200/50 landscape:dark:border-slate-700/50 landscape:pr-2">
-                    <button onClick={() => changeMonth(-1)} className="p-3 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-slate-500 transition-colors">
+                <div className="relative flex items-center justify-between mb-4 landscape:mb-0 landscape:flex-col landscape:gap-2 landscape:justify-center landscape:w-32 landscape:border-r landscape:border-border-default landscape:pr-2">
+                    <button onClick={() => changeMonth(-1)} className="p-3 hover:bg-surface-subtle rounded-xl text-text-muted transition-colors">
                         <span className="material-symbols-outlined text-lg lg:text-2xl">expand_less</span>
                     </button>
-                    <span className="font-bold text-slate-800 dark:text-white capitalize text-sm lg:text-2xl text-center leading-tight">
+                    <span className="font-bold text-text-primary capitalize text-sm lg:text-2xl text-center leading-tight">
                         {viewDate.toLocaleString('pt-BR', { month: 'long' })}<br />
-                        <span className="text-xs lg:text-base text-slate-400 font-mono">{viewDate.getFullYear()}</span>
+                        <span className="text-xs lg:text-base text-text-muted font-mono">{viewDate.getFullYear()}</span>
                     </span>
-                    <button onClick={() => changeMonth(1)} className="p-3 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded-xl text-slate-500 transition-colors">
+                    <button onClick={() => changeMonth(1)} className="p-3 hover:bg-surface-subtle rounded-xl text-text-muted transition-colors">
                         <span className="material-symbols-outlined text-lg lg:text-2xl">expand_more</span>
                     </button>
 
@@ -111,7 +111,7 @@ const MiniCalendar: React.FC<{
                     <button
                         type="button"
                         onClick={onClose}
-                        className="hidden landscape:flex w-full mt-auto py-2 bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors justify-center"
+                        className="hidden landscape:flex w-full mt-auto py-2 bg-surface-subtle text-text-muted rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-surface-hover transition-colors justify-center"
                     >
                         Fechar
                     </button>
@@ -121,7 +121,7 @@ const MiniCalendar: React.FC<{
 
                     <div className="grid grid-cols-7 gap-1 lg:gap-3 mb-2">
                         {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(day => (
-                            <div key={day} className="text-center text-[10px] lg:text-sm font-black text-slate-400 py-1 uppercase tracking-widest">
+                            <div key={day} className="text-center text-[10px] lg:text-sm font-black text-text-muted py-1 uppercase tracking-widest">
                                 {day}
                             </div>
                         ))}
@@ -146,7 +146,7 @@ const MiniCalendar: React.FC<{
                                                 ? 'font-bold'
                                                 : hasData(day as number)
                                                     ? 'text-emerald-500 dark:text-emerald-400 font-black drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]'
-                                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                                    : 'text-text-secondary hover:bg-surface-hover'
                                         }`}
                                     style={
                                         isSelected(day as number)
@@ -169,7 +169,7 @@ const MiniCalendar: React.FC<{
                 {/* Mobile Close Button */}
                 <button
                     onClick={onClose}
-                    className="w-full mt-3 py-2 bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 rounded-lg font-bold text-[10px] sm:hidden hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                    className="w-full mt-3 py-2 bg-surface-subtle text-text-muted rounded-lg font-bold text-[10px] sm:hidden hover:bg-surface-hover transition-colors"
                 >
                     Fechar
                 </button>
@@ -659,8 +659,8 @@ export const Attendance: React.FC = () => {
                 <div className={`size-20 rounded-2xl bg-${theme.primaryColor}/10 flex items-center justify-center mb-6`}>
                     <span className={`material-symbols-outlined text-4xl text-${theme.primaryColor}`}>{theme.icon}</span>
                 </div>
-                <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Nenhuma Série Selecionada</h3>
-                <p className="text-slate-500 text-center max-w-sm mb-8">Escolha uma série no menu superior para registrar as presenças de seus alunos.</p>
+                <h3 className="text-2xl font-bold text-text-primary mb-2">Nenhuma Série Selecionada</h3>
+                <p className="text-text-muted text-center max-w-sm mb-8">Escolha uma série no menu superior para registrar as presenças de seus alunos.</p>
             </div>
         );
     }
@@ -668,7 +668,7 @@ export const Attendance: React.FC = () => {
     return (
         <div className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6 lg:pb-12">
             {/* Header Control */}
-            <div className={`bg-white dark:bg-slate-900 p-4 sm:p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-8 relative z-30 group landscape:p-2`}>
+            <div className={`bg-surface-card p-4 sm:p-8 rounded-3xl shadow-card border border-border-default flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-8 relative z-30 group landscape:p-2`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700`}></div>
 
                 <div className="flex items-center gap-4 sm:gap-6 relative z-10 w-full lg:w-auto">
@@ -676,8 +676,8 @@ export const Attendance: React.FC = () => {
                         <span className="material-symbols-outlined text-2xl">check_circle</span>
                     </div>
                     <div className="flex flex-col">
-                        <h1 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1">Presenças</h1>
-                        <p className="text-slate-400 dark:text-slate-500 font-medium text-xs md:text-base">Frequência para <span className={`text-${theme.primaryColor} font-bold`}>{activeSeries?.name} • {selectedSection}</span></p>
+                        <h1 className="text-xl md:text-3xl font-black text-text-primary tracking-tight leading-none mb-1">Presenças</h1>
+                        <p className="text-text-muted font-medium text-xs md:text-base">Frequência para <span className={`text-${theme.primaryColor} font-bold`}>{activeSeries?.name} • {selectedSection}</span></p>
                     </div>
                 </div>
 
@@ -686,12 +686,12 @@ export const Attendance: React.FC = () => {
                         <button
                             data-tour="attendance-date"
                             onClick={() => setShowCalendar(!showCalendar)}
-                            className={`flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl hover:border-${theme.primaryColor} hover:bg-white dark:hover:bg-slate-800 transition-all group/cal shadow-sm`}
+                            className={`flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-2.5 sm:py-3 bg-surface-subtle border border-border-subtle rounded-2xl hover:border-${theme.primaryColor} hover:bg-surface-card transition-all group/cal shadow-sm`}
                         >
                             <span className={`material-symbols-outlined text-${theme.primaryColor} group-hover/cal:scale-110 transition-transform text-xl sm:text-2xl`}>calendar_month</span>
                             <div className="flex flex-col items-start leading-none gap-0.5 sm:gap-1">
-                                <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Data</span>
-                                <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                <span className="text-[9px] sm:text-[10px] font-black text-text-muted uppercase tracking-widest leading-none">Data</span>
+                                <span className="font-bold text-xs sm:text-sm text-text-primary">
                                     {new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                                 </span>
                             </div>
@@ -711,22 +711,22 @@ export const Attendance: React.FC = () => {
 
                     <button
                         onClick={generatePDF}
-                        className={`h-11 w-11 flex items-center justify-center border border-slate-200 dark:border-slate-700 hover:border-${theme.primaryColor} hover:text-${theme.primaryColor} text-slate-600 dark:text-slate-400 rounded-2xl transition-all shadow-sm active:scale-95`}
+                        className={`h-11 w-11 flex items-center justify-center border border-border-default hover:border-${theme.primaryColor} hover:text-${theme.primaryColor} text-text-muted rounded-2xl transition-all shadow-sm active:scale-95`}
                         title="Exportar Relatório PDF"
                     >
                         <span className="material-symbols-outlined">description</span>
                     </button>
 
-                    <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
+                    <div className="h-8 w-px bg-border-default mx-1 hidden sm:block"></div>
 
-                    <div className="flex items-center bg-slate-50 dark:bg-slate-800 rounded-2xl p-1 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center bg-surface-subtle rounded-2xl p-1 border border-border-default">
                         {['1', '2', '3'].map((unit) => (
                             <button
                                 key={unit}
                                 onClick={() => setSelectedUnit(unit)}
                                 className={`h-9 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${selectedUnit === unit
-                                    ? `bg-white dark:bg-slate-700 text-${theme.primaryColor} shadow-sm ring-1 ring-slate-200 dark:ring-slate-600`
-                                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                                    ? `bg-surface-card text-${theme.primaryColor} shadow-sm ring-1 ring-border-subtle`
+                                    : 'text-text-muted hover:text-text-primary'
                                     }`}
                             >
                                 {unit}ª Unid
@@ -751,28 +751,28 @@ export const Attendance: React.FC = () => {
                     <span className="material-symbols-outlined text-sm sm:text-lg">close</span>
                     Faltas
                 </button>
-                <button onClick={() => markAll('S')} className="flex-1 min-w-[90px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                <button onClick={() => markAll('S')} className="flex-1 min-w-[90px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 bg-surface-subtle text-text-secondary rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-surface-hover transition-all">
                     <span className="material-symbols-outlined text-sm sm:text-lg">event_busy</span>
                     Sem Aula
                 </button>
-                <button onClick={() => markAll('')} className="flex-1 min-w-[90px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-800">
+                <button onClick={() => markAll('')} className="flex-1 min-w-[90px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 bg-surface-card text-text-muted rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-surface-subtle transition-all border border-border-default">
                     <span className="material-symbols-outlined text-sm sm:text-lg">history</span>
                     Reiniciar
                 </button>
             </div>
 
             {/* Students Table */}
-            <div className={`bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden transition-all duration-300 ${loading ? 'opacity-70 pointer-events-none' : ''}`}>
+            <div className={`bg-surface-card border border-border-default rounded-3xl shadow-card overflow-hidden transition-all duration-300 ${loading ? 'opacity-70 pointer-events-none' : ''}`}>
                 <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                                <th className="px-3 sm:px-8 py-4 sm:py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest w-12 sm:w-24 text-center sm:text-left">Nº</th>
-                                <th className="px-3 sm:px-8 py-4 sm:py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-left">Aluno</th>
-                                <th className="px-3 sm:px-8 py-4 sm:py-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">Registro</th>
+                            <tr className="bg-surface-subtle/50 border-b border-border-subtle">
+                                <th className="px-3 sm:px-8 py-4 sm:py-5 text-[10px] font-black uppercase text-text-muted tracking-widest w-12 sm:w-24 text-center sm:text-left">Nº</th>
+                                <th className="px-3 sm:px-8 py-4 sm:py-5 text-[10px] font-black uppercase text-text-muted tracking-widest text-left">Aluno</th>
+                                <th className="px-3 sm:px-8 py-4 sm:py-5 text-[10px] font-black uppercase text-text-muted tracking-widest text-center">Registro</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                        <tbody className="divide-y divide-border-subtle">
                             {students.length > 0 ? (
                                 students.map((s) => (
                                     <AttendanceRow
@@ -787,11 +787,11 @@ export const Attendance: React.FC = () => {
                                 <tr>
                                     <td colSpan={3} className="px-8 py-20 text-center">
                                         <div className="flex flex-col items-center">
-                                            <div className="size-20 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-4">
-                                                <span className="material-symbols-outlined text-slate-300 text-4xl">group_off</span>
+                                            <div className="size-20 rounded-full bg-surface-subtle flex items-center justify-center mb-4">
+                                                <span className="material-symbols-outlined text-text-disabled text-4xl">group_off</span>
                                             </div>
-                                            <h4 className="font-bold text-slate-400">Nenhum aluno encontrado</h4>
-                                            <p className="text-sm text-slate-300">Certifique-se de que há alunos cadastrados nesta turma.</p>
+                                            <h4 className="font-bold text-text-muted">Nenhum aluno encontrado</h4>
+                                            <p className="text-sm text-text-disabled">Certifique-se de que há alunos cadastrados nesta turma.</p>
                                         </div>
                                     </td>
                                 </tr>

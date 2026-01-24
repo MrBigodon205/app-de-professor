@@ -586,7 +586,7 @@ export const Dashboard: React.FC = () => {
             </div>
           ) : (
             <div
-              className="h-[200px] flex flex-col items-center justify-center bg-white/5 dark:bg-slate-900/40 rounded-[2.5rem] border border-dashed border-slate-300 dark:border-slate-800/50 text-slate-400 group hover:border-[var(--theme-primary)] transition-all duration-500 relative overflow-hidden"
+              className="h-[200px] flex flex-col items-center justify-center glass-card-soft rounded-[2.5rem] border border-dashed border-border-default text-text-muted group hover:border-[var(--theme-primary)] transition-all duration-500 relative overflow-hidden"
               style={{ borderColor: `${theme.primaryColorHex}30` }}
             >
               <div
@@ -603,7 +603,7 @@ export const Dashboard: React.FC = () => {
 
       {/* Help Banner - Visible for new users or quick access */}
       <motion.div variants={itemVariants} className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-500 to-purple-600 p-[1px] shadow-lg shadow-indigo-500/20 group">
-        <div className="relative bg-white dark:bg-slate-900 rounded-[23px] p-6 flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden">
+        <div className="relative bg-surface-card rounded-[23px] p-6 flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden">
           {/* Background decoration */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
 
@@ -612,10 +612,10 @@ export const Dashboard: React.FC = () => {
               <span className="material-symbols-outlined text-3xl">rocket_launch</span>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+              <h3 className="text-lg font-bold text-text-primary mb-1">
                 Domine o Prof. Acerta+
               </h3>
-              <p className="text-slate-500 dark:text-slate-400 text-sm max-w-lg leading-relaxed">
+              <p className="text-text-secondary text-sm max-w-lg leading-relaxed">
                 Descubra como lançar notas, controlar frequência e gerar relatórios em segundos.
                 <span className="hidden sm:inline"> Confira nosso guia passo-a-passo.</span>
               </p>
@@ -638,7 +638,7 @@ export const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 landscape:grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-6 relative z-10">
 
         {/* Total Students (Large Card) */}
-        <motion.div variants={itemVariants} className="col-span-1 landscape:col-span-2 md:col-span-2 xl:col-span-2 glass-card-premium p-8 relative overflow-hidden group transition-all duration-500 flex flex-col justify-between h-auto min-h-[380px] md:min-h-[260px] border-white/20">
+        <motion.div variants={itemVariants} className="col-span-1 landscape:col-span-2 md:col-span-2 xl:col-span-2 glass-card-premium p-8 relative overflow-hidden group transition-all duration-500 flex flex-col justify-between h-auto min-h-[380px] md:min-h-[260px]">
           {/* Ambient Glows */}
           <div
             className="absolute -top-20 -right-20 p-40 rounded-full blur-[80px] opacity-10 group-hover:opacity-20 transition-opacity duration-700"
@@ -652,18 +652,18 @@ export const Dashboard: React.FC = () => {
           <div className="relative flex flex-col md:flex-row items-start justify-between h-full gap-6 md:gap-0">
             <div className="flex flex-col justify-between h-full">
               <div
-                className="size-16 rounded-2xl bg-black/5 dark:bg-slate-900/50 border border-white/10 flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-500"
+                className="size-16 rounded-2xl bg-surface-subtle border border-border-subtle flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-500"
                 style={{ color: theme.primaryColorHex, boxShadow: `0 10px 30px -10px ${theme.primaryColorHex}40` }}
               >
                 <span className="material-symbols-outlined text-3xl">groups</span>
               </div>
               <div>
                 {loadingCounts ? (
-                  <div className="h-16 w-32 bg-slate-800/10 rounded-2xl animate-pulse"></div>
+                  <div className="h-16 w-32 bg-surface-subtle rounded-2xl animate-pulse"></div>
                 ) : (
-                  <span className="block text-6xl lg:text-7xl font-display font-black text-transparent bg-clip-text bg-gradient-to-b from-slate-900 to-slate-500 dark:from-white dark:to-white/50 tracking-tighter leading-none shadow-xl drop-shadow-sm">{displayCount}</span>
+                  <span className="block text-6xl lg:text-7xl font-display font-black text-transparent bg-clip-text bg-gradient-to-b from-text-primary to-text-secondary tracking-tighter leading-none shadow-xl drop-shadow-sm">{displayCount}</span>
                 )}
-                <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-2">{isContextSelected ? 'Alunos na Turma' : 'Total de Alunos'}</h2>
+                <h2 className="text-sm font-bold text-text-muted uppercase tracking-widest mt-2">{isContextSelected ? 'Alunos na Turma' : 'Total de Alunos'}</h2>
               </div>
             </div>
 
@@ -682,7 +682,7 @@ export const Dashboard: React.FC = () => {
 
               {/* GITHUB HEATMAP INTEGRATION */}
               <div
-                className="w-full lg:w-max max-w-full glass-card-soft p-3 rounded-2xl bg-black/5 dark:bg-black/20 border border-white/5"
+                className="w-full lg:w-max max-w-full glass-card-soft p-3 rounded-2xl bg-surface-subtle/50 border border-white/5"
                 style={{ borderColor: `${theme.primaryColorHex}20` }}
               >
                 <ActivityHeatmap data={activityPoints} loading={loadingOccurrences} />
@@ -698,7 +698,7 @@ export const Dashboard: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
           to="/grades"
-          className="glass-card-soft p-6 hover:bg-white/10 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px] border border-white/10 hover:shadow-lg"
+          className="glass-card-soft p-6 hover:bg-white/10 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px] hover:shadow-lg"
           style={{
             '--hover-border': theme.primaryColorHex,
           } as React.CSSProperties}
@@ -719,7 +719,7 @@ export const Dashboard: React.FC = () => {
           <div className="relative z-10">
             <h3 className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-1">Média Geral</h3>
             {loadingStats ? (
-              <div className="h-10 w-24 bg-slate-800/10 rounded-lg animate-pulse"></div>
+              <div className="h-10 w-24 bg-surface-subtle rounded-lg animate-pulse"></div>
             ) : (
               <div className="flex items-baseline gap-2">
                 <span
@@ -728,7 +728,7 @@ export const Dashboard: React.FC = () => {
                 >
                   {stats.gradeAverage.toFixed(1)}
                 </span>
-                <span className="text-xs font-bold text-slate-500">/ 10</span>
+                <span className="text-xs font-bold text-text-muted">/ 10</span>
               </div>
             )}
           </div>
@@ -742,7 +742,7 @@ export const Dashboard: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
           to="/attendance"
-          className="glass-card-soft p-6 hover:bg-white/10 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px] border border-white/10 hover:shadow-lg"
+          className="glass-card-soft p-6 hover:bg-white/10 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px] hover:shadow-lg"
         >
           <div className="flex justify-between items-start relative z-10">
             <div
@@ -760,11 +760,11 @@ export const Dashboard: React.FC = () => {
           <div className="relative z-10">
             <h3 className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-1">Presença Hoje</h3>
             {loadingStats ? (
-              <div className="h-10 w-24 bg-slate-800/10 rounded-lg animate-pulse"></div>
+              <div className="h-10 w-24 bg-surface-subtle rounded-lg animate-pulse"></div>
             ) : (
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-display font-black text-slate-900 dark:text-white tracking-tight">{stats.presentToday}</span>
-                <span className="text-xs font-bold text-slate-500">/ {displayCount}</span>
+                <span className="text-4xl font-display font-black text-text-primary tracking-tight">{stats.presentToday}</span>
+                <span className="text-xs font-bold text-text-muted">/ {displayCount}</span>
               </div>
             )}
           </div>
@@ -773,9 +773,9 @@ export const Dashboard: React.FC = () => {
         </MotionLink>
 
         {/* Activities and Plans (Wide Card) */}
-        <motion.div variants={itemVariants} className="col-span-1 xl:col-span-2 glass-card-soft p-8 flex flex-col h-full border border-white/10" data-tour="dashboard-activities">
+        <motion.div variants={itemVariants} className="col-span-1 xl:col-span-2 glass-card-soft p-8 flex flex-col h-full" data-tour="dashboard-activities">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white flex items-center gap-3">
+            <h3 className="font-display font-bold text-xl text-text-primary flex items-center gap-3">
               <span className="material-symbols-outlined" style={{ color: theme.primaryColorHex }}>assignment_turned_in</span>
               Atividades & Agenda
             </h3>
@@ -792,9 +792,9 @@ export const Dashboard: React.FC = () => {
               </div>
               <div className="space-y-3">
                 {loadingActivities ? (
-                  [1, 2].map(i => <div key={i} className="h-14 bg-slate-800/10 rounded-xl animate-pulse"></div>)
+                  [1, 2].map(i => <div key={i} className="h-14 bg-surface-subtle rounded-xl animate-pulse"></div>)
                 ) : upcomingActivities.length === 0 ? (
-                  <p className="text-sm text-slate-500 italic text-center py-4 bg-white/5 rounded-xl border border-dashed border-white/5">Nenhuma atividade agendada.</p>
+                  <p className="text-sm text-text-muted italic text-center py-4 bg-surface-subtle/50 rounded-xl border border-dashed border-border-subtle">Nenhuma atividade agendada.</p>
                 ) : (
                   upcomingActivities.map(act => (
                     <Link

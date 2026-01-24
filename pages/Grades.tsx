@@ -58,8 +58,8 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
         const { annualTotal } = calculateAnnualSummary(student);
         const res = getStatusResult(student, 'results'); // Using standardized helper
         return (
-            <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
+            <tr className="hover:bg-surface-subtle transition-colors duration-150">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted font-mono">
                     {student.number}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -67,12 +67,12 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                         <div className={`student-avatar student-avatar-sm bg-gradient-to-br ${student.color || 'from-indigo-600 to-indigo-800'}`}>
                             {student.initials}
                         </div>
-                        <div className="text-sm font-medium text-slate-900 dark:text-white">
+                        <div className="text-sm font-medium text-text-primary">
                             {student.name}
                         </div>
                     </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center font-bold text-slate-700 dark:text-slate-300">
+                <td className="px-6 py-4 whitespace-nowrap text-center font-bold text-text-primary">
                     {annualTotal.toFixed(1)} <span className="text-[10px] text-slate-400 font-normal">pts</span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -85,7 +85,7 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
     }
 
     return (
-        <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
+        <tr className="hover:bg-surface-subtle transition-colors duration-150">
             <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
                 {student.number}
             </td>
@@ -94,7 +94,7 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                     <div className={`student-avatar student-avatar-sm bg-gradient-to-br ${student.color || 'from-indigo-600 to-indigo-800'}`}>
                         {student.initials}
                     </div>
-                    <div className="text-sm font-medium text-slate-900 dark:text-white">
+                    <div className="text-sm font-medium text-text-primary">
                         {student.name}
                     </div>
                 </div>
@@ -114,7 +114,7 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                             min="0"
                             max={currentMax}
                             step="0.1"
-                            className={`w-full min-w-[60px] text-center bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-${theme.baseColor}-500 focus:border-transparent transition-all font-mono text-sm shadow-sm`}
+                            className={`w-full min-w-[60px] text-center bg-surface-subtle border border-border-default rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-${theme.baseColor}-500 focus:border-transparent transition-all font-mono text-sm shadow-sm`}
                             value={getGrade(col.key)}
                             onChange={(e) => onGradeChange(student.id, col.key, e.target.value)}
                             placeholder="-"
@@ -122,7 +122,7 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                     </td>
                 );
             })}
-            <td className="px-6 py-4 whitespace-nowrap text-center bg-slate-50/30 dark:bg-slate-800/30">
+            <td className="px-6 py-4 whitespace-nowrap text-center bg-surface-subtle/30">
                 {(selectedUnit === 'final' || selectedUnit === 'recovery') ? (
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${finalResult.bg} ${finalResult.color}`}>
                         {finalResult.text}
@@ -560,12 +560,12 @@ export const Grades: React.FC = () => {
     if (loading) {
         return (
             <div className="space-y-6 animate-pulse">
-                <div className="h-16 bg-slate-100 dark:bg-slate-800 rounded-xl"></div>
+                <div className="h-16 bg-surface-subtle rounded-xl"></div>
                 <div className="space-y-4">
-                    <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-lg w-1/3"></div>
+                    <div className="h-10 bg-surface-subtle rounded-lg w-1/3"></div>
                     <div className="grid grid-cols-1 gap-4">
                         {[1, 2, 3, 4, 5].map(i => (
-                            <div key={i} className="h-14 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-slate-800"></div>
+                            <div key={i} className="h-14 bg-surface-subtle rounded-lg border border-border-subtle"></div>
                         ))}
                     </div>
                 </div>
@@ -599,14 +599,14 @@ export const Grades: React.FC = () => {
         <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6 lg:pb-12">
             {/* Header Controls */}
             <div className="glass-card-soft fluid-p-s flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
-                <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg overflow-x-auto max-w-full" data-tour="grades-units">
+                <div className="flex gap-2 bg-surface-subtle p-1 rounded-lg overflow-x-auto max-w-full" data-tour="grades-units">
                     {['1', '2', '3', 'final', 'recovery', 'results'].map((unit) => (
                         <button
                             key={unit}
                             onClick={() => setSelectedUnit(unit)}
                             className={`px-4 py-2 landscape:py-1 landscape:px-2 rounded-md text-sm font-bold transition-all duration-200 whitespace-nowrap ${selectedUnit === unit
                                 ? `text-white shadow-md transform scale-105`
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'
+                                : 'text-text-muted hover:bg-surface-card'
                                 }`}
                             style={selectedUnit === unit ? { backgroundColor: theme.primaryColorHex } : {}}
                         >
@@ -648,18 +648,18 @@ export const Grades: React.FC = () => {
             {/* Export Modal */}
             {showExportModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 animate-scale-in max-h-[90vh] flex flex-col">
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 shrink-0">
+                    <div className="bg-surface-card rounded-xl shadow-2xl max-w-md w-full p-6 animate-scale-in max-h-[90vh] flex flex-col">
+                        <h3 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2 shrink-0">
                             <span className="material-symbols-outlined text-indigo-600">settings</span>
                             Configurar Relatório PDF
                         </h3>
 
                         <div className="space-y-4 mb-6 overflow-y-auto custom-scrollbar flex-1 pr-2">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Unidades para Incluir:</label>
+                                <label className="block text-sm font-medium text-text-secondary mb-2">Unidades para Incluir:</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {(['1', '2', '3', 'final', 'recovery', 'results'] as const).map(key => (
-                                        <label key={key} className="flex items-center space-x-2 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer">
+                                        <label key={key} className="flex items-center space-x-2 p-2 rounded hover:bg-surface-subtle cursor-pointer">
                                             <input
                                                 type="checkbox"
                                                 checked={exportConfig.units[key]}
@@ -669,7 +669,7 @@ export const Grades: React.FC = () => {
                                                 }))}
                                                 className="rounded text-indigo-600 focus:ring-indigo-500"
                                             />
-                                            <span className="text-sm text-slate-600 dark:text-slate-300 font-bold">
+                                            <span className="text-sm text-text-secondary font-bold">
                                                 {{
                                                     '1': '1ª Unidade',
                                                     '2': '2ª Unidade',
@@ -684,7 +684,7 @@ export const Grades: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <div className="pt-4 border-t border-border-default">
                                 <label className="flex items-center space-x-2 cursor-pointer">
                                     <input
                                         type="checkbox"
@@ -692,15 +692,15 @@ export const Grades: React.FC = () => {
                                         onChange={e => setExportConfig(prev => ({ ...prev, detailed: e.target.checked }))}
                                         className="rounded text-indigo-600 focus:ring-indigo-500"
                                     />
-                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Detalhar colunas de notas</span>
+                                    <span className="text-sm font-medium text-text-primary">Detalhar colunas de notas</span>
                                 </label>
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-2 shrink-0 pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <div className="flex justify-end gap-2 shrink-0 pt-4 border-t border-border-default">
                             <button
                                 onClick={() => setShowExportModal(false)}
-                                className="px-4 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                className="px-4 py-2 text-text-muted hover:bg-surface-subtle rounded-lg transition-colors"
                             >
                                 Cancelar
                             </button>
@@ -717,8 +717,8 @@ export const Grades: React.FC = () => {
                     {/* Mobile Landscape Compact Controls */}
                     <div className="hidden landscape:flex w-full items-center gap-2 justify-between">
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">{activeSeries?.name || 'Série?'} - {selectedSection}</span>
-                            <span className="text-slate-300">|</span>
+                            <span className="text-xs font-bold text-text-muted whitespace-nowrap">{activeSeries?.name || 'Série?'} - {selectedSection}</span>
+                            <span className="text-text-disabled">|</span>
                             <select
                                 value={selectedUnit}
                                 onChange={(e) => setSelectedUnit(Number(e.target.value))}
@@ -726,7 +726,7 @@ export const Grades: React.FC = () => {
                                 aria-label="Seletor de Unidade"
                             >
                                 {[1, 2, 3, 4].map(unit => (
-                                    <option key={unit} value={unit} className="text-slate-800 dark:text-white bg-white dark:bg-slate-800">{unit}ª Un.</option>
+                                    <option key={unit} value={unit} className="text-text-primary bg-surface-card">{unit}ª Un.</option>
                                 ))}
                             </select>
                         </div>
@@ -735,7 +735,7 @@ export const Grades: React.FC = () => {
                                 onClick={() => {
                                     alert("Use o modo retrato para trocar de turma.");
                                 }}
-                                className="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-lg text-slate-500 dark:text-slate-400"
+                                className="bg-surface-subtle p-1.5 rounded-lg text-text-muted"
                             >
                                 <span className="material-symbols-outlined text-[18px]">tune</span>
                             </button>
@@ -751,27 +751,27 @@ export const Grades: React.FC = () => {
             <div className="card overflow-hidden shadow-premium border-none">
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[800px] border-collapse">
-                        <thead className={`bg-slate-50/50 dark:bg-slate-800/50 backdrop-blur-md border-b border-slate-200 dark:border-slate-700`}>
+                        <thead className={`bg-surface-subtle/50 backdrop-blur-md border-b border-border-default`}>
                             <tr>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-16">
+                                <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider w-16">
                                     Nº
                                 </th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider">
                                     Nome
                                 </th>
                                 {selectedUnit === 'results' ? (
                                     <>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider">
                                             Total Anual
                                         </th>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider">
                                             Situação Final
                                         </th>
                                     </>
                                 ) : (
                                     <>
                                         {currentConfig?.columns.map((col) => (
-                                            <th key={col.key} className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-32">
+                                            <th key={col.key} className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-32">
                                                 <div className="flex flex-col items-center">
                                                     <span>{col.label}</span>
                                                     <span className="text-[10px] opacity-70 font-normal">
@@ -780,14 +780,14 @@ export const Grades: React.FC = () => {
                                                 </div>
                                             </th>
                                         ))}
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-40 bg-slate-50/50 dark:bg-slate-800/50">
+                                        <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-40 bg-surface-subtle/50">
                                             {(selectedUnit === 'final' || selectedUnit === 'recovery') ? 'Situação' : 'Média'}
                                         </th>
                                     </>
                                 )}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                        <tbody className="divide-y divide-border-subtle">
                             {visibleStudents.map((student) => (
                                 <GradeRow
                                     key={student.id}

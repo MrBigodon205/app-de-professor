@@ -147,7 +147,7 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-4 md:p-8 font-display bg-slate-50 dark:bg-slate-950 overflow-hidden relative selection:bg-primary/30 selection:text-white transition-colors duration-500">
+    <div className="flex min-h-screen w-full items-center justify-center p-4 md:p-8 font-display bg-surface-page overflow-hidden relative selection:bg-primary/30 selection:text-white transition-colors duration-500">
       {/* Immersive Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <motion.div
@@ -173,7 +173,7 @@ export const Login: React.FC = () => {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         onClick={toggleTheme}
-        className="absolute top-6 right-6 z-50 p-3 rounded-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg text-slate-600 dark:text-slate-300 hover:scale-110 transition-all font-bold group"
+        className="absolute top-6 right-6 z-50 p-3 rounded-full bg-surface-card/50 backdrop-blur-md border border-border-default shadow-lg text-text-secondary hover:scale-110 transition-all font-bold group"
       >
         <span className="material-symbols-outlined text-xl group-hover:rotate-12 transition-transform">
           {isDarkMode ? 'light_mode' : 'dark_mode'}
@@ -188,7 +188,7 @@ export const Login: React.FC = () => {
         className="relative z-10 w-full max-w-[1000px] grid lg:grid-cols-[45%_55%] glass-card-premium overflow-hidden min-h-[650px] shadow-2xl shadow-slate-200/50 dark:shadow-[0_0_100px_-20px_rgba(0,0,0,0.5)]"
       >
         {/* Left Side: Brand Identity */}
-        <div className="relative bg-slate-50/50 dark:bg-slate-950/50 flex flex-col items-center justify-center p-8 lg:p-12 border-r border-slate-200/50 dark:border-white/5 overflow-hidden">
+        <div className="relative bg-surface-section/50 flex flex-col items-center justify-center p-8 lg:p-12 border-r border-border-default/50 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10" />
 
           <motion.div
@@ -199,7 +199,7 @@ export const Login: React.FC = () => {
           </motion.div>
 
           <div className="relative z-10 text-center space-y-4">
-            <h1 className="text-4xl lg:text-5xl font-bold text-slate-800 dark:text-white tracking-tight leading-tight">
+            <h1 className="text-4xl lg:text-5xl font-bold text-text-primary tracking-tight leading-tight">
               Prof. Acerta<span className="bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent font-black">+</span>
             </h1>
             <div className="flex items-center justify-center gap-3">
@@ -207,9 +207,10 @@ export const Login: React.FC = () => {
               <p className="text-[12px] tracking-[0.4em] text-slate-500 dark:text-slate-400 font-bold uppercase whitespace-nowrap">
                 v3.1 Intelligence
               </p>
+
               <span className="h-px w-8 bg-slate-300 dark:bg-slate-600"></span>
             </div>
-            <p className="text-slate-600 dark:text-slate-500 text-sm max-w-[280px] mx-auto leading-relaxed font-light">
+            <p className="text-text-secondary text-sm max-w-[280px] mx-auto leading-relaxed font-light">
               Transforme dados em conquistas pedagógicas com IA.
             </p>
           </div>
@@ -223,9 +224,9 @@ export const Login: React.FC = () => {
         </div>
 
         {/* Right Side: Form Access */}
-        <div className="bg-white/60 dark:bg-white/5 backdrop-blur-3xl flex flex-col p-8 lg:p-12 transition-colors duration-300">
+        <div className="bg-surface-card/60 backdrop-blur-3xl flex flex-col p-8 lg:p-12 transition-colors duration-300">
           {/* Tabs Navigation */}
-          <div className="mb-10 inline-flex p-1 bg-slate-100 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-white/5 self-start">
+          <div className="mb-10 inline-flex p-1 bg-surface-section rounded-2xl border border-border-default self-start">
             <button
               onClick={() => setActiveTab('login')}
               className={`relative px-8 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'login' ? 'text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
@@ -237,7 +238,7 @@ export const Login: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('register')}
-              className={`relative px-8 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'register' ? 'text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+              className={`relative px-8 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'register' ? 'text-white' : 'text-text-secondary hover:text-text-primary'}`}
             >
               {activeTab === 'register' && (
                 <motion.div layoutId="tab-pill" className="absolute inset-0 bg-primary rounded-xl shadow-lg shadow-primary/20" transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />
@@ -248,10 +249,10 @@ export const Login: React.FC = () => {
 
           <div className="flex-1 flex flex-col justify-center max-w-[400px] w-full mx-auto lg:mx-0">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2 transition-colors">
+              <h2 className="text-2xl font-bold text-text-primary mb-2 transition-colors">
                 {activeTab === 'login' ? 'Bem-vindo de volta' : 'Inicie sua jornada'}
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm transition-colors">
+              <p className="text-text-secondary text-sm transition-colors">
                 {activeTab === 'login' ? 'Entre com suas credenciais para acessar o painel.' : 'Crie seu perfil pedagógico em segundos.'}
               </p>
             </div>
@@ -280,10 +281,10 @@ export const Login: React.FC = () => {
                 >
                   {activeTab === 'register' && (
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Nome Completo</label>
+                      <label className="text-xs font-bold text-text-muted uppercase tracking-widest ml-1">Nome Completo</label>
                       <div className="relative group">
                         <input
-                          className="w-full bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-2xl py-4 px-5 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
+                          className="w-full bg-surface-card border border-border-default rounded-2xl py-4 px-5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
                           placeholder="Como deseja ser chamado?"
                           value={name}
                           onChange={e => setName(e.target.value)}
@@ -321,9 +322,9 @@ export const Login: React.FC = () => {
                   )}
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">E-mail Corporativo</label>
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-widest ml-1">E-mail Corporativo</label>
                     <input
-                      className="w-full bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-2xl py-4 px-5 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
+                      className="w-full bg-surface-card border border-border-default rounded-2xl py-4 px-5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
                       type="email"
                       placeholder="professor@escola.com"
                       value={email}
@@ -343,10 +344,10 @@ export const Login: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Chave de Acesso</label>
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-widest ml-1">Chave de Acesso</label>
                     <div className="relative group">
                       <input
-                        className="w-full bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-2xl py-4 pl-5 pr-12 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
+                        className="w-full bg-surface-card border border-border-default rounded-2xl py-4 pl-5 pr-12 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
                         value={password}
@@ -429,7 +430,7 @@ export const Login: React.FC = () => {
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={isSubmitting}
-                className="w-full h-14 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl flex items-center justify-center gap-3 shadow-sm hover:shadow-md transition-all group"
+                className="w-full h-14 bg-surface-card border border-border-default rounded-2xl flex items-center justify-center gap-3 shadow-sm hover:shadow-md transition-all group"
               >
                 <div className="p-1 bg-white rounded-full">
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -471,7 +472,7 @@ export const Login: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-white/10 relative overflow-hidden"
+              className="bg-surface-elevated w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-border-default relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-orange-500" />
 
@@ -481,8 +482,8 @@ export const Login: React.FC = () => {
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Atenção!</h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                  <h3 className="text-xl font-bold text-text-primary mb-2">Atenção!</h3>
+                  <p className="text-text-secondary text-sm leading-relaxed">
                     {error}
                   </p>
                 </div>

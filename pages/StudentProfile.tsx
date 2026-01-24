@@ -723,17 +723,17 @@ export const StudentProfile: React.FC = () => {
 
     // --- SKELETON HELPERS ---
     const SkeletonCard = () => (
-        <div className="bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm animate-pulse h-48">
-            <div className={`h-8 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg mb-4`}></div>
-            <div className={`h-12 w-16 bg-slate-200 dark:bg-slate-800 rounded-lg`}></div>
+        <div className="bg-surface-card p-8 rounded-[32px] border border-border-default shadow-sm animate-pulse h-48">
+            <div className={`h-8 w-32 bg-surface-subtle rounded-lg mb-4`}></div>
+            <div className={`h-12 w-16 bg-surface-subtle rounded-lg`}></div>
         </div>
     );
     const SkeletonHeader = () => (
-        <div className={`bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm animate-pulse h-40 flex items-center gap-6`}>
-            <div className="size-20 rounded-[28px] bg-slate-200 dark:bg-slate-800 shrink-0"></div>
+        <div className={`bg-surface-card p-8 rounded-[32px] border border-border-default shadow-sm animate-pulse h-40 flex items-center gap-6`}>
+            <div className="size-20 rounded-[28px] bg-surface-subtle shrink-0"></div>
             <div className="flex flex-col gap-3 w-full">
-                <div className="h-8 w-64 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
-                <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+                <div className="h-8 w-64 bg-surface-subtle rounded-xl"></div>
+                <div className="h-4 w-48 bg-surface-subtle rounded-xl"></div>
             </div>
         </div>
     );
@@ -745,7 +745,7 @@ export const StudentProfile: React.FC = () => {
             {/* LEFT SIDEBAR: Student List */}
             {/* Desktop: Always distinct. Mobile: Visible only when NO student selected */}
             <div className={`${selectedStudentId ? 'hidden lg:flex' : 'flex'} flex-col w-full lg:w-80 shrink-0 gap-4 h-full`}>
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none h-full flex flex-col">
+                <div className="bg-surface-card p-6 rounded-[2rem] border border-border-default shadow-xl h-full flex flex-col">
                     {/* Mobile Portrait Only Selectors */}
                     <div className="flex portrait:flex landscape:hidden lg:hidden flex-col gap-2 mb-4">
                         <DynamicSelect
@@ -775,17 +775,17 @@ export const StudentProfile: React.FC = () => {
                     </div>
 
                     {/* Desktop / Landscape Header */}
-                    <h3 className="hidden landscape:flex lg:flex font-bold text-slate-800 dark:text-white mb-4 items-center gap-2">
+                    <h3 className="hidden landscape:flex lg:flex font-bold text-text-primary mb-4 items-center gap-2">
                         <span className="material-symbols-outlined text-primary">groups</span>
                         Turma {activeSeries?.name}
                     </h3>
 
                     <div className="relative mb-4 group/search">
-                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/search:text-primary transition-colors">search</span>
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted group-focus-within/search:text-primary transition-colors">search</span>
                         <input
                             type="text"
                             placeholder="Buscar aluno..."
-                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium"
+                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface-subtle border border-border-default focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium"
                         />
                     </div>
 
@@ -796,7 +796,7 @@ export const StudentProfile: React.FC = () => {
                                 onClick={() => setSelectedStudentId(s.id)}
                                 className={`flex items-center gap-3 p-3 rounded-xl text-left transition-all ${selectedStudentId === s.id
                                     ? `bg-${theme.primaryColor}/10 border border-${theme.primaryColor}/20`
-                                    : 'hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent hover:border-slate-100 dark:hover:border-slate-800'}`}
+                                    : 'hover:bg-surface-subtle border border-transparent hover:border-border-default'}`}
                             >
                                 <div className={`student-avatar student-avatar-sm bg-gradient-to-br ${s.color || `from-indigo-600 to-indigo-800`}`}>
                                     {s.initials}

@@ -3,6 +3,47 @@
 @tailwind utilities;
 
 :root {
+    /* --- PREMIUM SEMANTIC TOKENS --- */
+
+    /* Text Colors - High Contrast but Premium */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --text-on-dark: #ffffff;
+    --text-on-brand: #ffffff;
+
+    /* Surfaces - Glassmorphism Base */
+    --surface-page: #f8fafc;
+    /* Translucent Glass Bases */
+    --surface-section: rgba(255, 255, 255, 0.7);
+    --surface-card: rgba(255, 255, 255, 0.65);
+    --surface-subtle: rgba(241, 245, 249, 0.5);
+    --surface-elevated: rgba(255, 255, 255, 0.8);
+
+    /* Borders - Subtle & Glassy */
+    --border-default: rgba(226, 232, 240, 0.6);
+    --border-subtle: rgba(241, 245, 249, 0.4);
+
+    /* Status - Vibrant */
+    --status-success: #10b981;
+    /* Emerald 500 */
+    --status-warning: #f59e0b;
+    /* Amber 500 */
+    --status-error: #ef4444;
+    /* Red 500 */
+
+    /* Spacing Scale (Pixels) */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-12: 48px;
+    --space-16: 64px;
+    --space-20: 80px;
+
+    /* Legacy Variables Preserved */
     --primary: 6, 182, 212;
     /* Cyan 500 */
     --secondary: 139, 92, 246;
@@ -18,19 +59,66 @@
     --fluid-bp: calc((var(--fluid-screen) - var(--fluid-min-width) * 1px) / (var(--fluid-max-width) - var(--fluid-min-width)));
     --fluid-res: calc(var(--fluid-min-size) * 1px + (var(--fluid-max-size) - var(--fluid-min-size)) * var(--fluid-bp));
 
-    --space-xs: clamp(0.75rem, 0.7rem + 0.25vw, 1rem);
-    --space-s: clamp(1rem, 0.9rem + 0.5vw, 1.5rem);
-    --space-m: clamp(1.5rem, 1.35rem + 0.75vw, 2.25rem);
-    --space-l: clamp(2.25rem, 2rem + 1.25vw, 3.5rem);
+    /* Dynamic Fluid Spacing Scale */
+    /* These use viewport units directly for gaps that need to breathe more on desktop */
+    --space-xs: clamp(0.5rem, 0.4rem + 0.5vw, 0.875rem);
+    --space-s: clamp(0.75rem, 0.6rem + 0.75vw, 1.25rem);
+    --space-m: clamp(1.25rem, 1rem + 1.25vw, 2rem);
+    --space-l: clamp(2rem, 1.5rem + 2.5vw, 4rem);
+    --space-xl: clamp(3rem, 2rem + 4vw, 6rem);
 
     /* CLS Optimization: Default dimensions for containers */
     --card-min-height: 120px;
 }
 
+.dark {
+    /* Text Colors - Tinted Whites for Comfort */
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #64748b;
+    --text-on-dark: #ffffff;
+    --text-on-brand: #ffffff;
 
+    /* Surfaces - Deep Space & Glass */
+    --surface-page: #020617;
+    /* Deep Slate 950 base */
+    /* Glass Bases for Dark Mode */
+    --surface-section: rgba(15, 23, 42, 0.6);
+    --surface-card: rgba(30, 41, 59, 0.5);
+    --surface-subtle: rgba(15, 23, 42, 0.4);
+    --surface-elevated: rgba(30, 41, 59, 0.7);
+
+    /* Borders - Glowing Edges */
+    --border-default: rgba(148, 163, 184, 0.1);
+    --border-subtle: rgba(148, 163, 184, 0.05);
+}
+
+/* Fully Fluid Root Scaling */
+/* This makes 1rem scale smoothly from 14px on mobile to 20px on large screens */
+/* Everything using 'rem' (padding, margin, width, height) will scale automatically */
 html {
-    font-size: clamp(14px, 0.8rem + 0.5vw, 18px);
+    font-size: clamp(14px, 0.75rem + 0.75vw, 20px);
     scroll-behavior: smooth;
+    background-color: var(--surface-page);
+    color: var(--text-primary);
+}
+
+/* HIGH DENSITY SCREEN OPTIMIZATIONS (Retina/4K) */
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+    html {
+        /* Slightly thinner text for high density screens to look more premium */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* ULTRA WIDE SCREENS (2000px+) */
+@media (min-width: 2000px) {
+    html {
+        /* Cap scale at a reasonable max to prevent things looking cartoonishly large */
+        font-size: 22px;
+    }
 }
 
 body {
@@ -38,7 +126,7 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-family: 'Outfit', sans-serif;
-    @apply bg-background-light dark:bg-background-dark text-text-main dark:text-white;
+    @apply bg-surface-page text-text-primary;
     background-image:
         radial-gradient(circle at 15% 50%, rgba(6, 182, 212, 0.08), transparent 25%),
         radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
@@ -570,15 +658,71 @@ body {
     }
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-
 /* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
     -ms-overflow-style: none;
     /* IE and Edge */
     scrollbar-width: none;
     /* Firefox */
+}
+
+/* --- PHASE 7: DEEP POLISH UTILITIES --- */
+
+/* Premium Buttons: Gradient + Glow + Lift */
+.btn-premium {
+    @apply relative overflow-hidden rounded-xl font-bold uppercase tracking-widest text-xs transition-all duration-300;
+    background-size: 200% auto;
+    background-image: linear-gradient(to right, var(--theme-primary, #06b6d4) 0%, var(--theme-secondary, #8b5cf6) 51%, var(--theme-primary, #06b6d4) 100%);
+    color: white;
+    box-shadow: 0 4px 15px -5px rgba(6, 182, 212, 0.4);
+    border: none;
+}
+
+.btn-premium:hover {
+    background-position: right center;
+    /* change the direction of the change here */
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -8px rgba(6, 182, 212, 0.6);
+}
+
+.btn-premium:active {
+    transform: scale(0.98);
+}
+
+/* Premium Ghost Button */
+.btn-ghost-premium {
+    @apply relative rounded-xl font-bold text-xs uppercase tracking-widest transition-all duration-300;
+    @apply text-text-secondary hover:text-text-primary;
+    @apply bg-transparent hover:bg-surface-subtle;
+    border: 1px solid transparent;
+}
+
+.btn-ghost-premium:hover {
+    @apply border-border-default shadow-sm;
+}
+
+/* Glass Inputs */
+.input-premium {
+    @apply w-full p-4 rounded-2xl bg-surface-subtle border border-border-default text-text-primary font-bold outline-none transition-all duration-300;
+    @apply focus:bg-surface-card focus:border-primary/50 focus:ring-4 focus:ring-primary/10;
+    @apply placeholder:text-text-muted;
+}
+
+/* Icon Glow Wrapper */
+.icon-glow {
+    @apply flex items-center justify-center rounded-xl transition-all duration-300;
+    background: rgba(var(--primary), 0.1);
+    color: rgb(var(--primary));
+}
+
+.group:hover .icon-glow {
+    background: rgb(var(--primary));
+    color: white;
+    box-shadow: 0 0 20px -5px rgba(var(--primary), 0.5);
+    transform: scale(1.1);
+}
+
+/* Gradient Text Class */
+.text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
 }

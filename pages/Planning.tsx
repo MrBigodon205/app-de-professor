@@ -786,11 +786,11 @@ export const Planning: React.FC = () => {
     }, [plans, debouncedSearchTerm, filterSection]);
 
     return (
-        <main className="flex h-full gap-4 md:gap-6 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden landscape:overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 p-3 md:p-8 pb-6 lg:pb-8 landscape:pb-0 relative">
+        <main className="flex h-full gap-4 md:gap-6 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden landscape:overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 p-3 md:p-8 pb-6 lg:pb-8 landscape:pb-0 relative fluid-p-m fluid-gap-m">
             {/* Landscape FAB for New Plan */}
             <button
                 onClick={handleNewPlan}
-                className="hidden landscape:flex fixed bottom-6 right-6 z-50 bg-indigo-600 hover:bg-indigo-700 text-white size-12 rounded-2xl shadow-xl border border-white/20 items-center justify-center transition-all hover:scale-110 active:scale-95 lg:hidden"
+                className="hidden landscape:flex fixed bottom-6 right-6 z-50 bg-primary hover:bg-primary-dark text-white size-12 rounded-2xl shadow-xl border border-white/20 items-center justify-center transition-all hover:scale-110 active:scale-95 lg:hidden"
                 title="Nova Aula"
             >
                 <span className="material-symbols-outlined text-3xl">add</span>

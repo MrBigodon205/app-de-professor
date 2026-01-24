@@ -17,7 +17,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onMoreClick })
     ];
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 h-[72px] bg-white dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 flex items-center justify-around px-2 z-50 pb-safe md:hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] landscape:hidden">
+        <div className="fixed bottom-0 left-0 right-0 h-[72px] bg-surface-elevated/90 backdrop-blur-md border-t border-border-default flex items-center justify-around px-2 z-50 pb-safe md:hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] landscape:hidden">
             {navItems.map((item) => (
                 <NavLink
                     key={item.path}
@@ -26,7 +26,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onMoreClick })
                         flex flex-col items-center justify-center w-full h-full gap-1 active:scale-95 transition-all
                         ${isActive
                             ? `text-${theme.primaryColor}`
-                            : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400'}
+                            : 'text-text-muted hover:text-text-secondary'}
                     `}
                 >
                     {({ isActive }) => (
@@ -50,7 +50,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onMoreClick })
             {/* More Button */}
             <button
                 onClick={onMoreClick}
-                className="flex flex-col items-center justify-center w-full h-full gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 active:scale-95 transition-all"
+                className="flex flex-col items-center justify-center w-full h-full gap-1 text-text-muted hover:text-text-secondary active:scale-95 transition-all"
             >
                 <span className="material-symbols-outlined text-[26px]">menu</span>
                 <span className="text-[10px] font-medium leading-none">Menu</span>

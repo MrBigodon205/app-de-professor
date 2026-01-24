@@ -27,7 +27,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         style={{ background: `linear-gradient(to right, ${theme.primaryColorHex}, ${theme.secondaryColorHex})` }}
                     ></div>
 
-                    <div className="relative size-16 md:size-20 landscape:size-12 rounded-full border-4 border-white dark:border-slate-800 shadow-2xl overflow-hidden bg-white dark:bg-slate-900 group-hover:scale-105 transition-transform duration-500">
+                    <div className="relative size-16 md:size-20 landscape:size-12 rounded-full border-4 border-surface-card shadow-2xl overflow-hidden bg-surface-card group-hover:scale-105 transition-transform duration-500">
                         {currentUser?.photoUrl ? (
                             <img
                                 src={currentUser.photoUrl}
@@ -47,13 +47,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
                 <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                        <span className="text-slate-400 dark:text-slate-500 text-sm md:text-base font-medium">Olá,</span>
-                        <span className={`text-base md:text-lg font-black text-slate-800 dark:text-white flex items-center gap-2`}>
+                        <span className="text-text-secondary text-sm md:text-base font-medium">Olá,</span>
+                        <span className={`text-base md:text-lg font-black text-text-primary flex items-center gap-2`}>
                             {currentUser?.name} <span className="animate-bounce-slow">👋</span>
                         </span>
                     </div>
                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                        <h1 className="text-2xl md:text-4xl landscape:text-xl font-black tracking-tight text-slate-900 dark:text-white">
+                        <h1 className="text-2xl md:text-4xl landscape:text-xl font-black tracking-tight text-text-primary">
                             Seu Painel <span
                                 className="text-transparent bg-clip-text"
                                 style={{ backgroundImage: `linear-gradient(to right, ${theme.primaryColorHex}, ${theme.secondaryColorHex})` }}

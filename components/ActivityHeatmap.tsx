@@ -61,8 +61,8 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
             borderColor: 'rgba(226, 232, 240, 0.5)',
             // In dark mode we override this:
             ...(document.documentElement.classList.contains('dark') ? {
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                borderColor: 'rgba(255, 255, 255, 0.05)'
+                backgroundColor: 'var(--color-surface-subtle)',
+                borderColor: 'var(--color-border-subtle)'
             } : {})
         };
 
@@ -94,14 +94,14 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
         return (
             <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between px-1">
-                    <span className="text-sm font-black text-slate-300 uppercase tracking-widest">Carregando...</span>
+                    <span className="text-sm font-black text-text-muted uppercase tracking-widest">Carregando...</span>
                 </div>
                 <div className="grid grid-cols-7 gap-1 md:gap-2 w-full max-w-[200px] md:max-w-[320px] animate-pulse">
                     {Array.from({ length: 7 }).map((_, i) => (
-                        <div key={`h-${i}`} className="h-4 w-full bg-transparent flex justify-center"><div className="size-2 rounded-full bg-slate-200/20"></div></div>
+                        <div key={`h-${i}`} className="h-4 w-full bg-transparent flex justify-center"><div className="size-2 rounded-full bg-surface-subtle"></div></div>
                     ))}
                     {Array.from({ length: 30 }).map((_, i) => (
-                        <div key={i} className="aspect-square w-full rounded-md bg-white/5"></div>
+                        <div key={i} className="aspect-square w-full rounded-md bg-surface-subtle"></div>
                     ))}
                 </div>
             </div>
@@ -111,15 +111,15 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
     return (
         <div className="flex flex-col gap-3 pb-2">
             <div className="flex items-center justify-between px-1">
-                <span className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">{capitalizedMonth}</span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Atividades</span>
+                <span className="text-sm font-black text-text-primary uppercase tracking-widest">{capitalizedMonth}</span>
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Atividades</span>
             </div>
 
             {/* Standard Calendar Grid (7 Cols) */}
             <div className="grid grid-cols-7 gap-1 md:gap-2 w-full max-w-[200px] md:max-w-[320px]">
                 {/* Weekday Headers - Optional but helps structure */}
                 {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(d => (
-                    <div key={d} className="text-[10px] font-bold text-slate-400 text-center">{d}</div>
+                    <div key={d} className="text-[10px] font-bold text-text-muted text-center">{d}</div>
                 ))}
 
                 {heatmapData.map((day, i) => (

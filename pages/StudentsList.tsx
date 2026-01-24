@@ -298,19 +298,19 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
     if (!selectedSeriesId || !selectedSection) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in duration-500">
+            <div className="flex flex-col items-center justify-center p-12 bg-surface-card rounded-3xl border-2 border-dashed border-border-default animate-in fade-in zoom-in duration-500">
                 <div className={`size-20 rounded-2xl bg-${theme.primaryColor}/10 flex items-center justify-center mb-6`}>
                     <span className={`material-symbols-outlined text-4xl text-${theme.primaryColor}`}>{theme.icon}</span>
                 </div>
-                <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Nenhuma Turma Selecionada</h3>
-                <p className="text-slate-500 text-center max-w-sm mb-8">Selecione uma turma no menu superior para gerenciar os alunos.</p>
+                <h3 className="text-2xl font-bold text-text-primary mb-2">Nenhuma Turma Selecionada</h3>
+                <p className="text-text-muted text-center max-w-sm mb-8">Selecione uma turma no menu superior para gerenciar os alunos.</p>
             </div>
         );
     }
 
     return (
         <div className="max-w-[1200px] mx-auto flex flex-col gap-4 md:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6 lg:pb-12">
-            <div className={`bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group`}>
+            <div className={`bg-surface-card p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-border-default flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700`}></div>
 
                 <div className="flex items-center gap-6 relative z-10 w-full lg:w-auto">
@@ -318,8 +318,8 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                         <span className="material-symbols-outlined text-3xl">groups</span>
                     </div>
                     <div className="flex flex-col">
-                        <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Gerenciar Turma</h1>
-                        <p className="text-slate-500 font-medium">Lista de alunos organizada para <span className={`text-${theme.primaryColor} font-bold`}>{activeSeries?.name} • {selectedSection}</span></p>
+                        <h1 className="text-3xl font-black text-text-primary tracking-tight">Gerenciar Turma</h1>
+                        <p className="text-text-muted font-medium">Lista de alunos organizada para <span className={`text-${theme.primaryColor} font-bold`}>{activeSeries?.name} • {selectedSection}</span></p>
                     </div>
                 </div>
 
@@ -347,7 +347,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 <button
                                     data-tour="students-import-btn"
                                     onClick={() => setIsImporting(true)}
-                                    className="flex items-center gap-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
+                                    className="flex items-center gap-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-text-primary font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
                                 >
                                     <span className="material-symbols-outlined text-xl">playlist_add</span>
                                     Importar em Massa
@@ -376,14 +376,14 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             {
                 isImporting && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-in fade-in duration-300">
-                        <div className="bg-white dark:bg-slate-900 rounded-[32px] w-full max-w-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-200 dark:border-slate-800">
+                        <div className="bg-surface-card rounded-[32px] w-full max-w-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300 border border-border-default">
                             <div className="flex items-center gap-4 mb-6">
                                 <div className={`size-12 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
                                     <span className="material-symbols-outlined">publish</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Importação em Massa</h2>
-                                    <p className="text-slate-500 text-sm font-medium">Cole a lista de nomes ou anexe um arquivo de texto.</p>
+                                    <h2 className="text-2xl font-black text-text-primary leading-tight">Importação em Massa</h2>
+                                    <p className="text-text-muted text-sm font-medium">Cole a lista de nomes ou anexe um arquivo de texto.</p>
                                 </div>
                             </div>
 
@@ -391,7 +391,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 <div className="flex items-center gap-4 mb-4">
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
-                                        className={`flex-1 h-14 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-${theme.primaryColor} hover:bg-${theme.primaryColor}/5 text-slate-500 hover:text-${theme.primaryColor} transition-all flex items-center justify-center gap-3 font-bold group`}
+                                        className={`flex-1 h-14 rounded-2xl border-2 border-dashed border-border-default hover:border-${theme.primaryColor} hover:bg-${theme.primaryColor}/5 text-text-muted hover:text-${theme.primaryColor} transition-all flex items-center justify-center gap-3 font-bold group`}
                                     >
                                         <span className="material-symbols-outlined group-hover:bounce">attach_file</span>
                                         <span>Anexar Arquivo (TXT/CSV)</span>
@@ -409,7 +409,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     value={importText}
                                     onChange={(e) => setImportText(e.target.value)}
                                     placeholder="Alice Silva&#10;Bernardo Souza&#10;Carlos Henrique..."
-                                    className={`w-full h-80 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-${theme.primaryColor}/10 focus:border-${theme.primaryColor} transition-all resize-none font-medium leading-relaxed custom-scrollbar`}
+                                    className={`w-full h-80 p-6 rounded-3xl border border-border-default bg-surface-subtle focus:bg-surface-card focus:ring-4 focus:ring-${theme.primaryColor}/10 focus:border-${theme.primaryColor} transition-all resize-none font-medium leading-relaxed custom-scrollbar`}
                                 />
                                 <div className="flex items-center justify-between mt-3 px-2">
                                     <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -423,7 +423,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                             <div className="flex gap-4">
                                 <button
                                     onClick={() => setIsImporting(false)}
-                                    className="flex-1 h-14 rounded-2xl font-black text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all uppercase tracking-widest text-xs"
+                                    className="flex-1 h-14 rounded-2xl font-black text-text-muted hover:bg-surface-subtle transition-all uppercase tracking-widest text-xs"
                                     disabled={isProcessing}
                                 >
                                     Cancelar
@@ -456,7 +456,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                     <div className={`bg-${theme.primaryColor}/5 border-2 border-dashed border-${theme.primaryColor}/20 p-8 rounded-3xl animate-in fade-in slide-in-from-top-4 duration-300`}>
                         <div className="flex items-center gap-3 mb-6">
                             <span className={`material-symbols-outlined text-${theme.primaryColor}`}>person_add</span>
-                            <h4 className="font-black text-slate-700 dark:text-white uppercase tracking-widest text-sm">Adicionar Novo Aluno</h4>
+                            <h4 className="font-black text-text-primary uppercase tracking-widest text-sm">Adicionar Novo Aluno</h4>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-4">
                             <input
@@ -464,7 +464,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 value={newStudentName}
                                 onChange={(e) => setNewStudentName(e.target.value)}
                                 placeholder="Digite o nome completo do aluno..."
-                                className={`flex-1 h-14 px-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 dark:bg-slate-900 focus:ring-4 focus:ring-${theme.primaryColor}/10 focus:border-${theme.primaryColor} transition-all font-bold`}
+                                className={`flex-1 h-14 px-6 rounded-2xl border-2 border-border-default bg-surface-card focus:ring-4 focus:ring-${theme.primaryColor}/10 focus:border-${theme.primaryColor} transition-all font-bold`}
                                 autoFocus
                             />
                             <div className="flex gap-2">
@@ -477,7 +477,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 </button>
                                 <button
                                     onClick={() => setIsAdding(false)}
-                                    className="h-14 px-6 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-2xl font-black border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
+                                    className="h-14 px-6 bg-surface-card text-text-muted rounded-2xl font-black border border-border-default hover:bg-surface-subtle transition-all"
                                 >
                                     Cancelar
                                 </button>
@@ -499,11 +499,9 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 <span className={`material-symbols-outlined text-slate-400 ${searchQuery ? `text-${theme.primaryColor}` : ''}`}>search</span>
                             </div>
                             <input
-                                type="text"
-                                value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Buscar aluno por nome ou número..."
-                                className="w-full h-12 pl-12 pr-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
+                                className="w-full h-12 pl-12 pr-4 bg-surface-card border border-border-default rounded-xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
                             />
                             {searchQuery && (
                                 <button
@@ -523,12 +521,12 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     s.number.toString().includes(searchQuery)
                                 )
                                 .length === 0 ? (
-                                <div className="col-span-full py-20 text-center bg-white dark:bg-slate-900 rounded-[32px] border border-slate-100 dark:border-slate-800">
-                                    <div className="size-20 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-4 mx-auto">
-                                        <span className="material-symbols-outlined text-slate-300 text-4xl">group_off</span>
+                                <div className="col-span-full py-20 text-center bg-surface-card rounded-[32px] border border-border-default">
+                                    <div className="size-20 rounded-full bg-surface-subtle flex items-center justify-center mb-4 mx-auto">
+                                        <span className="material-symbols-outlined text-text-disabled text-4xl">group_off</span>
                                     </div>
-                                    <h4 className="font-bold text-slate-400">Nenhum aluno encontrado</h4>
-                                    <p className="text-sm text-slate-300">Verifique os filtros de turma.</p>
+                                    <h4 className="font-bold text-text-muted">Nenhum aluno encontrado</h4>
+                                    <p className="text-sm text-text-disabled">Verifique os filtros de turma.</p>
                                 </div>
                             ) : (
                                 students
@@ -541,7 +539,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                         <div
                                             key={student.id}
                                             onClick={() => navigate(`/reports/${student.id}`)}
-                                            className="group bg-white dark:bg-slate-900 rounded-[24px] p-6 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-500/20 hover:-translate-y-1 transition-all cursor-pointer relative overflow-hidden"
+                                            className="group bg-surface-card rounded-[24px] p-6 border border-border-default shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-500/20 hover:-translate-y-1 transition-all cursor-pointer relative overflow-hidden"
                                             style={{ animationDelay: `${index * 50}ms` }}
                                         >
                                             <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${student.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} opacity-10 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-500`}></div>
@@ -550,20 +548,20 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                 <div className={`size-14 rounded-2xl bg-gradient-to-br ${student.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} flex items-center justify-center text-white text-lg font-black shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform duration-300`}>
                                                     {student.initials}
                                                 </div>
-                                                <span className="px-3 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                <span className="px-3 py-1 rounded-lg bg-surface-subtle border border-border-subtle text-[10px] font-black text-text-muted uppercase tracking-widest">
                                                     #{student.number}
                                                 </span>
                                             </div>
 
                                             <div className="relative z-10">
-                                                <h3 className="text-lg font-black text-slate-800 dark:text-white mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
+                                                <h3 className="text-lg font-black text-text-primary mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
                                                     {student.name}
                                                 </h3>
-                                                <p className="text-xs font-medium text-slate-400 dark:text-slate-500 mb-6">
+                                                <p className="text-xs font-medium text-text-muted mb-6">
                                                     {activeSeries?.name} • {selectedSection}
                                                 </p>
 
-                                                <button className="w-full h-10 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-widest group-hover:bg-indigo-600 group-hover:text-white transition-all flex items-center justify-center gap-2">
+                                                <button className="w-full h-10 rounded-xl bg-surface-subtle text-text-muted font-bold text-xs uppercase tracking-widest group-hover:bg-indigo-600 group-hover:text-white transition-all flex items-center justify-center gap-2">
                                                     <span>Relatório</span>
                                                     <span className="material-symbols-outlined text-base">arrow_forward</span>
                                                 </button>
@@ -575,11 +573,11 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                     </div>
                 ) : (
                     /* MANAGE MODE: TABLE LAYOUT */
-                    <div className={`bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden`}>
+                    <div className={`bg-surface-card border border-border-default rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden`}>
                         <div className="overflow-x-auto custom-scrollbar">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="bg-slate-100 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                                    <tr className="bg-surface-subtle/50 border-b border-border-default">
                                         <th className="px-4 py-3 w-12">
                                             <div className="flex items-center justify-center">
                                                 <input
@@ -590,27 +588,27 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                 />
                                             </div>
                                         </th>
-                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 tracking-widest w-24">Nº</th>
-                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 tracking-widest">Nome do Aluno</th>
-                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 tracking-widest text-right">Ações</th>
+                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-text-muted tracking-widest w-24">Nº</th>
+                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-text-muted tracking-widest">Nome do Aluno</th>
+                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-text-muted tracking-widest text-right">Ações</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                                <tbody className="divide-y divide-border-subtle">
                                     {students.length === 0 ? (
                                         <tr>
                                             <td colSpan={4} className="px-8 py-20 text-center">
                                                 <div className="flex flex-col items-center">
-                                                    <div className="size-20 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-4">
-                                                        <span className="material-symbols-outlined text-slate-300 text-4xl">group_off</span>
+                                                    <div className="size-20 rounded-full bg-surface-subtle flex items-center justify-center mb-4">
+                                                        <span className="material-symbols-outlined text-text-disabled text-4xl">group_off</span>
                                                     </div>
-                                                    <h4 className="font-bold text-slate-400">A lista está vazia</h4>
-                                                    <p className="text-sm text-slate-300">Comece adicionando seu primeiro aluno acima.</p>
+                                                    <h4 className="font-bold text-text-muted">A lista está vazia</h4>
+                                                    <p className="text-sm text-text-disabled">Comece adicionando seu primeiro aluno acima.</p>
                                                 </div>
                                             </td>
                                         </tr>
                                     ) : (
                                         students.map((student) => (
-                                            <tr key={student.id} className={`group transition-all border-b border-slate-100 dark:border-slate-800 ${selectedIds.includes(student.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/30'}`}>
+                                            <tr key={student.id} className={`group transition-all border-b border-border-subtle ${selectedIds.includes(student.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card hover:bg-surface-subtle'}`}>
                                                 <td className="px-4 py-4">
                                                     <div className="flex items-center justify-center">
                                                         <input
@@ -622,7 +620,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                     </div>
                                                 </td>
                                                 <td className="px-8 py-4">
-                                                    <span className="font-mono text-sm font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">
+                                                    <span className="font-mono text-sm font-bold text-text-muted bg-surface-subtle px-2 py-1 rounded-lg">
                                                         {student.number}
                                                     </span>
                                                 </td>
@@ -633,7 +631,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                                 type="text"
                                                                 value={editName}
                                                                 onChange={(e) => setEditName(e.target.value)}
-                                                                className={`px-4 py-2 border-2 border-primary/30 rounded-xl text-sm w-24 focus:w-64 max-w-md font-bold dark:bg-slate-900 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-300 ease-out`}
+                                                                className={`px-4 py-2 border-2 border-primary/30 rounded-xl text-sm w-24 focus:w-64 max-w-md font-bold bg-surface-card focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-300 ease-out`}
                                                                 autoFocus
                                                             />
                                                             <div className="flex gap-1">
@@ -644,7 +642,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                                 >
                                                                     <span className="material-symbols-outlined">check</span>
                                                                 </button>
-                                                                <button onClick={() => setEditingId(null)} className="p-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl hover:scale-110 transition-transform active:scale-95">
+                                                                <button onClick={() => setEditingId(null)} className="p-2 bg-surface-subtle text-text-muted rounded-xl hover:scale-110 transition-transform active:scale-95">
                                                                     <span className="material-symbols-outlined">close</span>
                                                                 </button>
                                                             </div>
@@ -655,8 +653,8 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                                 {student.initials}
                                                             </div>
                                                             <div className="flex flex-col">
-                                                                <span className="font-black text-slate-800 dark:text-white group-hover:text-primary transition-colors">{student.name}</span>
-                                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Frequência: 100% (Draft)</span>
+                                                                <span className="font-black text-text-primary group-hover:text-primary transition-colors">{student.name}</span>
+                                                                <span className="text-[10px] font-bold text-text-muted uppercase tracking-tighter">Frequência: 100% (Draft)</span>
                                                             </div>
                                                         </div>
                                                     )}
@@ -693,17 +691,19 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                 )}
             </div>
 
-            {transferringStudent && (
-                <TransferStudentModal
-                    isOpen={!!transferringStudent}
-                    onClose={() => setTransferringStudent(null)}
-                    student={transferringStudent}
-                    onSuccess={() => {
-                        fetchStudents();
-                        setTransferringStudent(null);
-                    }}
-                />
-            )}
+            {
+                transferringStudent && (
+                    <TransferStudentModal
+                        isOpen={!!transferringStudent}
+                        onClose={() => setTransferringStudent(null)}
+                        student={transferringStudent}
+                        onSuccess={() => {
+                            fetchStudents();
+                            setTransferringStudent(null);
+                        }}
+                    />
+                )
+            }
 
             <BulkTransferModal
                 isOpen={isBulkTransferring}
@@ -717,13 +717,13 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             />
 
             <div className={`flex items-center justify-center gap-4 py-4`}>
-                <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800"></div>
-                <div className="px-6 py-2 bg-slate-50 dark:bg-slate-800 rounded-full border border-slate-100 dark:border-slate-700">
-                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                <div className="h-px flex-1 bg-border-subtle"></div>
+                <div className="px-6 py-2 bg-surface-subtle rounded-full border border-border-default">
+                    <span className="text-xs font-black text-text-muted uppercase tracking-widest">
                         Total de <span className={`text-${theme.primaryColor}`}>{students.length}</span> alunos matriculados
                     </span>
                 </div>
-                <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800"></div>
+                <div className="h-px flex-1 bg-border-subtle"></div>
             </div>
         </div >
     );

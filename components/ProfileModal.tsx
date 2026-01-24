@@ -180,42 +180,50 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
         <>
             <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 animate-in fade-in duration-200">
                 <div
-                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                    className="absolute inset-0 bg-black/60 backdrop-blur-md"
                     onClick={onClose}
                 ></div>
 
-                <div className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-auto md:max-h-[80vh] landscape:h-[95dvh] landscape:md:h-auto">
+                <div className="relative glass-card-premium w-full max-w-4xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-auto md:max-h-[85vh] landscape:h-[95dvh] landscape:md:h-auto shadow-2xl border border-white/20">
 
-                    {/* Close Button Mobile */}
-                    <button
-                        onClick={onClose}
-                        className="absolute top-4 right-4 md:hidden size-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-red-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors z-20 shadow-sm"
-                    >
-                        <span className="material-symbols-outlined text-lg">close</span>
-                    </button>
+                    {/* HERO HEADER (Mobile Only) */}
+                    <div className="relative h-32 md:hidden shrink-0 overflow-hidden">
+                        <div className={`absolute inset-0 bg-gradient-to-r from-${theme.primaryColor} to-${theme.secondaryColor} opacity-90`}></div>
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay"></div>
+                        <button
+                            onClick={onClose}
+                            className="absolute top-4 right-4 size-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 text-white backdrop-blur-md transition-all z-20 shadow-lg"
+                        >
+                            <span className="material-symbols-outlined text-lg">close</span>
+                        </button>
+                    </div>
 
-                    {/* Sidebar (Left) */}
-                    <div className="w-full md:w-80 bg-slate-50 dark:bg-slate-800/50 p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 shrink-0 landscape:p-4 landscape:w-64 landscape:md:w-80">
+                    {/* Sidebar (Left) - Premium Design */}
+                    <div className="relative w-full md:w-80 bg-surface-section/50 backdrop-blur-xl p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-white/10 shrink-0 landscape:p-4 landscape:w-64 landscape:md:w-80">
+                        {/* Decorative Gradient Blob */}
+                        <div className={`absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-${theme.primaryColor}/10 to-transparent pointer-events-none md:block hidden`}></div>
 
-                        {/* Avatar Upload */}
-                        <div className="relative group mb-4">
-                            <div className="size-32 rounded-full border-4 border-white dark:border-slate-700 shadow-xl bg-slate-200 dark:bg-slate-700 overflow-hidden relative">
-                                {currentUser.photoUrl ? (
-                                    <img
-                                        src={currentUser.photoUrl}
-                                        alt={currentUser.name}
-                                        className="size-full object-cover"
-                                    />
-                                ) : (
-                                    <div className={`size-full flex items-center justify-center text-4xl font-bold text-${theme.primaryColor} bg-white dark:bg-slate-800`}>
-                                        {currentUser.name.substring(0, 2).toUpperCase()}
-                                    </div>
-                                )}
+                        {/* Avatar Upload - Floating Effect */}
+                        <div className="relative group mb-6 -mt-16 md:mt-4 z-10">
+                            <div className="relative p-1 rounded-full bg-gradient-to-br from-white/50 to-white/10 backdrop-blur-md shadow-2xl shadow-black/20">
+                                <div className="size-32 rounded-full overflow-hidden relative border-4 border-surface-card bg-surface-subtle">
+                                    {currentUser.photoUrl ? (
+                                        <img
+                                            src={currentUser.photoUrl}
+                                            alt={currentUser.name}
+                                            className="size-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className={`size-full flex items-center justify-center text-4xl font-bold bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white`}>
+                                            {currentUser.name.substring(0, 2).toUpperCase()}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <button
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={uploading}
-                                className="absolute bottom-0 right-0 p-2.5 bg-primary text-white rounded-full shadow-lg hover:bg-primary-dark transition-all hover:scale-110 active:scale-95"
+                                className={`absolute bottom-1 right-1 p-3 rounded-full shadow-neon text-white hover:scale-110 active:scale-95 transition-all outline-none btn-premium bg-gradient-to-r from-${theme.primaryColor} to-${theme.secondaryColor}`}
                             >
                                 <span className="material-symbols-outlined text-lg">
                                     {uploading ? 'sync' : 'photo_camera'}
@@ -224,127 +232,155 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                             <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" title="Upload de foto de perfil" />
                         </div>
 
-                        <div className="flex flex-col items-center landscape:flex-row landscape:gap-4 landscape:md:flex-col landscape:md:gap-0">
-                            <div className="flex flex-col items-center">
-                                <h2 className="text-xl font-bold text-slate-800 dark:text-white text-center leading-tight mb-1 landscape:text-lg">
-                                    {currentUser.name}
-                                </h2>
-                                <p className="text-sm text-slate-500 font-medium mb-6 text-center landscape:mb-2">{currentUser.email}</p>
-                            </div>
+                        <div className="flex flex-col items-center z-10 w-full">
+                            <h2 className="text-2xl font-black text-text-primary text-center leading-tight mb-1 landscape:text-lg tracking-tight">
+                                {currentUser.name}
+                            </h2>
+                            <p className="text-sm font-bold text-text-muted mb-8 text-center landscape:mb-4 bg-surface-subtle/50 px-3 py-1 rounded-full border border-white/5">
+                                {currentUser.email}
+                            </p>
+
+                            <nav className="w-full space-y-3">
+                                <button
+                                    onClick={() => setActiveTab('profile')}
+                                    className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 relative group overflow-hidden ${activeTab === 'profile'
+                                        ? `bg-surface-elevated shadow-lg text-${theme.primaryColor} border border-white/20`
+                                        : 'text-text-secondary hover:bg-surface-elevated/50 hover:text-text-primary'
+                                        }`}
+                                >
+                                    <div className={`size-8 rounded-lg flex items-center justify-center transition-all ${activeTab === 'profile' ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-subtle text-text-muted group-hover:bg-white group-hover:shadow-md'}`}>
+                                        <span className="material-symbols-outlined text-lg">person</span>
+                                    </div>
+                                    Dados Pessoais
+                                    {activeTab === 'profile' && <div className={`absolute right-0 top-0 bottom-0 w-1 bg-${theme.primaryColor} rounded-l-full`}></div>}
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('security')}
+                                    className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 relative group overflow-hidden ${activeTab === 'security'
+                                        ? `bg-surface-elevated shadow-lg text-${theme.primaryColor} border border-white/20`
+                                        : 'text-text-secondary hover:bg-surface-elevated/50 hover:text-text-primary'
+                                        }`}
+                                >
+                                    <div className={`size-8 rounded-lg flex items-center justify-center transition-all ${activeTab === 'security' ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-subtle text-text-muted group-hover:bg-white group-hover:shadow-md'}`}>
+                                        <span className="material-symbols-outlined text-lg">lock</span>
+                                    </div>
+                                    Segurança
+                                    {activeTab === 'security' && <div className={`absolute right-0 top-0 bottom-0 w-1 bg-${theme.primaryColor} rounded-l-full`}></div>}
+                                </button>
+                            </nav>
                         </div>
 
-                        <nav className="w-full space-y-2">
-                            <button
-                                onClick={() => setActiveTab('profile')}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'profile'
-                                    ? `bg-white dark:bg-slate-700 shadow-sm text-${theme.primaryColor}`
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
-                                    }`}
-                            >
-                                <span className="material-symbols-outlined">person</span>
-                                Dados Pessoais
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('security')}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'security'
-                                    ? `bg-white dark:bg-slate-700 shadow-sm text-${theme.primaryColor}`
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
-                                    }`}
-                            >
-                                <span className="material-symbols-outlined">lock</span>
-                                Segurança
-                            </button>
-                        </nav>
-
-                        <div className="mt-auto pt-6 w-full">
+                        <div className="mt-auto pt-6 w-full z-10">
                             <button
                                 onClick={() => { logout(); onClose(); }}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/10 dark:hover:bg-red-900/20 transition-all"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-bold text-red-500 hover:text-white bg-red-50/50 hover:bg-red-500 dark:bg-red-900/10 dark:hover:bg-red-600 transition-all active:scale-95 group"
                             >
-                                <span className="material-symbols-outlined">logout</span>
+                                <span className="material-symbols-outlined group-hover:-translate-x-1 transition-transform">logout</span>
                                 Sair da Conta
                             </button>
                         </div>
                     </div>
 
-                    {/* Main Content (Right) */}
-                    <div className="flex-1 p-6 md:p-10 overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900">
-                        <div className="max-w-xl mx-auto">
-                            <div className="flex justify-between items-center mb-8">
-                                <div>
-                                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                                        {activeTab === 'profile' ? 'Editar Perfil' : 'Segurança'}
-                                    </h1>
-                                    <p className="text-slate-500 mt-1">
-                                        {activeTab === 'profile' ? 'Gerencie suas informações pessoais' : 'Atualize sua senha de acesso'}
-                                    </p>
-                                </div>
-                                <button onClick={onClose} className="hidden md:flex size-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700">
-                                    <span className="material-symbols-outlined">close</span>
-                                </button>
+                    {/* Main Content (Right) - Scrollable Area */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar bg-surface-card/30 p-0 relative">
+                        {/* Desktop Close Button */}
+                        <button
+                            onClick={onClose}
+                            className="hidden md:flex absolute top-6 right-6 size-10 items-center justify-center rounded-full bg-surface-subtle hover:bg-red-50 text-text-muted hover:text-red-500 transition-all z-20 shadow-sm border border-border-subtle group"
+                        >
+                            <span className="material-symbols-outlined text-xl group-hover:rotate-90 transition-transform duration-300">close</span>
+                        </button>
+
+                        <div className="p-6 md:p-10 max-w-2xl mx-auto min-h-full flex flex-col">
+                            <div className="mb-8">
+                                <h1 className="text-3xl font-black text-text-primary mb-2 tracking-tight">
+                                    {activeTab === 'profile' ? 'Editar Perfil' : 'Segurança e Acesso'}
+                                </h1>
+                                <p className="text-text-muted font-medium text-lg">
+                                    {activeTab === 'profile' ? 'Gerencie suas informações e preferências.' : 'Mantenha sua conta protegida.'}
+                                </p>
                             </div>
 
                             {activeTab === 'profile' && (
-                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1">
                                     <div className="grid grid-cols-1 gap-6">
-                                        <div>
-                                            <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Nome Completo</label>
+                                        <div className="group">
+                                            <label className="block text-xs font-black uppercase tracking-widest text-text-muted mb-2 ml-1 text-shadow-sm">Nome Completo</label>
                                             <input
                                                 value={name}
                                                 onChange={e => setName(e.target.value)}
                                                 placeholder="Seu nome completo"
                                                 title="Nome Completo"
-                                                className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all"
+                                                className="input-premium"
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Email</label>
+                                        <div className="group">
+                                            <label className="block text-xs font-black uppercase tracking-widest text-text-muted mb-2 ml-1">Email</label>
                                             <input
                                                 value={email}
                                                 onChange={e => setEmail(e.target.value)}
                                                 placeholder="seu@email.com"
                                                 title="Email"
-                                                className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all"
+                                                className="input-premium opacity-70"
+                                                readOnly
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Disciplina Principal</label>
-                                            <select
-                                                value={subject}
-                                                onChange={(e) => setSubject(e.target.value)}
-                                                title="Disciplina Principal"
-                                                className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all mb-4"
-                                            >
-                                                {availableSubjects.map(subj => (
-                                                    <option key={subj} value={subj}>{subj}</option>
-                                                ))}
-                                            </select>
+                                        <div className="group">
+                                            <label className="block text-xs font-black uppercase tracking-widest text-text-muted mb-2 ml-1">Disciplina Principal</label>
+                                            <div className="relative">
+                                                <select
+                                                    value={subject}
+                                                    onChange={(e) => setSubject(e.target.value)}
+                                                    title="Disciplina Principal"
+                                                    className="input-premium appearance-none cursor-pointer"
+                                                >
+                                                    {availableSubjects.map(subj => (
+                                                        <option key={subj} value={subj}>{subj}</option>
+                                                    ))}
+                                                </select>
+                                                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">expand_more</span>
+                                            </div>
+                                        </div>
 
-                                            <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Minhas Disciplinas (Múltipla escolha)</label>
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                                {availableSubjects.map(subj => (
-                                                    <button
-                                                        key={subj}
-                                                        onClick={() => toggleSubject(subj)}
-                                                        className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all truncate ${selectedSubjects.includes(subj) || subject === subj
-                                                            ? `bg-${theme.primaryColor}/10 border-${theme.primaryColor} text-${theme.primaryColor}`
-                                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300'
-                                                            }`}
-                                                    >
-                                                        {subj} {(subject === subj) && '(Principal)'}
-                                                    </button>
-                                                ))}
+                                        <div>
+                                            <label className="block text-xs font-black uppercase tracking-widest text-text-muted mb-3 ml-1">Minhas Disciplinas</label>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 rounded-3xl bg-surface-subtle/30 border border-white/5">
+                                                {availableSubjects.map(subj => {
+                                                    const isSelected = selectedSubjects.includes(subj) || subject === subj;
+                                                    const isMain = subject === subj;
+                                                    return (
+                                                        <button
+                                                            key={subj}
+                                                            onClick={() => toggleSubject(subj)}
+                                                            className={`
+                                                                relative px-4 py-3 rounded-xl text-xs font-bold transition-all duration-300 flex items-center justify-between group overflow-hidden
+                                                                ${isSelected
+                                                                    ? `bg-white dark:bg-white/10 text-${theme.primaryColor} shadow-lg ring-2 ring-${theme.primaryColor}/20`
+                                                                    : 'bg-surface-card hover:bg-white dark:hover:bg-white/5 text-text-secondary hover:shadow-md'
+                                                                }
+                                                            `}
+                                                        >
+                                                            <span className="z-10">{subj}</span>
+                                                            {isSelected && <span className="material-symbols-outlined text-sm z-10">check</span>}
+                                                            {isMain && <div className={`absolute inset-0 bg-${theme.primaryColor}/5 z-0`}></div>}
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                                    <div className="pt-6 mt-auto border-t border-border-default flex justify-end">
                                         <button
                                             onClick={handleSaveProfile}
                                             disabled={loading}
-                                            className="px-8 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:bg-primary-dark hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+                                            className={`btn-premium px-8 py-4 flex items-center gap-3 text-sm shadow-neon hover:shadow-neon-lg`}
                                         >
-                                            {loading && <span className="material-symbols-outlined animate-spin text-lg">refresh</span>}
+                                            {loading ? (
+                                                <span className="material-symbols-outlined animate-spin text-lg">refresh</span>
+                                            ) : (
+                                                <span className="material-symbols-outlined text-lg">save</span>
+                                            )}
                                             Salvar Alterações
                                         </button>
                                     </div>
@@ -352,34 +388,53 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                             )}
 
                             {activeTab === 'security' && (
-                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Nova Senha</label>
-                                        <input
-                                            type="password"
-                                            value={password}
-                                            onChange={e => setPassword(e.target.value)}
-                                            placeholder="Digite a nova senha"
-                                            className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Confirmar Senha</label>
-                                        <input
-                                            type="password"
-                                            value={confirmPassword}
-                                            onChange={e => setConfirmPassword(e.target.value)}
-                                            placeholder="Repita a nova senha"
-                                            className="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/50 outline-none font-bold text-slate-700 dark:text-white transition-all"
-                                        />
+                                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1">
+                                    <div className="p-6 rounded-3xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 flex items-start gap-4">
+                                        <span className="material-symbols-outlined text-amber-500 text-3xl shrink-0">lock_reset</span>
+                                        <div>
+                                            <h3 className="font-bold text-amber-700 dark:text-amber-400 mb-1">Alterar Senha</h3>
+                                            <p className="text-xs text-amber-600/80 dark:text-amber-500 leading-relaxed">
+                                                Escolha uma senha forte com pelo menos 6 caracteres. Após a alteração, você precisará fazer login novamente em outros dispositivos.
+                                            </p>
+                                        </div>
                                     </div>
 
-                                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-xs font-black uppercase tracking-widest text-text-muted mb-2 ml-1">Nova Senha</label>
+                                            <div className="relative">
+                                                <input
+                                                    type="password"
+                                                    value={password}
+                                                    onChange={e => setPassword(e.target.value)}
+                                                    placeholder="••••••••"
+                                                    className="input-premium pl-12"
+                                                />
+                                                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">key</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-black uppercase tracking-widest text-text-muted mb-2 ml-1">Confirmar Senha</label>
+                                            <div className="relative">
+                                                <input
+                                                    type="password"
+                                                    value={confirmPassword}
+                                                    onChange={e => setConfirmPassword(e.target.value)}
+                                                    placeholder="••••••••"
+                                                    className="input-premium pl-12"
+                                                />
+                                                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">lock</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-6 mt-auto border-t border-border-default flex justify-end">
                                         <button
                                             onClick={handleUpdatePassword}
                                             disabled={loading || !password}
-                                            className="px-8 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:bg-primary-dark hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
+                                            className={`btn-premium px-8 py-4 flex items-center gap-3 text-sm disabled:opacity-50 disabled:grayscale`}
                                         >
+                                            <span className="material-symbols-outlined">security_update_good</span>
                                             Atualizar Senha
                                         </button>
                                     </div>
