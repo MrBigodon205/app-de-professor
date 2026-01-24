@@ -568,22 +568,23 @@ export const Dashboard: React.FC = () => {
       animate="visible"
     >
       {/* Dynamic Background Glyphs */}
+      {/* Dynamic Background Glyphs - OPTIMIZED */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-5">
-        {theme.illustrations && theme.illustrations.map((icon, i) => (
+        {React.useMemo(() => (theme.illustrations || []).map((icon, i) => (
           <span
             key={i}
             className="material-symbols-outlined absolute text-[20vw]"
             style={{
               color: theme.primaryColorHex || 'var(--theme-primary)',
-              top: `${Math.random() * 80}%`,
-              left: `${Math.random() * 80}%`,
-              transform: `rotate(${Math.random() * 45 - 22.5}deg)`,
+              top: `${(i * 12345 % 80)}%`, // Deterministic pseudo-random position based on index to avoid hydration mismatch/jitter
+              left: `${(i * 67890 % 80)}%`,
+              transform: `rotate(${(i * 45 % 90) - 45}deg)`,
               opacity: 0.3
             }}
           >
             {icon}
           </span>
-        ))}
+        )), [theme.illustrations, theme.primaryColorHex])}
       </div>
 
       <motion.div variants={itemVariants} className="relative z-10" data-tour="dashboard-kpi">
@@ -728,7 +729,7 @@ export const Dashboard: React.FC = () => {
         <div className="relative bg-surface-card rounded-[23px] p-6 flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden">
           {/* Background decoration */}
           {/* Background decoration - OPTIMIZED */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2" style={{ background: 'radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%)' }}></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2 bg-[radial-gradient(circle,rgba(99,102,241,0.2)_0%,transparent_70%)]"></div>
 
           <div className="flex items-center gap-6 relative z-10">
             <div className="size-16 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm shrink-0">
@@ -927,7 +928,7 @@ export const Dashboard: React.FC = () => {
                       key={act.id}
                       to="/activities"
                       className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-black/5 dark:bg-black/20 hover:bg-white/5 rounded-2xl border border-white/5 transition-all duration-300 group cursor-pointer backdrop-blur-sm gap-3 md:gap-0"
-                      style={{ borderColor: 'rgba(255,255,255,0.05)' }}
+                      className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-black/5 dark:bg-black/20 hover:bg-white/5 rounded-2xl border border-white/5 transition-all duration-300 group cursor-pointer backdrop-blur-sm gap-3 md:gap-0 border-white/5"
                     >
                       <div className="flex items-center gap-4 overflow-hidden w-full md:w-auto">
                         <div
