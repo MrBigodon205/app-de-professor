@@ -40,7 +40,6 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
 
     const getColor = (count: number): React.CSSProperties => {
         if (count === 0) return {
-<<<<<<< HEAD
             backgroundColor: 'rgba(226, 232, 240, 0.3)', // Slate 200 light
             borderColor: 'rgba(226, 232, 240, 0.5)',
             // In dark mode we override this:
@@ -48,12 +47,6 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
                 backgroundColor: 'var(--color-surface-subtle)',
                 borderColor: 'var(--color-border-subtle)'
             } : {})
-=======
-            backgroundColor: 'rgba(226, 232, 240, 0.3)', // Light Mode Empty
-            // Dark mode override via class will handle itself if we use utility classes or variables, 
-            // but here we use inline styles for dynamic colors. 
-            // Let's rely on standard logic + theme opacity.
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
         };
 
         const baseColor = theme?.primaryColorHex || '#06b6d4';
@@ -71,7 +64,6 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
 
     if (loading) {
         return (
-<<<<<<< HEAD
             <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between px-1">
                     <span className="text-sm font-black text-text-muted uppercase tracking-widest">Carregando...</span>
@@ -82,16 +74,6 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
                     ))}
                     {Array.from({ length: 30 }).map((_, i) => (
                         <div key={i} className="aspect-square w-full rounded-md bg-surface-subtle"></div>
-=======
-            <div className="flex flex-col gap-2">
-                <div className="flex gap-1 overflow-hidden h-[100px] items-end pb-2">
-                    {Array.from({ length: 16 }).map((_, i) => (
-                        <div key={i} className="flex flex-col gap-1">
-                            {Array.from({ length: 7 }).map((_, j) => (
-                                <div key={j} className="size-2.5 rounded-[2px] bg-slate-200/20 animate-pulse"></div>
-                            ))}
-                        </div>
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
                     ))}
                 </div>
             </div>
@@ -116,7 +98,6 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
     }
 
     return (
-<<<<<<< HEAD
         <div className="flex flex-col gap-3 pb-2">
             <div className="flex items-center justify-between px-1">
                 <span className="text-sm font-black text-text-primary uppercase tracking-widest">{capitalizedMonth}</span>
@@ -129,22 +110,6 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
                 {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(d => (
                     <div key={d} className="text-[10px] font-bold text-text-muted text-center">{d}</div>
                 ))}
-=======
-        <div className="flex flex-col gap-2 w-full">
-            <div className="flex items-center justify-between px-1 mb-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Contribuições Recentes</span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{heatmapData.reduce((acc, curr) => acc + curr.count, 0)} Total</span>
-            </div>
-
-            {/* Horizontal Scroll Container */}
-            <div className="flex gap-[3px] overflow-x-auto pb-2 custom-scrollbar">
-                {/* RTL direction makes it start from Today (Right) and scroll back? 
-                    Actually standard GitHub is LTR but ends on right.
-                    If we use flex-row-reverse, days might be inverted correctly if we grouped correctly.
-                    Let's stick to LTR but scroll to end? Or just render LTR (Oldest -> Newest).
-                    User wants GitHub style. GitHub is Left-to-Right (Jan -> Dec).
-                */}
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
 
                 {weeks.map((week, wIndex) => (
                     <div key={wIndex} className="flex flex-col gap-[3px]">

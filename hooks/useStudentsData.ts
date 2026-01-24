@@ -30,13 +30,13 @@ export const useStudentsData = (
             if (!seriesId || !section || !userId) return [];
 
             const localStudents = await db.students
-                .where({ seriesId: seriesId.toString(), section: section, userId: userId })
+                .where({ series_id: seriesId, section: section, user_id: userId }) // Match Dexie schema
                 .filter(s => s.syncStatus !== 'pending_delete')
                 .toArray();
 
             return localStudents.sort((a, b) => parseInt(a.number) - parseInt(b.number)).map(s => ({
                 ...s,
-                classId: s.seriesId,
+                classId: s.series_id, // Map from DB column
                 units: {}
             })) as unknown as Student[];
         }, [seriesId, section, userId]) || [];

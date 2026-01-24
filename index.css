@@ -70,7 +70,13 @@
     /* CLS Optimization: Default dimensions for containers */
     --card-min-height: 120px;
 
-<<<<<<< HEAD
+    /* Safe Area for Mobile */
+    --sat: env(safe-area-inset-top);
+    --sar: env(safe-area-inset-right);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
+}
+
 .dark {
     /* Text Colors - Tinted Whites for Comfort */
     --text-primary: #f8fafc;
@@ -78,14 +84,6 @@
     --text-muted: #64748b;
     --text-on-dark: #ffffff;
     --text-on-brand: #ffffff;
-=======
-    /* Safe Area for Mobile */
-    --sat: env(safe-area-inset-top);
-    --sar: env(safe-area-inset-right);
-    --sab: env(safe-area-inset-bottom);
-    --sal: env(safe-area-inset-left);
-}
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
 
     /* Surfaces - Deep Space & Glass */
     --surface-page: #020617;

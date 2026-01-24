@@ -60,13 +60,8 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
         const { annualTotal } = calculateAnnualSummary(student);
         const res = getStatusResult(student, 'results'); // Using standardized helper
         return (
-<<<<<<< HEAD
             <tr className="hover:bg-surface-subtle transition-colors duration-150">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted font-mono">
-=======
-            <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono text-center min-w-[3rem]">
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
                     {student.number}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -92,13 +87,8 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
     }
 
     return (
-<<<<<<< HEAD
         <tr className="hover:bg-surface-subtle transition-colors duration-150">
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono">
-=======
-        <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-mono text-center min-w-[3rem]">
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted font-mono">
                 {student.number}
             </td>
             <td className="px-6 py-4 whitespace-nowrap">

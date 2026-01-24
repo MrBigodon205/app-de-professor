@@ -187,12 +187,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const backgroundOrientation = useMemo(() => ({ x: springOrientX, y: springOrientY }), [springOrientX, springOrientY]);
 
   return (
-<<<<<<< HEAD
     <div className="flex h-dvh w-full bg-surface-page overflow-hidden lg:overflow-hidden selection:bg-primary/10 selection:text-primary">
-=======
-    <div className={`flex h-dvh w-full bg-background-light dark:bg-background-dark overflow-hidden lg:overflow-hidden selection:bg-primary/10 selection:text-primary ${window.electronAPI?.isElectron ? 'pt-10' : ''}`}>
-      <DesktopTitleBar />
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
+      {window.electronAPI?.isElectron && <DesktopTitleBar />}
       {/* Dynamic Background Pattern - Fixed and isolated */}
       <BackgroundPattern
         theme={theme}
@@ -244,23 +240,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       >
         <div className="flex flex-col h-full justify-between bg-transparent">
           <div className="lg:hidden landscape:hidden absolute top-4 right-4 z-50">
-<<<<<<< HEAD
             <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-surface-section rounded-full text-text-secondary hover:bg-surface-subtle hover:text-text-primary backdrop-blur-md transition-colors shadow-sm">
-=======
-            <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-slate-100 dark:bg-white/5 rounded-full text-slate-500 dark:text-white/70 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white backdrop-blur-none transition-colors shadow-sm">
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
               <span className="material-symbols-outlined">close</span>
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 landscape:p-2 flex flex-col gap-4 landscape:gap-2">
-<<<<<<< HEAD
             <div className={`flex gap-3 items-center px-2 py-4 landscape:py-2 border-b border-border-default mb-2 shrink-0 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
               <img src="/logo.svg" alt="Acerta+" className="size-12 object-contain drop-shadow-md shrink-0" />
-=======
-            <div className={`flex gap-3 items-center px-2 py-4 landscape:py-2 border-b border-slate-200 dark:border-white/10 mb-2 shrink-0 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-              <img src="./logo.png" alt="Acerta+" className="size-12 object-contain drop-shadow-lg shrink-0 rounded-xl" />
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
               {!isSidebarCollapsed && (
                 <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500 min-w-0">
                   <h1 className="text-text-primary text-2xl font-black leading-none tracking-tight truncate filter drop-shadow-sm">Prof. Acerta<span className="text-primary">+</span></h1>
@@ -269,11 +256,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               )}
             </div>
 
-<<<<<<< HEAD
             <div className="lg:hidden landscape:hidden flex flex-col gap-2 mb-2 p-3 bg-surface-section rounded-2xl border border-border-default shrink-0 backdrop-blur-md shadow-sm">
-=======
-            <div className="lg:hidden landscape:hidden flex flex-col gap-2 mb-2 p-3 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5 shrink-0 backdrop-blur-none shadow-sm">
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
               <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setIsProfileModalOpen(true); setIsMobileMenuOpen(false); }}>
                 <div className="size-10 rounded-full bg-surface-subtle overflow-hidden shrink-0 border-2 border-primary/50 shadow-neon">
                   {currentUser?.photoUrl ? (
@@ -293,15 +276,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div>
 
             <div className="lg:hidden landscape:hidden px-3 mb-2 shrink-0">
-<<<<<<< HEAD
               <label className="text-[10px] uppercase font-bold text-text-muted mb-1 block px-1 font-mono">Matéria Atual</label>
               <div className="bg-surface-section rounded-xl border border-border-default overflow-hidden backdrop-blur-md shadow-sm">
                 <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="w-full flex items-center justify-between p-3 hover:bg-surface-subtle transition-colors">
-=======
-              <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block px-1 font-mono">Matéria Atual</label>
-              <div className="bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5 overflow-hidden backdrop-blur-none shadow-sm">
-                <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="w-full flex items-center justify-between p-3 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
                   <div className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-primary shadow-neon"></span>
                     <span className="font-bold text-sm text-text-primary">{activeSubject}</span>
@@ -322,17 +299,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </nav>
           </div>
 
-<<<<<<< HEAD
           <div className="p-4 border-t border-border-default flex flex-col gap-2">
-            <button onClick={() => { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); }} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted hover:bg-surface-subtle hover:text-amber-500 transition-all active:scale-95 hover:scale-[1.01] group border border-transparent hover:border-border-default ${isSidebarCollapsed ? 'lg:justify-center' : ''}`}>
-              <span className="material-symbols-outlined text-[24px] font-medium transition-transform duration-500 lg:group-hover:rotate-[180deg]">dark_mode</span>
-=======
-          <div className="p-4 border-t border-slate-200 dark:border-white/10 flex flex-col gap-2">
-            <button onClick={theme.toggleTheme} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-amber-500 dark:hover:text-amber-400 transition-all active:scale-95 hover:scale-[1.01] group border border-transparent hover:border-slate-200 dark:hover:border-white/5 ${isSidebarCollapsed ? 'lg:justify-center' : ''}`}>
-              <span className="material-symbols-outlined text-[24px] font-medium transition-transform duration-500 lg:group-hover:rotate-[180deg]">
-                {theme.isDarkMode ? 'light_mode' : 'dark_mode'}
-              </span>
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
+            <button onClick={theme.toggleTheme} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted hover:bg-surface-subtle hover:text-amber-500 transition-all active:scale-95 hover:scale-[1.01] group border border-transparent hover:border-border-default ${isSidebarCollapsed ? 'lg:justify-center' : ''}`}>
+              <span className="material-symbols-outlined text-[24px] font-medium transition-transform duration-500 lg:group-hover:rotate-[180deg]">{theme.isDarkMode ? 'light_mode' : 'dark_mode'}</span>
               <span className={`text-sm font-medium animate-in fade-in duration-300 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>Alternar Tema</span>
             </button>
             <button onClick={logout} className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 hover:border-red-200 dark:hover:border-red-500/20 border border-transparent transition-all active:scale-95 hover:scale-[1.01] group ${isSidebarCollapsed ? 'lg:justify-center' : ''}`}>
@@ -347,11 +316,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {!isProfileModalOpen && !isPasswordSetupOpen && !isClassSelectorOpen && (
         <button
           onClick={toggleSidebar}
-<<<<<<< HEAD
           className={`hidden lg:flex landscape:flex fixed z-[70] top-8 size-12 bg-surface-card/95 border border-border-default rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'}`}
-=======
-          className={`hidden lg:flex landscape:flex fixed z-[70] ${window.electronAPI?.isElectron ? 'top-8' : 'top-8'} size-12 bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17.5rem]'}`}
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
           title={isSidebarCollapsed ? "Expandir" : "Recolher"}
         >
           <span className={`material-symbols-outlined text-3xl font-bold transition-transform duration-150 ease-out ${isSidebarCollapsed ? '' : 'rotate-180'}`}>chevron_right</span>
@@ -380,15 +345,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <button className="lg:hidden landscape:hidden text-text-primary p-2 hover:bg-surface-subtle rounded-lg transition-colors" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
                 <span className="material-symbols-outlined">menu</span>
               </button>
-<<<<<<< HEAD
               <div className="lg:hidden landscape:hidden flex items-center gap-2">
                 <img src="/logo.svg" alt="Acerta+" className="size-8 object-contain drop-shadow-md" />
                 <span className="font-bold text-text-primary text-xs landscape:hidden">Prof. Acerta+</span>
-=======
-              <div className="lg:hidden landscape:hidden flex items-center gap-3">
-                <img src="./logo.png" alt="Acerta+" className="size-10 object-contain drop-shadow-md rounded-lg" />
-                <span className="font-black text-slate-800 dark:text-white text-sm tracking-tight landscape:hidden">Prof. Acerta+</span>
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
               </div>
 
               {/* ☁️ SYNC STATUS INDICATOR ☁️ */}
@@ -408,7 +367,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               )}
 
               <div className={`hidden md:block landscape:block transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ml-4`}>
-<<<<<<< HEAD
                 <button onClick={() => setIsClassSelectorOpen(true)} className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 rounded-xl bg-surface-card/50 hover:bg-surface-card/80 transition-all duration-300 group border border-border-default hover:border-primary/30 shadow-sm hover:shadow-neon active:scale-95 backdrop-blur-sm" title="Gerenciar Turmas">
                   <div className={`size-10 rounded-lg bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-all duration-500`}>
                     <span className="material-symbols-outlined text-lg font-black">{theme.icon}</span>
@@ -418,37 +376,18 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     <div className="flex items-center gap-1">
                       <span className="font-black text-base text-text-primary tracking-tight leading-none group-hover:text-primary transition-colors">{activeSeries?.name || 'Selecione...'}</span>
                       <span className="material-symbols-outlined text-text-muted text-[10px] group-hover:text-primary transition-all">expand_more</span>
-=======
-                <button onClick={() => setIsClassSelectorOpen(true)} className="flex items-center gap-3 pl-2 pr-5 py-2 rounded-xl bg-white/50 dark:bg-black/20 hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 group border border-white/20 dark:border-white/5 hover:border-primary/30 shadow-sm hover:shadow-neon active:scale-95 backdrop-blur-sm" title="Gerenciar Turmas">
-                  <div className={`size-11 rounded-lg bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-all duration-500`}>
-                    <span className="material-symbols-outlined text-xl font-black">{theme.icon}</span>
-                  </div>
-                  <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none font-mono">Série</span>
-                    <div className="flex items-center gap-1">
-                      <span className="font-black text-lg text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-primary transition-colors">{activeSeries?.name || 'Selecione...'}</span>
-                      <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-[12px] group-hover:text-primary transition-all">expand_more</span>
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
                     </div>
                   </div>
                 </button>
               </div>
 
-<<<<<<< HEAD
               <div className="h-8 w-px bg-gradient-to-b from-transparent via-border-default to-transparent mx-2 hidden md:block landscape:block"></div>
-=======
-              <div className="h-10 w-px bg-gradient-to-b from-transparent via-slate-200 dark:via-white/10 to-transparent mx-2 hidden md:block landscape:block"></div>
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
 
               <div className="flex-1 min-w-0 mx-2 md:mx-0 overflow-hidden hidden md:block landscape:block">
                 <div className="flex items-center gap-3 overflow-x-auto no-scrollbar mask-linear-fade py-1 pr-4">
                   {activeSeries?.sections.map(sec => (
                     <div key={sec} className="relative group/tab shrink-0">
-<<<<<<< HEAD
                       <button onClick={() => handleSwitchSection(sec)} className={`relative min-w-[3.5rem] h-10 px-5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center border active:scale-90 ${selectedSection === sec ? `bg-gradient-to-br from-primary to-secondary text-white border-transparent shadow-lg shadow-semimary/30 ring-1 ring-white/20` : 'bg-surface-card/50 border-border-subtle text-text-secondary hover:bg-surface-elevated hover:text-primary hover:border-primary/30'}`}>
-=======
-                      <button onClick={() => handleSwitchSection(sec)} className={`relative min-w-[3.5rem] h-11 px-6 rounded-xl font-bold text-base transition-all duration-300 flex items-center justify-center border active:scale-90 ${selectedSection === sec ? `bg-gradient-to-br from-primary to-secondary text-white border-transparent shadow-lg shadow-semimary/30 ring-1 ring-white/20` : 'bg-white/50 dark:bg-white/5 border-white/10 text-slate-500 dark:text-slate-400 hover:bg-white hover:text-primary hover:border-primary/30'}`}>
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
                         {sec}
                         {selectedSection === sec && <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-white animate-pulse shadow-neon`}></span>}
                       </button>
@@ -458,15 +397,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     </div>
                   ))}
                   {activeSeries && (
-<<<<<<< HEAD
                     <button onClick={handleAddSectionOneClick} className={`h-10 pl-3 pr-4 rounded-xl flex items-center gap-2 border border-dashed border-text-muted/50 text-text-muted hover:border-primary hover:text-white hover:bg-primary transition-all duration-300 hover:scale-105 active:scale-95 group/nova shadow-sm hover:shadow-neon`} title="Adicionar Turma">
                       <span className="material-symbols-outlined text-sm font-black">add</span>
                       <span className="text-[10px] font-black uppercase tracking-widest font-mono">Nova</span>
-=======
-                    <button onClick={handleAddSectionOneClick} className={`h-11 pl-4 pr-5 rounded-xl flex items-center gap-2 border border-dashed border-slate-300 dark:border-white/20 text-slate-400 hover:border-primary hover:text-white hover:bg-primary transition-all duration-300 hover:scale-105 active:scale-95 group/nova shadow-sm hover:shadow-neon`} title="Adicionar Turma">
-                      <span className="material-symbols-outlined text-base font-black">add</span>
-                      <span className="text-[11px] font-black uppercase tracking-widest font-mono">Nova</span>
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
                     </button>
                   )}
                 </div>
@@ -529,11 +462,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </motion.header>
 
         <div className="xl:hidden landscape:hidden px-3 pt-2.5 -mb-0.5 z-30">
-<<<<<<< HEAD
           <button onClick={() => setIsClassSelectorOpen(true)} className="w-full bg-surface-elevated/90 backdrop-blur-md p-2 rounded-2xl border border-border-default shadow-lg dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all landscape:p-1.5 landscape:rounded-xl">
-=======
-          <button onClick={() => setIsClassSelectorOpen(true)} className="w-full bg-white/90 dark:bg-slate-900/95 backdrop-blur-none p-2 rounded-2xl border border-slate-200 dark:border-white/5 shadow-lg dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all landscape:p-1.5 landscape:rounded-xl">
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
             <div className="flex items-center gap-2.5">
 
               {/* Dynamic Theme Icon instead of static logo */}

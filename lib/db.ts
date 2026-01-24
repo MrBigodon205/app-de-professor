@@ -1,37 +1,3 @@
-import Dexie, { Table } from 'dexie';
-<<<<<<< HEAD
-
-export interface StudentDB {
-    id: string; // UUID from Supabase
-    name: string;
-    number: string;
-    seriesId: string; // mapped from series_id
-    section: string;
-    userId: string;
-    syncStatus: 'synced' | 'pending_update' | 'pending_create' | 'pending_delete';
-    updatedAt: string;
-}
-
-export interface ClassDB {
-    id: string;
-    name: string;
-    sections: string[]; // Stored as array, Dexie handles this
-    userId: string;
-    syncStatus: 'synced' | 'pending';
-}
-
-export class ProfAcertaDB extends Dexie {
-    students!: Table<StudentDB>;
-    classes!: Table<ClassDB>;
-
-    constructor() {
-        super('ProfAcertaDatabase');
-
-        // Define Schema
-        this.version(1).stores({
-            students: 'id, name, seriesId, section, userId, syncStatus', // primary key + indexes
-            classes: 'id, name, userId'
-=======
 import { Student, AttendanceRecord, Occurrence, Grades } from '../types';
 
 // Extend types for local storage (optional fields for sync status)
@@ -104,7 +70,6 @@ class ProfAcertaDB extends Dexie {
         // Version 4: Timetable (Schedules)
         this.version(4).stores({
             schedules: 'id, user_id, day_of_week'
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
         });
     }
 }

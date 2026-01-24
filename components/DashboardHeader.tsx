@@ -46,28 +46,11 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 </div>
 
                 <div className="flex flex-col gap-1">
-<<<<<<< HEAD
                     <div className="flex items-center gap-2">
                         <span className="text-text-secondary text-sm md:text-base font-medium">Olá,</span>
                         <span className={`text-base md:text-lg font-black text-text-primary flex items-center gap-2`}>
                             {currentUser?.name} <span className="animate-bounce-slow">👋</span>
                         </span>
-=======
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 shadow-sm group">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-primary"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                            </span>
-                            <span className="text-[9px] font-black uppercase tracking-widest text-primary">Intelligence v3.1</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-slate-400 dark:text-slate-500 text-sm md:text-base font-medium">Olá,</span>
-                            <span className={`text-base md:text-lg font-black text-slate-800 dark:text-white flex items-center gap-2`}>
-                                {currentUser?.name} <span className="animate-bounce-slow">👋</span>
-                            </span>
-                        </div>
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
                     </div>
                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
                         <h1 className="text-2xl md:text-4xl landscape:text-xl font-black tracking-tight text-text-primary">

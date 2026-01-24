@@ -453,13 +453,8 @@ export const Observations: React.FC = () => {
     return (
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 h-auto lg:h-[calc(100vh-6rem)] overflow-visible lg:overflow-hidden pb-6 lg:pb-8">
             {/* Sidebar List */}
-<<<<<<< HEAD
             <div className={`w-full lg:w-96 flex flex-col bg-surface-card rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-border-default overflow-hidden shrink-0 ${selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
                 <div className={`p-4 sm:p-8 border-b border-border-default bg-gradient-to-br from-surface-subtle to-surface-card`}>
-=======
-            <div className={`w-full lg:w-96 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden shrink-0 h-[500px] lg:h-full ${selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
-                <div className={`p-4 sm:p-8 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-slate-50 to-white dark:from-slate-950 dark:to-slate-900`}>
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
                     <div className="flex items-center gap-3 mb-4 sm:mb-6">
                         <div className={`size-8 sm:size-10 rounded-xl flex items-center justify-center`} style={{ backgroundColor: `${theme.primaryColorHex}1A`, color: theme.primaryColorHex }}>
                             <span className="material-symbols-outlined text-lg sm:text-2xl">badge</span>
@@ -507,11 +502,7 @@ export const Observations: React.FC = () => {
             </div>
 
             {/* Main Content */}
-<<<<<<< HEAD
             <div className={`flex-1 flex flex-col bg-surface-card rounded-[32px] landscape:rounded-none border border-border-default landscape:border-0 shadow-xl shadow-slate-200/50 dark:shadow-none lg:overflow-hidden relative group ${!selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
-=======
-            <div className={`flex-1 flex flex-col bg-white dark:bg-slate-900 rounded-[32px] landscape:rounded-none border border-slate-100 dark:border-slate-800 landscape:border-0 shadow-xl shadow-slate-200/50 dark:shadow-none lg:overflow-hidden relative group ${!selectedStudentId ? 'hidden lg:flex' : 'flex'} h-auto lg:h-full`}>
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
                 {!selectedStudentId ? (
                     <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in duration-500 h-[500px] lg:h-auto">
                         <div className={`size-24 rounded-full bg-${theme.primaryColor}/10 flex items-center justify-center mb-6`}>
@@ -542,29 +533,9 @@ export const Observations: React.FC = () => {
                                             {selectedStudent.initials}
                                         </div>
                                         <div className="flex flex-col min-w-0">
-<<<<<<< HEAD
                                             <h1 className="text-lg sm:text-3xl landscape:text-base font-black text-text-primary tracking-tight leading-none mb-1 sm:mb-2 landscape:mb-0 truncate">{selectedStudent.name}</h1>
                                             <div className="flex items-center gap-2 sm:gap-3 text-[9px] sm:text-sm font-bold text-text-muted landscape:hidden">
                                                 <span className="bg-surface-subtle px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl font-mono text-text-secondary">#{selectedStudent.number.padStart(2, '0')}</span>
-=======
-                                            <div className="flex items-center gap-2">
-                                                <h1 className="text-lg sm:text-3xl landscape:text-base font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1 sm:mb-2 landscape:mb-0 truncate">{selectedStudent.name}</h1>
-                                                {/* Sync Badge */}
-                                                <div className={`hidden md:flex items-center gap-2 px-2 py-0.5 rounded-full border font-bold text-[10px] transition-all ${isOnline
-                                                    ? (pendingCount > 0 ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800')
-                                                    : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:border-slate-700'}`}>
-                                                    {isOnline ? (pendingCount > 0 ? (
-                                                        <span className="material-symbols-outlined text-xs animate-spin">sync</span>
-                                                    ) : (
-                                                        <span className="material-symbols-outlined text-xs">cloud_done</span>
-                                                    )) : (
-                                                        <span className="material-symbols-outlined text-xs">cloud_off</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2 sm:gap-3 text-[9px] sm:text-sm font-bold text-slate-400 landscape:hidden">
-                                                <span className="bg-slate-100 dark:bg-slate-800 px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl font-mono text-slate-500">#{selectedStudent.number.padStart(2, '0')}</span>
->>>>>>> 5caaa26adfac974c18011977d16101f607965507
                                                 <span>•</span>
                                                 <span className={`truncate`} style={{ color: theme.primaryColorHex }}>{activeSeries?.name} • Turma {selectedSection}</span>
                                             </div>
