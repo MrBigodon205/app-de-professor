@@ -144,8 +144,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const subscription = supabase.auth.onAuthStateChange(async (event, session) => {
             if (session?.user) {
-                if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-                    if (mounted) setLoading(true); // START LOADING
+                // HANDLING: Initial Load or Explicit Login -> Show Loading
+                if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+                    if (mounted) setLoading(true);
                     localStorage.setItem('last_user_id', session.user.id);
 
                     // Race fetchProfile to prevent infinite load
@@ -155,7 +156,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         timeoutPromise
                     ]);
 
-                    if (mounted) setLoading(false); // STOP LOADING
+                    if (mounted) setLoading(false);
+                }
+                // HANDLING: Silent Updates (Token Refresh, User Update) -> No Loading Screen
+                else if (event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+                    // Update profile in background without blocking UI
+                    fetchProfile(session.user.id, session.user);
                 }
             } else if (event === 'SIGNED_OUT') {
                 setCurrentUser(null);

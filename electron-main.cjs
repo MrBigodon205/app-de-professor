@@ -4,7 +4,7 @@ const path = require('path');
 // ⚠️ MODO ESPELHO (WEBVIEW)
 // Coloque o link do seu site aqui (ex: 'https://seu-site.vercel.app')
 // Se deixar como null, o app continuará carregando os arquivos locais do PC.
-const WEB_APP_URL = 'https://www.profacerta.com.br';
+const WEB_APP_URL = null;
 
 function createWindow() {
     const win = new BrowserWindow({
@@ -18,7 +18,8 @@ function createWindow() {
             nodeIntegration: false,
             contextIsolation: true,
             webSecurity: false,
-            preload: path.join(__dirname, 'preload.cjs')
+            preload: path.join(__dirname, 'preload.cjs'),
+            backgroundThrottling: false
         },
         icon: path.join(__dirname, 'public/logo.png'),
         title: "Prof. Acerta+"
@@ -68,7 +69,22 @@ ipcMain.on('window-close', () => {
     BrowserWindow.getFocusedWindow()?.close();
 });
 
-app.whenReady().then(createWindow);
+const instanceLock = app.requestSingleInstanceLock();
+
+if (!instanceLock) {
+    app.quit();
+} else {
+    app.on('second-instance', () => {
+        // Someone tried to run a second instance, we should focus our window.
+        const win = BrowserWindow.getAllWindows()[0];
+        if (win) {
+            if (win.isMinimized()) win.restore();
+            win.focus();
+        }
+    });
+
+    app.whenReady().then(createWindow);
+}
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();

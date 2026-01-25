@@ -1,4 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import logoSrc from '../assets/logo.svg';
+
 import { motion, useScroll, useMotionValue, useSpring } from 'framer-motion';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -247,7 +249,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 landscape:p-2 flex flex-col gap-4 landscape:gap-2">
             <div className={`flex gap-3 items-center px-2 py-4 landscape:py-2 border-b border-border-default mb-2 shrink-0 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-              <img src="/logo.svg" alt="Acerta+" className="size-12 object-contain drop-shadow-md shrink-0" />
+              <img src={logoSrc} alt="Acerta+" className="size-12 object-contain drop-shadow-md shrink-0" />
               {!isSidebarCollapsed && (
                 <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500 min-w-0">
                   <h1 className="text-text-primary text-2xl font-black leading-none tracking-tight truncate filter drop-shadow-sm">Prof. Acerta<span className="text-primary">+</span></h1>
@@ -346,7 +348,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 <span className="material-symbols-outlined">menu</span>
               </button>
               <div className="lg:hidden landscape:hidden flex items-center gap-2">
-                <img src="/logo.svg" alt="Acerta+" className="size-8 object-contain drop-shadow-md" />
+                <img src={logoSrc} alt="Acerta+" className="size-8 object-contain drop-shadow-md" />
                 <span className="font-bold text-text-primary text-xs landscape:hidden">Prof. Acerta+</span>
               </div>
 
