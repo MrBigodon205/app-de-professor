@@ -158,35 +158,38 @@ export const Login: React.FC = () => {
         className="relative z-10 w-full max-w-[1000px] grid lg:grid-cols-[45%_55%] glass-card-premium overflow-hidden min-h-[650px] shadow-2xl shadow-slate-200/50 dark:shadow-[0_0_100px_-20px_rgba(0,0,0,0.5)]"
       >
         {/* Left Side: Brand Identity */}
-        <div className="relative bg-surface-section/50 flex flex-col items-center justify-center p-8 lg:p-12 border-r border-border-default/50 overflow-hidden">
+        <div className="relative bg-surface-section/50 flex flex-col items-center p-8 lg:p-12 border-r border-border-default/50 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10" />
 
-          <motion.div
-            whileHover={{ scale: 1.05, rotate: 5 }}
-            className="relative z-10 mb-10 shadow-2xl shadow-primary/30 rounded-[2.5rem]"
-          >
-            <img src={logoSrc} alt="Acerta+" className="w-40 h-40 object-contain drop-shadow-md" />
-          </motion.div>
+          {/* Centered Content */}
+          <div className="flex-1 flex flex-col items-center justify-center w-full z-10">
+            <motion.div
+              whileHover={{ scale: 1.05, rotate: 5 }}
+              className="relative mb-10 shadow-2xl shadow-primary/30 rounded-[2.5rem]"
+            >
+              <img src={logoSrc} alt="Acerta+" className="w-40 h-40 object-contain drop-shadow-md" />
+            </motion.div>
 
-          <div className="relative z-10 text-center space-y-4">
-            <h1 className="text-4xl lg:text-5xl font-bold text-text-primary tracking-tight leading-tight">
-              Prof. Acerta<span className="bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent font-black">+</span>
-            </h1>
-            <div className="flex items-center justify-center gap-3">
-              <span className="h-px w-8 bg-slate-300 dark:bg-slate-600"></span>
-              <p className="text-[12px] tracking-[0.4em] text-slate-500 dark:text-slate-400 font-bold uppercase whitespace-nowrap">
-                v3.1 Intelligence
+            <div className="text-center space-y-4">
+              <h1 className="text-4xl lg:text-5xl font-bold text-text-primary tracking-tight leading-tight">
+                Prof. Acerta<span className="bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent font-black">+</span>
+              </h1>
+              <div className="flex items-center justify-center gap-3">
+                <span className="h-px w-8 bg-slate-300 dark:bg-slate-600"></span>
+                <p className="text-[12px] tracking-[0.4em] text-slate-500 dark:text-slate-400 font-bold uppercase whitespace-nowrap">
+                  v3.1 Intelligence
+                </p>
+
+                <span className="h-px w-8 bg-slate-300 dark:bg-slate-600"></span>
+              </div>
+              <p className="text-text-secondary text-sm max-w-[280px] mx-auto leading-relaxed font-light">
+                Transforme dados em conquistas pedagógicas com IA.
               </p>
-
-              <span className="h-px w-8 bg-slate-300 dark:bg-slate-600"></span>
             </div>
-            <p className="text-text-secondary text-sm max-w-[280px] mx-auto leading-relaxed font-light">
-              Transforme dados em conquistas pedagógicas com IA.
-            </p>
           </div>
 
-          {/* Micro Footer for Brand */}
-          <div className="absolute bottom-10 text-center opacity-40 dark:opacity-30">
+          {/* Footer - Pushed to bottom naturally */}
+          <div className="relative z-10 text-center opacity-40 dark:opacity-30 mt-8 shrink-0">
             <p className="text-[10px] text-slate-500 uppercase tracking-widest">
               © 2026 PROF. ACERTA+ CORE
             </p>
