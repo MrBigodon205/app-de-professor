@@ -12,17 +12,32 @@ import { ProfileModal } from './ProfileModal';
 import { PasswordSetupModal } from './PasswordSetupModal';
 
 import { NotificationCenter } from './NotificationCenter';
+import { AnimatedNavItem } from './AnimatedNavItem';
 
 import { MobileClassSelector } from './MobileClassSelector';
 import { ClassManager } from './ClassManager';
 import { BackgroundPattern } from './BackgroundPattern';
 import { DesktopTitleBar } from './DesktopTitleBar';
+import { BackupService } from '../services/BackupService';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, logout, activeSubject, updateActiveSubject } = useAuth();
   const theme = useTheme();
   const { classes, activeSeries, selectedSeriesId, selectedSection, selectSeries, selectSection, removeClass: deleteSeries, addClass: addSeries, removeSection, addSection } = useClass();
   const location = useLocation();
+
+  // Auto-Backup Integration (PC Only)
+  useEffect(() => {
+    // 1. Check if we need to restore from file (on first load)
+    BackupService.checkAndRestore();
+
+    // 2. Set up auto-backup interval (every 5 minutes)
+    const backupInterval = setInterval(() => {
+      BackupService.performAutoBackup();
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(backupInterval);
+  }, []);
 
   // 🔄 BACKGROUND SYNC: Active whenever Layout is mounted (Logged In)
   const { isSyncing, pendingCount } = useSync();
@@ -292,11 +307,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
             <nav className="flex flex-col gap-2 landscape:gap-1 mt-2">
               {navItems.map((item) => (
-                <Link key={item.path} to={item.path} onClick={() => setIsMobileMenuOpen(false)} className={`relative flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group hover:scale-[1.02] active:scale-95 ${isActive(item.path) ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-white shadow-sm dark:shadow-neon border border-primary/10 dark:border-primary/20' : 'text-text-secondary hover:bg-surface-subtle hover:text-primary border border-transparent'} ${isSidebarCollapsed && !isMobileMenuOpen ? 'justify-center px-0' : ''}`} title={isSidebarCollapsed && !isMobileMenuOpen ? item.label : ''}>
-                  <span className={`material-symbols-outlined text-2xl transition-transform duration-300 group-hover:rotate-12 ${isActive(item.path) ? 'icon-filled text-primary dark:text-white scale-110' : 'group-hover:text-primary group-hover:scale-110'}`}>{item.icon}</span>
-                  {(!isSidebarCollapsed || isMobileMenuOpen) && <span className={`text-sm tracking-wide transition-all animate-in fade-in duration-300 ${isActive(item.path) ? 'font-bold' : 'font-medium'}`}>{item.label}</span>}
-                  {isActive(item.path) && (!isSidebarCollapsed || isMobileMenuOpen) && <span className="absolute right-3 w-1.5 h-1.5 bg-primary rounded-full animate-pulse shadow-neon" />}
-                </Link>
+                <AnimatedNavItem
+                  key={item.path}
+                  path={item.path}
+                  label={item.label}
+                  icon={item.icon}
+                  isActive={isActive(item.path)}
+                  isCollapsed={isSidebarCollapsed && !isMobileMenuOpen}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
               ))}
             </nav>
           </div>
@@ -339,84 +358,72 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
         <motion.header
           layout
-          className={`flex items-center justify-between mx-4 mt-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-none px-4 md:px-6 py-2 md:py-3 z-[40] shrink-0 gap-4 sticky top-4 shadow-lg shadow-black/5`}
+          className={`flex flex-col md:flex-row items-center justify-between mx-2 md:mx-4 mt-2 md:mt-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-none px-3 py-3 z-[40] shrink-0 gap-3 sticky top-2 shadow-lg shadow-black/5 bg-white/80 dark:bg-slate-900/80 min-h-[60px]`}
         >
-          {/* Centered Container for Landscape */}
-          <div className="contents landscape:flex landscape:w-full landscape:max-w-5xl landscape:items-center landscape:justify-between landscape:mx-auto">
-            <div className="flex items-center gap-4 flex-1">
-              <button className="lg:hidden landscape:hidden text-text-primary p-2 hover:bg-surface-subtle rounded-lg transition-colors" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          {/* Main Flex Container - Wraps on small screens */}
+          <div className="flex flex-wrap w-full items-center justify-between gap-x-4 gap-y-2">
+
+            {/* 1. LEFT: Menu (Visible on Mobile, Hidden on Desktop but keeps alignment if needed) */}
+            <div className="flex items-center shrink-0 w-[50px] lg:w-auto">
+              <button className="lg:hidden text-text-primary p-2 hover:bg-surface-subtle rounded-lg transition-colors shrink-0" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
                 <span className="material-symbols-outlined">menu</span>
               </button>
-              <div className="lg:hidden landscape:hidden flex items-center gap-2">
-                <img src={logoSrc} alt="Acerta+" className="size-8 object-contain drop-shadow-md" />
-                <span className="font-bold text-text-primary text-xs landscape:hidden">Prof. Acerta+</span>
-              </div>
+            </div>
 
-              {/* ☁️ SYNC STATUS INDICATOR ☁️ */}
-              {(pendingCount > 0 || isSyncing) && (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-widest animate-pulse">
-                  <span className={`material-symbols-outlined text-sm ${isSyncing ? 'animate-spin' : ''}`}>{isSyncing ? 'sync' : 'cloud_upload'}</span>
-                  <span className="hidden sm:inline">{isSyncing ? 'ENVIANDO...' : `${pendingCount} PENDENTE(S)`}</span>
+            {/* 2. CENTER: Series + Classes (Mobile: Bottom Row, Desktop: Center) */}
+            <div className="flex flex-wrap items-center justify-center gap-2 flex-1 order-3 md:order-2 w-full md:w-auto mt-2 md:mt-0 min-w-[200px]">
+
+              {/* Series Selector - HIDDEN on Mobile */}
+              <button onClick={() => setIsClassSelectorOpen(true)} className="hidden md:flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl bg-surface-card/50 hover:bg-surface-card/80 transition-all duration-300 border border-border-default hover:border-primary/30 shadow-sm active:scale-95 backdrop-blur-sm shrink-0" title="Gerenciar Turmas">
+                <div className={`size-8 rounded-lg bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-md shadow-primary/20`}>
+                  <span className="material-symbols-outlined text-base font-black">{theme.icon}</span>
                 </div>
-              )}
-
-              {/* 🔮 PREDICTIVE FETCH INDICATOR 🔮 */}
-              {prefetchStatus === 'fetching' && (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400 text-[10px] font-bold uppercase tracking-widest animate-pulse">
-                  <span className="material-symbols-outlined text-sm animate-bounce">download</span>
-                  <span className="hidden sm:inline">BAIXANDO AULA...</span>
-                </div>
-              )}
-
-              <div className={`hidden md:block landscape:block transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ml-4`}>
-                <button onClick={() => setIsClassSelectorOpen(true)} className="flex items-center gap-3 pl-1.5 pr-4 py-1.5 rounded-xl bg-surface-card/50 hover:bg-surface-card/80 transition-all duration-300 group border border-border-default hover:border-primary/30 shadow-sm hover:shadow-neon active:scale-95 backdrop-blur-sm" title="Gerenciar Turmas">
-                  <div className={`size-10 rounded-lg bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-all duration-500`}>
-                    <span className="material-symbols-outlined text-lg font-black">{theme.icon}</span>
+                <div className="flex flex-col items-start gap-0.5">
+                  <span className="text-[9px] font-black text-text-muted uppercase tracking-widest leading-none font-mono">Série</span>
+                  <div className="flex items-center gap-0.5">
+                    <span className="font-black text-sm text-text-primary tracking-tight leading-none">{activeSeries?.name || 'Selecione...'}</span>
+                    <span className="material-symbols-outlined text-text-muted text-[10px]">expand_more</span>
                   </div>
-                  <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-[10px] font-black text-text-muted uppercase tracking-widest leading-none font-mono">Série</span>
-                    <div className="flex items-center gap-1">
-                      <span className="font-black text-base text-text-primary tracking-tight leading-none group-hover:text-primary transition-colors">{activeSeries?.name || 'Selecione...'}</span>
-                      <span className="material-symbols-outlined text-text-muted text-[10px] group-hover:text-primary transition-all">expand_more</span>
-                    </div>
-                  </div>
-                </button>
-              </div>
-
-              <div className="h-8 w-px bg-gradient-to-b from-transparent via-border-default to-transparent mx-2 hidden md:block landscape:block"></div>
-
-              <div className="flex-1 min-w-0 mx-2 md:mx-0 overflow-hidden hidden md:block landscape:block">
-                <div className="flex items-center gap-3 overflow-x-auto no-scrollbar mask-linear-fade py-1 pr-4">
-                  {activeSeries?.sections.map(sec => (
-                    <div key={sec} className="relative group/tab shrink-0">
-                      <button onClick={() => handleSwitchSection(sec)} className={`relative min-w-[3.5rem] h-10 px-5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center border active:scale-90 ${selectedSection === sec ? `bg-gradient-to-br from-primary to-secondary text-white border-transparent shadow-lg shadow-semimary/30 ring-1 ring-white/20` : 'bg-surface-card/50 border-border-subtle text-text-secondary hover:bg-surface-elevated hover:text-primary hover:border-primary/30'}`}>
-                        {sec}
-                        {selectedSection === sec && <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-white animate-pulse shadow-neon`}></span>}
-                      </button>
-                      <button onClick={(e) => handleRemoveSectionOneClick(e, sec)} className="absolute -top-1.5 -right-1.5 size-5 bg-surface-elevated text-red-500 rounded-full shadow-md border border-border-default flex items-center justify-center opacity-0 group-hover/tab:opacity-100 transition-all transform scale-0 group-hover/tab:scale-100 cursor-pointer z-20 hover:scale-110" title="Remover Turma">
-                        <span className="material-symbols-outlined text-[10px] font-black">close</span>
-                      </button>
-                    </div>
-                  ))}
-                  {activeSeries && (
-                    <button onClick={handleAddSectionOneClick} className={`h-10 pl-3 pr-4 rounded-xl flex items-center gap-2 border border-dashed border-text-muted/50 text-text-muted hover:border-primary hover:text-white hover:bg-primary transition-all duration-300 hover:scale-105 active:scale-95 group/nova shadow-sm hover:shadow-neon`} title="Adicionar Turma">
-                      <span className="material-symbols-outlined text-sm font-black">add</span>
-                      <span className="text-[10px] font-black uppercase tracking-widest font-mono">Nova</span>
-                    </button>
-                  )}
                 </div>
+              </button>
+
+              {/* Divider */}
+              <div className="h-6 w-px bg-border-default mx-1 hidden sm:block shrink-0"></div>
+
+              {/* Classes List */}
+              <div className="flex items-center gap-2 flex-wrap justify-center">
+                {activeSeries?.sections.map(sec => (
+                  <button key={sec} onClick={() => handleSwitchSection(sec)} className={`min-w-[2.5rem] h-8 px-3 rounded-lg font-bold text-xs transition-colors shrink-0 ${selectedSection === sec ? `bg-primary text-white shadow-neon` : 'bg-surface-card/50 border border-border-default text-text-secondary hover:bg-surface-subtle'}`}>
+                    {sec}
+                  </button>
+                ))}
+                {activeSeries && (
+                  <button onClick={handleAddSectionOneClick} className={`size-8 rounded-lg flex items-center justify-center border border-dashed border-text-muted/50 text-text-muted hover:border-primary hover:text-white hover:bg-primary transition-colors shrink-0`} title="Nova Turma">
+                    <span className="material-symbols-outlined text-sm font-black">add</span>
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* Subject Selector - Always visible if user is logged in */}
-            <div className="flex items-center gap-4 pl-4 border-l border-border-default">
+            {/* 3. RIGHT: Subject + Profile (Aligned Right) */}
+            <div className="flex flex-wrap items-center justify-end gap-3 shrink-0 ml-auto bg-surface-subtle/30 p-1 rounded-xl order-2 md:order-3">
+
+              {/* Sync Status */}
+              {(pendingCount > 0 || isSyncing) && (
+                <div className="flex items-center justify-center size-8 rounded-full bg-amber-500/10 text-amber-600 animate-pulse shrink-0" title="Sincronizando...">
+                  <span className={`material-symbols-outlined text-base ${isSyncing ? 'animate-spin' : ''}`}>{isSyncing ? 'sync' : 'cloud_upload'}</span>
+                </div>
+              )}
+
+              {/* Subject Selector - HIDDEN on Mobile */}
               {currentUser && (
-                <div className="relative hidden md:block landscape:block">
+                <div className="relative shrink-0 hidden md:block">
                   <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold text-text-secondary hover:bg-surface-subtle hover:text-primary transition-colors">
                     <span className={`size-2 rounded-full bg-primary shadow-neon`}></span>
-                    {activeSubject}
+                    <span className="hidden xs:inline max-w-[120px] truncate">{activeSubject}</span>
                     <span className="material-symbols-outlined text-xs">expand_more</span>
                   </button>
+                  {/* Dropdown Logic Kept Same - Rendered via Portal or Absolute usually, reusing state */}
                   {isSubjectDropdownOpen && (
                     <>
                       <div className="fixed inset-0 z-[60]" onClick={() => setIsSubjectDropdownOpen(false)}></div>
@@ -433,34 +440,36 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   )}
                 </div>
               )}
-              <div className="hidden md:block landscape:block">
-                <Link to="/instructions" title="Precisa de ajuda?" className="flex items-center justify-center p-2 rounded-xl text-text-muted hover:text-primary hover:bg-surface-subtle transition-colors group">
-                  <span className="material-symbols-outlined group-hover:animate-bounce">help</span>
+
+              {/* Help & Notifications - visible on tablet+ (md), hidden on mobile */}
+              <div className="hidden md:flex items-center gap-1.5 transition-transform duration-300 lg:scale-110">
+                <Link to="/instructions" title="Precisa de ajuda?" className="flex items-center justify-center size-9 rounded-full text-text-muted hover:text-primary hover:bg-surface-subtle transition-colors group">
+                  <span className="material-symbols-outlined text-xl group-hover:animate-bounce">help</span>
                 </Link>
-              </div>
-              <div className="hidden md:block landscape:block">
-                <NotificationCenter />
-              </div>
-              <button onClick={() => setIsProfileModalOpen(true)} className="flex items-center gap-3 bg-surface-card/50 pl-1.5 pr-4 py-1.5 rounded-xl border border-border-default shadow-sm hover:shadow-neon hover:border-primary/30 transition-all group active:scale-95 backdrop-blur-sm">
-                <div className="relative">
-                  <div className="size-10 rounded-lg bg-surface-subtle overflow-hidden border border-border-default shadow-sm group-hover:scale-105 transition-transform duration-300">
-                    {currentUser?.photoUrl ? (
-                      <img src={currentUser.photoUrl} alt="Profile" className="size-full object-cover" />
-                    ) : (
-                      <div className={`size-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-white font-bold text-sm tracking-tighter`}>
-                        {(currentUser?.name || '??').substring(0, 2).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <div className="absolute -bottom-0.5 -right-0.5 size-3 bg-emerald-500 border-2 border-surface-card rounded-full shadow-lg shadow-emerald-500/50"></div>
+                <div className="flex items-center justify-center transform transition-transform hover:scale-110">
+                  <NotificationCenter />
                 </div>
-                <div className="hidden md:flex landscape:flex flex-col items-start leading-tight">
-                  <span className="text-[13px] font-black text-text-primary group-hover:text-primary transition-colors">{currentUser?.name?.split(' ')[0]}</span>
-                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest font-mono">{activeSubject || theme.subject}</span>
+              </div>
+
+              {/* User Profile */}
+              <button onClick={() => setIsProfileModalOpen(true)} className="flex items-center gap-2 bg-surface-card px-2.5 py-2 rounded-xl border border-border-default hover:border-primary/30 transition-all active:scale-95 group shrink-0 shadow-sm md:ml-2 lg:scale-105 origin-right">
+                <div className="size-9 rounded-lg bg-surface-subtle overflow-hidden border border-border-default shadow-sm group-hover:scale-105 transition-transform">
+                  {currentUser?.photoUrl ? (
+                    <img src={currentUser.photoUrl} alt="Profile" className="size-full object-cover" />
+                  ) : (
+                    <div className={`size-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-white font-bold text-xs`}>
+                      {(currentUser?.name || '??').substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col items-start leading-tight">
+                  <span className="text-[11px] font-black text-text-primary">{currentUser?.name?.split(' ')[0]}</span>
+                  <span className="text-[9px] font-bold text-text-muted uppercase tracking-widest font-mono">{activeSubject || theme.subject}</span>
                 </div>
               </button>
             </div>
-          </div> {/* End of Centered Container */}
+
+          </div>
         </motion.header>
 
         <div className="xl:hidden landscape:hidden px-3 pt-2.5 -mb-0.5 z-30">

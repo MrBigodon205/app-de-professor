@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // 1. Try Network Fetch first (Standard Web)
             const { data: profile, error } = await supabase
                 .from('profiles')
-                .select('*')
+                .select('id, name, email, photo_url, subject, subjects') // OPTIMIZATION: Select only needed columns
                 .eq('id', uid)
                 .single();
 
@@ -90,49 +90,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const initSession = async () => {
             try {
-                // Safety timeout: If Supabase takes > 3s, we force finish to allow offline mode or login
-                const timeoutDetails = new Promise<{ timeout: true }>(resolve => setTimeout(() => resolve({ timeout: true }), 3000));
-
-                // Get session from Supabase SDK (handles storage automatically)
-                // We race against the timeout
-                const result = await Promise.race([
-                    supabase.auth.getSession(),
-                    timeoutDetails
-                ]);
-
-                if ('timeout' in result || !result.data.session) {
-                    console.warn("Auth session check timed out or failed - checking offline cache");
-
-                    // OFFLINE RECOVERY STRATEGY
-                    // If Supabase fails (offline), try to restore the last known user.
-                    const lastUserId = localStorage.getItem('last_user_id');
-                    if (lastUserId) {
-                        try {
-                            const cached = localStorage.getItem(`offline_profile_${lastUserId}`);
-                            if (cached && mounted) {
-                                const savedUser = JSON.parse(cached);
-                                console.log("Restored user from offline cache (Force):", savedUser.name);
+                // IMMEDIATE CACHE CHECK: If we have a user in localStorage, restore it INSTANTLY
+                // This removes the "white screen" or "spinner" delay entirely for repeat users
+                const lastUserId = localStorage.getItem('last_user_id');
+                if (lastUserId) {
+                    try {
+                        const cached = localStorage.getItem(`offline_profile_${lastUserId}`);
+                        if (cached) {
+                            const savedUser = JSON.parse(cached);
+                            if (mounted) {
+                                console.log("⚡ Instant Cache Restore:", savedUser.name);
                                 setCurrentUser(savedUser);
                                 setUserId(savedUser.id);
-                                // Set active subject from cache or persistent
+                                setLoading(false); // Unblock UI immediately
+
                                 const storedSubject = localStorage.getItem('last_active_subject');
                                 if (storedSubject) setActiveSubject(storedSubject);
                             }
-                        } catch (e) {
-                            console.error("Failed to restore offline user", e);
                         }
-                    }
-                } else {
-                    const { data: { session }, error } = result;
+                    } catch (e) { console.warn("Cache restore error", e); }
+                }
 
-                    if (session?.user) {
-                        if (mounted) {
-                            setUserId(session.user.id);
-                            localStorage.setItem('last_user_id', session.user.id); // Save for offline recovery
-                            // Also race fetchProfile so it doesn't hang
-                            const profilePromise = fetchProfile(session.user.id, session.user);
-                            await Promise.race([profilePromise, timeoutDetails]);
-                        }
+                // CHECK NETWORK STATUS
+                if (!navigator.onLine) {
+                    console.warn("Offline mode detected at startup.");
+                    if (mounted) setLoading(false);
+                    return;
+                }
+
+                // ASYNC SUPABASE CHECK (Background)
+                const { data: { session }, error } = await supabase.auth.getSession();
+
+                if (session?.user) {
+                    if (mounted) {
+                        setUserId(session.user.id);
+                        localStorage.setItem('last_user_id', session.user.id);
+                        // Fetch fresh profile in background
+                        await fetchProfile(session.user.id, session.user);
+                    }
+                } else if (!lastUserId) {
+                    // Only stop loading if we didn't have a cached user. 
+                    // If we had a cached user, we stay logged in until explicit sign out or failure.
+                    if (mounted) {
+                        setCurrentUser(null);
+                        setUserId(null);
                     }
                 }
             } catch (err) {
@@ -144,23 +145,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const subscription = supabase.auth.onAuthStateChange(async (event, session) => {
             if (session?.user) {
-                // HANDLING: Initial Load or Explicit Login -> Show Loading
                 if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-                    if (mounted) setLoading(true);
+                    // Update fresh data
                     localStorage.setItem('last_user_id', session.user.id);
-
-                    // Race fetchProfile to prevent infinite load
-                    const timeoutPromise = new Promise(resolve => setTimeout(resolve, 5000));
-                    await Promise.race([
-                        fetchProfile(session.user.id, session.user),
-                        timeoutPromise
-                    ]);
-
-                    if (mounted) setLoading(false);
-                }
-                // HANDLING: Silent Updates (Token Refresh, User Update) -> No Loading Screen
-                else if (event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
-                    // Update profile in background without blocking UI
+                    fetchProfile(session.user.id, session.user);
+                } else if (event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
                     fetchProfile(session.user.id, session.user);
                 }
             } else if (event === 'SIGNED_OUT') {

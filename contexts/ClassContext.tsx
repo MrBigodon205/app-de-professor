@@ -90,7 +90,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         try {
             let query = supabase
                 .from('classes')
-                .select('*')
+                .select('id, name, sections, user_id, subject')
                 .eq('user_id', currentUser.id);
 
             const { data, error } = await query.order('created_at', { ascending: true });

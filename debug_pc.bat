@@ -5,7 +5,7 @@ echo ===========================================
 echo.
 
 :: Define o caminho do executável
-set "APP_EXE=release\win-unpacked\Prof. Acerta+.exe"
+set "APP_EXE=release_v2\win-unpacked\Prof. Acerta+.exe"
 
 if exist "%APP_EXE%" (
     echo Iniciando o aplicativo oficial...

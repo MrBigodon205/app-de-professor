@@ -30,7 +30,7 @@ export const ClassProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             setLoading(true);
             const { data, error } = await supabase
                 .from('classes')
-                .select('*')
+                .select('id, name, sections, user_id, subject')
                 .eq('user_id', userId)
                 .or(`subject.eq.${activeSubject},subject.is.null`);
 

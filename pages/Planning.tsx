@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -797,6 +798,10 @@ export const Planning: React.FC = () => {
             </button>
             <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain" title="Adicionar anexo" aria-label="Adicionar anexo" />
 
+            {/* ANIMATION VARIANTS */}
+            {/* These align with the "Premium" feel of the Dashboard */}
+            <motion.div className="hidden" animate={{ opacity: 0 }} /> {/* Hack to ensure motion is used if needed elsewhere or just defining variants below */}
+
             {/* AI MODAL */}
 
 
@@ -880,7 +885,21 @@ export const Planning: React.FC = () => {
                     </div>
                 )}
 
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-0">
+                <motion.div
+                    variants={{
+                        hidden: { opacity: 0 },
+                        visible: {
+                            opacity: 1,
+                            transition: {
+                                staggerChildren: 0.1,
+                                delayChildren: 0.1
+                            }
+                        }
+                    }}
+                    initial="hidden"
+                    animate="visible"
+                    className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-0"
+                >
 
                     {loading ? (
                         Array.from({ length: 5 }).map((_, i) => (
@@ -896,11 +915,18 @@ export const Planning: React.FC = () => {
                         <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 min-h-[200px] flex items-center justify-center">Nenhuma aula encontrada.</div>
                     ) : (
                         displayedPlans.map((plan, idx) => (
-                            <button
+                            <motion.button
                                 key={plan.id}
+                                variants={{
+                                    hidden: { opacity: 0, x: -20, filter: "blur(5px)" },
+                                    visible: {
+                                        opacity: 1, x: 0, filter: "blur(0px)",
+                                        transition: { type: 'spring', stiffness: 100, damping: 12 }
+                                    }
+                                }}
+                                layoutId={`plan-card-${plan.id}`}
                                 onClick={() => isSelectionMode ? toggleSelection(plan.id) : handleSelectPlan(plan)}
-                                style={{ '--delay': `${idx * 100}ms` } as React.CSSProperties}
-                                className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm animate-in fade-in md:slide-in-from-left duration-500 fill-mode-backwards animate-delay-[var(--delay)] ${isSelectionMode
+                                className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm ${isSelectionMode
                                     ? (selectedIds.includes(plan.id) ? `bg-${theme.primaryColor}/5 border-${theme.primaryColor} dark:bg-${theme.primaryColor}/20` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800')
                                     : (selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600')
                                     }`}
@@ -949,10 +975,10 @@ export const Planning: React.FC = () => {
                                         {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                                     </div>
                                 </div>
-                            </button>
+                            </motion.button>
                         ))
                     )}
-                </div>
+                </motion.div>
             </div>
 
             {/* Main Content */}

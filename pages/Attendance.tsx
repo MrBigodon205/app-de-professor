@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -83,13 +84,20 @@ const MiniCalendar: React.FC<{
 
     return (
         <>
-            {/* Backdrop */}
-            <div
-                className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 animate-in fade-in duration-300"
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
                 onClick={onClose}
             />
 
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface-card backdrop-blur-2xl rounded-3xl shadow-2xl border border-border-default p-4 lg:p-8 landscape:p-2 z-50 w-[90%] max-w-[320px] lg:max-w-[500px] max-h-[90vh] landscape:max-h-[95vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 landscape:flex landscape:flex-row landscape:items-start landscape:gap-4 landscape:w-auto landscape:max-w-none">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface-card backdrop-blur-2xl rounded-3xl shadow-2xl border border-border-default p-4 lg:p-8 landscape:p-2 z-50 w-[90%] max-w-[320px] lg:max-w-[500px] max-h-[90vh] landscape:max-h-[95vh] overflow-y-auto landscape:flex landscape:flex-row landscape:items-start landscape:gap-4 landscape:w-auto landscape:max-w-none"
+            >
 
                 {/* Decorative background glow */}
                 <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
@@ -175,7 +183,7 @@ const MiniCalendar: React.FC<{
                 >
                     Fechar
                 </button>
-            </div>
+            </motion.div>
         </>
     );
 };
@@ -793,15 +801,18 @@ export const Attendance: React.FC = () => {
                             <span className={`material-symbols-outlined text-slate-400 transition-transform text-lg sm:text-xl ${showCalendar ? 'rotate-180' : ''}`}>expand_more</span>
                         </button>
 
-                        {showCalendar && (
-                            <MiniCalendar
-                                currentDate={selectedDate}
-                                onSelectDate={setSelectedDate}
-                                activeDates={activeDates}
-                                onClose={() => setShowCalendar(false)}
-                                theme={theme}
-                            />
-                        )}
+
+                        <AnimatePresence>
+                            {showCalendar && (
+                                <MiniCalendar
+                                    currentDate={selectedDate}
+                                    onSelectDate={setSelectedDate}
+                                    activeDates={activeDates}
+                                    onClose={() => setShowCalendar(false)}
+                                    theme={theme}
+                                />
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     <button
@@ -881,7 +892,18 @@ export const Attendance: React.FC = () => {
                                 <th className="px-3 sm:px-8 py-4 sm:py-5 text-[10px] font-black uppercase text-text-muted tracking-widest text-center">Registro</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border-subtle">
+                        <motion.tbody
+                            variants={{
+                                hidden: { opacity: 0 },
+                                visible: {
+                                    opacity: 1,
+                                    transition: { staggerChildren: 0.05 }
+                                }
+                            }}
+                            initial="hidden"
+                            animate="visible"
+                            className="divide-y divide-border-subtle"
+                        >
                             {students.length > 0 ? (
                                 students.map((s) => (
                                     <AttendanceRow
@@ -905,7 +927,7 @@ export const Attendance: React.FC = () => {
                                     </td>
                                 </tr>
                             )}
-                        </tbody>
+                        </motion.tbody>
                     </table>
                 </div>
             </div>
@@ -958,7 +980,17 @@ interface AttendanceRowProps {
 
 const AttendanceRow = React.memo(({ student: s, status, onStatusChange, theme }: AttendanceRowProps) => {
     return (
-        <tr className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all">
+        <motion.tr
+            variants={{
+                hidden: { opacity: 0, y: 10, filter: "blur(5px)" },
+                visible: {
+                    opacity: 1, y: 0, filter: "blur(0px)",
+                    transition: { type: 'spring', stiffness: 120, damping: 14 }
+                }
+            }}
+            layoutId={`row-${s.id}`}
+            className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all"
+        >
             <td className="px-3 sm:px-8 py-3 sm:py-4 landscape:py-1.5 landscape:px-2 text-center sm:text-left">
                 <span className="font-mono text-xs sm:text-sm font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 sm:px-2 py-1 rounded-lg inline-block min-w-[2.2rem] text-center">
                     {s.number.padStart(2, '0')}
@@ -1008,6 +1040,6 @@ const AttendanceRow = React.memo(({ student: s, status, onStatusChange, theme }:
                     />
                 </div>
             </td>
-        </tr>
+        </motion.tr>
     );
 });

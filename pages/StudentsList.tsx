@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -30,6 +31,26 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
         deleteStudent,
         refresh: refreshStudents
     } = useStudentsData(selectedSeriesId?.toString(), selectedSection, currentUser?.id);
+
+    // ANIMATIONS
+    const containerVariants: any = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.05,
+                delayChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants: any = {
+        hidden: { opacity: 0, y: 20, filter: "blur(5px)" },
+        visible: {
+            opacity: 1, y: 0, filter: "blur(0px)",
+            transition: { type: 'spring', stiffness: 100, damping: 12 }
+        }
+    };
 
     // Local UI state
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -103,7 +124,9 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
             if (error) throw error;
 
-            setStudents(students.filter(s => !selectedIds.includes(s.id)));
+            if (error) throw error;
+
+            await refreshStudents();
             setSelectedIds([]);
         } catch (e) {
             console.error("Bulk delete error", e);
@@ -445,7 +468,12 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                             )}
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <motion.div
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                        >
                             {students
                                 .filter(s =>
                                     searchQuery === '' ||
@@ -468,11 +496,12 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                         s.number.toString().includes(searchQuery)
                                     )
                                     .map((student, index) => (
-                                        <div
+                                        <motion.div
                                             key={student.id}
+                                            variants={itemVariants}
+                                            layoutId={`student-card-${student.id}`}
                                             onClick={() => navigate(`/reports/${student.id}`)}
                                             className="group bg-surface-card rounded-[24px] p-6 border border-border-default shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-500/20 hover:-translate-y-1 transition-all cursor-pointer relative overflow-hidden"
-                                            style={{ animationDelay: `${index * 50}ms` }}
                                         >
                                             <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${student.color || `from-${theme.primaryColor} to-${theme.secondaryColor}`} opacity-10 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-500`}></div>
 
@@ -498,10 +527,10 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                     <span className="material-symbols-outlined text-base">arrow_forward</span>
                                                 </button>
                                             </div>
-                                        </div>
+                                        </motion.div>
                                     ))
                             )}
-                        </div>
+                        </motion.div>
                     </div>
                 ) : (
                     /* MANAGE MODE: TABLE LAYOUT */
@@ -525,7 +554,12 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                         <th className="px-8 py-5 text-[10px] font-black uppercase text-text-muted tracking-widest text-right">Ações</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border-subtle">
+                                <motion.tbody
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                    className="divide-y divide-border-subtle"
+                                >
                                     {students.length === 0 ? (
                                         <tr>
                                             <td colSpan={4} className="px-8 py-20 text-center">
@@ -540,7 +574,12 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                         </tr>
                                     ) : (
                                         students.map((student) => (
-                                            <tr key={student.id} className={`group transition-all border-b border-border-subtle ${selectedIds.includes(student.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card hover:bg-surface-subtle'}`}>
+                                            <motion.tr
+                                                layoutId={`student-row-${student.id}`}
+                                                variants={itemVariants}
+                                                key={student.id}
+                                                className={`group transition-all border-b border-border-subtle ${selectedIds.includes(student.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card hover:bg-surface-subtle'}`}
+                                            >
                                                 <td className="px-4 py-4">
                                                     <div className="flex items-center justify-center">
                                                         <input
@@ -613,10 +652,10 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                         </button>
                                                     </div>
                                                 </td>
-                                            </tr>
+                                            </motion.tr>
                                         ))
                                     )}
-                                </tbody>
+                                </motion.tbody>
                             </table>
                         </div>
                     </div>

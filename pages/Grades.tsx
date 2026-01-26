@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
@@ -60,7 +61,17 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
         const { annualTotal } = calculateAnnualSummary(student);
         const res = getStatusResult(student, 'results'); // Using standardized helper
         return (
-            <tr className="hover:bg-surface-subtle transition-colors duration-150">
+            <motion.tr
+                variants={{
+                    hidden: { opacity: 0, y: 10, filter: "blur(5px)" },
+                    visible: {
+                        opacity: 1, y: 0, filter: "blur(0px)",
+                        transition: { type: 'spring', stiffness: 120, damping: 14 }
+                    }
+                }}
+                layoutId={`grade-row-res-${student.id}`}
+                className="hover:bg-surface-subtle transition-colors duration-150"
+            >
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted font-mono">
                     {student.number}
                 </td>
@@ -82,12 +93,22 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                         {res.text}
                     </span>
                 </td>
-            </tr>
+            </motion.tr>
         );
     }
 
     return (
-        <tr className="hover:bg-surface-subtle transition-colors duration-150">
+        <motion.tr
+            variants={{
+                hidden: { opacity: 0, y: 10, filter: "blur(5px)" },
+                visible: {
+                    opacity: 1, y: 0, filter: "blur(0px)",
+                    transition: { type: 'spring', stiffness: 120, damping: 14 }
+                }
+            }}
+            layoutId={`grade-row-${student.id}`}
+            className="hover:bg-surface-subtle transition-colors duration-150"
+        >
             <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted font-mono">
                 {student.number}
             </td>
@@ -138,7 +159,7 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                     </span>
                 )}
             </td>
-        </tr>
+        </motion.tr>
     );
 });
 
@@ -673,7 +694,9 @@ export const Grades: React.FC = () => {
     });
 
     return (
-        <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6 lg:pb-12">
+        <div className="space-y-4 md:space-y-6 pb-6 lg:pb-12">
+            {/* ANIMATIONS */}
+            <motion.div className="hidden" animate={{ opacity: 0 }} /> {/* Hack to ensure motion is used/defined if needed elsewhere */}
             {/* Header Controls */}
             <div className="glass-card-soft fluid-p-s flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
                 <div className="flex gap-2 bg-surface-subtle p-1 rounded-lg overflow-x-auto max-w-full" data-tour="grades-units">
@@ -742,171 +765,196 @@ export const Grades: React.FC = () => {
             </div>
 
             {/* Export Modal */}
-            {showExportModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-surface-card rounded-xl shadow-2xl max-w-md w-full p-6 animate-scale-in max-h-[90vh] flex flex-col">
-                        <h3 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2 shrink-0">
-                            <span className="material-symbols-outlined text-indigo-600">settings</span>
-                            Configurar Relatório PDF
-                        </h3>
+            <AnimatePresence>
+                {showExportModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-surface-card rounded-xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] flex flex-col"
+                        >
+                            <h3 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2 shrink-0">
+                                <span className="material-symbols-outlined text-indigo-600">settings</span>
+                                Configurar Relatório PDF
+                            </h3>
 
-                        <div className="space-y-4 mb-6 overflow-y-auto custom-scrollbar flex-1 pr-2">
-                            <div>
-                                <label className="block text-sm font-medium text-text-secondary mb-2">Unidades para Incluir:</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {(['1', '2', '3', 'final', 'recovery', 'results'] as const).map(key => (
-                                        <label key={key} className="flex items-center space-x-2 p-2 rounded hover:bg-surface-subtle cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={exportConfig.units[key]}
-                                                onChange={e => setExportConfig(prev => ({
-                                                    ...prev,
-                                                    units: { ...prev.units, [key]: e.target.checked }
-                                                }))}
-                                                className="rounded text-indigo-600 focus:ring-indigo-500"
-                                            />
-                                            <span className="text-sm text-text-secondary font-bold">
-                                                {{
-                                                    '1': '1ª Unidade',
-                                                    '2': '2ª Unidade',
-                                                    '3': '3ª Unidade',
-                                                    'final': 'Prova Final',
-                                                    'recovery': 'Recuperação',
-                                                    'results': 'Resultado Final'
-                                                }[key]}
-                                            </span>
-                                        </label>
-                                    ))}
+                            <div className="space-y-4 mb-6 overflow-y-auto custom-scrollbar flex-1 pr-2">
+                                <div>
+                                    <label className="block text-sm font-medium text-text-secondary mb-2">Unidades para Incluir:</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {(['1', '2', '3', 'final', 'recovery', 'results'] as const).map(key => (
+                                            <label key={key} className="flex items-center space-x-2 p-2 rounded hover:bg-surface-subtle cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={exportConfig.units[key]}
+                                                    onChange={e => setExportConfig(prev => ({
+                                                        ...prev,
+                                                        units: { ...prev.units, [key]: e.target.checked }
+                                                    }))}
+                                                    className="rounded text-indigo-600 focus:ring-indigo-500"
+                                                />
+                                                <span className="text-sm text-text-secondary font-bold">
+                                                    {{
+                                                        '1': '1ª Unidade',
+                                                        '2': '2ª Unidade',
+                                                        '3': '3ª Unidade',
+                                                        'final': 'Prova Final',
+                                                        'recovery': 'Recuperação',
+                                                        'results': 'Resultado Final'
+                                                    }[key]}
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-border-default">
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={exportConfig.detailed}
+                                            onChange={e => setExportConfig(prev => ({ ...prev, detailed: e.target.checked }))}
+                                            className="rounded text-indigo-600 focus:ring-indigo-500"
+                                        />
+                                        <span className="text-sm font-medium text-text-primary">Detalhar colunas de notas</span>
+                                    </label>
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-border-default">
-                                <label className="flex items-center space-x-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={exportConfig.detailed}
-                                        onChange={e => setExportConfig(prev => ({ ...prev, detailed: e.target.checked }))}
-                                        className="rounded text-indigo-600 focus:ring-indigo-500"
-                                    />
-                                    <span className="text-sm font-medium text-text-primary">Detalhar colunas de notas</span>
-                                </label>
+                            <div className="flex justify-end gap-2 shrink-0 pt-4 border-t border-border-default">
+                                <button
+                                    onClick={() => setShowExportModal(false)}
+                                    className="px-4 py-2 text-text-muted hover:bg-surface-subtle rounded-lg transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={exportPDF}
+                                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-md transition-all flex items-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-sm">download</span>
+                                    Gerar PDF
+                                </button>
+                            </div>
+                        </motion.div>
+
+                        {/* Mobile Landscape Compact Controls */}
+                        <div className="hidden landscape:flex w-full items-center gap-2 justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-text-muted whitespace-nowrap">{activeSeries?.name || 'Série?'} - {selectedSection}</span>
+                                <span className="text-text-disabled">|</span>
+                                <select
+                                    value={selectedUnit}
+                                    onChange={(e) => setSelectedUnit(e.target.value)}
+                                    className="bg-transparent text-xs font-bold text-indigo-600 dark:text-indigo-400 border-none outline-none p-0 cursor-pointer"
+                                    aria-label="Seletor de Unidade"
+                                >
+                                    {[1, 2, 3, 4].map(unit => (
+                                        <option key={unit} value={unit} className="text-text-primary bg-surface-card">{unit}ª Un.</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => {
+                                        alert("Use o modo retrato para trocar de turma.");
+                                    }}
+                                    className="bg-surface-subtle p-1.5 rounded-lg text-text-muted"
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">tune</span>
+                                </button>
+                                <button onClick={() => setShowExportModal(true)} className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 p-1.5 rounded-lg">
+                                    <span className="material-symbols-outlined text-[18px]">download</span>
+                                </button>
                             </div>
                         </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
 
-                        <div className="flex justify-end gap-2 shrink-0 pt-4 border-t border-border-default">
-                            <button
-                                onClick={() => setShowExportModal(false)}
-                                className="px-4 py-2 text-text-muted hover:bg-surface-subtle rounded-lg transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={exportPDF}
-                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-md transition-all flex items-center gap-2"
-                            >
-                                <span className="material-symbols-outlined text-sm">download</span>
-                                Gerar PDF
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Mobile Landscape Compact Controls */}
-                    <div className="hidden landscape:flex w-full items-center gap-2 justify-between">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-text-muted whitespace-nowrap">{activeSeries?.name || 'Série?'} - {selectedSection}</span>
-                            <span className="text-text-disabled">|</span>
-                            <select
-                                value={selectedUnit}
-                                onChange={(e) => setSelectedUnit(e.target.value)}
-                                className="bg-transparent text-xs font-bold text-indigo-600 dark:text-indigo-400 border-none outline-none p-0 cursor-pointer"
-                                aria-label="Seletor de Unidade"
-                            >
-                                {[1, 2, 3, 4].map(unit => (
-                                    <option key={unit} value={unit} className="text-text-primary bg-surface-card">{unit}ª Un.</option>
+            {/* Grades Table */ }
+    <div className="card overflow-hidden shadow-premium border-none">
+        <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px] border-collapse">
+                <thead className={`bg-surface-subtle/50 backdrop-blur-md border-b border-border-default`}>
+                    <tr>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider w-16">
+                            Nº
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider">
+                            Nome
+                        </th>
+                        {selectedUnit === 'results' ? (
+                            <>
+                                <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider">
+                                    Total Anual
+                                </th>
+                                <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider">
+                                    Situação Final
+                                </th>
+                            </>
+                        ) : (
+                            <>
+                                {currentConfig?.columns.map((col) => (
+                                    <th key={col.key} className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-32">
+                                        <div className="flex flex-col items-center">
+                                            <span>{col.label}</span>
+                                            <span className="text-[10px] opacity-70 font-normal">
+                                                (Max: {col.max})
+                                            </span>
+                                        </div>
+                                    </th>
                                 ))}
-                            </select>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => {
-                                    alert("Use o modo retrato para trocar de turma.");
-                                }}
-                                className="bg-surface-subtle p-1.5 rounded-lg text-text-muted"
-                            >
-                                <span className="material-symbols-outlined text-[18px]">tune</span>
-                            </button>
-                            <button onClick={() => setShowExportModal(true)} className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 p-1.5 rounded-lg">
-                                <span className="material-symbols-outlined text-[18px]">download</span>
-                            </button>
-                        </div>
-                    </div>
+                                <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-40 bg-surface-subtle/50">
+                                    {(selectedUnit === 'final' || selectedUnit === 'recovery') ? 'Situação' : 'Média'}
+                                </th>
+                            </>
+                        )}
+                    </tr>
+                </thead>
+                <motion.tbody
+                    variants={{
+                        hidden: { opacity: 0 },
+                        visible: {
+                            opacity: 1,
+                            transition: { staggerChildren: 0.05 }
+                        }
+                    }}
+                    initial="hidden"
+                    animate="visible"
+                    key={selectedUnit} // Key forces re-mount (and thus re-stagger) when unit changes
+                    className="divide-y divide-border-subtle"
+                >
+                    {visibleStudents.map((student) => (
+                        <GradeRow
+                            key={student.id}
+                            student={student}
+                            selectedUnit={selectedUnit}
+                            theme={theme}
+                            onGradeChange={handleGradeChange}
+                        />
+                    ))}
+                </motion.tbody>
+            </table>
+
+            {visibleStudents.length === 0 && (
+                <div className="text-center py-12">
+                    <p className="text-slate-500 dark:text-slate-400">
+                        {selectedUnit === 'final' ? 'Nenhum aluno em Prova Final.' :
+                            selectedUnit === 'recovery' ? 'Nenhum aluno em Recuperação.' :
+                                'Nenhum aluno encontrado nesta turma.'}
+                    </p>
                 </div>
             )}
-
-            {/* Grades Table */}
-            <div className="card overflow-hidden shadow-premium border-none">
-                <div className="overflow-x-auto">
-                    <table className="w-full min-w-[800px] border-collapse">
-                        <thead className={`bg-surface-subtle/50 backdrop-blur-md border-b border-border-default`}>
-                            <tr>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider w-16">
-                                    Nº
-                                </th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider">
-                                    Nome
-                                </th>
-                                {selectedUnit === 'results' ? (
-                                    <>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider">
-                                            Total Anual
-                                        </th>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider">
-                                            Situação Final
-                                        </th>
-                                    </>
-                                ) : (
-                                    <>
-                                        {currentConfig?.columns.map((col) => (
-                                            <th key={col.key} className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-32">
-                                                <div className="flex flex-col items-center">
-                                                    <span>{col.label}</span>
-                                                    <span className="text-[10px] opacity-70 font-normal">
-                                                        (Max: {col.max})
-                                                    </span>
-                                                </div>
-                                            </th>
-                                        ))}
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-40 bg-surface-subtle/50">
-                                            {(selectedUnit === 'final' || selectedUnit === 'recovery') ? 'Situação' : 'Média'}
-                                        </th>
-                                    </>
-                                )}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border-subtle">
-                            {visibleStudents.map((student) => (
-                                <GradeRow
-                                    key={student.id}
-                                    student={student}
-                                    selectedUnit={selectedUnit}
-                                    theme={theme}
-                                    onGradeChange={handleGradeChange}
-                                />
-                            ))}
-                        </tbody>
-                    </table>
-
-                    {visibleStudents.length === 0 && (
-                        <div className="text-center py-12">
-                            <p className="text-slate-500 dark:text-slate-400">
-                                {selectedUnit === 'final' ? 'Nenhum aluno em Prova Final.' :
-                                    selectedUnit === 'recovery' ? 'Nenhum aluno em Recuperação.' :
-                                        'Nenhum aluno encontrado nesta turma.'}
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </div>
         </div>
+    </div>
+        </div >
     );
 };

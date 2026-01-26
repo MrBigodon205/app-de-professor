@@ -86,6 +86,37 @@ if (!instanceLock) {
     app.whenReady().then(createWindow);
 }
 
+const fs = require('fs');
+
+// ... existing code ...
+
+ipcMain.handle('save-backup', async (event, data) => {
+    try {
+        const userDataPath = app.getPath('userData');
+        const backupPath = path.join(userDataPath, 'backup-latest.json');
+        await fs.promises.writeFile(backupPath, data, 'utf-8');
+        return { success: true, path: backupPath };
+    } catch (error) {
+        console.error('Backup failed:', error);
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('load-backup', async () => {
+    try {
+        const userDataPath = app.getPath('userData');
+        const backupPath = path.join(userDataPath, 'backup-latest.json');
+        if (fs.existsSync(backupPath)) {
+            const data = await fs.promises.readFile(backupPath, 'utf-8');
+            return { success: true, data };
+        }
+        return { success: false, error: 'No backup found' };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+// Window lifecycle ...
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });

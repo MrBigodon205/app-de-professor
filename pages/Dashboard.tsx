@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion'; // Import motion
 import { useClass } from '../contexts/ClassContext';
@@ -254,10 +254,8 @@ export const Dashboard: React.FC = () => {
       const today = new Date().toLocaleDateString('sv-SE');
       let query = supabase.from('occurrences')
         .select(`
-          *,
-          student:students (
-            name
-          )
+          id, student_id, type, date, description, unit, user_id, created_at,
+          student:students ( name )
         `)
         .eq('user_id', currentUser.id)
         .eq('subject', activeSubject)
@@ -358,7 +356,7 @@ export const Dashboard: React.FC = () => {
     try {
       const today = new Date().toLocaleDateString('sv-SE');
       let query = supabase.from('plans')
-        .select('*')
+        .select('id, title, description, start_date, end_date, series_id, section, files, user_id, subject') // Specific columns
         .eq('user_id', currentUser.id);
 
       // Add subject filter to ensure plans from other subjects don't appear
@@ -426,12 +424,12 @@ export const Dashboard: React.FC = () => {
 
         const active = cached.find((p: any) => today >= p.start_date && today <= p.end_date);
 
-        setTodaysPlan(active ? {
+        setTodaysPlans([active ? {
           ...active,
           startDate: active.start_date,
           endDate: active.end_date,
           seriesId: active.series_id
-        } : null);
+        } : null].filter(Boolean));
 
         setClassPlans(cached.slice(0, 10).map((p: any) => ({
           ...p,
@@ -452,7 +450,7 @@ export const Dashboard: React.FC = () => {
     try {
       const today = new Date().toLocaleDateString('sv-SE');
       let query = supabase.from('activities')
-        .select('*')
+        .select('id, title, type, series_id, section, date, start_date, end_date, description, files, user_id, subject')
         .eq('user_id', currentUser.id)
         .eq('subject', activeSubject)
         // Show today's, ongoing, and future activities
@@ -478,6 +476,21 @@ export const Dashboard: React.FC = () => {
 
       // Show up to 50 items (effectively "all" for the dashboard widget)
       const { data } = await query.limit(50);
+
+      const formattedActivities = (data || []).map(a => ({
+        id: a.id.toString(),
+        title: a.title,
+        type: a.type,
+        seriesId: a.series_id.toString(),
+        section: a.section,
+        date: a.date,
+        startDate: a.start_date,
+        endDate: a.end_date,
+        description: a.description,
+        files: a.files || [],
+        userId: a.user_id,
+        subject: a.subject
+      }));
 
       setUpcomingActivities(formattedActivities);
 
@@ -518,44 +531,49 @@ export const Dashboard: React.FC = () => {
     fetchActivities(silent);
   }, [fetchCounts, fetchStats, fetchOccurrences, fetchPlans, fetchActivities]);
 
-  // --- OPTIMIZATION: Stable Reference for Realtime Callback ---
+  // --- OPTIMIZATION: Debounced Realtime Callback ---
   const refreshRef = React.useRef(refreshAll);
 
-  // Update ref on every render so the subscription always calls the latest closure
+  // Debounce timeout ref
+  const debounceTimeout = useRef<any>(null);
+
+  // Update ref on every render
   useEffect(() => {
     refreshRef.current = refreshAll;
   });
+
+  const debouncedRefresh = useCallback(() => {
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    debounceTimeout.current = setTimeout(() => {
+      console.log("♻️ Triggering Debounced Dashboard Refresh");
+      refreshRef.current(true);
+    }, 2000); // 2 seconds debounce to absorb bursts of events
+  }, []);
 
   // --- REALTIME SUBSCRIPTION ---
   useEffect(() => {
     if (!currentUser) return;
 
-    // Polling Fallback (60s)
+    // Polling Fallback (Longer interval for performance)
     const interval = setInterval(() => {
       refreshRef.current(true);
-    }, 60000);
+    }, 300000); // 5 minutes
 
-    // Realtime setup setup
-
-    // Listen to everything relevant for the dashboard
-    // We bind to 'refreshRef.current' to avoid tearing down the channel when state changes
     const channel = supabase.channel(`dashboard_sync_${currentUser.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => refreshRef.current(true))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'occurrences' }, () => refreshRef.current(true))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => refreshRef.current(true))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, () => refreshRef.current(true))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'plans' }, () => refreshRef.current(true))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'grades' }, () => refreshRef.current(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, debouncedRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'occurrences' }, debouncedRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, debouncedRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, debouncedRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'plans' }, debouncedRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'grades' }, debouncedRefresh)
       .subscribe();
 
     return () => {
-      // Realtime cleanup
       supabase.removeChannel(channel);
       clearInterval(interval);
+      if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     };
-    // ONLY Depend on currentUser.id (and activeSubject if strictly needed for channel segregation, but typically user_id is enough)
-    // We REMOVE selectedSeriesId from dependencies to prevent "freezing" due to channel recreation
-  }, [currentUser?.id]);
+  }, [currentUser?.id, debouncedRefresh]);
 
 
   const activityPoints = React.useMemo(() => {
@@ -575,26 +593,49 @@ export const Dashboard: React.FC = () => {
   const displayCount = isContextSelected ? classCount : globalCount;
   const contextName = (classes.find(c => c.id === selectedSeriesId)?.name || `Série ${selectedSeriesId}`) + (selectedSection ? ` - Turma ${selectedSection}` : '');
 
-  // ANIMATION VARIANTS
-  const containerVariants = {
+  // EXTRAORDINARY ANIMATIONS - COREOGRAPHY
+  const containerVariants: any = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.12,
         delayChildren: 0.05
       }
     }
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+  const itemVariants: any = {
+    hidden: {
+      opacity: 0,
+      y: 40,
+      scale: 0.9,
+      filter: "blur(10px)"
+    },
     visible: {
-      opacity: 1, y: 0,
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      filter: "blur(0px)",
       transition: {
         type: 'spring',
-        stiffness: 100,
-        damping: 15
+        stiffness: 80,
+        damping: 15,
+        mass: 1.2
+      }
+    }
+  };
+
+  const heroVariants: any = {
+    hidden: { opacity: 0, scale: 1.1, filter: "blur(20px)" },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      filter: "blur(0px)",
+      transition: {
+        duration: 0.8,
+        ease: [0.25, 0.4, 0.25, 1],
+        delay: 0.2
       }
     }
   };
@@ -967,7 +1008,6 @@ export const Dashboard: React.FC = () => {
                       key={act.id}
                       to="/activities"
                       className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-black/5 dark:bg-black/20 hover:bg-white/5 rounded-2xl border border-white/5 transition-all duration-300 group cursor-pointer backdrop-blur-sm gap-3 md:gap-0"
-                      className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-black/5 dark:bg-black/20 hover:bg-white/5 rounded-2xl border border-white/5 transition-all duration-300 group cursor-pointer backdrop-blur-sm gap-3 md:gap-0 border-white/5"
                     >
                       <div className="flex items-center gap-4 overflow-hidden w-full md:w-auto">
                         <div

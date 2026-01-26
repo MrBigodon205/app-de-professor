@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -52,6 +53,26 @@ export const Activities: React.FC = () => {
     const [filterSection, setFilterSection] = useState('');
     const [isDragging, setIsDragging] = useState(false);
     const [isImporterOpen, setIsImporterOpen] = useState(false);
+
+    // ANIMATIONS
+    const containerVariants: any = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.08,
+                delayChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants: any = {
+        hidden: { opacity: 0, x: -20, filter: "blur(5px)" },
+        visible: {
+            opacity: 1, x: 0, filter: "blur(0px)",
+            transition: { type: 'spring', stiffness: 100, damping: 12 }
+        }
+    };
 
     // Generate UUID Helper
     const generateUUID = () => {
@@ -986,7 +1007,12 @@ export const Activities: React.FC = () => {
                 )}
 
                 {/* List Items */}
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-0">
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-0"
+                >
                     {loading ? (
 
                         Array.from({ length: 5 }).map((_, i) => (
@@ -1003,7 +1029,9 @@ export const Activities: React.FC = () => {
                     ) : (
                         displayedActivities.map(act => {
                             return (
-                                <button
+                                <motion.button
+                                    variants={itemVariants}
+                                    layoutId={`activity-card-${act.id}`}
                                     key={act.id}
                                     onClick={() => isSelectionMode ? toggleSelection(act.id) : handleSelectActivity(act)}
                                     className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${isSelectionMode
@@ -1041,11 +1069,11 @@ export const Activities: React.FC = () => {
                                             {new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                                         </div>
                                     </div>
-                                </button>
+                                </motion.button>
                             );
                         })
                     )}
-                </div>
+                </motion.div>
 
             </div >
 
@@ -1527,17 +1555,23 @@ export const Activities: React.FC = () => {
                                             </button>
                                         </h3>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 min-h-[200px]">
+                                        <motion.div
+                                            variants={containerVariants}
+                                            initial="hidden"
+                                            animate="visible"
+                                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 min-h-[200px]"
+                                        >
                                             {students.map(s => {
                                                 const isDone = currentActivity.completions?.includes(s.id);
                                                 return (
-                                                    <div
+                                                    <motion.div
                                                         key={s.id}
-                                                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-backwards flex items-center justify-between group ${isDone
+                                                        variants={itemVariants}
+                                                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${isDone
                                                             ? `bg-white dark:bg-slate-800/50`
                                                             : 'bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 hover:border-slate-200'}`}
                                                         onClick={() => toggleCompletion(s.id)}
-                                                        style={{ animationDelay: `${students.indexOf(s) * 30}ms`, ...(isDone ? { backgroundColor: `${theme.primaryColorHex}0D`, borderColor: `${theme.primaryColorHex}33` } : {}) }}
+                                                        style={isDone ? { backgroundColor: `${theme.primaryColorHex}0D`, borderColor: `${theme.primaryColorHex}33` } : {}}
                                                     >
                                                         <div className="flex items-center gap-3 min-w-0">
                                                             <span className="text-xs font-mono text-slate-400 shrink-0 min-w-[1.5rem]">{s.number}</span>
@@ -1546,10 +1580,10 @@ export const Activities: React.FC = () => {
                                                         <div className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 shrink-0`} style={isDone ? { backgroundColor: theme.primaryColorHex, borderColor: theme.primaryColorHex, color: 'white', transform: 'scale(1.1)', boxShadow: `0 1px 2px 0 ${theme.primaryColorHex}4d` } : { borderColor: '#e2e8f0' /* slate-200 */ }}>
                                                             {isDone && <span className="material-symbols-outlined text-[16px] font-bold animate-in zoom-in spin-in-180 duration-300">check</span>}
                                                         </div>
-                                                    </div>
+                                                    </motion.div>
                                                 );
                                             })}
-                                        </div>
+                                        </motion.div>
 
                                     </div>
                                 )}
@@ -1558,38 +1592,42 @@ export const Activities: React.FC = () => {
                     ))}
             </div>
             {/* Presentation Modal */}
-            {isPresentationOpen && currentActivity && (
-                <div className="fixed inset-0 z-[100] bg-black animate-in fade-in duration-300">
-                    <button
-                        onClick={() => setIsPresentationOpen(false)}
-                        className="absolute top-4 right-4 z-[101] size-12 rounded-full bg-slate-800 text-white flex items-center justify-center hover:bg-slate-700 transition-colors"
-                    >
-                        <span className="material-symbols-outlined text-2xl">close</span>
-                    </button>
-                    {(() => {
-                        const pptFile = currentActivity.files.find(f => f.name.match(/\.(ppt|pptx)$/i));
-                        if (pptFile) {
-                            return (
-                                <iframe
-                                    src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(pptFile.url)}`}
-                                    className="w-full h-full border-0"
-                                    title="Apresentação"
-                                />
-                            );
-                        }
-                        return null;
-                    })()}
-                </div>
-            )}
+            {
+                isPresentationOpen && currentActivity && (
+                    <div className="fixed inset-0 z-[100] bg-black animate-in fade-in duration-300">
+                        <button
+                            onClick={() => setIsPresentationOpen(false)}
+                            className="absolute top-4 right-4 z-[101] size-12 rounded-full bg-slate-800 text-white flex items-center justify-center hover:bg-slate-700 transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-2xl">close</span>
+                        </button>
+                        {(() => {
+                            const pptFile = currentActivity.files.find(f => f.name.match(/\.(ppt|pptx)$/i));
+                            if (pptFile) {
+                                return (
+                                    <iframe
+                                        src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(pptFile.url)}`}
+                                        className="w-full h-full border-0"
+                                        title="Apresentação"
+                                    />
+                                );
+                            }
+                            return null;
+                        })()}
+                    </div>
+                )
+            }
 
             {/* File Viewer Modal */}
-            {viewerFile && (
-                <FileViewerModal
-                    isOpen={!!viewerFile}
-                    onClose={() => setViewerFile(null)}
-                    file={viewerFile}
-                />
-            )}
+            {
+                viewerFile && (
+                    <FileViewerModal
+                        isOpen={!!viewerFile}
+                        onClose={() => setViewerFile(null)}
+                        file={viewerFile}
+                    />
+                )
+            }
 
             <FileImporterModal
                 isOpen={isImporterOpen}
@@ -1601,6 +1639,6 @@ export const Activities: React.FC = () => {
             />
 
 
-        </div>
+        </div >
     );
 };
