@@ -870,91 +870,90 @@ export const Grades: React.FC = () => {
                                     <span className="material-symbols-outlined text-lg">tune</span>
                                 </button>
                                 <button onClick={() => setShowExportModal(true)} className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 p-1.5 rounded-lg">
-                                    <span className="material-symbols-outlined text-[18px]">download</span>
+                                    <span className="material-symbols-outlined text-lg">download</span>
                                 </button>
                             </div>
                         </div>
                     </motion.div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+                )}
+            </AnimatePresence>
 
 
-    <div className="card overflow-hidden shadow-premium border-none">
-        <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px] border-collapse">
-                <thead className={`bg-surface-subtle/50 backdrop-blur-md border-b border-border-default`}>
-                    <tr>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider w-16">
-                            Nº
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider">
-                            Nome
-                        </th>
-                        {selectedUnit === 'results' ? (
-                            <>
-                                <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider">
-                                    Total Anual
+            <div className="card overflow-hidden shadow-premium border-none">
+                <div className="overflow-x-auto">
+                    <table className="w-full min-w-[800px] border-collapse">
+                        <thead className={`bg-surface-subtle/50 backdrop-blur-md border-b border-border-default`}>
+                            <tr>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider w-16">
+                                    Nº
                                 </th>
-                                <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider">
-                                    Situação Final
+                                <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider">
+                                    Nome
                                 </th>
-                            </>
-                        ) : (
-                            <>
-                                {currentConfig?.columns.map((col) => (
-                                    <th key={col.key} className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-32">
-                                        <div className="flex flex-col items-center">
-                                            <span>{col.label}</span>
-                                            <span className="text-[10px] opacity-70 font-normal">
-                                                (Max: {col.max})
-                                            </span>
-                                        </div>
-                                    </th>
-                                ))}
-                                <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-40 bg-surface-subtle/50">
-                                    {(selectedUnit === 'final' || selectedUnit === 'recovery') ? 'Situação' : 'Média'}
-                                </th>
-                            </>
-                        )}
-                    </tr>
-                </thead>
-                <motion.tbody
-                    variants={{
-                        hidden: { opacity: 0 },
-                        visible: {
-                            opacity: 1,
-                            transition: { staggerChildren: 0.05 }
-                        }
-                    }}
-                    initial="hidden"
-                    animate="visible"
-                    key={selectedUnit} // Key forces re-mount (and thus re-stagger) when unit changes
-                    className="divide-y divide-border-subtle"
-                >
-                    {visibleStudents.map((student) => (
-                        <GradeRow
-                            key={student.id}
-                            student={student}
-                            selectedUnit={selectedUnit}
-                            theme={theme}
-                            onGradeChange={handleGradeChange}
-                        />
-                    ))}
-                </motion.tbody>
-            </table>
+                                {selectedUnit === 'results' ? (
+                                    <>
+                                        <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider">
+                                            Total Anual
+                                        </th>
+                                        <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider">
+                                            Situação Final
+                                        </th>
+                                    </>
+                                ) : (
+                                    <>
+                                        {currentConfig?.columns.map((col) => (
+                                            <th key={col.key} className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-32">
+                                                <div className="flex flex-col items-center">
+                                                    <span>{col.label}</span>
+                                                    <span className="text-[10px] opacity-70 font-normal">
+                                                        (Max: {col.max})
+                                                    </span>
+                                                </div>
+                                            </th>
+                                        ))}
+                                        <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-40 bg-surface-subtle/50">
+                                            {(selectedUnit === 'final' || selectedUnit === 'recovery') ? 'Situação' : 'Média'}
+                                        </th>
+                                    </>
+                                )}
+                            </tr>
+                        </thead>
+                        <motion.tbody
+                            variants={{
+                                hidden: { opacity: 0 },
+                                visible: {
+                                    opacity: 1,
+                                    transition: { staggerChildren: 0.05 }
+                                }
+                            }}
+                            initial="hidden"
+                            animate="visible"
+                            key={selectedUnit} // Key forces re-mount (and thus re-stagger) when unit changes
+                            className="divide-y divide-border-subtle"
+                        >
+                            {visibleStudents.map((student) => (
+                                <GradeRow
+                                    key={student.id}
+                                    student={student}
+                                    selectedUnit={selectedUnit}
+                                    theme={theme}
+                                    onGradeChange={handleGradeChange}
+                                />
+                            ))}
+                        </motion.tbody>
+                    </table>
 
-            {visibleStudents.length === 0 && (
-                <div className="text-center py-12">
-                    <p className="text-slate-500 dark:text-slate-400">
-                        {selectedUnit === 'final' ? 'Nenhum aluno em Prova Final.' :
-                            selectedUnit === 'recovery' ? 'Nenhum aluno em Recuperação.' :
-                                'Nenhum aluno encontrado nesta turma.'}
-                    </p>
+                    {visibleStudents.length === 0 && (
+                        <div className="text-center py-12">
+                            <p className="text-slate-500 dark:text-slate-400">
+                                {selectedUnit === 'final' ? 'Nenhum aluno em Prova Final.' :
+                                    selectedUnit === 'recovery' ? 'Nenhum aluno em Recuperação.' :
+                                        'Nenhum aluno encontrado nesta turma.'}
+                            </p>
+                        </div>
+                    )}
                 </div>
-            )}
-        </div>
-    </div>
+            </div>
         </div >
     );
 };
