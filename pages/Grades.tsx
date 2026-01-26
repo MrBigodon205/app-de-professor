@@ -879,7 +879,7 @@ export const Grades: React.FC = () => {
             )}
         </AnimatePresence>
 
-            {/* Grades Table */ }
+
     <div className="card overflow-hidden shadow-premium border-none">
         <div className="overflow-x-auto">
             <table className="w-full min-w-[800px] border-collapse">
