@@ -642,7 +642,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <motion.div
-      className="h-full overflow-y-auto overflow-x-hidden fluid-p-m fluid-gap-m flex flex-col custom-scrollbar pb-6 lg:pb-12 landscape:fluid-p-s landscape:fluid-gap-s landscape:pb-10 theme-transition relative"
+      className="h-full min-h-screen overflow-y-auto overflow-x-hidden fluid-p-m fluid-gap-m flex flex-col custom-scrollbar pb-6 lg:pb-12 landscape:fluid-p-s landscape:fluid-gap-s landscape:pb-10 theme-transition relative"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -685,7 +685,7 @@ export const Dashboard: React.FC = () => {
       <motion.div variants={itemVariants} className="h-auto relative z-10">
         {
           loadingPlans ? (
-            <div className="h-[200px] rounded-[2rem] bg-white/5 animate-pulse border border-white/5"></div>
+            <div className="min-h-[220px] rounded-[2rem] bg-white/5 animate-pulse border border-white/5"></div>
           ) : currentPlan ? (
             <div
               className={`relative h-auto min-h-[220px] rounded-[2.5rem] p-8 landscape:p-6 overflow-hidden flex flex-col group transition-all duration-500 hover:shadow-lg`}
@@ -789,7 +789,7 @@ export const Dashboard: React.FC = () => {
             </div>
           ) : (
             <div
-              className="h-[200px] flex flex-col items-center justify-center glass-card-soft rounded-[2.5rem] border border-dashed border-border-default text-text-muted group hover:border-[var(--theme-primary)] transition-all duration-500 relative overflow-hidden"
+              className="min-h-[220px] flex flex-col items-center justify-center glass-card-soft rounded-[2.5rem] border border-dashed border-border-default text-text-muted group hover:border-[var(--theme-primary)] transition-all duration-500 relative overflow-hidden"
               style={{ borderColor: `${theme.primaryColorHex}30` }}
             >
               <div
