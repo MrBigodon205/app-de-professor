@@ -867,7 +867,7 @@ export const Grades: React.FC = () => {
                                     }}
                                     className="bg-surface-subtle p-1.5 rounded-lg text-text-muted"
                                 >
-                                    <span className="material-symbols-outlined text-[18px]">tune</span>
+                                    <span className="material-symbols-outlined text-lg">tune</span>
                                 </button>
                                 <button onClick={() => setShowExportModal(true)} className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 p-1.5 rounded-lg">
                                     <span className="material-symbols-outlined text-[18px]">download</span>
