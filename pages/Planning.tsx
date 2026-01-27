@@ -1110,6 +1110,7 @@ export const Planning: React.FC = () => {
                     )}
                 </motion.div>
             </div>
+            </div>
 
             {/* Main Content */}
             <div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${showForm || viewMode ? 'flex' : 'hidden lg:flex'}`}>
@@ -1443,6 +1444,7 @@ export const Planning: React.FC = () => {
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
                                     </div>
 
                                     {/* CONTENT PREVIEW CARDS */}
