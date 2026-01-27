@@ -206,7 +206,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
         <div className="relative" ref={notificationsRef}>
             <button
                 onClick={() => (effectiveIsMobile && onClose) ? onClose() : setInternalIsOpen(!internalIsOpen)}
-                className={`relative size-9 rounded-full transition-all duration-300 group flex items-center justify-center ${internalIsOpen || (effectiveIsMobile && controlledIsOpen) ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-card hover:bg-surface-subtle text-text-muted hover:text-text-primary border border-border-default dark:border-border-subtle shadow-sm'} ${effectiveIsMobile && controlledIsOpen ? 'ring-2 ring-primary/20' : ''}`}
+                className={`relative w-9 h-9 shrink-0 rounded-full transition-all duration-300 group flex items-center justify-center ${internalIsOpen || (effectiveIsMobile && controlledIsOpen) ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-card hover:bg-surface-subtle text-text-muted hover:text-text-primary border border-border-default dark:border-border-subtle shadow-sm'} ${effectiveIsMobile && controlledIsOpen ? 'ring-2 ring-primary/20' : ''}`}
             >
                 <span className={`material-symbols-outlined text-xl ${internalIsOpen ? 'icon-filled animate-none' : 'group-hover:animate-pulse'}`}>notifications</span>
                 {notifications.length > 0 && (
