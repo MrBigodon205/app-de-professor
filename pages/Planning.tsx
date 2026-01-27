@@ -1213,7 +1213,7 @@ export const Planning: React.FC = () => {
                                     {/* Mobile Back Button (Visible on View Mode) */}
                                     <div className="absolute top-4 left-4 lg:hidden z-10">
                                         <button
-                                            onClick={() => setShowForm(true)}
+                                            onClick={() => setSelectedPlanId(null)}
                                             className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg active:scale-95"
                                             title="Voltar"
                                         >
