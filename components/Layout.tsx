@@ -411,7 +411,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               {/* MOBILE ONLY: Series Selector (Next to Profile) */}
               <button
                 onClick={() => setIsClassSelectorOpen(true)}
-                className="lg:hidden landscape:hidden flex items-center gap-2 bg-surface-card px-2 py-1.5 rounded-lg border border-border-default active:scale-95 transition-all shadow-sm"
+                className="lg:hidden flex items-center gap-2 bg-surface-card px-2 py-1.5 rounded-lg border border-border-default active:scale-95 transition-all shadow-sm"
               >
                 <div className="flex flex-col items-end leading-none">
                   <span className="text-[8px] font-black text-text-muted uppercase tracking-wider font-mono">Turma</span>
