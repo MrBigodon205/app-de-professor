@@ -376,19 +376,19 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
         <motion.header
           layout
-          className={`flex flex-col md:flex-row items-center justify-between mx-2 md:mx-4 mt-2 md:mt-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-none px-3 py-3 z-[40] shrink-0 gap-3 sticky top-2 shadow-lg shadow-black/5 bg-white/80 dark:bg-slate-900/80 min-h-[60px]`}
+          className={`flex flex-col md:flex-row items-center justify-between mx-2 md:mx-4 mt-2 md:mt-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-none px-2 py-1.5 md:px-3 md:py-3 z-[40] shrink-0 gap-3 sticky top-2 shadow-lg shadow-black/5 bg-white/80 dark:bg-slate-900/80 min-h-[48px] md:min-h-[60px]`}
         >
-          {/* Main Flex Container - Wraps on small screens */}
-          <div className="flex flex-wrap w-full items-center justify-between gap-x-4 gap-y-2">
+          {/* Main Flex Container - Single Row on Mobile */}
+          <div className="flex w-full items-center justify-between gap-x-2 gap-y-0">
 
-            {/* 1. LEFT: Menu (Visible on Mobile, Hidden on Desktop but keeps alignment if needed) */}
-            <div className="flex items-center shrink-0 w-[50px] lg:w-auto">
-              <button className="lg:hidden text-text-primary p-2 hover:bg-surface-subtle rounded-lg transition-colors shrink-0" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-                <span className="material-symbols-outlined">menu</span>
+            {/* 1. LEFT: Menu (Visible on Mobile, Hidden on Desktop) */}
+            <div className="flex items-center shrink-0 lg:w-auto">
+              <button className="lg:hidden text-text-primary p-1.5 hover:bg-surface-subtle rounded-lg transition-colors shrink-0" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                <span className="material-symbols-outlined text-xl">menu</span>
               </button>
             </div>
 
-            {/* 2. CENTER: Series + Classes (Mobile: Bottom Row, Desktop: Center) */}
+            {/* 2. CENTER: Series + Classes (Hidden on Mobile, Desktop Center) */}
             <div className="hidden lg:flex flex-wrap items-center justify-center gap-2 flex-1 order-3 md:order-2 w-full md:w-auto mt-2 md:mt-0 min-w-[200px]">
 
               {/* Series Selector - HIDDEN on Mobile */}
@@ -423,27 +423,27 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </div>
             </div>
 
-            {/* 3. RIGHT: Subject + Profile (Aligned Right) */}
-            <div className="flex flex-wrap items-center justify-end gap-3 shrink-0 ml-auto bg-surface-subtle/30 p-1 rounded-xl order-2 md:order-3">
+            {/* 3. RIGHT: Subject + Profile (Aligned Right, Compact on Mobile) */}
+            <div className="flex items-center justify-end gap-1.5 shrink-0 ml-auto bg-transparent md:bg-surface-subtle/30 p-0 md:p-1 rounded-xl order-2 md:order-3">
 
               {/* MOBILE ONLY: Series Selector (Next to Profile) */}
               <button
                 onClick={() => setIsClassSelectorOpen(true)}
-                className="lg:hidden flex items-center gap-2 bg-surface-card px-2 py-1.5 rounded-lg border border-border-default active:scale-95 transition-all shadow-sm"
+                className="lg:hidden flex items-center gap-1.5 bg-surface-card px-2 py-1 rounded-lg border border-border-default active:scale-95 transition-all shadow-sm h-8"
               >
                 <div className="flex flex-col items-end leading-none">
-                  <span className="text-[8px] font-black text-text-muted uppercase tracking-wider font-mono">Turma</span>
-                  <span className="text-xs font-black text-text-primary capitalize flex items-center gap-1">
-                    {activeSeries?.name || '?'} <span className="bg-primary text-white px-1 rounded text-[10px]">{selectedSection}</span>
+                  {/* <span className="text-[6px] font-black text-text-muted uppercase tracking-wider font-mono hidden sm:inline">Turma</span> */}
+                  <span className="text-[10px] sm:text-xs font-black text-text-primary capitalize flex items-center gap-1">
+                    {activeSeries?.name || '?'} <span className="bg-primary text-white px-1 sm:px-1.5 rounded text-[9px] sm:text-[10px]">{selectedSection}</span>
                   </span>
                 </div>
-                <span className="material-symbols-outlined text-xs text-text-muted bg-surface-subtle rounded-full p-0.5">expand_more</span>
+                <span className="material-symbols-outlined text-[10px] text-text-muted bg-surface-subtle rounded-full p-0.5">expand_more</span>
               </button>
 
               {/* Sync Status */}
               {(pendingCount > 0 || isSyncing) && (
-                <div className="flex items-center justify-center size-8 rounded-full bg-amber-500/10 text-amber-600 animate-pulse shrink-0" title="Sincronizando...">
-                  <span className={`material-symbols-outlined text-base ${isSyncing ? 'animate-spin' : ''}`}>{isSyncing ? 'sync' : 'cloud_upload'}</span>
+                <div className="flex items-center justify-center size-7 md:size-8 rounded-full bg-amber-500/10 text-amber-600 animate-pulse shrink-0" title="Sincronizando...">
+                  <span className={`material-symbols-outlined text-sm md:text-base ${isSyncing ? 'animate-spin' : ''}`}>{isSyncing ? 'sync' : 'cloud_upload'}</span>
                 </div>
               )}
 
@@ -474,18 +474,18 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               )}
 
               {/* Help & Notifications */}
-              <div className="flex items-center gap-1.5 transition-transform duration-300 lg:scale-110">
+              <div className="flex items-center gap-1 transition-transform duration-300 lg:scale-110">
                 <Link to="/instructions" title="Precisa de ajuda?" className="hidden md:flex landscape:flex items-center justify-center size-9 rounded-full text-text-muted hover:text-primary hover:bg-surface-subtle transition-colors group">
                   <span className="material-symbols-outlined text-xl group-hover:animate-bounce">help</span>
                 </Link>
-                <div className="flex items-center justify-center transform transition-transform hover:scale-110">
+                <div className="flex items-center justify-center transform transition-transform hover:scale-110 scale-90 md:scale-100">
                   <NotificationCenter />
                 </div>
               </div>
 
-              {/* User Profile */}
-              <button onClick={() => setIsProfileModalOpen(true)} className="flex items-center gap-2 bg-surface-card px-2.5 py-2 rounded-xl border border-border-default hover:border-primary/30 transition-all active:scale-95 group shrink-0 shadow-sm md:ml-2 lg:scale-105 origin-right">
-                <div className="size-9 rounded-lg bg-surface-subtle overflow-hidden border border-border-default shadow-sm group-hover:scale-105 transition-transform">
+              {/* User Profile - Compacted on Mobile */}
+              <button onClick={() => setIsProfileModalOpen(true)} className="flex items-center gap-2 bg-surface-card px-1.5 py-1 md:px-2.5 md:py-2 rounded-lg md:rounded-xl border border-border-default hover:border-primary/30 transition-all active:scale-95 group shrink-0 shadow-sm md:ml-2 lg:scale-105 origin-right">
+                <div className="size-7 md:size-9 rounded-md md:rounded-lg bg-surface-subtle overflow-hidden border border-border-default shadow-sm group-hover:scale-105 transition-transform">
                   {currentUser?.photoUrl ? (
                     <img src={currentUser.photoUrl} alt="Profile" className="size-full object-cover" />
                   ) : (
@@ -494,9 +494,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col items-start leading-tight">
-                  <span className="text-[11px] font-black text-text-primary">{currentUser?.name?.split(' ')[0]}</span>
-                  <span className="text-[9px] font-bold text-text-muted uppercase tracking-widest font-mono">{activeSubject || theme.subject}</span>
+                <div className="flex flex-col items-start leading-tight max-w-[80px] md:max-w-none">
+                  <span className="text-[10px] md:text-[11px] font-black text-text-primary truncate w-full text-left">{currentUser?.name?.split(' ')[0]}</span>
+                  <span className="text-[8px] md:text-[9px] font-bold text-text-muted uppercase tracking-widest font-mono truncate w-full text-left">{theme.subject || activeSubject}</span>
                 </div>
               </button>
             </div>
