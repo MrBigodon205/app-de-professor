@@ -183,8 +183,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         const isLandscape = window.innerWidth > window.innerHeight;
         const isLargeScreen = window.innerWidth >= 1024; // lg breakpoint
 
-        // If rotating to Portrait Mobile, force sidebar closed
-        if (!isLandscape && !isLargeScreen) {
+        // If on a small screen (regardless of orientation), close sidebar
+        if (!isLargeScreen) {
           setIsSidebarCollapsed(true);
           setIsMobileMenuOpen(false);
         }
@@ -193,6 +193,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
     window.addEventListener('resize', handleResizeAndOrientation);
     window.addEventListener('orientationchange', handleResizeAndOrientation);
+
+    // Initial check
+    handleResizeAndOrientation();
 
     return () => {
       window.removeEventListener('resize', handleResizeAndOrientation);
@@ -344,7 +347,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         layout
         transition={{ type: "spring", stiffness: 280, damping: 30, mass: 0.6 }}
         className={`flex-1 flex flex-col min-w-0 h-full relative z-10 
-          ${isSidebarCollapsed ? 'lg:ml-0 landscape:ml-0' : 'lg:ml-72 landscape:ml-72'}
+          ${isSidebarCollapsed ? 'lg:ml-0' : 'lg:ml-72'}
         `}
       >
         {isMobileMenuOpen && (
