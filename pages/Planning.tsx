@@ -917,7 +917,7 @@ export const Planning: React.FC = () => {
     }, [plans, debouncedSearchTerm, filterSection]);
 
     return (
-        <main className="flex flex-col gap-4 md:gap-6 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 md:pb-8 relative fluid-p-m fluid-gap-m px-4 md:px-0 w-full h-full overflow-hidden">
+        <main className="flex flex-col lg:flex-row gap-4 md:gap-6 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 md:pb-8 relative fluid-p-m fluid-gap-m px-4 md:px-0 w-full h-full overflow-hidden">
             {/* Landscape FAB for New Plan */}
             <button
                 onClick={handleNewPlan}
@@ -1112,16 +1112,24 @@ export const Planning: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className={`flex-1 flex flex-col bg-white dark:bg-surface-dark rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-all ${showForm || viewMode ? 'flex' : 'hidden lg:flex'}`}>
+            <div className={`flex-1 flex flex-col card shadow-premium overflow-hidden relative transition-all ${showForm || viewMode ? 'flex' : 'hidden lg:flex'}`}>
                 {(!showForm && !viewMode) ? (
                     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-300">
                         <div className={`size-32 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-8 shadow-sm border border-slate-100 dark:border-slate-700`}>
                             <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600">edit_calendar</span>
                         </div>
                         <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">Planejamento de Aulas</h2>
-                        <p className="text-slate-500 max-w-md mb-8 leading-relaxed">Organize seus roteiros, alinhe com a BNCC e anexe materiais.</p>
-                        <button onClick={handleNewPlan} className={`group relative inline-flex items-center justify-center gap-3 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden`} style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 20px 25px -5px ${theme.primaryColorHex}33` }}>
-                            <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">add</span> Criar Nova Aula
+                        <p className="text-slate-500 max-w-md mb-8 leading-relaxed">
+                            Organize seus roteiros, alinhe com a BNCC e anexe materiais para sua turma de <span className={`text-${theme.primaryColor} font-bold`}>{theme.subject}</span>.
+                        </p>
+                        <button
+                            onClick={handleNewPlan}
+                            className={`group relative inline-flex items-center justify-center gap-3 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden`}
+                            style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 20px 25px -5px ${theme.primaryColorHex}33` }}
+                        >
+                            <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">add</span>
+                            Criar Nova Aula
+                            <div className="absolute inset-0 rounded-2xl ring-2 ring-white/20 group-hover:ring-white/40 transition-all"></div>
                         </button>
                     </div>
                 ) : showForm ? (
