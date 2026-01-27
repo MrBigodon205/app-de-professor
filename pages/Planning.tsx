@@ -1209,15 +1209,7 @@ export const Planning: React.FC = () => {
                                     </div>
 
 
-                                    <div className="absolute top-6 left-6 lg:hidden">
-                                        <button
-                                            onClick={() => { setSelectedPlanId(null); setIsEditing(false); setShowForm(false); }}
-                                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-none border border-white/20 transition-all shadow-lg"
-                                            title="Voltar para Lista"
-                                        >
-                                            <span className="material-symbols-outlined">arrow_back</span>
-                                        </button>
-                                    </div>
+
                                     {/* Mobile Back Button (Visible on View Mode) */}
                                     <div className="absolute top-4 left-4 lg:hidden z-10">
                                         <button

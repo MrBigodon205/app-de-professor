@@ -1398,7 +1398,7 @@ export const Activities: React.FC = () => {
                                             <div className="p-1.5 flex flex-col gap-1">
                                                 <button onClick={handleExportPDF} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-300 transition-colors w-full text-left">
                                                     <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
-                                                    <span className="text-sm font-bold">Baixar PDF</span>
+                                                    <span className="text-sm font-bold">PDF</span>
                                                 </button>
                                                 {currentActivity?.files?.find(f => f.name.match(/\.(ppt|pptx)$/i)) && (
                                                     <button onClick={() => setIsPresentationOpen(true)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 text-orange-600 dark:text-orange-400 transition-colors w-full text-left">
