@@ -207,10 +207,9 @@ export const useStudentsData = (
 
     const addStudent = async (data: any) => {
         // Direct Supabase Insert
-        const { seriesId, userId: uid, id, ...rest } = data;
+        const { seriesId, userId: uid, id: _tempId, ...rest } = data;
         const cleanData = {
             ...rest,
-            id: id,
             series_id: seriesId,
             user_id: uid
         };
