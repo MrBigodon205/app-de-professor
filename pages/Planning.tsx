@@ -1738,11 +1738,10 @@ export const Planning: React.FC = () => {
                                         Voltar à Lista
                                     </button>
                                 </div>
-                        )}
+                            )}
                             </div>
                         )}
                     </div>
-
             {/* FILE VIEWER MODAL */}
                 {viewerFile && (
                     <FileViewerModal
