@@ -371,7 +371,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div>
 
             {/* 2. CENTER: Series + Classes (Mobile: Bottom Row, Desktop: Center) */}
-            <div className="flex flex-wrap items-center justify-center gap-2 flex-1 order-3 md:order-2 w-full md:w-auto mt-2 md:mt-0 min-w-[200px]">
+            <div className="hidden lg:flex flex-wrap items-center justify-center gap-2 flex-1 order-3 md:order-2 w-full md:w-auto mt-2 md:mt-0 min-w-[200px]">
 
               {/* Series Selector - HIDDEN on Mobile */}
               <button onClick={() => setIsClassSelectorOpen(true)} className="hidden md:flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl bg-surface-card/50 hover:bg-surface-card/80 transition-all duration-300 border border-border-default hover:border-primary/30 shadow-sm active:scale-95 backdrop-blur-sm shrink-0" title="Gerenciar Turmas">
