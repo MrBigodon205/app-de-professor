@@ -185,38 +185,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
     }, []);
 
     // Render as Modal/Overlay for Mobile Portrait ONLY
-    if (isMobile && !isLandscape) {
-        // Render as Modal/Overlay for Mobile
-        if (!show) return null;
+    const isPortraitMobile = isMobile && !isLandscape;
 
-        return (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
-                    <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
-                        <div className="flex items-center gap-3">
-                            <div className={`size-10 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
-                                <span className="material-symbols-outlined text-xl">notifications_active</span>
-                            </div>
-                            <h3 className="font-black text-slate-900 dark:text-white">Notificações</h3>
-                        </div>
-                        <button onClick={handleClose} className="size-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500">
-                            <span className="material-symbols-outlined text-sm">close</span>
-                        </button>
-                    </div>
-
-                    <div className="max-h-[60vh] overflow-y-auto custom-scrollbar p-2">
-                        {renderNotificationList(notifications, theme, handleClose)}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // Render as Popover for Desktop AND Mobile Landscape
     return (
         <div className="relative" ref={notificationsRef}>
             <button
-                onClick={() => isMobile ? onClose && onClose() : setInternalIsOpen(!internalIsOpen)}
+                onClick={() => isMobile && onClose ? onClose() : setInternalIsOpen(!internalIsOpen)}
                 className={`relative size-9 rounded-full transition-all duration-300 group flex items-center justify-center ${internalIsOpen || (isMobile && controlledIsOpen) ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-text-muted hover:text-primary'} ${isMobile && controlledIsOpen ? 'ring-2 ring-primary/20' : ''}`}
             >
                 <span className={`material-symbols-outlined text-xl ${internalIsOpen ? 'icon-filled animate-none' : 'group-hover:animate-pulse'}`}>notifications</span>
@@ -230,7 +204,31 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
                 )}
             </button>
 
-            {show && (
+            {/* Mobile Portrait Modal */}
+            {isPortraitMobile && show && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={handleClose}>
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800" onClick={(e) => e.stopPropagation()}>
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                            <div className="flex items-center gap-3">
+                                <div className={`size-10 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
+                                    <span className="material-symbols-outlined text-xl">notifications_active</span>
+                                </div>
+                                <h3 className="font-black text-slate-900 dark:text-white">Notificações</h3>
+                            </div>
+                            <button onClick={handleClose} className="size-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500">
+                                <span className="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </div>
+
+                        <div className="max-h-[60vh] overflow-y-auto custom-scrollbar p-2">
+                            {renderNotificationList(notifications, theme, handleClose)}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Desktop/Landscape Popover */}
+            {!isPortraitMobile && show && (
                 <div className="absolute top-full right-0 mt-3 w-80 md:w-96 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[100] animate-in slide-in-from-top-4 duration-300 origin-top-right">
                     <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
                         <div className="flex items-center gap-3">
