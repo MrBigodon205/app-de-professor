@@ -17,6 +17,7 @@ import autoTable from 'jspdf-autotable';
 import { DynamicSelect } from '../components/DynamicSelect';
 import FileViewerModal from '../components/FileViewerModal';
 import { FileImporterModal } from '../components/FileImporterModal';
+import { useStudentsData } from '../hooks/useStudentsData';
 
 // Fallback types if fetch fails
 const DEFAULT_ACTIVITY_TYPES = ['Prova', 'Trabalho', 'Dever de Casa', 'Seminário', 'Pesquisa', 'Conteúdo', 'Outro'];
@@ -29,8 +30,19 @@ export const Activities: React.FC = () => {
 
     // UI State
     const [activities, setActivities] = useState<Activity[]>([]);
-    const [students, setStudents] = useState<Student[]>([]);
+    const [students, setStudents] = useState<Student[]>([]);    // UI State
     const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
+
+    // Helper for offline ID generation
+    const generateUUID = () => {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    };
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -175,60 +187,12 @@ export const Activities: React.FC = () => {
         setFilterSection('');
     }, [selectedSeriesId, selectedSection]);
 
-    // Centralized Student Fetching
-    useEffect(() => {
-        if (!selectedSeriesId || !currentUser) return;
-
-        const currentActivity = activities.find(a => a.id === selectedActivityId);
-
-        if (currentActivity) {
-            // Fetch students based on activity context
-            fetchStudents(currentActivity.seriesId, currentActivity.section);
-        } else {
-            // Fetch students based on global context
-            fetchStudents(selectedSeriesId, selectedSection);
-        }
-    }, [selectedActivityId, selectedSeriesId, selectedSection, currentUser, activities]);
-
-    const fetchStudents = async (seriesId?: string, section?: string) => {
-        const targetSeries = seriesId !== undefined ? seriesId : selectedSeriesId;
-        const targetSection = section !== undefined ? section : selectedSection;
-
-        if (!targetSeries || !currentUser) return;
-
-        try {
-            let query = supabase
-                .from('students')
-                .select('*')
-                .eq('series_id', targetSeries)
-                .eq('user_id', currentUser.id);
-
-            // If a specific section is provided, filter by it. 
-            // If section is empty string or null, it means "All Sections" of that series.
-            if (targetSection && targetSection !== '') {
-                query = query.eq('section', targetSection);
-            }
-
-            const { data, error } = await query;
-
-            if (error) throw error;
-
-            const formatted: Student[] = (data || []).map(s => ({
-                id: s.id.toString(),
-                name: s.name,
-                number: s.number,
-                initials: s.initials || '',
-                color: s.color || '',
-                classId: s.series_id.toString(),
-                section: s.section,
-                userId: s.user_id,
-                units: s.units || {}
-            }));
-            formatted.sort((a, b) => parseInt(a.number) - parseInt(b.number));
-            setStudents(formatted);
-        } catch (e) {
-        }
-    }
+    // Centralized Student Fetching via Hook (Offline First)
+    const { students } = useStudentsData(
+        selectedActivityId ? activities.find(a => a.id === selectedActivityId)?.seriesId : selectedSeriesId?.toString(),
+        selectedActivityId ? activities.find(a => a.id === selectedActivityId)?.section : selectedSection,
+        currentUser?.id
+    );
 
     const fetchActivities = async (silent = false) => {
         if (!currentUser) return;
@@ -553,17 +517,34 @@ export const Activities: React.FC = () => {
             : [...completions, studentId];
 
         try {
-            const { data, error } = await supabase
-                .from('activities')
-                .update({ completions: newCompletions })
-                .eq('id', currentActivity.id)
-                .select()
-                .single();
+            // 1. Update Local (Dexie)
+            const updatedActivity = { ...currentActivity, completions: newCompletions, syncStatus: 'pending' as const };
 
-            if (error) throw error;
+            // Map activity back to DB shape if needed, but Dexie stores full objects mostly
+            // We need to be careful not to lose other fields. currentActivity comes from state/Dexie.
+            await db.activities.put(updatedActivity);
+
+            // 2. Queue Update
+            await db.syncQueue.add({
+                table: 'activities',
+                action: 'UPDATE',
+                payload: { id: currentActivity.id, completions: newCompletions }, // Only send what changed? Or full object?
+                // useSync mostly sends full object for upsert. If we send partial, Supabase Upsert needs to handle it.
+                // Safest is to send full object for UPSERT, or specialized UPDATE logic.
+                // Our useSync does 'upsert'. So we likely need the full object or at least required fields.
+                // Let's send full payload to be safe with upsert.
+                payload: { ...updatedActivity },
+                status: 'pending',
+                createdAt: Date.now(),
+                retryCount: 0
+            });
+
+            // 3. Trigger & Refresh
+            triggerSync();
             await fetchActivities(true);
+
         } catch (e) {
-            console.error(e);
+            console.error("Completion toggle failed", e);
         }
     };
 
@@ -575,17 +556,26 @@ export const Activities: React.FC = () => {
         const newCompletions = isAllSelected ? [] : allStudentIds;
 
         try {
-            const { data, error } = await supabase
-                .from('activities')
-                .update({ completions: newCompletions })
-                .eq('id', currentActivity.id)
-                .select()
-                .single();
+            // 1. Update Local (Dexie)
+            const updatedActivity = { ...currentActivity, completions: newCompletions, syncStatus: 'pending' as const };
+            await db.activities.put(updatedActivity);
 
-            if (error) throw error;
-            await fetchActivities(true);
+            // 2. Queue Update
+            await db.syncQueue.add({
+                table: 'activities',
+                action: 'UPDATE',
+                payload: { ...updatedActivity },
+                status: 'pending',
+                createdAt: Date.now(),
+                retryCount: 0
+            });
+
+            // 3. Trigger & Refresh
+            triggerSync();
+            await fetchActivities(true); // Optimistic UI update via re-fetch (merges local)
+
         } catch (e) {
-            console.error(e);
+            console.error("Select All failed", e);
         }
     };
 
