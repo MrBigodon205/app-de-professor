@@ -252,73 +252,142 @@ export const Timetable: React.FC = () => {
                 </div>
             </div>
 
-            {/* Timetable Grid */}
-            <div className="overflow-x-auto pb-4 custom-scrollbar">
-                <div className="min-w-[800px] bg-white dark:bg-slate-900 rounded-[24px] shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-4">
+            {/* Timetable Content - Responsive Split */}
+            <div className="flex-1 min-h-0 relative">
 
-                    {/* Header Row */}
-                    <div className="grid gap-4 mb-4" style={{ gridTemplateColumns: `80px repeat(${visibleDays.length}, 1fr)` }}>
-                        <div className="flex items-center justify-center p-4">
-                            <span className="text-slate-400 font-black uppercase text-xs tracking-widest">Horário</span>
-                        </div>
-                        {visibleDays.map(day => (
-                            <div key={day.id} className="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-                                <span className={`text-${theme.primaryColor} font-black uppercase text-sm tracking-widest`}>{day.label}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Time Rows */}
-                    <div className="space-y-3">
-                        {config.slots.map((slot, index) => (
-                            <div key={index} className="grid gap-3 group" style={{ gridTemplateColumns: `80px repeat(${visibleDays.length}, 1fr)` }}>
-                                {/* Time Column */}
-                                <div className="flex items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800/50">
-                                    <div className="flex flex-col items-center">
-                                        <span className="text-slate-700 dark:text-slate-300 font-bold text-sm font-mono">{slot.start}</span>
-                                        <span className="text-slate-400 text-[10px] font-medium">{slot.end}</span>
-                                    </div>
-                                </div>
-
-                                {/* Days Columns */}
-                                {visibleDays.map(day => {
+                {/* A. MOBILE LIST VIEW (Visible < md) */}
+                <div className="md:hidden flex flex-col gap-6">
+                    {visibleDays.map(day => (
+                        <div key={day.id} className="space-y-3">
+                            <h3 className="text-lg font-black text-slate-800 dark:text-white sticky top-0 bg-surface-page/95 backdrop-blur-sm py-2 z-10 flex items-center gap-2">
+                                <span className={`size-2 rounded-full bg-${theme.primaryColor}`}></span>
+                                {day.label}
+                            </h3>
+                            <div className="grid gap-3">
+                                {config.slots.map((slot, index) => {
                                     const item = getSlotItem(day.id, slot.start);
                                     const assignedClass = classes.find(c => c.id === item?.classId);
                                     const styles = item ? getSubjectTheme(item.subject) : null;
 
                                     return (
-                                        <motion.button
-                                            key={`${day.id}-${slot.start}`}
-                                            whileHover={{ scale: 0.98 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={() => handleSlotClick(day.id, slot.start, slot.end)}
-                                            className={`relative h-16 rounded-xl border transition-all flex flex-col items-center justify-center gap-0.5 p-1
-                                                ${item
-                                                    ? `${styles?.bg} ${styles?.border}`
-                                                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:shadow-md'
-                                                }
-                                            `}
-                                        >
-                                            {item ? (
-                                                <>
-                                                    <span className={`${styles?.text} font-black text-xs md:text-sm text-center leading-tight truncate w-full`}>
-                                                        {assignedClass?.name || 'Aula'}
-                                                    </span>
-                                                    <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider">
-                                                        {item.section} • {item.subject.slice(0, 3)}
-                                                    </span>
-                                                    <div className={`absolute top-1 right-1 size-1.5 rounded-full ${styles?.dot}`}></div>
-                                                </>
-                                            ) : (
-                                                <span className="material-symbols-outlined text-slate-200 dark:text-slate-800 group-hover:text-slate-300 transition-colors">add</span>
-                                            )}
-                                        </motion.button>
-                                    )
+                                        <div key={`${day.id}-${slot.start}`} className="flex gap-3 relative">
+                                            {/* Time Column */}
+                                            <div className="flex flex-col items-center justify-center w-16 shrink-0 pt-2">
+                                                <span className="text-slate-900 dark:text-white font-black text-sm">{slot.start}</span>
+                                                <span className="text-slate-400 text-[10px] font-bold">{slot.end}</span>
+                                            </div>
+
+                                            {/* Card */}
+                                            <motion.button
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={() => handleSlotClick(day.id, slot.start, slot.end)}
+                                                className={`flex-1 rounded-2xl border p-4 text-left transition-all relative overflow-hidden min-h-[80px] flex items-center
+                                                    ${item
+                                                        ? `${styles?.bg} ${styles?.border}`
+                                                        : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
+                                                    }
+                                                `}
+                                            >
+                                                {item ? (
+                                                    <div className="flex flex-col gap-1 relative z-10 w-full">
+                                                        <div className="flex justify-between items-start">
+                                                            <span className={`${styles?.text} font-black text-lg leading-none`}>
+                                                                {assignedClass?.name || 'Aula'}
+                                                            </span>
+                                                            <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-white/50 dark:bg-black/20 ${styles?.text}`}>
+                                                                {item.section}
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wide">
+                                                            {item.subject}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2 text-slate-300 dark:text-slate-700 font-bold text-sm uppercase tracking-wider w-full">
+                                                        <span className="material-symbols-outlined text-xl">add_circle</span>
+                                                        <span>Livre</span>
+                                                    </div>
+                                                )}
+
+                                                {/* Decorative Dot/Line */}
+                                                {item && <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${styles?.dot}`}></div>}
+                                            </motion.button>
+                                        </div>
+                                    );
                                 })}
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    ))}
+                </div>
 
+                {/* B. DESKTOP GRID VIEW (Hidden < md) */}
+                <div className="hidden md:block overflow-x-auto pb-4 custom-scrollbar">
+                    <div className="min-w-[800px] bg-white dark:bg-slate-900 rounded-[24px] shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-4">
+
+                        {/* Header Row */}
+                        <div className="grid gap-4 mb-4" style={{ gridTemplateColumns: `80px repeat(${visibleDays.length}, 1fr)` }}>
+                            <div className="flex items-center justify-center p-4">
+                                <span className="text-slate-400 font-black uppercase text-xs tracking-widest">Horário</span>
+                            </div>
+                            {visibleDays.map(day => (
+                                <div key={day.id} className="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
+                                    <span className={`text-${theme.primaryColor} font-black uppercase text-sm tracking-widest`}>{day.label}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Time Rows */}
+                        <div className="space-y-3">
+                            {config.slots.map((slot, index) => (
+                                <div key={index} className="grid gap-3 group" style={{ gridTemplateColumns: `80px repeat(${visibleDays.length}, 1fr)` }}>
+                                    {/* Time Column */}
+                                    <div className="flex items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800/50">
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-slate-700 dark:text-slate-300 font-bold text-sm font-mono">{slot.start}</span>
+                                            <span className="text-slate-400 text-[10px] font-medium">{slot.end}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Days Columns */}
+                                    {visibleDays.map(day => {
+                                        const item = getSlotItem(day.id, slot.start);
+                                        const assignedClass = classes.find(c => c.id === item?.classId);
+                                        const styles = item ? getSubjectTheme(item.subject) : null;
+
+                                        return (
+                                            <motion.button
+                                                key={`${day.id}-${slot.start}`}
+                                                whileHover={{ scale: 0.98 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => handleSlotClick(day.id, slot.start, slot.end)}
+                                                className={`relative h-16 rounded-xl border transition-all flex flex-col items-center justify-center gap-0.5 p-1
+                                                    ${item
+                                                        ? `${styles?.bg} ${styles?.border}`
+                                                        : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:shadow-md'
+                                                    }
+                                                `}
+                                            >
+                                                {item ? (
+                                                    <>
+                                                        <span className={`${styles?.text} font-black text-xs md:text-sm text-center leading-tight truncate w-full`}>
+                                                            {assignedClass?.name || 'Aula'}
+                                                        </span>
+                                                        <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider">
+                                                            {item.section} • {item.subject.slice(0, 3)}
+                                                        </span>
+                                                        <div className={`absolute top-1 right-1 size-1.5 rounded-full ${styles?.dot}`}></div>
+                                                    </>
+                                                ) : (
+                                                    <span className="material-symbols-outlined text-slate-200 dark:text-slate-800 group-hover:text-slate-300 transition-colors">add</span>
+                                                )}
+                                            </motion.button>
+                                        )
+                                    })}
+                                </div>
+                            ))}
+                        </div>
+
+                    </div>
                 </div>
             </div>
 

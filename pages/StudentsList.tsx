@@ -533,113 +533,69 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                         </motion.div>
                     </div>
                 ) : (
-                    /* MANAGE MODE: TABLE LAYOUT */
-                    <div className={`bg-surface-card border border-border-default rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden`}>
-                        <div className="overflow-x-auto custom-scrollbar">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-surface-subtle/50 border-b border-border-default">
-                                        <th className="px-4 py-3 w-12">
-                                            <div className="flex items-center justify-center">
+                    /* MANAGE MODE: RESPONSIVE LAYOUT (Card List on Mobile, Table on Desktop) */
+                    <div className="flex flex-col">
+
+                        {/* A. MOBILE CARD VIEW (< md) */}
+                        <div className="md:hidden flex flex-col gap-3">
+                            {students.length === 0 ? (
+                                <div className="py-12 text-center bg-surface-card rounded-[24px] border border-border-default">
+                                    <div className="size-16 rounded-full bg-surface-subtle flex items-center justify-center mb-4 mx-auto">
+                                        <span className="material-symbols-outlined text-text-disabled text-3xl">group_off</span>
+                                    </div>
+                                    <h4 className="font-bold text-text-muted">Lista vazia</h4>
+                                    <p className="text-xs text-text-disabled mt-1">Adicione alunos no botão acima.</p>
+                                </div>
+                            ) : (
+                                students.map((student) => (
+                                    <motion.div
+                                        layoutId={`student-card-mobile-${student.id}`}
+                                        key={student.id}
+                                        className={`bg-surface-card p-4 rounded-2xl border border-border-default shadow-sm relative overflow-hidden ${selectedIds.includes(student.id) ? 'ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
+                                    >
+                                        <div className="flex items-start gap-4 relative z-10">
+                                            {/* Checkbox */}
+                                            <div className="pt-1">
                                                 <input
                                                     type="checkbox"
                                                     className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
-                                                    checked={students.length > 0 && selectedIds.length === students.length}
-                                                    onChange={toggleSelectAll}
+                                                    checked={selectedIds.includes(student.id)}
+                                                    onChange={() => toggleSelect(student.id)}
                                                 />
                                             </div>
-                                        </th>
-                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-text-muted tracking-widest w-24">Nº</th>
-                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-text-muted tracking-widest">Nome do Aluno</th>
-                                        <th className="px-8 py-5 text-[10px] font-black uppercase text-text-muted tracking-widest text-right">Ações</th>
-                                    </tr>
-                                </thead>
-                                <motion.tbody
-                                    variants={containerVariants}
-                                    initial="hidden"
-                                    animate="visible"
-                                    className="divide-y divide-border-subtle"
-                                >
-                                    {students.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={4} className="px-8 py-20 text-center">
-                                                <div className="flex flex-col items-center">
-                                                    <div className="size-20 rounded-full bg-surface-subtle flex items-center justify-center mb-4">
-                                                        <span className="material-symbols-outlined text-text-disabled text-4xl">group_off</span>
+
+                                            {/* Content */}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <span className="inline-block px-1.5 py-0.5 rounded-md bg-surface-subtle border border-border-subtle text-[10px] font-mono font-bold text-text-muted mb-1">
+                                                            #{student.number}
+                                                        </span>
+                                                        <h3 className="font-black text-text-primary text-base leading-tight truncate pr-2">
+                                                            {student.name}
+                                                        </h3>
                                                     </div>
-                                                    <h4 className="font-bold text-text-muted">A lista está vazia</h4>
-                                                    <p className="text-sm text-text-disabled">Comece adicionando seu primeiro aluno acima.</p>
+
+                                                    {/* Actions Menu (Simple Edit Button for now on mobile) */}
+                                                    <button
+                                                        onClick={() => handleEdit(student)}
+                                                        className="p-2 bg-surface-subtle rounded-xl text-text-muted hover:text-primary active:scale-95 transition-all"
+                                                    >
+                                                        <span className="material-symbols-outlined text-xl">edit</span>
+                                                    </button>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        students.map((student) => (
-                                            <motion.tr
-                                                layoutId={`student-row-${student.id}`}
-                                                variants={itemVariants}
-                                                key={student.id}
-                                                className={`group transition-all border-b border-border-subtle ${selectedIds.includes(student.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card hover:bg-surface-subtle'}`}
-                                            >
-                                                <td className="px-4 py-4">
-                                                    <div className="flex items-center justify-center">
-                                                        <input
-                                                            type="checkbox"
-                                                            className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
-                                                            checked={selectedIds.includes(student.id)}
-                                                            onChange={() => toggleSelect(student.id)}
-                                                        />
-                                                    </div>
-                                                </td>
-                                                <td className="px-8 py-4">
-                                                    <span className="font-mono text-sm font-bold text-text-muted bg-surface-subtle px-2 py-1 rounded-lg">
-                                                        {student.number}
-                                                    </span>
-                                                </td>
-                                                <td className="px-8 py-4">
-                                                    {editingId === student.id ? (
-                                                        <div className="flex items-center gap-3 animate-in fade-in zoom-in-95 duration-200">
+
+                                                {/* Editing State Inline */}
+                                                {editingId === student.id && (
+                                                    <div className="mt-3 animate-in fade-in slide-in-from-top-2">
+                                                        <div className="flex items-center gap-2">
                                                             <input
                                                                 type="text"
                                                                 value={editName}
                                                                 onChange={(e) => setEditName(e.target.value)}
-                                                                className={`px-4 py-2 border-2 border-primary/30 rounded-xl text-sm w-24 focus:w-64 max-w-md font-bold bg-surface-card focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-300 ease-out`}
+                                                                className="flex-1 h-10 px-3 rounded-lg border-2 border-primary bg-white dark:bg-black font-bold text-sm focus:outline-none"
                                                                 autoFocus
                                                             />
-                                                            <div className="flex gap-1">
-                                                                <button
-                                                                    onClick={saveEdit}
-                                                                    className="p-2 text-white rounded-xl shadow-lg transition-transform hover:scale-110 active:scale-95"
-                                                                    style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 8px 15px -3px ${theme.primaryColorHex}40` }}
-                                                                >
-                                                                    <span className="material-symbols-outlined">check</span>
-                                                                </button>
-                                                                <button onClick={() => setEditingId(null)} className="p-2 bg-surface-subtle text-text-muted rounded-xl hover:scale-110 transition-transform active:scale-95">
-                                                                    <span className="material-symbols-outlined">close</span>
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center gap-4">
-                                                            <div className={`student-avatar student-avatar-md bg-gradient-to-br ${student.color || `from-indigo-600 to-indigo-800`}`}>
-                                                                {student.initials}
-                                                            </div>
-                                                            <div className="flex flex-col">
-                                                                <span className="font-black text-text-primary group-hover:text-primary transition-colors">{student.name}</span>
-                                                                <span className="text-[10px] font-bold text-text-muted uppercase tracking-tighter">Frequência: 100% (Draft)</span>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-8 py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                                                        <button
-                                                            onClick={() => setTransferringStudent(student)}
-                                                            className={`p-2.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-xl transition-all`}
-                                                            title="Transferir Aluno">
-                                                            <span className="material-symbols-outlined text-[22px]">move_up</span>
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleEdit(student)}
                                                             className={`p-2.5 text-slate-400 hover:text-${theme.primaryColor} hover:bg-${theme.primaryColor}/10 rounded-xl transition-all`}
                                                             title="Editar Aluno">
                                                             <span className="material-symbols-outlined text-[22px]">edit_note</span>
@@ -652,29 +608,29 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                         </button>
                                                     </div>
                                                 </td>
-                                            </motion.tr>
+                                        </motion.tr>
                                         ))
                                     )}
-                                </motion.tbody>
+                                    </motion.tbody>
                             </table>
-                        </div>
+                    </div>
                     </div>
                 )}
-            </div>
+        </div>
 
             {
-                transferringStudent && (
-                    <TransferStudentModal
-                        isOpen={!!transferringStudent}
-                        onClose={() => setTransferringStudent(null)}
-                        student={transferringStudent}
-                        onSuccess={() => {
-                            refreshStudents();
-                            setTransferringStudent(null);
-                        }}
-                    />
-                )
-            }
+        transferringStudent && (
+            <TransferStudentModal
+                isOpen={!!transferringStudent}
+                onClose={() => setTransferringStudent(null)}
+                student={transferringStudent}
+                onSuccess={() => {
+                    refreshStudents();
+                    setTransferringStudent(null);
+                }}
+            />
+        )
+    }
 
             <BulkTransferModal
                 isOpen={isBulkTransferring}
