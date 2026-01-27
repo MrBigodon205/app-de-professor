@@ -248,7 +248,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
                         </div>
 
                         {/* Scrollable Content */}
-                        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2 touch-auto overscroll-contain pb-safe-area-bottom min-h-[50vh]">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-2 touch-auto overscroll-contain pb-safe-area-bottom min-h-[50vh]">
                             {renderNotificationList(notifications, theme, handleClose)}
                         </div>
                     </div>
