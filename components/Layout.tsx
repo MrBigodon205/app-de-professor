@@ -370,19 +370,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </button>
             </div>
 
-            {/* MOBILE ONLY: Compact Series Selector (As requested) */}
-            <button
-              onClick={() => setIsClassSelectorOpen(true)}
-              className="lg:hidden flex items-center gap-2 mr-auto bg-surface-subtle/50 px-3 py-1.5 rounded-xl border border-border-default active:scale-95 transition-all"
-            >
-              <span className="material-symbols-outlined text-sm font-black text-primary">{theme.icon}</span>
-              <div className="flex flex-col items-start leading-none">
-                <span className="text-[8px] font-black text-text-muted uppercase tracking-wider">Turma</span>
-                <span className="text-xs font-black text-text-primary capitalize">{activeSeries?.name || 'Selecionar'} {selectedSection}</span>
-              </div>
-              <span className="material-symbols-outlined text-xs text-text-muted">expand_more</span>
-            </button>
-
             {/* 2. CENTER: Series + Classes (Mobile: Bottom Row, Desktop: Center) */}
             <div className="flex flex-wrap items-center justify-center gap-2 flex-1 order-3 md:order-2 w-full md:w-auto mt-2 md:mt-0 min-w-[200px]">
 
@@ -420,6 +407,20 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
             {/* 3. RIGHT: Subject + Profile (Aligned Right) */}
             <div className="flex flex-wrap items-center justify-end gap-3 shrink-0 ml-auto bg-surface-subtle/30 p-1 rounded-xl order-2 md:order-3">
+
+              {/* MOBILE ONLY: Series Selector (Next to Profile) */}
+              <button
+                onClick={() => setIsClassSelectorOpen(true)}
+                className="lg:hidden landscape:hidden flex items-center gap-2 bg-surface-card px-2 py-1.5 rounded-lg border border-border-default active:scale-95 transition-all shadow-sm"
+              >
+                <div className="flex flex-col items-end leading-none">
+                  <span className="text-[8px] font-black text-text-muted uppercase tracking-wider font-mono">Turma</span>
+                  <span className="text-xs font-black text-text-primary capitalize flex items-center gap-1">
+                    {activeSeries?.name || '?'} <span className="bg-primary text-white px-1 rounded text-[10px]">{selectedSection}</span>
+                  </span>
+                </div>
+                <span className="material-symbols-outlined text-xs text-text-muted bg-surface-subtle rounded-full p-0.5">expand_more</span>
+              </button>
 
               {/* Sync Status */}
               {(pendingCount > 0 || isSyncing) && (
@@ -485,29 +486,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </div>
         </motion.header>
 
-        <div className="xl:hidden landscape:hidden px-3 pt-2.5 -mb-0.5 z-30">
-          <button onClick={() => setIsClassSelectorOpen(true)} className="w-full bg-surface-elevated/90 backdrop-blur-md p-2 rounded-2xl border border-border-default shadow-lg dark:shadow-none flex items-center justify-between group active:scale-[0.98] transition-all landscape:p-1.5 landscape:rounded-xl">
-            <div className="flex items-center gap-2.5">
 
-              {/* Dynamic Theme Icon instead of static logo */}
-              <div className={`size-8 rounded-lg bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-md shadow-primary/20 shrink-0`}>
-                <span className="material-symbols-outlined text-lg font-black">{theme.icon}</span>
-              </div>
-
-              <div className="flex flex-col items-start gap-0">
-                <span className="text-[7px] uppercase font-black tracking-widest text-text-muted leading-none mb-0.5 landscape:hidden">Seletor de Turma</span>
-                <span className="text-[11px] font-black text-text-primary tracking-tight truncate max-w-[120px] xs:max-w-none text-left flex items-center gap-1.5 landscape:text-[10px]">
-                  {activeSeries?.name || 'Selecione...'}
-                  {selectedSection && <span className={`px-1 py-0.5 rounded-md bg-text-primary text-surface-card text-[8px] font-black shadow-sm`}>{selectedSection}</span>}
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 text-text-muted">
-              <span className="material-symbols-outlined text-sm">swap_horiz</span>
-              <span className="material-symbols-outlined text-sm">expand_more</span>
-            </div>
-          </button>
-        </div>
 
         {/* Main Content Area - Fixed Scrolling */}
         <main className={`flex-1 overflow-y-auto overflow-x-hidden scroll-smooth custom-scrollbar relative px-1`}>
