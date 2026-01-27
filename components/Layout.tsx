@@ -64,6 +64,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     if (currentUser) {
       if (!currentUser.isPasswordSet && !isPasswordSetupOpen) {
         setIsPasswordSetupOpen(true);
+      } else if (currentUser.isPasswordSet && isPasswordSetupOpen) {
+        // Close it if it was open but requirements were met elsewhere
+        setIsPasswordSetupOpen(false);
       }
     }
   }, [currentUser, isPasswordSetupOpen]);

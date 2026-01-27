@@ -32,17 +32,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // --- PROFILE FETCHING (With Offline Fallback) ---
     const fetchProfile = useCallback(async (uid: string, authUser?: any) => {
         try {
+            // Get freshest auth user if not provided or to ensure metadata is current
+            let freshAuthUser = authUser;
+            if (!freshAuthUser || !freshAuthUser.user_metadata) {
+                const { data } = await supabase.auth.getUser();
+                if (data.user) freshAuthUser = data.user;
+            }
+
             // 1. Try Network Fetch first (Standard Web)
             const { data: profile, error } = await supabase
                 .from('profiles')
-                .select('id, name, email, photo_url, subject, subjects') // OPTIMIZATION: Select only needed columns
+                .select('id, name, email, photo_url, subject, subjects')
                 .eq('id', uid)
                 .single();
 
             if (profile) {
-                // Determine hasPassword from metadata
-                const hasPasswordConfirmed = authUser?.user_metadata?.is_password_set === true ||
-                    authUser?.app_metadata?.providers?.includes('email');
+                // Robust password check:
+                // 1. Metadata from Supabase Auth
+                // 2. Providers (email provider always has password)
+                // 3. FALLBACK: If user was retrieved from a session that didn't have metadata yet
+                const isEmailUser = freshAuthUser?.app_metadata?.providers?.includes('email');
+                const isPasswordSetInMeta = freshAuthUser?.user_metadata?.is_password_set === true;
+
+                const hasPasswordConfirmed = isEmailUser || isPasswordSetInMeta;
 
                 const finalUser: User = {
                     id: profile.id,
@@ -51,13 +63,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     photoUrl: profile.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=random`,
                     subject: profile.subject,
                     subjects: profile.subjects || [],
-                    isPasswordSet: hasPasswordConfirmed
+                    isPasswordSet: !!hasPasswordConfirmed
                 };
 
                 // SUCCESS: Save to State AND Cache
                 setCurrentUser(finalUser);
                 setUserId(finalUser.id);
                 localStorage.setItem(`offline_profile_${finalUser.id}`, JSON.stringify(finalUser));
+                // ...
 
                 // Handle Subject Persistence
                 const storedSubject = localStorage.getItem('last_active_subject');
