@@ -596,63 +596,102 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                                 className="flex-1 h-10 px-3 rounded-lg border-2 border-primary bg-white dark:bg-black font-bold text-sm focus:outline-none"
                                                                 autoFocus
                                                             />
-                                                            className={`p-2.5 text-slate-400 hover:text-${theme.primaryColor} hover:bg-${theme.primaryColor}/10 rounded-xl transition-all`}
-                                                            title="Editar Aluno">
-                                                            <span className="material-symbols-outlined text-[22px]">edit_note</span>
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDelete(student.id)}
-                                                            className="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all"
-                                                            title="Remover Aluno">
-                                                            <span className="material-symbols-outlined text-[22px]">delete</span>
-                                                        </button>
+                                                            <button
+                                                                onClick={saveEdit}
+                                                                className="size-10 rounded-lg bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 active:scale-90 transition-all font-black"
+                                                            >
+                                                                <span className="material-symbols-outlined">check</span>
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </td>
-                                        </motion.tr>
-                                        ))
-                                    )}
-                                    </motion.tbody>
-                            </table>
-                    </div>
-                    </div>
-                )}
-        </div>
+                                                )}
 
-            {
-        transferringStudent && (
-            <TransferStudentModal
-                isOpen={!!transferringStudent}
-                onClose={() => setTransferringStudent(null)}
-                student={transferringStudent}
-                onSuccess={() => {
-                    refreshStudents();
-                    setTransferringStudent(null);
-                }}
-            />
-        )
-    }
+                                                <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border-subtle">
+                                                    <button
+                                                        onClick={() => setTransferringStudent(student)}
+                                                        className="flex-1 py-2 rounded-lg bg-surface-subtle hover:bg-amber-50 text-text-muted hover:text-amber-600 text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1"
+                                                    >
+                                                        <span className="material-symbols-outlined text-sm">move_up</span>
+                                                        Transferir
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(student.id)}
+                                                        className="flex-1 py-2 rounded-lg bg-surface-subtle hover:bg-red-50 text-text-muted hover:text-red-600 text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1"
+                                                    >
+                                                        <span className="material-symbols-outlined text-sm">delete</span>
+                                                        Remover
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))
+                            )}
+                        </div>
 
-            <BulkTransferModal
-                isOpen={isBulkTransferring}
-                onClose={() => setIsBulkTransferring(false)}
-                studentIds={selectedIds}
-                onSuccess={() => {
-                    refreshStudents();
-                    setSelectedIds([]);
-                    setIsBulkTransferring(false);
-                }}
-            />
+                        {/* B. DESKTOP TABLE VIEW (Hidden < md) */}
+                        <div className={`hidden md:block bg-surface-card border border-border-default rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden`}>
+                            <div className="overflow-x-auto custom-scrollbar">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-surface-subtle/50 border-b border-border-default">
+                                            <th className="px-4 py-3 w-12">
+                                                <div className="flex items-center justify-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
+                                                        checked={students.length > 0 && selectedIds.length === students.length}
+                                                        onChange={toggleSelectAll}
+                                                    />
+                                                </div>
+                                            </th>
+                                            <th className="px-8 py-5 text-[10px] font-black uppercase text-text-muted tracking-widest w-24">Nº</th>
+                                            <th className="px-8 py-5 text-[10px] font-black uppercase text-text-muted tracking-widest">Nome do Aluno</th>
+                                            <th className="px-8 py-5 text-[10px] font-black uppercase text-text-muted tracking-widest text-right">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <motion.tbody
+                                        variants={containerVariants}
+                                        initial="hidden"
+                                        animate="visible"
+                                        className="divide-y divide-border-subtle"
+                                    >
 
-            <div className={`flex items-center justify-center gap-4 py-4`}>
-                <div className="h-px flex-1 bg-border-subtle"></div>
-                <div className="px-6 py-2 bg-surface-subtle rounded-full border border-border-default">
-                    <span className="text-xs font-black text-text-muted uppercase tracking-widest">
-                        Total de <span className={`text-${theme.primaryColor}`}>{students.length}</span> alunos matriculados
-                    </span>
-                </div>
-                <div className="h-px flex-1 bg-border-subtle"></div>
-            </div>
-        </div >
-    );
+                                        {
+                                            transferringStudent && (
+                                                <TransferStudentModal
+                                                    isOpen={!!transferringStudent}
+                                                    onClose={() => setTransferringStudent(null)}
+                                                    student={transferringStudent}
+                                                    onSuccess={() => {
+                                                        refreshStudents();
+                                                        setTransferringStudent(null);
+                                                    }}
+                                                />
+                                            )
+                                        }
+
+                                        <BulkTransferModal
+                                            isOpen={isBulkTransferring}
+                                            onClose={() => setIsBulkTransferring(false)}
+                                            studentIds={selectedIds}
+                                            onSuccess={() => {
+                                                refreshStudents();
+                                                setSelectedIds([]);
+                                                setIsBulkTransferring(false);
+                                            }}
+                                        />
+
+                                        <div className={`flex items-center justify-center gap-4 py-4`}>
+                                            <div className="h-px flex-1 bg-border-subtle"></div>
+                                            <div className="px-6 py-2 bg-surface-subtle rounded-full border border-border-default">
+                                                <span className="text-xs font-black text-text-muted uppercase tracking-widest">
+                                                    Total de <span className={`text-${theme.primaryColor}`}>{students.length}</span> alunos matriculados
+                                                </span>
+                                            </div>
+                                            <div className="h-px flex-1 bg-border-subtle"></div>
+                                        </div>
+                                    </div >
+                                    );
 };
 
