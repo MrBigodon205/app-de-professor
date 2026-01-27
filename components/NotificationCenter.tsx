@@ -48,8 +48,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
     // Check for landscape orientation
 
     const [isLandscape, setIsLandscape] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         const checkOrientation = () => {
             setIsLandscape(window.matchMedia("(orientation: landscape) and (max-height: 500px)").matches);
         };
@@ -221,7 +223,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
             </button>
 
             {/* Mobile Portrait Bottom Sheet (Portal to break out of stacking context) */}
-            {isPortraitMobile && show && createPortal(
+            {mounted && isPortraitMobile && show && createPortal(
                 <div className="fixed inset-0 z-[9999] flex items-end justify-center sm:items-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={handleClose}>
                     <div
                         className="w-full bg-white dark:bg-slate-900 rounded-t-[32px] sm:rounded-3xl shadow-[0_-8px_30px_-5px_rgba(0,0,0,0.3)] overflow-hidden animate-in slide-in-from-bottom duration-500 border-t border-white/20 dark:border-slate-700 max-h-[85dvh] flex flex-col"
