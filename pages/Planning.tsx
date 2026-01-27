@@ -8,7 +8,6 @@ import { Plan, AttachmentFile } from '../types';
 import { supabase } from '../lib/supabase';
 import { db } from '../lib/db';
 import { useSync } from '../hooks/useSync';
-import { generatePDF } from '../utils/pdfGenerator';
 import { ENABLE_OFFLINE_MODE } from '../lib/offlineConfig';
 import DOMPurify from 'dompurify';
 import { RichTextEditor } from '../components/RichTextEditor';
@@ -212,7 +211,9 @@ export const Planning: React.FC = () => {
                 let query = supabase.from('plans').select('*').eq('user_id', currentUser.id);
 
                 if (selectedSeriesId) query = query.eq('series_id', selectedSeriesId);
-                if (activeSubject) query = query.eq('subject', activeSubject);
+                if (activeSubject) {
+                    query = query.or(`subject.eq."${activeSubject}",subject.is.null`);
+                }
 
                 const { data, error } = await query;
                 if (error) throw error;
@@ -226,7 +227,7 @@ export const Planning: React.FC = () => {
                     query = query.eq('series_id', selectedSeriesId);
                 }
                 if (activeSubject) {
-                    query = query.eq('subject', activeSubject);
+                    query = query.or(`subject.eq."${activeSubject}",subject.is.null`);
                 }
 
                 const { data, error } = await query;
@@ -1328,7 +1329,7 @@ export const Planning: React.FC = () => {
 
                 ) : (
                     <div className="flex-1 overflow-y-auto relative animate-in fade-in h-full custom-scrollbar bg-slate-50 dark:bg-black/20">
-                        {currentPlan && (
+                        {currentPlan ? (
                             <div className="flex flex-col min-h-full">
                                 {/* Premium Header */}
                                 <div className={`h-48 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden shrink-0`}>
@@ -1737,37 +1738,46 @@ export const Planning: React.FC = () => {
                                                     </tbody>
                                                 </table>
                                             </div>
-                                            <div className="mt-4">
-                                                <div className="font-bold text-xs uppercase mb-1">OBSERVAÇÕES:</div>
-                                                <div className="border border-black p-2 h-20"></div>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>)}
+                                ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-surface-dark">
+                                    <span className="material-symbols-outlined text-6xl text-slate-200 mb-4 font-black">search_off</span>
+                                    <h3 className="text-xl font-bold text-slate-400">Plano não encontrado</h3>
+                                    <p className="text-slate-400 text-sm mt-2 max-w-xs">O plano selecionado não foi encontrado ou foi excluído.</p>
+                                    <button
+                                        onClick={() => { setSelectedPlanId(null); setViewMode(false); }}
+                                        className="mt-6 px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition-all"
+                                    >
+                                        Voltar à Lista
+                                    </button>
+                                </div>
+                        )}
                     </div>
                 )}
             </div>
+
             {/* FILE VIEWER MODAL */}
-            {viewerFile && (
-                <FileViewerModal
-                    isOpen={!!viewerFile}
-                    onClose={() => setViewerFile(null)}
-                    file={viewerFile as any}
+                {viewerFile && (
+                    <FileViewerModal
+                        isOpen={!!viewerFile}
+                        onClose={() => setViewerFile(null)}
+                        file={viewerFile as any}
+                    />
+                )}
+
+                <FileImporterModal
+                    isOpen={isImporterOpen}
+                    onClose={() => setIsImporterOpen(false)}
+                    onFileSelect={(files) => {
+                        if (files) processFiles(Array.from(files));
+                    }}
+                    multiple
                 />
-            )}
-
-            <FileImporterModal
-                isOpen={isImporterOpen}
-                onClose={() => setIsImporterOpen(false)}
-                onFileSelect={(files) => {
-                    if (files) processFiles(Array.from(files));
-                }}
-                multiple
-            />
 
 
-        </main >
+        </main>
     );
 };
 // Build trigger: 2026-01-13 00:54
