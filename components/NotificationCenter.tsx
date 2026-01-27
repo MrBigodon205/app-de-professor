@@ -33,7 +33,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
     const notificationsRef = useRef<HTMLDivElement>(null);
 
     // Derived state
-    const show = isMobile ? controlledIsOpen : internalIsOpen;
+    const show = effectiveIsMobile ? controlledIsOpen : internalIsOpen;
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
     useEffect(() => {
@@ -171,6 +171,18 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
         }
     }
 
+    // Internal Mobile Detection
+    const [isMobileWidth, setIsMobileWidth] = useState(window.innerWidth < 1024); // lg breakpoint
+
+    useEffect(() => {
+        const handleResize = () => setIsMobileWidth(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Merge prop with internal detection
+    const effectiveIsMobile = isMobile ?? isMobileWidth;
+
     // Check for landscape orientation
     const [isLandscape, setIsLandscape] = useState(false);
 
@@ -185,13 +197,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
     }, []);
 
     // Render as Modal/Overlay for Mobile Portrait ONLY
-    const isPortraitMobile = isMobile && !isLandscape;
+    const isPortraitMobile = effectiveIsMobile && !isLandscape;
 
     return (
         <div className="relative" ref={notificationsRef}>
             <button
-                onClick={() => isMobile && onClose ? onClose() : setInternalIsOpen(!internalIsOpen)}
-                className={`relative size-9 rounded-full transition-all duration-300 group flex items-center justify-center ${internalIsOpen || (isMobile && controlledIsOpen) ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-text-muted hover:text-primary'} ${isMobile && controlledIsOpen ? 'ring-2 ring-primary/20' : ''}`}
+                onClick={() => effectiveIsMobile && onClose ? onClose() : setInternalIsOpen(!internalIsOpen)}
+                className={`relative size-9 rounded-full transition-all duration-300 group flex items-center justify-center ${internalIsOpen || (effectiveIsMobile && controlledIsOpen) ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-text-muted hover:text-primary'} ${effectiveIsMobile && controlledIsOpen ? 'ring-2 ring-primary/20' : ''}`}
             >
                 <span className={`material-symbols-outlined text-xl ${internalIsOpen ? 'icon-filled animate-none' : 'group-hover:animate-pulse'}`}>notifications</span>
                 {notifications.length > 0 && (
