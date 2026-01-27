@@ -1446,7 +1446,7 @@ export const Planning: React.FC = () => {
                                                     {currentPlan.files.map((file, index) => (
                                                         <div
                                                             key={index}
-                                                            className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group shadow-sm"
+                                                            className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group shadow-sm max-w-full"
                                                         >
                                                             <div className="flex items-center gap-3 flex-1 min-w-0 pointer-events-none">
                                                                 <span className="material-symbols-outlined text-slate-500 group-hover:text-indigo-500 transition-colors">description</span>
