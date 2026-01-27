@@ -1324,29 +1324,29 @@ export const Activities: React.FC = () => {
                                 </div>
 
                                 {/* Desktop Actions (Visible > lg) */}
-                                <div className="absolute top-6 right-6 hidden lg:flex gap-2 z-10 animate-in fade-in slide-in-from-right-4 duration-500 delay-200">
+                                <div className="absolute top-6 right-6 hidden lg:flex gap-3 z-10 animate-in fade-in slide-in-from-right-4 duration-500 delay-200">
                                     <button
                                         onClick={handleExportPDF}
-                                        className="p-3 size-12 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
+                                        className="p-2 size-10 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
                                         title="Baixar PDF"
                                     >
-                                        <span className="material-symbols-outlined text-2xl">picture_as_pdf</span>
+                                        <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
                                     </button>
                                     {currentActivity?.files?.find(f => f.name.match(/\.(ppt|pptx)$/i)) && (
                                         <button
                                             onClick={() => setIsPresentationOpen(true)}
-                                            className="p-3 size-12 rounded-2xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 backdrop-blur-md border border-orange-500/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
+                                            className="p-2 size-10 rounded-2xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 backdrop-blur-md border border-orange-500/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
                                             title="Apresentar Slide"
                                         >
-                                            <span className="material-symbols-outlined text-2xl">slideshow</span>
+                                            <span className="material-symbols-outlined text-xl">slideshow</span>
                                         </button>
                                     )}
                                     <button
                                         onClick={handlePrint}
-                                        className="p-3 size-12 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
+                                        className="p-2 size-10 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
                                         title="Imprimir"
                                     >
-                                        <span className="material-symbols-outlined text-2xl">print</span>
+                                        <span className="material-symbols-outlined text-xl">print</span>
                                     </button>
                                     <button
                                         onClick={() => {
@@ -1363,17 +1363,17 @@ export const Activities: React.FC = () => {
                                             }
                                             setIsEditing(true);
                                         }}
-                                        className="p-3 size-12 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
+                                        className="p-2 size-10 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
                                         title="Editar Atividade"
                                     >
-                                        <span className="material-symbols-outlined text-2xl">edit</span>
+                                        <span className="material-symbols-outlined text-xl">edit</span>
                                     </button>
                                     <button
                                         onClick={handleDelete}
-                                        className="p-3 size-12 rounded-2xl bg-red-500/20 hover:bg-red-500/40 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 group"
+                                        className="p-2 size-10 rounded-2xl bg-red-500/20 hover:bg-red-500/40 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 group"
                                         title="Excluir Atividade"
                                     >
-                                        <span className="material-symbols-outlined text-xl group-hover:text-red-200 transaction-colors">delete</span>
+                                        <span className="material-symbols-outlined text-lg group-hover:text-red-200 transaction-colors">delete</span>
                                     </button>
                                 </div>
 
