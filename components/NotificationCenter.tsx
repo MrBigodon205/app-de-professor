@@ -177,8 +177,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
 
         return (
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
-                    <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                <div className="bg-white dark:bg-slate-900 w-full max-w-sm landscape:max-w-xs rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
+                    <div className="p-6 landscape:p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
                         <div className="flex items-center gap-3">
                             <div className={`size-10 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
                                 <span className="material-symbols-outlined text-xl">notifications_active</span>
@@ -190,7 +190,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
                         </button>
                     </div>
 
-                    <div className="max-h-[60vh] overflow-y-auto custom-scrollbar p-2">
+                    <div className="max-h-[60vh] landscape:max-h-[50vh] overflow-y-auto custom-scrollbar p-2">
                         {renderNotificationList(notifications, theme, handleClose)}
                     </div>
                 </div>
