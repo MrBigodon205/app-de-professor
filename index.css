@@ -250,6 +250,11 @@ body {
         -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
         mask-image: linear-gradient(to right, black 85%, transparent 100%);
     }
+
+    .pb-safe-area-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
 }
 
 @media screen and (orientation: landscape) and (max-height: 500px) {
