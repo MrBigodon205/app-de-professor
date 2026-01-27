@@ -221,9 +221,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
 
             {/* Mobile Portrait Bottom Sheet */}
             {isPortraitMobile && show && (
-                <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={handleClose}>
+                <div className="fixed inset-0 z-[60] w-screen h-screen flex items-end justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={handleClose}>
                     <div
-                        className="w-full bg-white dark:bg-slate-900 rounded-t-[32px] sm:rounded-3xl shadow-[0_-8px_30px_-5px_rgba(0,0,0,0.3)] overflow-hidden animate-in slide-in-from-bottom duration-500 border-t border-white/20 dark:border-slate-700 max-h-[85dvh] flex flex-col"
+                        className="w-full min-w-full sm:min-w-[24rem] sm:w-auto bg-white dark:bg-slate-900 rounded-t-[32px] sm:rounded-3xl shadow-[0_-8px_30px_-5px_rgba(0,0,0,0.3)] overflow-hidden animate-in slide-in-from-bottom duration-500 border-t border-white/20 dark:border-slate-700 max-h-[85dvh] flex flex-col text-left"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Drag Handle Area */}
