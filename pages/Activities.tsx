@@ -1002,7 +1002,7 @@ export const Activities: React.FC = () => {
                         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
                             <button
                                 onClick={() => setFilterSection('')}
-                                className={`shrink-0 px-5 py-2.5 rounded-xl text-sm font-black transition-all border-2 ${filterSection === ''
+                                className={`shrink-0 px-5 py-2.5 lg:px-3 lg:py-1 rounded-xl text-sm font-black transition-all border-2 ${filterSection === ''
                                     ? `bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-transparent shadow-md`
                                     : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
                                     }`}
@@ -1014,7 +1014,7 @@ export const Activities: React.FC = () => {
                                 <button
                                     key={sec}
                                     onClick={() => setFilterSection(sec)}
-                                    className={`shrink-0 px-5 py-2.5 rounded-xl text-sm font-black transition-all border-2 ${filterSection === sec
+                                    className={`shrink-0 px-5 py-2.5 lg:px-3 lg:py-1 rounded-xl text-sm font-black transition-all border-2 ${filterSection === sec
                                         ? `bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-transparent shadow-md`
                                         : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
                                         }`}

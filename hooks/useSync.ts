@@ -91,44 +91,62 @@ export const useSync = () => {
     const syncItem = async (item: SyncQueueItem) => {
         const { table, action, payload } = item;
 
-        let supabaseTable = table;
-        if (table === 'attendance') supabaseTable = 'attendance_records';
+        // Map local table names to Supabase table names if they differ
+        const tableMap: Record<string, string> = {
+            'attendance': 'attendance_records',
+            'students': 'students',
+            'grades': 'grades',
+            'occurrences': 'occurrences',
+            'plans': 'plans',
+            'activities': 'activities',
+            // Add other mappings as needed
+        };
+
+        const supabaseTable = tableMap[table] || table;
+
+        console.log(`[Sync] Processing ${action} on ${supabaseTable} (ID: ${payload.id || 'new'})`, payload);
 
         if (action === 'INSERT' || action === 'UPDATE') {
-            // SANITIZATION: Fix types before sending to Supabase
+            // SHADOW COPY: Avoid mutating the original payload in Dexie (though we are getting a copy from toArray usually)
             const cleanPayload = { ...payload };
 
-            // Fix IDs for relational tables (Supabase expects Numbers for BigInt, Dexie uses Strings)
-            if (cleanPayload.student_id) cleanPayload.student_id = parseInt(cleanPayload.student_id);
-            if (cleanPayload.series_id) cleanPayload.series_id = parseInt(cleanPayload.series_id);
-            if (cleanPayload.id && !isNaN(parseInt(cleanPayload.id))) {
-                // For update actions, ensure ID is correct type if needed, but usually UUIDs are strings.
-                // If ID is numeric (old schema), parse it. If UUID, keep string.
-                // ProfAcerta seems to use Numeric IDs for students/grades?
-                // Let's assume standard handling -> if it parses to int and looks like one, send as number.
-                // Actually, best to trust the source unless known issue.
-                // Grades/Attendance use numeric IDs? 
-                // Let's safe-guard student_id specifically.
-            }
-
-            // Remove local-only fields if they exist
+            // REMOVE LOCAL-ONLY FIELDS
             delete cleanPayload.syncStatus;
 
-            const { error } = await supabase
+            // ID SANITIZATION (Legacy Support for numeric IDs vs UUIDs)
+            // Only parse to integer if the string is purely numeric to avoid corrupted UUIDs (NaN)
+            // checking if it matches /^\d+$/
+            if (cleanPayload.student_id && typeof cleanPayload.student_id === 'string' && /^\d+$/.test(cleanPayload.student_id)) {
+                cleanPayload.student_id = parseInt(cleanPayload.student_id);
+            }
+            if (cleanPayload.series_id && typeof cleanPayload.series_id === 'string' && /^\d+$/.test(cleanPayload.series_id)) {
+                cleanPayload.series_id = parseInt(cleanPayload.series_id);
+            }
+
+            // Perform Upsert
+            const { data, error } = await supabase
                 .from(supabaseTable)
-                .upsert(cleanPayload);
+                .upsert(cleanPayload)
+                .select(); // Select to confirm return
 
             if (error) {
-                console.error(`[Sync] Supabase Error for ${table}:`, error.message);
-                throw error;
+                console.error(`[Sync] Supabase Error for ${table}:`, error.message, error.details, error.hint);
+                throw new Error(`Supabase Error: ${error.message}`);
             }
+
+            console.log(`[Sync] Success: ${supabaseTable}`, data);
+
         } else if (action === 'DELETE') {
             const { error } = await supabase
                 .from(supabaseTable)
                 .delete()
                 .eq('id', payload.id);
 
-            if (error) throw error;
+            if (error) {
+                console.error(`[Sync] Delete Failed for ${table}:`, error.message);
+                throw error;
+            }
+            console.log(`[Sync] Deleted: ${supabaseTable} ${payload.id}`);
         }
     };
 

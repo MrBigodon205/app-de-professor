@@ -29,7 +29,7 @@ export interface LocalOccurrence extends Occurrence {
 
 export interface SyncQueueItem {
     id?: number; // Auto-increment
-    table: 'attendance' | 'grades' | 'occurrences' | 'students' | 'activities';
+    table: 'attendance' | 'grades' | 'occurrences' | 'students' | 'activities' | 'plans';
     action: 'INSERT' | 'UPDATE' | 'DELETE';
     payload: any;
     status: 'pending' | 'processing' | 'failed';
