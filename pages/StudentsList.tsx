@@ -278,21 +278,21 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto relative z-10">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto relative z-10 transition-all">
                     {mode === 'manage' ? (
                         <>
                             {selectedIds.length > 0 ? (
-                                <div className="flex items-center gap-3 animate-in fade-in zoom-in">
+                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 animate-in fade-in zoom-in w-full sm:w-auto">
                                     <button
                                         onClick={() => setIsBulkTransferring(true)}
-                                        className="flex items-center gap-3 bg-amber-100 hover:bg-amber-200 text-amber-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
+                                        className="flex items-center justify-center gap-3 bg-amber-100 hover:bg-amber-200 text-amber-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
                                     >
                                         <span className="material-symbols-outlined text-xl">move_up</span>
                                         Transferir ({selectedIds.length})
                                     </button>
                                     <button
                                         onClick={handleBulkDelete}
-                                        className="flex items-center gap-3 bg-red-100 hover:bg-red-200 text-red-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
+                                        className="flex items-center justify-center gap-3 bg-red-100 hover:bg-red-200 text-red-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
                                     >
                                         <span className="material-symbols-outlined text-xl">delete</span>
                                         Remover
@@ -302,16 +302,16 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 <button
                                     data-tour="students-import-btn"
                                     onClick={() => setIsImporting(true)}
-                                    className="flex items-center gap-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-text-primary font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
+                                    className="flex items-center justify-center gap-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-text-primary font-bold h-12 px-6 rounded-2xl transition-all active:scale-95 w-full sm:w-auto"
                                 >
                                     <span className="material-symbols-outlined text-xl">playlist_add</span>
-                                    Importar em Massa
+                                    Importar
                                 </button>
                             )}
                             <button
                                 data-tour="students-add-btn"
                                 onClick={() => setIsAdding(!isAdding)}
-                                className={`flex items-center gap-3 hover:opacity-90 text-white font-bold h-12 px-6 rounded-2xl shadow-lg shadow-${theme.primaryColor}/20 transition-all active:scale-95`}
+                                className={`flex items-center justify-center gap-3 hover:opacity-90 text-white font-bold h-12 px-6 rounded-2xl shadow-lg shadow-${theme.primaryColor}/20 transition-all active:scale-95 w-full sm:w-auto`}
                                 style={{ backgroundColor: theme.primaryColorHex }}
                             >
                                 <span className="material-symbols-outlined text-xl">add_circle</span>

@@ -787,7 +787,7 @@ export const Planning: React.FC = () => {
     }, [plans, debouncedSearchTerm, filterSection]);
 
     return (
-        <main className="flex flex-col gap-4 md:gap-6 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 md:pb-8 relative fluid-p-m fluid-gap-m">
+        <main className="flex flex-col gap-4 md:gap-6 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 md:pb-8 relative fluid-p-m fluid-gap-m px-4 md:px-0">
             {/* Landscape FAB for New Plan */}
             <button
                 onClick={handleNewPlan}
