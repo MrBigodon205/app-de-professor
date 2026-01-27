@@ -456,7 +456,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   <span className="material-symbols-outlined text-xl group-hover:animate-bounce">help</span>
                 </Link>
                 <div className="flex items-center justify-center transform transition-transform hover:scale-110">
-                  <NotificationCenter isMobile={window.innerWidth < 768} />
+                  <NotificationCenter />
                 </div>
               </div>
 
