@@ -223,11 +223,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updateProfile = useCallback(async (data: Partial<User>) => {
         if (!userId) return false;
         try {
+            // 1. Update Password if provided
             if (data.password) {
                 const { error } = await supabase.auth.updateUser({ password: data.password });
                 if (error) throw error;
             }
 
+            // 2. Sync Metadata (is_password_set)
+            if (data.isPasswordSet === true) {
+                const { error: metaError } = await supabase.auth.updateUser({
+                    data: { is_password_set: true }
+                });
+                if (metaError) console.warn("Failed to sync auth metadata:", metaError);
+            }
+
+            // 3. Update Profile Table
             const updates: any = {};
             if (data.name) updates.name = data.name;
             if (data.subject) updates.subject = data.subject;
@@ -265,10 +275,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const completeRegistrationReal = useCallback(async (name: string, password: string, subject: Subject, subjects: Subject[]) => {
         if (!userId) return { success: false, error: "Não autenticado" };
         try {
-            await supabase.auth.updateUser({ password, data: { is_password_set: true } });
+            // Updated to use both password AND data update
+            const { error: authError } = await supabase.auth.updateUser({
+                password,
+                data: { is_password_set: true }
+            });
+            if (authError) throw authError;
+
             await updateProfile({ name, subject, subjects, isPasswordSet: true });
             return { success: true };
-        } catch (e: any) { return { success: false, error: e.message }; }
+        } catch (e: any) {
+            return { success: false, error: e.message };
+        }
     }, [userId, updateProfile]);
 
     const updateActiveSubjectWrapper = useCallback((subject: string) => {

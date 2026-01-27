@@ -10,7 +10,7 @@ interface PasswordSetupModalProps {
 }
 
 export const PasswordSetupModal: React.FC<PasswordSetupModalProps> = ({ isOpen, onClose, mandatory = false }) => {
-    const { currentUser, updatePassword, updateProfile } = useAuth();
+    const { currentUser, updatePassword, updateProfile, updateActiveSubject } = useAuth();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [selectedSubject, setSelectedSubject] = useState('');
@@ -89,6 +89,11 @@ export const PasswordSetupModal: React.FC<PasswordSetupModalProps> = ({ isOpen, 
 
             const profileResult = await updateProfile(updates);
             if (!profileResult) throw new Error('Erro ao atualizar perfil.');
+
+            // NEW: Update theme immediately for "wow" factor
+            if (needsSubject) {
+                updateActiveSubject(selectedSubject);
+            }
 
             setSuccess(true);
             setTimeout(() => {

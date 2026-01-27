@@ -61,13 +61,28 @@ export const Login: React.FC = () => {
         }
       } else {
         // Registration Logic
+        if (!name.trim()) {
+          setError('O nome é obrigatório.');
+          setIsSubmitting(false);
+          return;
+        }
+        if (!email.trim()) {
+          setError('O e-mail é obrigatório.');
+          setIsSubmitting(false);
+          return;
+        }
+        if (!password || password.length < 6) {
+          setError('A senha deve ter pelo menos 6 caracteres.');
+          setIsSubmitting(false);
+          return;
+        }
         if (password !== confirmPassword) {
           setError('As senhas não coincidem.');
           setIsSubmitting(false);
           return;
         }
         if (selectedSubjects.length === 0) {
-          setError('Selecione ao menos uma disciplina.');
+          setError('Selecione pelo menos uma disciplina.');
           setIsSubmitting(false);
           return;
         }
