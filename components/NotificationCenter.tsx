@@ -151,13 +151,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
             });
 
             filteredActivities.forEach(a => {
+                const colorBase = theme.primaryColor && typeof theme.primaryColor === 'string' ? theme.primaryColor.split('-')[0] : 'blue';
                 items.push({
                     id: `act-${a.id}`,
                     title: 'Atividade Hoje',
                     description: `Você tem a atividade "${a.title}" programada para hoje.`,
                     type: 'activity',
                     link: '/activities',
-                    color: (theme.primaryColor || 'blue-600').split('-')[0]
+                    color: colorBase
                 });
             });
 
@@ -176,13 +177,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
             });
 
             filteredPlans.forEach(p => {
+                const colorBase = theme.secondaryColor && typeof theme.secondaryColor === 'string' ? theme.secondaryColor.split('-')[0] : 'indigo';
                 items.push({
                     id: `plan-${p.id}`,
                     title: 'Planejamento Ativo',
                     description: `O planejamento "${p.title}" está em vigor hoje.`,
                     type: 'plan',
                     link: '/planning',
-                    color: (theme.secondaryColor || 'blue-700').split('-')[0]
+                    color: colorBase
                 });
             });
 
@@ -223,7 +225,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
             </button>
 
             {/* Mobile Portrait Bottom Sheet (Portal to break out of stacking context) */}
-            {mounted && isPortraitMobile && show && createPortal(
+            {mounted && isPortraitMobile && show && typeof document !== 'undefined' && document.body && createPortal(
                 <div className="fixed inset-0 z-[9999] flex items-end justify-center sm:items-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={handleClose}>
                     <div
                         className="w-full bg-white dark:bg-slate-900 rounded-t-[32px] sm:rounded-3xl shadow-[0_-8px_30px_-5px_rgba(0,0,0,0.3)] overflow-hidden animate-in slide-in-from-bottom duration-500 border-t border-white/20 dark:border-slate-700 max-h-[85dvh] flex flex-col"
