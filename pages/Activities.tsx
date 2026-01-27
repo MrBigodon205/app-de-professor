@@ -248,18 +248,39 @@ export const Activities: React.FC = () => {
 
                 const { data, error } = await query;
                 if (error) throw error;
-                activityData = data || [];
 
-                // Cache to Dexie
-                // Important: We need a valid ID for Dexie. If we filter by series/subject here, 
-                // we should stick to caching what we downloaded.
-                // But careful not to overwrite "pending" edits if we implement optimistic UI properly. 
-                // For now, blind cache is Acceptable for "WhatsApp Mode" (Last Write Wins).
-                await db.activities.bulkPut(activityData.map(a => ({
+                // 1. Get Server Data
+                let serverActivities = data || [];
+
+                // 2. Get Local Pending Items (Optimistic UI) - FIX: Use table('activities') not db.activities directly if not pure Dexie
+                // Actually db.activities IS a Dexie table.
+                const pendingActivities = await db.activities
+                    .filter(a => a.syncStatus === 'pending' && a.user_id === currentUser.id)
+                    .toArray();
+
+                // 3. Merge: Server + Pending (Pending overwrites server if same ID)
+                const activityMap = new Map();
+                serverActivities.forEach(a => activityMap.set(a.id.toString(), a));
+                pendingActivities.forEach(a => activityMap.set(a.id.toString(), {
                     ...a,
-                    id: a.id.toString(), // Ensure string
-                    syncStatus: 'synced'
-                })));
+                    // If it's a temp ID (UUID), it won't clash with server IDs usually, or it will eventually.
+                    // Ideally we should use same UUID.
+                }));
+
+                activityData = Array.from(activityMap.values());
+
+                // 4. Cache Server Data to Dexie (Safely)
+                // We only overwrite items that are NOT pending locally.
+                const pendingIds = new Set(pendingActivities.map(p => p.id.toString()));
+                const safeCacheData = serverActivities.filter(a => !pendingIds.has(a.id.toString()));
+
+                if (safeCacheData.length > 0) {
+                    await db.activities.bulkPut(safeCacheData.map(a => ({
+                        ...a,
+                        id: a.id.toString(),
+                        syncStatus: 'synced'
+                    })));
+                }
 
             } else {
                 // Offline Fallback
