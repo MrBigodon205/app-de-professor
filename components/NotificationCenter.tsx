@@ -220,7 +220,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
                             </button>
                         </div>
 
-                        <div className="max-h-[60vh] overflow-y-auto custom-scrollbar p-2">
+                        <div className="max-h-[60dvh] overflow-y-auto custom-scrollbar p-2 touch-auto overscroll-y-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
                             {renderNotificationList(notifications, theme, handleClose)}
                         </div>
                     </div>
