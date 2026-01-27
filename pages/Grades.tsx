@@ -875,7 +875,8 @@ export const Grades: React.FC = () => {
                             </div>
                         </div>
                     </motion.div>
-                )}
+                </motion.div>
+            )}
             </AnimatePresence>
 
 
