@@ -219,23 +219,36 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
                 )}
             </button>
 
-            {/* Mobile Portrait Modal */}
+            {/* Mobile Portrait Bottom Sheet */}
             {isPortraitMobile && show && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={handleClose}>
-                    <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800" onClick={(e) => e.stopPropagation()}>
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={handleClose}>
+                    <div
+                        className="w-full bg-white dark:bg-slate-900 rounded-t-[32px] sm:rounded-3xl shadow-[0_-8px_30px_-5px_rgba(0,0,0,0.3)] overflow-hidden animate-in slide-in-from-bottom duration-500 border-t border-white/20 dark:border-slate-700 max-h-[85dvh] flex flex-col"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Drag Handle Area */}
+                        <div className="w-full flex justify-center pt-3 pb-1" onTouchStart={handleClose}>
+                            <div className="w-16 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700/50 mb-2"></div>
+                        </div>
+
+                        {/* Header */}
+                        <div className="px-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className={`size-10 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
+                                <div className={`size-10 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0`}>
                                     <span className="material-symbols-outlined text-xl">notifications_active</span>
                                 </div>
-                                <h3 className="font-black text-slate-900 dark:text-white">Notificações</h3>
+                                <div>
+                                    <h3 className="font-black text-lg text-slate-900 dark:text-white leading-tight">Notificações</h3>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Central de Alertas</p>
+                                </div>
                             </div>
-                            <button onClick={handleClose} className="size-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500">
+                            <button onClick={handleClose} className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 active:scale-90 transition-transform">
                                 <span className="material-symbols-outlined text-sm">close</span>
                             </button>
                         </div>
 
-                        <div className="max-h-[60dvh] overflow-y-auto custom-scrollbar p-2 touch-auto overscroll-y-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+                        {/* Scrollable Content */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2 touch-auto overscroll-contain pb-safe-area-bottom min-h-[50vh]">
                             {renderNotificationList(notifications, theme, handleClose)}
                         </div>
                     </div>
