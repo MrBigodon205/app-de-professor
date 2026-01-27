@@ -58,8 +58,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
         return () => window.removeEventListener('resize', checkOrientation);
     }, []);
 
-    // Derived state
-    const show = effectiveIsMobile ? controlledIsOpen : internalIsOpen;
+    // Derived state - specific handling for unmanaged mobile instances
+    const show = (effectiveIsMobile && controlledIsOpen !== undefined) ? controlledIsOpen : internalIsOpen;
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
     useEffect(() => {
