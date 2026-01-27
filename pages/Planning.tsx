@@ -212,22 +212,7 @@ export const Planning: React.FC = () => {
 
                 if (selectedSeriesId) query = query.eq('series_id', selectedSeriesId);
                 if (activeSubject) {
-                    query = query.or(`subject.eq."${activeSubject}",subject.is.null`);
-                }
-
-                const { data, error } = await query;
-                if (error) throw error;
-                planData = data || [];
-
-            } else if (navigator.onLine) {
-                // --- HYBRID MODE (Connected) ---
-                let query = supabase.from('plans').select('*').eq('user_id', currentUser.id);
-
-                if (selectedSeriesId) {
-                    query = query.eq('series_id', selectedSeriesId);
-                }
-                if (activeSubject) {
-                    query = query.or(`subject.eq."${activeSubject}",subject.is.null`);
+                    query = query.or(`subject.eq.${activeSubject},subject.is.null`);
                 }
 
                 const { data, error } = await query;
@@ -1754,9 +1739,9 @@ export const Planning: React.FC = () => {
                                     </button>
                                 </div>
                         )}
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
 
             {/* FILE VIEWER MODAL */}
                 {viewerFile && (
