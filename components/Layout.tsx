@@ -234,12 +234,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         mandatory={currentUser ? (!currentUser.isPasswordSet || !currentUser.subject) : false}
       />
 
-      {/* Mobile Notifications Modal */}
-      <NotificationCenter
-        isMobile
-        isOpen={isNotificationModalOpen}
-        onClose={() => setIsNotificationModalOpen(false)}
-      />
+
 
       <ClassManager
         isOpen={isClassSelectorOpen}
@@ -455,8 +450,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 </div>
               )}
 
-              {/* Help & Notifications - visible on tablet+ (md), hidden on mobile */}
-              <div className="hidden md:flex items-center gap-1.5 transition-transform duration-300 lg:scale-110">
+              {/* Help & Notifications - visible on tablet+ (md) AND mobile landscape */}
+              <div className="hidden md:flex landscape:flex items-center gap-1.5 transition-transform duration-300 lg:scale-110">
                 <Link to="/instructions" title="Precisa de ajuda?" className="flex items-center justify-center size-9 rounded-full text-text-muted hover:text-primary hover:bg-surface-subtle transition-colors group">
                   <span className="material-symbols-outlined text-xl group-hover:animate-bounce">help</span>
                 </Link>
