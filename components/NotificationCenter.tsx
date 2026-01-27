@@ -45,7 +45,22 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
     const effectiveIsMobile = isMobile ?? isMobileWidth;
 
     // Check for landscape orientation
+    // Check for landscape orientation
     const [isLandscape, setIsLandscape] = useState(false);
+
+    useEffect(() => {
+        const checkOrientation = () => {
+            setIsLandscape(window.matchMedia("(orientation: landscape) and (max-height: 500px)").matches);
+        };
+
+        checkOrientation();
+        window.addEventListener('resize', checkOrientation);
+        return () => window.removeEventListener('resize', checkOrientation);
+    }, []);
+
+    // Derived state
+    const show = effectiveIsMobile ? controlledIsOpen : internalIsOpen;
+    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
     useEffect(() => {
         if (currentUser) {
