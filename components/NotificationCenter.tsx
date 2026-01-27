@@ -182,107 +182,84 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
         }
     }
 
-    // Internal Mobile Detection
-    const [isMobileWidth, setIsMobileWidth] = useState(window.innerWidth < 1024); // lg breakpoint
 
-    useEffect(() => {
-        const handleResize = () => setIsMobileWidth(window.innerWidth < 1024);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
 
-}, []);
+    // Render as Modal/Overlay for Mobile Portrait ONLY
+    const isPortraitMobile = effectiveIsMobile && !isLandscape;
 
-// Derived state
-const show = effectiveIsMobile ? controlledIsOpen : internalIsOpen;
-const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-
-useEffect(() => {
-    const checkOrientation = () => {
-        setIsLandscape(window.matchMedia("(orientation: landscape) and (max-height: 500px)").matches);
-    };
-
-    checkOrientation();
-    window.addEventListener('resize', checkOrientation);
-    return () => window.removeEventListener('resize', checkOrientation);
-}, []);
-
-// Render as Modal/Overlay for Mobile Portrait ONLY
-const isPortraitMobile = effectiveIsMobile && !isLandscape;
-
-return (
-    <div className="relative" ref={notificationsRef}>
-        <button
-            onClick={() => effectiveIsMobile && onClose ? onClose() : setInternalIsOpen(!internalIsOpen)}
-            className={`relative size-9 rounded-full transition-all duration-300 group flex items-center justify-center ${internalIsOpen || (effectiveIsMobile && controlledIsOpen) ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-text-muted hover:text-primary'} ${effectiveIsMobile && controlledIsOpen ? 'ring-2 ring-primary/20' : ''}`}
-        >
-            <span className={`material-symbols-outlined text-xl ${internalIsOpen ? 'icon-filled animate-none' : 'group-hover:animate-pulse'}`}>notifications</span>
-            {notifications.length > 0 && (
-                <span className="absolute top-0 right-0 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-white dark:border-surface-dark text-[8px] text-white items-center justify-center font-bold">
-                        {notifications.length}
+    return (
+        <div className="relative" ref={notificationsRef}>
+            <button
+                onClick={() => effectiveIsMobile && onClose ? onClose() : setInternalIsOpen(!internalIsOpen)}
+                className={`relative size-9 rounded-full transition-all duration-300 group flex items-center justify-center ${internalIsOpen || (effectiveIsMobile && controlledIsOpen) ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-text-muted hover:text-primary'} ${effectiveIsMobile && controlledIsOpen ? 'ring-2 ring-primary/20' : ''}`}
+            >
+                <span className={`material-symbols-outlined text-xl ${internalIsOpen ? 'icon-filled animate-none' : 'group-hover:animate-pulse'}`}>notifications</span>
+                {notifications.length > 0 && (
+                    <span className="absolute top-0 right-0 flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-white dark:border-surface-dark text-[8px] text-white items-center justify-center font-bold">
+                            {notifications.length}
+                        </span>
                     </span>
-                </span>
-            )}
-        </button>
+                )}
+            </button>
 
-        {/* Mobile Portrait Modal */}
-        {isPortraitMobile && show && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={handleClose}>
-                <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800" onClick={(e) => e.stopPropagation()}>
+            {/* Mobile Portrait Modal */}
+            {isPortraitMobile && show && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={handleClose}>
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800" onClick={(e) => e.stopPropagation()}>
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                            <div className="flex items-center gap-3">
+                                <div className={`size-10 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
+                                    <span className="material-symbols-outlined text-xl">notifications_active</span>
+                                </div>
+                                <h3 className="font-black text-slate-900 dark:text-white">Notificações</h3>
+                            </div>
+                            <button onClick={handleClose} className="size-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500">
+                                <span className="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </div>
+
+                        <div className="max-h-[60dvh] overflow-y-auto custom-scrollbar p-2 touch-auto overscroll-y-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+                            {renderNotificationList(notifications, theme, handleClose)}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Desktop/Landscape Popover */}
+            {!isPortraitMobile && show && (
+                <div className="absolute top-full right-0 mt-3 w-80 md:w-96 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[100] animate-in slide-in-from-top-4 duration-300 origin-top-right">
                     <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
                         <div className="flex items-center gap-3">
                             <div className={`size-10 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
                                 <span className="material-symbols-outlined text-xl">notifications_active</span>
                             </div>
-                            <h3 className="font-black text-slate-900 dark:text-white">Notificações</h3>
+                            <h3 className="font-black text-slate-900 dark:text-white">Central de Alertas</h3>
                         </div>
-                        <button onClick={handleClose} className="size-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500">
-                            <span className="material-symbols-outlined text-sm">close</span>
+                        {notifications.length > 0 && (
+                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor}`}>
+                                {notifications.length} Novos
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="max-h-[400px] landscape:max-h-[40dvh] overflow-y-auto custom-scrollbar touch-auto overscroll-y-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+                        {renderNotificationList(notifications, theme, () => setInternalIsOpen(false))}
+                    </div>
+
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 text-center">
+                        <button
+                            onClick={() => setInternalIsOpen(false)}
+                            className="text-[10px] font-black text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 uppercase tracking-widest transition-colors"
+                        >
+                            Fechar Painel de Notificações
                         </button>
                     </div>
-
-                    <div className="max-h-[60dvh] overflow-y-auto custom-scrollbar p-2 touch-auto overscroll-y-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
-                        {renderNotificationList(notifications, theme, handleClose)}
-                    </div>
                 </div>
-            </div>
-        )}
-
-        {/* Desktop/Landscape Popover */}
-        {!isPortraitMobile && show && (
-            <div className="absolute top-full right-0 mt-3 w-80 md:w-96 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[100] animate-in slide-in-from-top-4 duration-300 origin-top-right">
-                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
-                    <div className="flex items-center gap-3">
-                        <div className={`size-10 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
-                            <span className="material-symbols-outlined text-xl">notifications_active</span>
-                        </div>
-                        <h3 className="font-black text-slate-900 dark:text-white">Central de Alertas</h3>
-                    </div>
-                    {notifications.length > 0 && (
-                        <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor}`}>
-                            {notifications.length} Novos
-                        </span>
-                    )}
-                </div>
-
-                <div className="max-h-[400px] landscape:max-h-[40dvh] overflow-y-auto custom-scrollbar touch-auto overscroll-y-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
-                    {renderNotificationList(notifications, theme, () => setInternalIsOpen(false))}
-                </div>
-
-                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 text-center">
-                    <button
-                        onClick={() => setInternalIsOpen(false)}
-                        className="text-[10px] font-black text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 uppercase tracking-widest transition-colors"
-                    >
-                        Fechar Painel de Notificações
-                    </button>
-                </div>
-            </div>
-        )}
-    </div>
-);
+            )}
+        </div>
+    );
 };
 
 // Helper to render the list (Shared)
