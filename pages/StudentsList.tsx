@@ -264,8 +264,8 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
     }
 
     return (
-        <div className="max-w-[1200px] mx-auto flex flex-col gap-4 md:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6 lg:pb-12">
-            <div className={`bg-surface-card p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-border-default flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group`}>
+        <div className="max-w-[1200px] mx-auto flex flex-col gap-4 md:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 lg:pb-12">
+            <div className={`bg-surface-card p-4 md:p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-border-default flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-8 relative overflow-hidden group`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700`}></div>
 
                 <div className="flex items-center gap-6 relative z-10 w-full lg:w-auto">
