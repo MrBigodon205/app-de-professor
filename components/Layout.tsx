@@ -337,7 +337,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {!isProfileModalOpen && !isPasswordSetupOpen && !isClassSelectorOpen && (
         <button
           onClick={toggleSidebar}
-          className={`hidden lg:flex landscape:flex fixed z-[70] top-8 size-12 bg-surface-card/95 border border-border-default rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'}`}
+          className={`hidden lg:flex fixed z-[70] top-8 size-12 bg-surface-card/95 border border-border-default rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'}`}
           title={isSidebarCollapsed ? "Expandir" : "Recolher"}
         >
           <span className={`material-symbols-outlined text-3xl font-bold transition-transform duration-150 ease-out ${isSidebarCollapsed ? '' : 'rotate-180'}`}>chevron_right</span>
