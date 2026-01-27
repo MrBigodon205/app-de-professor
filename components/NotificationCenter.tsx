@@ -45,7 +45,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
     const effectiveIsMobile = isMobile ?? isMobileWidth;
 
     // Check for landscape orientation
-    // Check for landscape orientation
+
     const [isLandscape, setIsLandscape] = useState(false);
 
     useEffect(() => {
