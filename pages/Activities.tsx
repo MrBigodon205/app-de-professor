@@ -30,7 +30,7 @@ export const Activities: React.FC = () => {
 
     // UI State
     const [activities, setActivities] = useState<Activity[]>([]);
-    const [students, setStudents] = useState<Student[]>([]);    // UI State
+    // students state managed by useStudentsData hook now
     const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
 
     // Helper for offline ID generation
@@ -86,17 +86,7 @@ export const Activities: React.FC = () => {
         }
     };
 
-    // Generate UUID Helper
-    const generateUUID = () => {
-        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-            return crypto.randomUUID();
-        }
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            const r = Math.random() * 16 | 0;
-            const v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    };
+
 
     // File Processing Helper
     const handleFiles = (files: File[]) => {
