@@ -96,6 +96,22 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
     // Helper to generate unique matricula (5 digits)
     const generateMatricula = () => Math.floor(10000 + Math.random() * 90000).toString();
 
+    // Robust UUID Generator Fallback
+    const generateUUID = () => {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            try {
+                return crypto.randomUUID();
+            } catch (e) {
+                console.warn("crypto.randomUUID failed, using fallback");
+            }
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    };
+
     const toggleSelectAll = () => {
         if (selectedIds.length === students.length) {
             setSelectedIds([]);
@@ -164,7 +180,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
         // Prepare data - hook handles specific field requirements
         const newStudentData = {
-            id: crypto.randomUUID(), // Always generate ID for consistency
+            id: generateUUID(), // Always generate ID for consistency with fallback
             name: newStudentName,
             number: newNumber,
             series_id: selectedSeriesId,
@@ -330,10 +346,10 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             {/* Bulk Import Modal */}
             {
                 isImporting && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm animate-in fade-in duration-300">
-                        <div className="bg-surface-card rounded-[32px] w-full max-w-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300 border border-border-default">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-300">
+                        <div className="bg-surface-card rounded-[32px] w-full max-w-2xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-300 border border-border-default max-h-[90dvh] overflow-y-auto custom-scrollbar flex flex-col">
                             <div className="flex items-center gap-4 mb-6">
-                                <div className={`size-12 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
+                                <div className="size-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${theme.primaryColorHex}15`, color: theme.primaryColorHex }}>
                                     <span className="material-symbols-outlined">publish</span>
                                 </div>
                                 <div>
@@ -346,7 +362,8 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 <div className="flex items-center gap-4 mb-4">
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
-                                        className={`flex-1 h-14 rounded-2xl border-2 border-dashed border-border-default hover:border-${theme.primaryColor} hover:bg-${theme.primaryColor}/5 text-text-muted hover:text-${theme.primaryColor} transition-all flex items-center justify-center gap-3 font-bold group`}
+                                        className="flex-1 h-14 rounded-2xl border-2 border-dashed border-border-default hover:bg-surface-subtle text-text-muted transition-all flex items-center justify-center gap-3 font-bold group"
+                                        style={{ '--hover-color': theme.primaryColorHex } as any}
                                     >
                                         <span className="material-symbols-outlined group-hover:bounce">attach_file</span>
                                         <span>Anexar Arquivo (TXT/CSV)</span>
@@ -364,14 +381,14 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     value={importText}
                                     onChange={(e) => setImportText(e.target.value)}
                                     placeholder="Alice Silva&#10;Bernardo Souza&#10;Carlos Henrique..."
-                                    className={`w-full h-80 p-6 rounded-3xl border border-border-default bg-surface-subtle focus:bg-surface-card focus:ring-4 focus:ring-${theme.primaryColor}/10 focus:border-${theme.primaryColor} transition-all resize-none font-medium leading-relaxed custom-scrollbar`}
+                                    className={`w-full h-48 md:h-64 p-6 rounded-3xl border border-border-default bg-surface-subtle focus:bg-surface-card focus:ring-4 focus:ring-${theme.primaryColor}/10 focus:border-${theme.primaryColor} transition-all resize-none font-medium leading-relaxed custom-scrollbar text-sm md:text-base`}
                                 />
                                 <div className="flex items-center justify-between mt-3 px-2">
-                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                        <span className={`size-2 rounded-full bg-${theme.primaryColor}`}></span>
+                                    <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                        <span className="size-2 rounded-full" style={{ backgroundColor: theme.primaryColorHex }}></span>
                                         {importText.split('\n').filter(n => n.trim().length > 0).length} nomes identificados
                                     </span>
-                                    <span className="text-[10px] font-bold text-slate-400">Pressione Enter para cada novo nome</span>
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Pressione Enter para cada novo nome</span>
                                 </div>
                             </div>
 
@@ -385,7 +402,8 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 </button>
                                 <button
                                     onClick={handleBulkImport}
-                                    className={`flex-[2] h-14 rounded-2xl bg-${theme.primaryColor} text-white font-black shadow-xl shadow-${theme.primaryColor}/20 hover:opacity-90 transition-all flex items-center justify-center gap-3 disabled:opacity-50 uppercase tracking-widest text-xs`}
+                                    className="flex-[2] h-14 rounded-2xl text-white font-black shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 uppercase tracking-widest text-xs"
+                                    style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}40` }}
                                     disabled={isProcessing}
                                 >
                                     {isProcessing ? (
@@ -425,7 +443,8 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleAddStudent}
-                                    className={`h-14 px-8 bg-${theme.primaryColor} text-white rounded-2xl font-black shadow-lg shadow-${theme.primaryColor}/20 hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2`}
+                                    className="h-14 px-8 text-white rounded-2xl font-black shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+                                    style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}30` }}
                                 >
                                     <span className="material-symbols-outlined text-xl">save</span>
                                     Salvar
