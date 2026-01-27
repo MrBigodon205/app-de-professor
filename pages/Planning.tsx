@@ -1450,7 +1450,7 @@ export const Planning: React.FC = () => {
                                                         >
                                                             <div className="flex items-center gap-3 flex-1 min-w-0 pointer-events-none">
                                                                 <span className="material-symbols-outlined text-slate-500 group-hover:text-indigo-500 transition-colors">description</span>
-                                                                <div className="flex flex-col truncate">
+                                                                <div className="flex flex-col min-w-0 truncate">
                                                                     <span className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">{file.name}</span>
                                                                     <span className="text-[10px] text-slate-500 uppercase">{file.size}</span>
                                                                 </div>
