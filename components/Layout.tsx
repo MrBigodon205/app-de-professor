@@ -370,6 +370,19 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </button>
             </div>
 
+            {/* MOBILE ONLY: Compact Series Selector (As requested) */}
+            <button
+              onClick={() => setIsClassSelectorOpen(true)}
+              className="lg:hidden flex items-center gap-2 mr-auto bg-surface-subtle/50 px-3 py-1.5 rounded-xl border border-border-default active:scale-95 transition-all"
+            >
+              <span className="material-symbols-outlined text-sm font-black text-primary">{theme.icon}</span>
+              <div className="flex flex-col items-start leading-none">
+                <span className="text-[8px] font-black text-text-muted uppercase tracking-wider">Turma</span>
+                <span className="text-xs font-black text-text-primary capitalize">{activeSeries?.name || 'Selecionar'} {selectedSection}</span>
+              </div>
+              <span className="material-symbols-outlined text-xs text-text-muted">expand_more</span>
+            </button>
+
             {/* 2. CENTER: Series + Classes (Mobile: Bottom Row, Desktop: Center) */}
             <div className="flex flex-wrap items-center justify-center gap-2 flex-1 order-3 md:order-2 w-full md:w-auto mt-2 md:mt-0 min-w-[200px]">
 
