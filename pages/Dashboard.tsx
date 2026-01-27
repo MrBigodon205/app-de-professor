@@ -642,7 +642,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <motion.div
-      className="h-full min-h-screen overflow-y-auto overflow-x-hidden fluid-p-m fluid-gap-m flex flex-col custom-scrollbar pb-6 lg:pb-12 landscape:fluid-p-s landscape:fluid-gap-s landscape:pb-10 theme-transition relative"
+      className="w-full fluid-p-m fluid-gap-m flex flex-col pb-6 lg:pb-12 landscape:fluid-p-s landscape:fluid-gap-s landscape:pb-10 theme-transition relative"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -994,7 +994,7 @@ export const Dashboard: React.FC = () => {
             {/* Upcoming Activities */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="h-px flex-1 bg-gradient-to-r to-transparent" style={{ from: `${theme.primaryColorHex}80`, backgroundImage: `linear-gradient(to right, ${theme.primaryColorHex}80, transparent)` }}></div>
+                <div className="h-px flex-1 bg-gradient-to-r to-transparent" style={{ backgroundImage: `linear-gradient(to right, ${theme.primaryColorHex}80, transparent)` }}></div>
                 <h4 className="text-[10px] font-black uppercase tracking-widest" style={{ color: theme.primaryColorHex }}>Atividades do Dia</h4>
               </div>
               <div className="space-y-3">

@@ -882,7 +882,8 @@ export const Attendance: React.FC = () => {
             </div>
 
             {/* Students Table */}
-            <div className={`bg-surface-card border border-border-default rounded-3xl shadow-card overflow-hidden transition-all duration-300 ${loading ? 'opacity-70 pointer-events-none' : ''}`}>
+            {/* Students Table (Desktop/Tablet) */}
+            <div className={`hidden md:block bg-surface-card border border-border-default rounded-3xl shadow-card overflow-hidden transition-all duration-300 ${loading ? 'opacity-70 pointer-events-none' : ''}`}>
                 <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full text-left border-collapse">
                         <thead>
@@ -931,9 +932,33 @@ export const Attendance: React.FC = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Students List (Mobile Cards) */}
+            <div className={`md:hidden space-y-3 pb-20 ${loading ? 'opacity-70 pointer-events-none' : ''}`}>
+                {students.length > 0 ? (
+                    students.map((s) => (
+                        <MobileAttendanceCard
+                            key={s.id}
+                            student={s}
+                            status={attendanceMap[s.id]}
+                            onStatusChange={handleStatusChange}
+                            theme={theme}
+                        />
+                    ))
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <div className="size-16 rounded-full bg-surface-subtle flex items-center justify-center mb-4">
+                            <span className="material-symbols-outlined text-text-disabled text-3xl">group_off</span>
+                        </div>
+                        <h4 className="font-bold text-text-muted">Nenhum aluno</h4>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
+
+
 
 // Helper Component for Attendance Buttons
 const AttendanceButton: React.FC<{
@@ -977,6 +1002,54 @@ interface AttendanceRowProps {
     onStatusChange: (studentId: string, status: string) => void;
     theme: any;
 }
+
+// Mobile Card Component
+const MobileAttendanceCard = React.memo(({ student: s, status, onStatusChange, theme }: AttendanceRowProps) => {
+    return (
+        <div className="bg-surface-card border border-border-default rounded-2xl p-4 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="flex items-center gap-3 mb-4">
+                <div className={`student-avatar size-10 text-sm bg-gradient-to-br ${s.color || `from-indigo-600 to-indigo-800`}`}>
+                    {s.initials || s.name.substring(0, 2)}
+                </div>
+                <div className="flex flex-col min-w-0">
+                    <span className="font-bold text-sm text-text-primary truncate">{s.name}</span>
+                    <span className="text-[10px] uppercase font-bold text-text-muted">Nº {s.number} • ID: {s.id.substring(0, 6)}</span>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-2">
+                <AttendanceButton
+                    active={status === 'P'}
+                    onClick={() => onStatusChange(s.id, 'P')}
+                    icon="check_circle"
+                    label="Pres"
+                    color="emerald"
+                />
+                <AttendanceButton
+                    active={status === 'F'}
+                    onClick={() => onStatusChange(s.id, 'F')}
+                    icon="cancel"
+                    label="Falta"
+                    color="rose"
+                />
+                <AttendanceButton
+                    active={status === 'J'}
+                    onClick={() => onStatusChange(s.id, 'J')}
+                    icon="assignment_late"
+                    label="Just"
+                    color="amber"
+                />
+                <AttendanceButton
+                    active={status === 'S'}
+                    onClick={() => onStatusChange(s.id, 'S')}
+                    icon="event_busy"
+                    label="S/A"
+                    color="slate"
+                />
+            </div>
+        </div>
+    );
+});
 
 const AttendanceRow = React.memo(({ student: s, status, onStatusChange, theme }: AttendanceRowProps) => {
     return (
