@@ -244,7 +244,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
                         )}
                     </div>
 
-                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                    <div className="max-h-[400px] landscape:max-h-[40vh] overflow-y-auto custom-scrollbar">
                         {renderNotificationList(notifications, theme, () => setInternalIsOpen(false))}
                     </div>
 
