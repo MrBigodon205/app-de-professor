@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext';
 import { ClassConfig } from '../types';
 import { supabase } from '../lib/supabase';
 import { db } from '../lib/db';
+import { ENABLE_OFFLINE_MODE } from '../lib/offlineConfig';
 
 
 
@@ -53,33 +54,38 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!currentUser) return;
 
         // 1. CACHE FIRST: Try to load from Dexie immediately
+        // 1. CACHE FIRST: Try to load from Dexie immediately (If Enabled)
         try {
-            const cachedClasses = await (db as any).classes.where('userId').equals(currentUser.id).toArray();
-            if (cachedClasses.length > 0) {
-                // Deduplicate logic
-                const finalClasses: ClassConfig[] = [];
-                const seen = new Set();
-                cachedClasses.forEach((c: ClassConfig) => {
-                    const k = `${c.name}-${c.sections.join(',')}`;
-                    if (!seen.has(k)) { seen.add(k); finalClasses.push(c); }
-                });
+            if (ENABLE_OFFLINE_MODE) {
+                const cachedClasses = await (db as any).classes.where('userId').equals(currentUser.id).toArray();
+                if (cachedClasses.length > 0) {
+                    // Deduplicate logic
+                    const finalClasses: ClassConfig[] = [];
+                    const seen = new Set();
+                    cachedClasses.forEach((c: ClassConfig) => {
+                        const k = `${c.name}-${c.sections.join(',')}`;
+                        if (!seen.has(k)) { seen.add(k); finalClasses.push(c); }
+                    });
 
-                setClasses(finalClasses);
-                setLoading(false); // Show cached data immediately!
+                    setClasses(finalClasses);
+                    setLoading(false); // Show cached data immediately!
 
-                // Restore selection if needed
-                const storedSeriesId = localStorage.getItem(`selectedSeriesId_${currentUser.id}`);
-                const storedSection = localStorage.getItem(`selectedSection_${currentUser.id}`);
+                    // Restore selection if needed
+                    const storedSeriesId = localStorage.getItem(`selectedSeriesId_${currentUser.id}`);
+                    const storedSection = localStorage.getItem(`selectedSection_${currentUser.id}`);
 
-                if (storedSeriesId && finalClasses.find(c => c.id === storedSeriesId)) {
-                    setSelectedSeriesId(storedSeriesId);
-                    if (storedSection) setSelectedSection(storedSection);
-                } else if (!selectedSeriesId && finalClasses.length > 0) {
-                    setSelectedSeriesId(finalClasses[0].id);
-                    if (finalClasses[0].sections.length > 0) setSelectedSection(finalClasses[0].sections[0]);
+                    if (storedSeriesId && finalClasses.find(c => c.id === storedSeriesId)) {
+                        setSelectedSeriesId(storedSeriesId);
+                        if (storedSection) setSelectedSection(storedSection);
+                    } else if (!selectedSeriesId && finalClasses.length > 0) {
+                        setSelectedSeriesId(finalClasses[0].id);
+                        if (finalClasses[0].sections.length > 0) setSelectedSection(finalClasses[0].sections[0]);
+                    }
+                } else {
+                    setLoading(true); // Only show spinner if no cache
                 }
             } else {
-                setLoading(true); // Only show spinner if no cache
+                setLoading(true); // Online-only: Show spinner
             }
         } catch (e) {
             console.warn("Cache load failed", e);
@@ -107,7 +113,9 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             // Update Cache
             try {
-                await (db as any).classes.bulkPut(formattedClasses);
+                if (ENABLE_OFFLINE_MODE) {
+                    await (db as any).classes.bulkPut(formattedClasses);
+                }
             } catch (e) {
                 console.warn("Failed to update cache", e);
             }

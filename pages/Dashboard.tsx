@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Student, AttendanceRecord, Occurrence, Activity } from '../types';
 import { supabase } from '../lib/supabase';
 import { db } from '../lib/db';
+import { ENABLE_OFFLINE_MODE } from '../lib/offlineConfig';
 
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { DashboardHeader } from '../components/DashboardHeader';
@@ -303,13 +304,15 @@ export const Dashboard: React.FC = () => {
 
       // [CACHE] Save to local DB
       try {
-        await db.occurrences.bulkPut((data || []).map(o => ({
-          ...o,
-          id: o.id,
-          studentId: o.student_id, // Map for local schema
-          user_id: o.user_id,
-          syncStatus: 'synced'
-        } as any)));
+        if (ENABLE_OFFLINE_MODE) {
+          await db.occurrences.bulkPut((data || []).map(o => ({
+            ...o,
+            id: o.id,
+            studentId: o.student_id, // Map for local schema
+            user_id: o.user_id,
+            syncStatus: 'synced'
+          } as any)));
+        }
       } catch (err) { console.warn("Cache occurrences failed", err) }
 
       setRecentOccurrences(formatted);
@@ -318,32 +321,34 @@ export const Dashboard: React.FC = () => {
     } catch (e) {
       console.error("Error fetching occurrences (online):", e);
       // [OFFLINE] Fallback
-      try {
-        const cached = await db.occurrences
-          .where('user_id').equals(currentUser.id)
-          .reverse() // Sort by ID/Created desc usually
-          .limit(20) // Get some recent ones
-          .toArray();
+      if (ENABLE_OFFLINE_MODE) {
+        try {
+          const cached = await db.occurrences
+            .where('user_id').equals(currentUser.id)
+            .reverse() // Sort by ID/Created desc usually
+            .limit(20) // Get some recent ones
+            .toArray();
 
-        const filtered = cached.filter((o: any) => {
-          // Basic filtering if needed, e.g. date
-          return o.date === new Date().toLocaleDateString('sv-SE');
-        });
+          const filtered = cached.filter((o: any) => {
+            // Basic filtering if needed, e.g. date
+            return o.date === new Date().toLocaleDateString('sv-SE');
+          });
 
-        const mapped = filtered.slice(0, 5).map((o: any) => ({
-          id: o.id.toString(),
-          studentId: o.studentId?.toString() || o.student_id?.toString(),
-          student_name: 'Estudante', // We might not have join data handy without complex query
-          date: o.date,
-          type: o.type,
-          description: o.description,
-          unit: o.unit,
-          userId: o.user_id
-        }));
-        setRecentOccurrences(mapped);
-        setStats(prev => ({ ...prev, newObservations: filtered.length }));
-      } catch (dbErr) {
-        console.error("Offline occurrences failed", dbErr);
+          const mapped = filtered.slice(0, 5).map((o: any) => ({
+            id: o.id.toString(),
+            studentId: o.studentId?.toString() || o.student_id?.toString(),
+            student_name: 'Estudante', // We might not have join data handy without complex query
+            date: o.date,
+            type: o.type,
+            description: o.description,
+            unit: o.unit,
+            userId: o.user_id
+          }));
+          setRecentOccurrences(mapped);
+          setStats(prev => ({ ...prev, newObservations: filtered.length }));
+        } catch (dbErr) {
+          console.error("Offline occurrences failed", dbErr);
+        }
       }
     } finally {
       if (!silent) setLoadingOccurrences(false);
@@ -406,39 +411,43 @@ export const Dashboard: React.FC = () => {
 
       // [CACHE]
       try {
-        await db.plans.bulkPut(formatted.map(p => ({
-          ...p,
-          // Flatten for storage if needed, or keep structure
-          start_date: p.startDate,
-          end_date: p.endDate,
-          series_id: p.seriesId
-        })));
+        if (ENABLE_OFFLINE_MODE) {
+          await db.plans.bulkPut(formatted.map(p => ({
+            ...p,
+            // Flatten for storage if needed, or keep structure
+            start_date: p.startDate,
+            end_date: p.endDate,
+            series_id: p.seriesId
+          })));
+        }
       } catch (e) { console.warn("Cache plans failed", e); }
 
     } catch (e) {
       console.error("Error fetching plans (online):", e);
       // [OFFLINE]
-      try {
-        const cached = await db.plans.where('user_id').equals(currentUser.id).toArray();
-        const today = new Date().toLocaleDateString('sv-SE');
+      if (ENABLE_OFFLINE_MODE) {
+        try {
+          const cached = await db.plans.where('user_id').equals(currentUser.id).toArray();
+          const today = new Date().toLocaleDateString('sv-SE');
 
-        const active = cached.find((p: any) => today >= p.start_date && today <= p.end_date);
+          const active = cached.find((p: any) => today >= p.start_date && today <= p.end_date);
 
-        setTodaysPlans([active ? {
-          ...active,
-          startDate: active.start_date,
-          endDate: active.end_date,
-          seriesId: active.series_id
-        } : null].filter(Boolean));
+          setTodaysPlans([active ? {
+            ...active,
+            startDate: active.start_date,
+            endDate: active.end_date,
+            seriesId: active.series_id
+          } : null].filter(Boolean));
 
-        setClassPlans(cached.slice(0, 10).map((p: any) => ({
-          ...p,
-          startDate: p.start_date,
-          endDate: p.end_date,
-          seriesId: p.series_id
-        })));
+          setClassPlans(cached.slice(0, 10).map((p: any) => ({
+            ...p,
+            startDate: p.start_date,
+            endDate: p.end_date,
+            seriesId: p.series_id
+          })));
 
-      } catch (dbErr) { console.error("Offline plans failed", dbErr); }
+        } catch (dbErr) { console.error("Offline plans failed", dbErr); }
+      }
     } finally {
       if (!silent) setLoadingPlans(false);
     }
@@ -496,26 +505,30 @@ export const Dashboard: React.FC = () => {
 
       // [CACHE]
       try {
-        await db.activities.bulkPut(formattedActivities.map(a => ({
-          ...a,
-          series_id: a.seriesId,
-          start_date: a.startDate,
-          end_date: a.endDate
-        })));
+        if (ENABLE_OFFLINE_MODE) {
+          await db.activities.bulkPut(formattedActivities.map(a => ({
+            ...a,
+            series_id: a.seriesId,
+            start_date: a.startDate,
+            end_date: a.endDate
+          })));
+        }
       } catch (e) { console.warn("Cache activities failed", e); }
 
     } catch (e) {
       console.error("Error fetching activities (online):", e);
       // [OFFLINE]
-      try {
-        const cached = await db.activities.where('user_id').equals(currentUser.id).toArray();
-        const today = new Date().toLocaleDateString('sv-SE');
-        // Simple filter mimicking the online query
-        const relevant = cached.filter((a: any) => {
-          return a.date >= today || (a.start_date <= today && a.end_date >= today);
-        });
-        setUpcomingActivities(relevant.slice(0, 50));
-      } catch (dbErr) { console.error("Offline activities failed", dbErr); }
+      if (ENABLE_OFFLINE_MODE) {
+        try {
+          const cached = await db.activities.where('user_id').equals(currentUser.id).toArray();
+          const today = new Date().toLocaleDateString('sv-SE');
+          // Simple filter mimicking the online query
+          const relevant = cached.filter((a: any) => {
+            return a.date >= today || (a.start_date <= today && a.end_date >= today);
+          });
+          setUpcomingActivities(relevant.slice(0, 50));
+        } catch (dbErr) { console.error("Offline activities failed", dbErr); }
+      }
     } finally {
       if (!silent) setLoadingActivities(false);
     }
