@@ -1222,402 +1222,465 @@ export const Planning: React.FC = () => {
                                         <button
                                             onClick={handleExportPDF}
                                             className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-none border border-white/20 transition-all shadow-lg flex items-center justify-center"
-                                            title="Baixar PDF"
-                                        >
-                                            <span className="material-symbols-outlined landscape:text-2xl">picture_as_pdf</span>
-                                        </button>
-                                        <button
-                                            onClick={handleExportWord}
-                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-none border border-white/20 transition-all shadow-lg flex items-center justify-center"
-                                            title="Baixar Word"
-                                        >
-                                            <span className="material-symbols-outlined landscape:text-2xl">description</span>
-                                        </button>
-                                        <button
-                                            onClick={() => currentPlan && handleClone(currentPlan)}
-                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/40 text-white rounded-xl backdrop-blur-none border border-white/20 transition-all shadow-lg flex items-center justify-center"
-                                            title="Clonar Aula"
-                                        >
-                                            <span className="material-symbols-outlined landscape:text-2xl">content_copy</span>
-                                        </button>
-                                        <button
-                                            onClick={() => { setIsEditing(true); setShowForm(true); }}
-                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-none border border-white/20 transition-all shadow-lg flex items-center justify-center"
-                                            title="Editar Aula"
-                                        >
-                                            <span className="material-symbols-outlined landscape:text-2xl">edit</span>
-                                        </button>
-                                        <button
-                                            onClick={handleDelete}
-                                            className="p-2 landscape:p-3 landscape:size-12 landscape:rounded-2xl bg-red-500/20 hover:bg-red-500/40 text-white rounded-xl backdrop-blur-none border border-white/20 transition-all shadow-lg flex items-center justify-center"
-                                            title="Excluir Aula"
-                                        >
-                                            <span className="material-symbols-outlined text-red-200 landscape:text-2xl text-lg">delete</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Metadata Grid */}
-                                <div className="p-8 max-w-5xl mx-auto w-full space-y-8 flex-1">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
-                                            <div className="size-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
-                                                <span className="material-symbols-outlined">event</span>
-                                            </div>
-                                            <div className="min-w-0">
-                                                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Data</div>
-                                                <div className="font-bold text-slate-700 dark:text-gray-200 text-sm truncate">
-                                                    {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
-                                            <div className="size-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                                                <span className="material-symbols-outlined">school</span>
-                                            </div>
-                                            <div className="min-w-0">
-                                                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Disciplina</div>
-                                                <div className="font-bold text-slate-700 dark:text-gray-200 text-sm truncate">
-                                                    {currentPlan.subject || 'Não definida'}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
-                                            <div className="size-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-                                                <span className="material-symbols-outlined">timer</span>
-                                            </div>
-                                            <div className="min-w-0">
-                                                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Duração</div>
-                                                <div className="font-bold text-slate-700 dark:text-gray-200 text-sm truncate">
-                                                    {currentPlan.duration || 'Não definida'}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
-                                            <div className="size-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                                                <span className="material-symbols-outlined">category</span>
-                                            </div>
-                                            <div className="min-w-0">
-                                                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Eixo / Tema</div>
-                                                <div className="font-bold text-slate-700 dark:text-gray-200 text-sm truncate">
-                                                    {currentPlan.theme_area || 'Geral'}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* CONTENT PREVIEW CARDS */}
-                                    <div className="px-8 max-w-5xl mx-auto w-full space-y-6 flex-1">
-                                        {/* Row 1: Objeto & Habilidades */}
-                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                            <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-                                                <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
-                                                    <span className="material-symbols-outlined text-indigo-500">menu_book</span>
-                                                    Conteúdo & Objetivos
-                                                </h3>
-
-                                                <div className="space-y-4">
-
-
-                                                    {currentPlan.objectives && (
-                                                        <div>
-                                                            <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Objetivos de Aprendizagem</label>
-                                                            <div className="text-sm text-slate-600 dark:text-slate-300 client-rendered-html leading-relaxed break-words" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives) }} />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-                                                <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
-                                                    <span className="material-symbols-outlined text-emerald-500">verified</span>
-                                                    BNCC & Habilidades
-                                                </h3>
-
-                                                <div>
-                                                    <div className="flex flex-wrap gap-2 mb-3">
-                                                        {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
-                                                            <span key={i} className="px-2 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 rounded-md text-xs font-bold font-mono border border-emerald-200 dark:border-emerald-500/30 break-all whitespace-normal h-auto">
-                                                                {code}
-                                                            </span>
-                                                        ))}
-                                                        {(!currentPlan.bncc_codes) && <span className="text-slate-400 text-sm italic">Nenhum código informado</span>}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Row 2: Desenvolvimento (Full Width) */}
-                                        <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-                                            <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
-                                                <span className="material-symbols-outlined text-blue-500">play_circle</span>
-                                                Desenvolvimento & Metodologia
-                                            </h3>
-
-                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                                {currentPlan.methodology && (
-                                                    <div>
-                                                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2 block">Metodologia</label>
-                                                        <div className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed break-words">
-                                                            {currentPlan.methodology}
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {currentPlan.description && (
-                                                    <div>
-                                                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2 block">Roteiro da Aula</label>
-                                                        <div className="text-sm text-slate-600 dark:text-slate-300 client-rendered-html leading-relaxed break-words" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description) }} />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Row 3: Recursos & Avaliação */}
-                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                            <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-                                                <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
-                                                    <span className="material-symbols-outlined text-amber-500">build</span>
-                                                    Recursos
-                                                </h3>
-                                                <div className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line break-words">
-                                                    {currentPlan.resources || 'Nenhum recurso específico listado.'}
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-                                                <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
-                                                    <span className="material-symbols-outlined text-rose-500">assignment_turned_in</span>
-                                                    Avaliação
-                                                </h3>
-                                                <div className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line break-words">
-                                                    {currentPlan.assessment || 'Nenhuma avaliação específica listada.'}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Print Button (Screen Only) */}
-                                        <div className="flex justify-end print:hidden">
+                                            {/* Mobile Back Button (Visible on View Mode) */}
+                                <div className="absolute top-4 left-4 lg:hidden z-10">
                                             <button
-                                                onClick={() => {
-                                                    const printContent = document.querySelector('.printable-content');
-                                                    if (!printContent) return;
-                                                    const iframe = document.createElement('iframe');
-                                                    iframe.style.position = 'absolute';
-                                                    iframe.style.top = '-9999px';
-                                                    iframe.style.left = '-9999px';
-                                                    document.body.appendChild(iframe);
-                                                    const doc = iframe.contentWindow?.document;
-                                                    if (!doc) return;
-                                                    const styles = document.querySelectorAll('style, link[rel="stylesheet"]');
-                                                    styles.forEach(style => doc.head.appendChild(style.cloneNode(true)));
-                                                    const printStyle = doc.createElement('style');
-                                                    printStyle.textContent = `@page {size: landscape; margin: 0; } body {background: white !important; margin: 0; padding: 10mm !important; } .printable-content {visibility: visible !important; width: 100% !important; margin: 0 !important; }`;
-                                                    doc.head.appendChild(printStyle);
-                                                    doc.body.innerHTML = printContent.outerHTML;
-                                                    setTimeout(() => {
-                                                        iframe.contentWindow?.print();
-                                                        setTimeout(() => document.body.removeChild(iframe), 100);
-                                                    }, 500);
-                                                }}
-                                                className="flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl shadow-lg transition-all"
+                                                onClick={() => setShowForm(true)}
+                                                className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg active:scale-95"
+                                                title="Voltar"
                                             >
-                                                <span className="material-symbols-outlined">print</span> Imprimir Documento
+                                                <span className="material-symbols-outlined">arrow_back</span>
                                             </button>
                                         </div>
 
-                                        {/* ATTACHMENTS VIEW (Screen Only) */}
-                                        {currentPlan.files && currentPlan.files.length > 0 && (
-                                            <div className="animate-in fade-in slide-in-from-bottom-3 duration-500 delay-100 print:hidden">
-                                                <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                                                    <span className={`material-symbols-outlined text-${theme.primaryColor}`}>attachment</span>
-                                                    Anexos
-                                                </h3>
-                                                <div className="flex flex-wrap gap-3">
-                                                    {currentPlan.files.map((file, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group shadow-sm"
+                                        {/* Desktop Actions (Visible > lg) */}
+                                        <div className="absolute top-6 right-6 hidden lg:flex gap-2 z-10 animate-in fade-in slide-in-from-right-4 duration-500 delay-200">
+                                            <button
+                                                onClick={handleExportPDF}
+                                                className="p-3 size-12 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
+                                                title="Baixar PDF"
+                                            >
+                                                <span className="material-symbols-outlined text-2xl">picture_as_pdf</span>
+                                            </button>
+                                            <button
+                                                onClick={handleExportWord}
+                                                className="p-3 size-12 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
+                                                title="Baixar Word"
+                                            >
+                                                <span className="material-symbols-outlined text-2xl">description</span>
+                                            </button>
+                                            <button
+                                                onClick={() => currentPlan && handleClone(currentPlan)}
+                                                className="p-3 size-12 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/40 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
+                                                title="Clonar Aula"
+                                            >
+                                                <span className="material-symbols-outlined text-2xl">content_copy</span>
+                                            </button>
+                                            <button
+                                                onClick={() => { setIsEditing(true); setShowForm(true); }}
+                                                className="p-3 size-12 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
+                                                title="Editar Aula"
+                                            >
+                                                <span className="material-symbols-outlined text-2xl">edit</span>
+                                            </button>
+                                            <button
+                                                onClick={handleDelete}
+                                                className="p-3 size-12 rounded-2xl bg-red-500/20 hover:bg-red-500/40 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 group"
+                                                title="Excluir Aula"
+                                            >
+                                                <span className="material-symbols-outlined text-xl group-hover:text-red-200 transaction-colors">delete</span>
+                                            </button>
+                                        </div>
+
+                                        {/* Mobile Actions Menu (Visible < lg) */}
+                                        <div className="absolute top-4 right-4 lg:hidden z-10">
+                                            <div className="relative">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        const menu = document.getElementById(`mobile-action-menu-planning-${currentPlan.id}`);
+                                                        if (menu) menu.classList.toggle('hidden');
+                                                    }}
+                                                    className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg active:scale-95"
+                                                >
+                                                    <span className="material-symbols-outlined">more_vert</span>
+                                                </button>
+                                                {/* Dropdown Menu */}
+                                                <div
+                                                    id={`mobile-action-menu-planning-${currentPlan.id}`}
+                                                    className="hidden absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden animate-in fade-in zoom-in-95 origin-top-right z-50 ring-1 ring-black/5"
+                                                >
+                                                    <div className="p-1.5 flex flex-col gap-1">
+                                                        <button onClick={handleExportPDF} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-300 transition-colors w-full text-left">
+                                                            <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
+                                                            <span className="text-sm font-bold">PDF</span>
+                                                        </button>
+                                                        <button onClick={handleExportWord} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-300 transition-colors w-full text-left">
+                                                            <span className="material-symbols-outlined text-lg">description</span>
+                                                            <span className="text-sm font-bold">Word</span>
+                                                        </button>
+                                                        <button onClick={() => currentPlan && handleClone(currentPlan)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 transition-colors w-full text-left">
+                                                            <span className="material-symbols-outlined text-lg">content_copy</span>
+                                                            <span className="text-sm font-bold">Clonar</span>
+                                                        </button>
+                                                        <div className="h-px bg-slate-100 dark:bg-slate-700 my-0.5"></div>
+                                                        <button
+                                                            onClick={() => { setIsEditing(true); setShowForm(true); }}
+                                                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 transition-colors w-full text-left"
                                                         >
-                                                            <div className="flex items-center gap-3 flex-1 min-w-0 pointer-events-none">
-                                                                <span className="material-symbols-outlined text-slate-500 group-hover:text-indigo-500 transition-colors">description</span>
-                                                                <div className="flex flex-col truncate">
-                                                                    <span className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">{file.name}</span>
-                                                                    <span className="text-[10px] text-slate-500 uppercase">{file.size}</span>
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex items-center gap-1">
-                                                                <div className="flex items-center gap-1">
-                                                                    {(
-                                                                        // Image/PDF always viewable (native/base64 compatible)
-                                                                        (file.name.match(/\.(pdf|jpg|jpeg|png|webp)$/i) ||
-                                                                            file.url.startsWith('data:image') ||
-                                                                            file.url.startsWith('data:application/pdf')) ||
-                                                                        // Office files ONLY viewable if saved (public URL), NOT base64/data:
-                                                                        (file.name.match(/\.(doc|docx|ppt|pptx|xls|xlsx)$/i) && !file.url.startsWith('data:'))
-                                                                    ) && (
-                                                                            <button
-                                                                                onClick={() => setViewerFile(file)}
-                                                                                className="p-2 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-all"
-                                                                                title={file.url.startsWith('data:') && file.name.match(/\.(doc|docx|ppt|pptx|xls|xlsx)$/i) ? "Salve para visualizar" : "Visualizar / Apresentar"}
-                                                                            >
-                                                                                <span className="material-symbols-outlined">visibility</span>
-                                                                            </button>
-                                                                        )}
-                                                                    <a
-                                                                        href={file.url}
-                                                                        download={file.name}
-                                                                        className="p-2 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
-                                                                        title="Baixar"
-                                                                    >
-                                                                        <span className="material-symbols-outlined">download</span>
-                                                                    </a>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                                            <span className="material-symbols-outlined text-lg">edit</span>
+                                                            <span className="text-sm font-bold">Editar</span>
+                                                        </button>
+                                                        <button onClick={handleDelete} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors w-full text-left">
+                                                            <span className="material-symbols-outlined text-lg">delete</span>
+                                                            <span className="text-sm font-bold">Excluir</span>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        )}
+                                        </div>
 
-                                        <div className="border-t border-slate-100 dark:border-slate-800 my-8 print:hidden"></div>
+                                        {/* Metadata Grid */}
+                                        <div className="p-8 max-w-5xl mx-auto w-full space-y-8 flex-1">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+                                                    <div className="size-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                                                        <span className="material-symbols-outlined">event</span>
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Data</div>
+                                                        <div className="font-bold text-slate-700 dark:text-gray-200 text-sm truncate">
+                                                            {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                        {/* PRINTABLE CONTENT (Matches CENSC Layout - Landscape) */}
-                                        <div className="printable-content bg-white p-[10mm] hidden print:block">
-                                            <div className="flex justify-between items-start mb-6">
-                                                <table className="w-full border-collapse border-none">
-                                                    <tbody>
-                                                        <tr>
-                                                            <td className="w-[65%] align-top border-none p-0">
-                                                                <table className="w-full border-collapse border-none">
-                                                                    <tbody>
-                                                                        <tr>
-                                                                            <td className="w-24 py-1"><span className="text-xs font-bold">Turma:</span></td>
-                                                                            <td className="border-b border-black py-1 px-2">
-                                                                                <span className="text-sm font-bold">
-                                                                                    {(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
-                                                                                        ? `${activeSeries?.name} - ${currentPlan.section}`
-                                                                                        : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`}
-                                                                                </span>
-                                                                            </td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td className="w-24 py-1"><span className="text-xs font-bold">Professor:</span></td>
-                                                                            <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentUser?.name}</span></td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td className="w-24 py-1"><span className="text-xs font-bold">Componente:</span></td>
-                                                                            <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold text-[#0369a1]">{currentPlan.subject}</span></td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td className="w-24 py-1"><span className="text-xs font-bold">Período:</span></td>
-                                                                            <td className="border-b border-black py-1 px-2">
-                                                                                <span className="text-sm font-bold">
-                                                                                    {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} até {new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                                                                </span>
-                                                                            </td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td className="w-24 py-1"><span className="text-xs font-bold">Coordenação:</span></td>
-                                                                            <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentPlan.coordinator_name || 'MOISÉS FERREIRA'}</span></td>
-                                                                        </tr>
-                                                                    </tbody>
-                                                                </table>
-                                                            </td>
-                                                            <td className="w-[1%] border-l border-slate-300"></td>
-                                                            <td className="w-[34%] align-middle text-right">
-                                                                <div className="flex flex-col items-end">
-                                                                    <div className="text-[#0ea5e9] text-5xl font-black leading-none">CENSC</div>
-                                                                    <div className="text-[#0ea5e9] text-[8px] font-bold uppercase mt-1 leading-tight">CENTRO EDUCACIONAL<br />NOSSA SRA DO CENÁCULO</div>
+                                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+                                                    <div className="size-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                                                        <span className="material-symbols-outlined">school</span>
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Disciplina</div>
+                                                        <div className="font-bold text-slate-700 dark:text-gray-200 text-sm truncate">
+                                                            {currentPlan.subject || 'Não definida'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+                                                    <div className="size-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                                                        <span className="material-symbols-outlined">timer</span>
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Duração</div>
+                                                        <div className="font-bold text-slate-700 dark:text-gray-200 text-sm truncate">
+                                                            {currentPlan.duration || 'Não definida'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
+                                                    <div className="size-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                                        <span className="material-symbols-outlined">category</span>
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Eixo / Tema</div>
+                                                        <div className="font-bold text-slate-700 dark:text-gray-200 text-sm truncate">
+                                                            {currentPlan.theme_area || 'Geral'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* CONTENT PREVIEW CARDS */}
+                                            <div className="px-8 max-w-5xl mx-auto w-full space-y-6 flex-1">
+                                                {/* Row 1: Objeto & Habilidades */}
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                                    <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                                                        <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
+                                                            <span className="material-symbols-outlined text-indigo-500">menu_book</span>
+                                                            Conteúdo & Objetivos
+                                                        </h3>
+
+                                                        <div className="space-y-4">
+
+
+                                                            {currentPlan.objectives && (
+                                                                <div>
+                                                                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Objetivos de Aprendizagem</label>
+                                                                    <div className="text-sm text-slate-600 dark:text-slate-300 client-rendered-html leading-relaxed break-words" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives) }} />
                                                                 </div>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <div className="border-b-2 border-black mb-6 w-full"></div>
-                                            <div className="border border-black">
-                                                <table className="w-full border-collapse table-fixed">
-                                                    <thead>
-                                                        <tr className="bg-[#d9d9d9]">
-                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[17%] text-center align-middle">HABILIDADE(s)<br />CONTEMPLADA(s)</th>
-                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">OBJETO DE<br />CONHECIMENTO</th>
-                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">RECURSOS<br />UTILIZADOS</th>
-                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[31%] text-center align-middle">DESENVOLVIMENTO</th>
-                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">DURAÇÃO</th>
-                                                            <th className="border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">TIPO DE<br />ATIVIDADE</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr>
-                                                            <td className="border-r border-black p-2 text-[11px] align-top h-[400px]">
-                                                                <ul className="list-disc pl-4 space-y-1">
-                                                                    {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
-                                                                        <li key={i}>{code}</li>
-                                                                    ))}
-                                                                    {currentPlan.objectives && (
-                                                                        <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives).replace(/<[^>]+>/g, ' ') }}></li>
-                                                                    )}
-                                                                </ul>
-                                                            </td>
-                                                            <td className="border-r border-black p-2 text-[11px] align-top font-bold">
-                                                                <ul className="list-disc pl-4"><li>{currentPlan.title}</li></ul>
-                                                            </td>
-                                                            <td className="border-r border-black p-2 text-[11px] align-top">
-                                                                <ul className="list-disc pl-4"><li>{currentPlan.resources}</li></ul>
-                                                            </td>
-                                                            <td className="border-r border-black p-2 text-[11px] align-top">
-                                                                <ul className="list-disc pl-4 space-y-2">
-                                                                    {currentPlan.methodology && <li>{currentPlan.methodology}</li>}
-                                                                    {currentPlan.description && (
-                                                                        <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description).replace(/<[^>]+>/g, ' ') }}></li>
-                                                                    )}
-                                                                </ul>
-                                                            </td>
-                                                            <td className="border-r border-black p-2 text-[11px] align-top text-center">
-                                                                <ul className="list-disc pl-4"><li>{currentPlan.duration}</li></ul>
-                                                            </td>
-                                                            <td className="border-black p-2 text-[11px] align-top text-center">
-                                                                <ul className="list-disc pl-4"><li>{currentPlan.activity_type}</li></ul>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <div className="mt-4">
-                                                <div className="font-bold text-xs uppercase mb-1">OBSERVAÇÕES:</div>
-                                                <div className="border border-black p-2 h-20"></div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                                                        <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
+                                                            <span className="material-symbols-outlined text-emerald-500">verified</span>
+                                                            BNCC & Habilidades
+                                                        </h3>
+
+                                                        <div>
+                                                            <div className="flex flex-wrap gap-2 mb-3">
+                                                                {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
+                                                                    <span key={i} className="px-2 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 rounded-md text-xs font-bold font-mono border border-emerald-200 dark:border-emerald-500/30 break-all whitespace-normal h-auto">
+                                                                        {code}
+                                                                    </span>
+                                                                ))}
+                                                                {(!currentPlan.bncc_codes) && <span className="text-slate-400 text-sm italic">Nenhum código informado</span>}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Row 2: Desenvolvimento (Full Width) */}
+                                                <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                                                    <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
+                                                        <span className="material-symbols-outlined text-blue-500">play_circle</span>
+                                                        Desenvolvimento & Metodologia
+                                                    </h3>
+
+                                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                                        {currentPlan.methodology && (
+                                                            <div>
+                                                                <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2 block">Metodologia</label>
+                                                                <div className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed break-words">
+                                                                    {currentPlan.methodology}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {currentPlan.description && (
+                                                            <div>
+                                                                <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2 block">Roteiro da Aula</label>
+                                                                <div className="text-sm text-slate-600 dark:text-slate-300 client-rendered-html leading-relaxed break-words" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description) }} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Row 3: Recursos & Avaliação */}
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                                    <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                                                        <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
+                                                            <span className="material-symbols-outlined text-amber-500">build</span>
+                                                            Recursos
+                                                        </h3>
+                                                        <div className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line break-words">
+                                                            {currentPlan.resources || 'Nenhum recurso específico listado.'}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                                                        <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-50 dark:border-slate-800 pb-3">
+                                                            <span className="material-symbols-outlined text-rose-500">assignment_turned_in</span>
+                                                            Avaliação
+                                                        </h3>
+                                                        <div className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line break-words">
+                                                            {currentPlan.assessment || 'Nenhuma avaliação específica listada.'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Print Button (Screen Only) */}
+                                                <div className="flex justify-end print:hidden">
+                                                    <button
+                                                        onClick={() => {
+                                                            const printContent = document.querySelector('.printable-content');
+                                                            if (!printContent) return;
+                                                            const iframe = document.createElement('iframe');
+                                                            iframe.style.position = 'absolute';
+                                                            iframe.style.top = '-9999px';
+                                                            iframe.style.left = '-9999px';
+                                                            document.body.appendChild(iframe);
+                                                            const doc = iframe.contentWindow?.document;
+                                                            if (!doc) return;
+                                                            const styles = document.querySelectorAll('style, link[rel="stylesheet"]');
+                                                            styles.forEach(style => doc.head.appendChild(style.cloneNode(true)));
+                                                            const printStyle = doc.createElement('style');
+                                                            printStyle.textContent = `@page {size: landscape; margin: 0; } body {background: white !important; margin: 0; padding: 10mm !important; } .printable-content {visibility: visible !important; width: 100% !important; margin: 0 !important; }`;
+                                                            doc.head.appendChild(printStyle);
+                                                            doc.body.innerHTML = printContent.outerHTML;
+                                                            setTimeout(() => {
+                                                                iframe.contentWindow?.print();
+                                                                setTimeout(() => document.body.removeChild(iframe), 100);
+                                                            }, 500);
+                                                        }}
+                                                        className="flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl shadow-lg transition-all"
+                                                    >
+                                                        <span className="material-symbols-outlined">print</span> Imprimir Documento
+                                                    </button>
+                                                </div>
+
+                                                {/* ATTACHMENTS VIEW (Screen Only) */}
+                                                {currentPlan.files && currentPlan.files.length > 0 && (
+                                                    <div className="animate-in fade-in slide-in-from-bottom-3 duration-500 delay-100 print:hidden">
+                                                        <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                                            <span className={`material-symbols-outlined text-${theme.primaryColor}`}>attachment</span>
+                                                            Anexos
+                                                        </h3>
+                                                        <div className="flex flex-wrap gap-3">
+                                                            {currentPlan.files.map((file, index) => (
+                                                                <div
+                                                                    key={index}
+                                                                    className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group shadow-sm"
+                                                                >
+                                                                    <div className="flex items-center gap-3 flex-1 min-w-0 pointer-events-none">
+                                                                        <span className="material-symbols-outlined text-slate-500 group-hover:text-indigo-500 transition-colors">description</span>
+                                                                        <div className="flex flex-col truncate">
+                                                                            <span className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">{file.name}</span>
+                                                                            <span className="text-[10px] text-slate-500 uppercase">{file.size}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1">
+                                                                        <div className="flex items-center gap-1">
+                                                                            {(
+                                                                                // Image/PDF always viewable (native/base64 compatible)
+                                                                                (file.name.match(/\.(pdf|jpg|jpeg|png|webp)$/i) ||
+                                                                                    file.url.startsWith('data:image') ||
+                                                                                    file.url.startsWith('data:application/pdf')) ||
+                                                                                // Office files ONLY viewable if saved (public URL), NOT base64/data:
+                                                                                (file.name.match(/\.(doc|docx|ppt|pptx|xls|xlsx)$/i) && !file.url.startsWith('data:'))
+                                                                            ) && (
+                                                                                    <button
+                                                                                        onClick={() => setViewerFile(file)}
+                                                                                        className="p-2 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-all"
+                                                                                        title={file.url.startsWith('data:') && file.name.match(/\.(doc|docx|ppt|pptx|xls|xlsx)$/i) ? "Salve para visualizar" : "Visualizar / Apresentar"}
+                                                                                    >
+                                                                                        <span className="material-symbols-outlined">visibility</span>
+                                                                                    </button>
+                                                                                )}
+                                                                            <a
+                                                                                href={file.url}
+                                                                                download={file.name}
+                                                                                className="p-2 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
+                                                                                title="Baixar"
+                                                                            >
+                                                                                <span className="material-symbols-outlined">download</span>
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="border-t border-slate-100 dark:border-slate-800 my-8 print:hidden"></div>
+
+                                                {/* PRINTABLE CONTENT (Matches CENSC Layout - Landscape) */}
+                                                <div className="printable-content bg-white p-[10mm] hidden print:block">
+                                                    <div className="flex justify-between items-start mb-6">
+                                                        <table className="w-full border-collapse border-none">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td className="w-[65%] align-top border-none p-0">
+                                                                        <table className="w-full border-collapse border-none">
+                                                                            <tbody>
+                                                                                <tr>
+                                                                                    <td className="w-24 py-1"><span className="text-xs font-bold">Turma:</span></td>
+                                                                                    <td className="border-b border-black py-1 px-2">
+                                                                                        <span className="text-sm font-bold">
+                                                                                            {(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
+                                                                                                ? `${activeSeries?.name} - ${currentPlan.section}`
+                                                                                                : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`}
+                                                                                        </span>
+                                                                                    </td>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                    <td className="w-24 py-1"><span className="text-xs font-bold">Professor:</span></td>
+                                                                                    <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentUser?.name}</span></td>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                    <td className="w-24 py-1"><span className="text-xs font-bold">Componente:</span></td>
+                                                                                    <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold text-[#0369a1]">{currentPlan.subject}</span></td>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                    <td className="w-24 py-1"><span className="text-xs font-bold">Período:</span></td>
+                                                                                    <td className="border-b border-black py-1 px-2">
+                                                                                        <span className="text-sm font-bold">
+                                                                                            {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} até {new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                                                                        </span>
+                                                                                    </td>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                    <td className="w-24 py-1"><span className="text-xs font-bold">Coordenação:</span></td>
+                                                                                    <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentPlan.coordinator_name || 'MOISÉS FERREIRA'}</span></td>
+                                                                                </tr>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </td>
+                                                                    <td className="w-[1%] border-l border-slate-300"></td>
+                                                                    <td className="w-[34%] align-middle text-right">
+                                                                        <div className="flex flex-col items-end">
+                                                                            <div className="text-[#0ea5e9] text-5xl font-black leading-none">CENSC</div>
+                                                                            <div className="text-[#0ea5e9] text-[8px] font-bold uppercase mt-1 leading-tight">CENTRO EDUCACIONAL<br />NOSSA SRA DO CENÁCULO</div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div className="border-b-2 border-black mb-6 w-full"></div>
+                                                    <div className="border border-black">
+                                                        <table className="w-full border-collapse table-fixed">
+                                                            <thead>
+                                                                <tr className="bg-[#d9d9d9]">
+                                                                    <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[17%] text-center align-middle">HABILIDADE(s)<br />CONTEMPLADA(s)</th>
+                                                                    <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">OBJETO DE<br />CONHECIMENTO</th>
+                                                                    <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">RECURSOS<br />UTILIZADOS</th>
+                                                                    <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[31%] text-center align-middle">DESENVOLVIMENTO</th>
+                                                                    <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">DURAÇÃO</th>
+                                                                    <th className="border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">TIPO DE<br />ATIVIDADE</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td className="border-r border-black p-2 text-[11px] align-top h-[400px]">
+                                                                        <ul className="list-disc pl-4 space-y-1">
+                                                                            {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
+                                                                                <li key={i}>{code}</li>
+                                                                            ))}
+                                                                            {currentPlan.objectives && (
+                                                                                <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives).replace(/<[^>]+>/g, ' ') }}></li>
+                                                                            )}
+                                                                        </ul>
+                                                                    </td>
+                                                                    <td className="border-r border-black p-2 text-[11px] align-top font-bold">
+                                                                        <ul className="list-disc pl-4"><li>{currentPlan.title}</li></ul>
+                                                                    </td>
+                                                                    <td className="border-r border-black p-2 text-[11px] align-top">
+                                                                        <ul className="list-disc pl-4"><li>{currentPlan.resources}</li></ul>
+                                                                    </td>
+                                                                    <td className="border-r border-black p-2 text-[11px] align-top">
+                                                                        <ul className="list-disc pl-4 space-y-2">
+                                                                            {currentPlan.methodology && <li>{currentPlan.methodology}</li>}
+                                                                            {currentPlan.description && (
+                                                                                <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description).replace(/<[^>]+>/g, ' ') }}></li>
+                                                                            )}
+                                                                        </ul>
+                                                                    </td>
+                                                                    <td className="border-r border-black p-2 text-[11px] align-top text-center">
+                                                                        <ul className="list-disc pl-4"><li>{currentPlan.duration}</li></ul>
+                                                                    </td>
+                                                                    <td className="border-black p-2 text-[11px] align-top text-center">
+                                                                        <ul className="list-disc pl-4"><li>{currentPlan.activity_type}</li></ul>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div className="mt-4">
+                                                        <div className="font-bold text-xs uppercase mb-1">OBSERVAÇÕES:</div>
+                                                        <div className="border border-black p-2 h-20"></div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div>)}
                                 </div>
-                            </div>)}
-                    </div>
                 )}
-            </div>
+                            </div>
             {/* FILE VIEWER MODAL */}
-            {viewerFile && (
-                <FileViewerModal
-                    isOpen={!!viewerFile}
-                    onClose={() => setViewerFile(null)}
-                    file={viewerFile as any}
-                />
-            )}
+                        {viewerFile && (
+                            <FileViewerModal
+                                isOpen={!!viewerFile}
+                                onClose={() => setViewerFile(null)}
+                                file={viewerFile as any}
+                            />
+                        )}
 
-            <FileImporterModal
-                isOpen={isImporterOpen}
-                onClose={() => setIsImporterOpen(false)}
-                onFileSelect={(files) => {
-                    if (files) processFiles(Array.from(files));
-                }}
-                multiple
-            />
+                        <FileImporterModal
+                            isOpen={isImporterOpen}
+                            onClose={() => setIsImporterOpen(false)}
+                            onFileSelect={(files) => {
+                                if (files) processFiles(Array.from(files));
+                            }}
+                            multiple
+                        />
 
 
-        </main >
-    );
+                    </main >
+                );
 };
 // Build trigger: 2026-01-13 00:54
