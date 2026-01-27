@@ -246,7 +246,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         transition={{ type: "spring", stiffness: 280, damping: 30, mass: 0.6 }}
         className={`fixed ${window.electronAPI?.isElectron ? 'top-10' : 'top-4'} bottom-4 left-4 z-[60] glass-card-premium transform flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden transition-all duration-300
           ${isMobileMenuOpen ? 'translate-x-0 w-72 border-r-0' : ''} 
-          ${!isMobileMenuOpen && isSidebarCollapsed ? 'lg:-translate-x-full landscape:-translate-x-full w-0 border-0 p-0 opacity-0 pointer-events-none' : 'lg:translate-x-0 landscape:translate-x-0 w-72 border-r-0'}
+          ${!isMobileMenuOpen && isSidebarCollapsed ? 'lg:-translate-x-full w-0 border-0 p-0 opacity-0 pointer-events-none' : 'lg:translate-x-0 w-72 border-r-0'}
           ${!isMobileMenuOpen && !isSidebarCollapsed ? '-translate-x-[120%]' : ''}
         `}
       >
