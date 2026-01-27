@@ -171,14 +171,28 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
         }
     }
 
-    if (isMobile) {
+    // Check for landscape orientation
+    const [isLandscape, setIsLandscape] = useState(false);
+
+    useEffect(() => {
+        const checkOrientation = () => {
+            setIsLandscape(window.matchMedia("(orientation: landscape) and (max-height: 500px)").matches);
+        };
+
+        checkOrientation();
+        window.addEventListener('resize', checkOrientation);
+        return () => window.removeEventListener('resize', checkOrientation);
+    }, []);
+
+    // Render as Modal/Overlay for Mobile Portrait ONLY
+    if (isMobile && !isLandscape) {
         // Render as Modal/Overlay for Mobile
         if (!show) return null;
 
         return (
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                <div className="bg-white dark:bg-slate-900 w-full max-w-sm landscape:max-w-xs rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
-                    <div className="p-6 landscape:p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
+                    <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
                         <div className="flex items-center gap-3">
                             <div className={`size-10 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
                                 <span className="material-symbols-outlined text-xl">notifications_active</span>
@@ -190,7 +204,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
                         </button>
                     </div>
 
-                    <div className="max-h-[60vh] landscape:max-h-[50vh] overflow-y-auto custom-scrollbar p-2">
+                    <div className="max-h-[60vh] overflow-y-auto custom-scrollbar p-2">
                         {renderNotificationList(notifications, theme, handleClose)}
                     </div>
                 </div>
@@ -198,12 +212,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
         );
     }
 
-    // Render as Popover for Desktop
+    // Render as Popover for Desktop AND Mobile Landscape
     return (
         <div className="relative" ref={notificationsRef}>
             <button
-                onClick={() => setInternalIsOpen(!internalIsOpen)}
-                className={`relative size-9 rounded-full transition-all duration-300 group flex items-center justify-center ${internalIsOpen ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-text-muted hover:text-primary'}`}
+                onClick={() => isMobile ? onClose && onClose() : setInternalIsOpen(!internalIsOpen)}
+                className={`relative size-9 rounded-full transition-all duration-300 group flex items-center justify-center ${internalIsOpen || (isMobile && controlledIsOpen) ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-text-muted hover:text-primary'} ${isMobile && controlledIsOpen ? 'ring-2 ring-primary/20' : ''}`}
             >
                 <span className={`material-symbols-outlined text-xl ${internalIsOpen ? 'icon-filled animate-none' : 'group-hover:animate-pulse'}`}>notifications</span>
                 {notifications.length > 0 && (
