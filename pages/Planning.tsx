@@ -62,6 +62,17 @@ export const Planning: React.FC = () => {
     const [viewerFile, setViewerFile] = useState<{ name: string; url: string; } | null>(null);
     const [isImporterOpen, setIsImporterOpen] = useState(false);
 
+    // Helper for offline ID generation
+    const generateUUID = () => {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    };
+
     // Bulk Delete State
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -90,7 +101,7 @@ export const Planning: React.FC = () => {
             if (fileData === null) return null;
 
             return {
-                id: crypto.randomUUID(),
+                id: generateUUID(),
                 name: file.name,
                 size: formatBytes(file.size),
                 type: file.type,
@@ -115,9 +126,30 @@ export const Planning: React.FC = () => {
     const handleBulkDelete = async () => {
         if (!window.confirm(`Tem certeza que deseja excluir ${selectedIds.length} aulas?`)) return;
 
+        setLoading(true);
         try {
-            const { error } = await supabase.from('plans').delete().in('id', selectedIds);
-            if (error) throw error;
+            if (!ENABLE_OFFLINE_MODE) {
+                // ONLINE ONLY
+                const { error } = await supabase.from('plans').delete().in('id', selectedIds);
+                if (error) throw error;
+            } else {
+                // OFFLINE/HYBRID
+                // 1. Local Delete
+                await db.plans.bulkDelete(selectedIds);
+
+                // 2. Queue Delete
+                const timestamp = Date.now();
+                const queueItems = selectedIds.map(id => ({
+                    table: 'plans',
+                    action: 'DELETE',
+                    payload: { id },
+                    status: 'pending',
+                    createdAt: timestamp,
+                    retryCount: 0
+                }));
+                await db.syncQueue.bulkAdd(queueItems as any);
+                triggerSync();
+            }
 
             setPlans(prev => prev.filter(p => !selectedIds.includes(p.id)));
             setSelectedIds([]);
@@ -126,9 +158,12 @@ export const Planning: React.FC = () => {
                 setSelectedPlanId(null);
                 setShowForm(false);
             }
-        } catch (error) {
+            alert(`${selectedIds.length} planejamentos excluídos.`);
+        } catch (error: any) {
             console.error('Error deleting plans:', error);
-            alert('Erro ao excluir aulas.');
+            alert('Erro ao excluir planos: ' + (error.message || 'Erro desconhecido'));
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -409,7 +444,7 @@ export const Planning: React.FC = () => {
                     const blob = new Blob([u8arr], { type: mime });
 
                     const sanitizedName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9.-]/g, "_");
-                    const fileName = `planning/${crypto.randomUUID()}-${sanitizedName}`;
+                    const fileName = `planning/${generateUUID()}-${sanitizedName}`;
 
                     const { error: uploadError } = await supabase.storage
                         .from('planning-attachments')
@@ -458,9 +493,8 @@ export const Planning: React.FC = () => {
                 // UPDATE
                 action = 'UPDATE';
             } else {
-                // CREATE
-                // Generate UUID locally so we have a valid ID immediately
-                finalId = crypto.randomUUID();
+                // CREATE or CLONE
+                finalId = generateUUID();
                 action = 'INSERT';
             }
 
@@ -473,20 +507,16 @@ export const Planning: React.FC = () => {
                     id: finalId
                 });
                 if (error) throw error;
-                alert("Planejamento salvo com sucesso!");
-
+                // Success message below at common logic
             } else {
                 // --- OFFLINE/HYBRID MODE ---
-                // 2. Save Local (Dexie)
                 const localPayload = {
                     ...planData,
                     id: finalId,
                     syncStatus: 'pending' as const
                 };
-
                 await db.plans.put(localPayload);
 
-                // 3. Queue Sync
                 await db.syncQueue.add({
                     table: 'plans',
                     action: action,
@@ -496,17 +526,11 @@ export const Planning: React.FC = () => {
                     retryCount: 0
                 });
 
-                // 4. Trigger Sync Worker
                 triggerSync();
-                alert("Planejamento salvo na fila de sincronização!");
             }
 
-            // 5. Update UI
-            // Optimistic UI update is handled by fetchPlans merged with local data, 
-            // but we can also manually update state here for safety/speed if needed.
-            // Let's rely on fetchPlans + Optimistic Read.
-
-            alert(action === 'INSERT' ? "Planejamento criado localmente!" : "Planejamento atualizado localmente!");
+            // --- COMMON UI UPDATES ---
+            alert(action === 'INSERT' ? "Planejamento criado com sucesso!" : "Planejamento atualizado com sucesso!");
 
             await fetchPlans(true);
 
