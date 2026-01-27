@@ -251,7 +251,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         `}
       >
         <div className="flex flex-col h-full justify-between bg-transparent">
-          <div className="lg:hidden landscape:hidden absolute top-4 right-4 z-50">
+          <div className="lg:hidden absolute top-4 right-4 z-50">
             <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-surface-section rounded-full text-text-secondary hover:bg-surface-subtle hover:text-text-primary backdrop-blur-md transition-colors shadow-sm">
               <span className="material-symbols-outlined">close</span>
             </button>
