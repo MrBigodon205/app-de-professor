@@ -76,15 +76,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
             return;
         }
 
-
-
-        // Read file as Data URL for cropper
-        const reader = new FileReader();
-        reader.addEventListener('load', () => {
-            setCropImageSrc(reader.result?.toString() || null);
-            setIsCropperOpen(true);
-        });
-        reader.readAsDataURL(file);
+        // Use Object URL instead of FileReader (Base64) to save memory
+        const objectUrl = URL.createObjectURL(file);
+        setCropImageSrc(objectUrl);
+        setIsCropperOpen(true);
 
         // Reset input so same file can be selected again if needed
         e.target.value = '';

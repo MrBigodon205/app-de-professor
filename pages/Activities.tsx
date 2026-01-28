@@ -288,14 +288,20 @@ export const Activities: React.FC = () => {
                 if (!selectedActivityId || !isCurrentFound) {
                     setIsEditing(false);
                     if (window.innerWidth >= 1024) {
-                        setSelectedActivityId(formatted[0].id);
+                        if (selectedActivityId !== formatted[0].id) {
+                            setSelectedActivityId(formatted[0].id);
+                        }
                     } else {
-                        setSelectedActivityId(null);
+                        if (selectedActivityId !== null) {
+                            setSelectedActivityId(null);
+                        }
                     }
                 }
             } else {
-                setSelectedActivityId(null);
-                setIsEditing(false);
+                if (selectedActivityId !== null) {
+                    setSelectedActivityId(null);
+                    setIsEditing(false);
+                }
             }
         } catch (e) {
             console.error("Fetch activities failed", e);

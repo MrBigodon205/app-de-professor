@@ -309,6 +309,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Dynamic CSS Variable Injection
     React.useEffect(() => {
         const root = document.documentElement;
+
+        // Helper to convert Hex to RGB for Tailwind opacity support
+        const hexToRgb = (hex: string) => {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` : null;
+        };
+
+        const primaryRgb = hexToRgb(themeValue.primaryColorHex);
+        const secondaryRgb = hexToRgb(themeValue.secondaryColorHex);
+
+        if (primaryRgb) root.style.setProperty('--primary', primaryRgb);
+        if (secondaryRgb) root.style.setProperty('--secondary', secondaryRgb);
+
         root.style.setProperty('--theme-primary', themeValue.primaryColorHex);
         root.style.setProperty('--theme-secondary', themeValue.secondaryColorHex);
         // Add a subtle tint for backgrounds

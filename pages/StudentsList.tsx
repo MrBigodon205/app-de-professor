@@ -481,7 +481,6 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                         ref={imageInputRef}
                                         onChange={handleImageSelection}
                                         accept="image/*"
-                                        capture="environment"
                                         title="Importar lista via foto ou imagem"
                                         aria-label="Importar lista via foto ou imagem"
                                         className="hidden"

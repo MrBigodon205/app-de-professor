@@ -295,17 +295,23 @@ export const Planning: React.FC = () => {
                     setViewMode(false);
                     setShowForm(false);
                     if (window.innerWidth >= 1024) {
-                        setSelectedPlanId(formatted[0].id);
-                        setViewMode(true);
+                        if (selectedPlanId !== formatted[0].id) {
+                            setSelectedPlanId(formatted[0].id);
+                            setViewMode(true);
+                        }
                     } else {
-                        setSelectedPlanId(null);
+                        if (selectedPlanId !== null) {
+                            setSelectedPlanId(null);
+                        }
                     }
                 }
             } else {
                 // No plans for this series, ensure reset
-                setSelectedPlanId(null);
-                setViewMode(false);
-                setShowForm(false);
+                if (selectedPlanId !== null) {
+                    setSelectedPlanId(null);
+                    setViewMode(false);
+                    setShowForm(false);
+                }
             }
         } catch (e) {
             console.error("Failed to load plans", e);
