@@ -286,11 +286,24 @@ export const Planning: React.FC = () => {
             formatted.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 
             setPlans(formatted);
-            // ONLY auto-select if NOT in editing/creating mode and no current selection
-            if (formatted.length > 0 && !selectedPlanId && !showForm && !viewMode && window.innerWidth >= 1024) {
-                setSelectedPlanId(formatted[0].id);
-            } else if (formatted.length === 0) {
+
+            // --- UPDATED NAVIGATION LOGIC ---
+            if (formatted.length > 0) {
+                // If on desktop and nothing selected/editing, auto-select first
+                if (!selectedPlanId && !showForm && !viewMode && window.innerWidth >= 1024) {
+                    setSelectedPlanId(formatted[0].id);
+                }
+                // If something was selected but NOT found in the new list (e.g. series swap), RESET
+                else if (selectedPlanId && !formatted.find(p => p.id === selectedPlanId)) {
+                    setSelectedPlanId(null);
+                    setViewMode(false);
+                    setShowForm(false);
+                }
+            } else {
+                // No plans for this series, ensure reset
                 setSelectedPlanId(null);
+                setViewMode(false);
+                setShowForm(false);
             }
         } catch (e) {
             console.error("Failed to load plans", e);

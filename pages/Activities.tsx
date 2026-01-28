@@ -281,10 +281,21 @@ export const Activities: React.FC = () => {
 
             setActivities(formatted);
 
-            if (formatted.length > 0 && !selectedActivityId && !isEditing && window.innerWidth >= 1024) {
-                setSelectedActivityId(formatted[0].id);
-            } else if (formatted.length === 0) {
+            // --- UPDATED NAVIGATION LOGIC ---
+            if (formatted.length > 0) {
+                // If on desktop and nothing selected/editing, auto-select first
+                if (!selectedActivityId && !isEditing && window.innerWidth >= 1024) {
+                    setSelectedActivityId(formatted[0].id);
+                }
+                // If something was selected but NOT found in current series list, RESET
+                else if (selectedActivityId && !formatted.find(a => a.id === selectedActivityId)) {
+                    setSelectedActivityId(null);
+                    setIsEditing(false);
+                }
+            } else {
+                // No activities for this series
                 setSelectedActivityId(null);
+                setIsEditing(false);
             }
         } catch (e) {
             console.error("Fetch activities failed", e);

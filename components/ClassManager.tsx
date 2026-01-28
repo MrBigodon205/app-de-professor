@@ -84,21 +84,21 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overflow-x-hidden custom-scrollbar py-10 sm:py-20">
             {/* Backdrop with Blur */}
             <div
-                className="absolute inset-0 bg-slate-950/40 backdrop-blur-md animate-in fade-in duration-500"
+                className="fixed inset-0 bg-slate-950/40 backdrop-blur-md animate-in fade-in duration-500"
                 onClick={onClose}
             ></div>
 
             {/* Modal Window - Glassmorphism style */}
             <div className={`
                 relative w-full max-w-2xl bg-white/90 dark:bg-slate-900/95 
-                rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] 
+                rounded-2xl sm:rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] 
                 border-t sm:border border-white/50 dark:border-white/10 
-                flex flex-col max-h-[90vh] sm:max-h-[85vh] landscape:max-h-[96dvh]
+                flex flex-col
                 animate-in slide-in-from-bottom duration-500 sm:zoom-in-95
-                overflow-hidden backdrop-blur-xl
+                backdrop-blur-xl mb-auto
             `}>
 
                 {/* Header */}
@@ -130,7 +130,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-5 sm:p-8 pt-4 bg-transparent">
+                <div className="p-4 sm:p-6 pt-2 bg-transparent">
                     <div className="space-y-6">
 
                         {/* Series Creation Area */}
