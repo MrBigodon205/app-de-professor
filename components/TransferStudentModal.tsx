@@ -138,7 +138,8 @@ export const TransferStudentModal: React.FC<TransferStudentModalProps> = ({ isOp
                     <button
                         onClick={handleTransfer}
                         disabled={loading || !targetSeriesId || !targetSection}
-                        className={`flex-[2] h-14 rounded-2xl bg-${theme.primaryColor} text-white font-black hover:opacity-90 transition-all shadow-xl shadow-${theme.primaryColor}/20 disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 uppercase tracking-widest text-xs`}
+                        className="flex-[2] h-14 rounded-2xl text-white font-black transition-all shadow-xl disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 uppercase tracking-widest text-xs hover:brightness-110 active:scale-[0.98]"
+                        style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}40` }}
                     >
                         {loading ? (
                             <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

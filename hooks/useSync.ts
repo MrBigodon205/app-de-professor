@@ -93,7 +93,7 @@ export const useSync = () => {
 
         // Map local table names to Supabase table names if they differ
         const tableMap: Record<string, string> = {
-            'attendance': 'attendance_records',
+            'attendance': 'attendance',
             'students': 'students',
             'grades': 'grades',
             'occurrences': 'occurrences',

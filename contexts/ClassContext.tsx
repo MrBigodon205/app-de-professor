@@ -76,10 +76,15 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
                     if (storedSeriesId && finalClasses.find(c => c.id === storedSeriesId)) {
                         setSelectedSeriesId(storedSeriesId);
-                        if (storedSection) setSelectedSection(storedSection);
+                        if (storedSection) {
+                            setSelectedSection(storedSection);
+                        } else {
+                            const target = finalClasses.find(c => c.id === storedSeriesId);
+                            setSelectedSection(target?.sections[0] || 'A');
+                        }
                     } else if (!selectedSeriesId && finalClasses.length > 0) {
                         setSelectedSeriesId(finalClasses[0].id);
-                        if (finalClasses[0].sections.length > 0) setSelectedSection(finalClasses[0].sections[0]);
+                        setSelectedSection(finalClasses[0].sections[0] || 'A');
                     }
                 } else {
                     setLoading(true); // Only show spinner if no cache
@@ -139,9 +144,12 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             if (!selectedSeriesId && uniqueClasses.length > 0) {
                 if (storedSeriesId && uniqueClasses.find(c => c.id === storedSeriesId)) {
                     setSelectedSeriesId(storedSeriesId);
+                    const storedSection = localStorage.getItem(`selectedSection_${currentUser.id}`);
+                    const target = uniqueClasses.find(c => c.id === storedSeriesId);
+                    setSelectedSection(storedSection || (target?.sections[0] || 'A'));
                 } else {
                     setSelectedSeriesId(uniqueClasses[0].id);
-                    if (uniqueClasses[0].sections.length > 0) setSelectedSection(uniqueClasses[0].sections[0]);
+                    setSelectedSection(uniqueClasses[0].sections[0] || 'A');
                 }
             }
 
