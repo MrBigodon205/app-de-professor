@@ -10,7 +10,7 @@ import { TransferStudentModal } from '../components/TransferStudentModal';
 import { BulkTransferModal } from '../components/BulkTransferModal';
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import Tesseract from 'tesseract.js';
+import type Tesseract from 'tesseract.js';
 
 interface StudentsListProps {
     mode?: 'manage' | 'report';
@@ -85,22 +85,10 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
     const fileInputRef = useRef<HTMLInputElement>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
 
-    // Initialize Worker on Mount
+    // Initialize Worker only when needed (Lazy)
     useEffect(() => {
-        const initWorker = async () => {
-            try {
-                const worker = await Tesseract.createWorker('por', 1, {
-                    errorHandler: err => console.error(err)
-                });
-                workerRef.current = worker;
-            } catch (err) {
-                console.error("Failed to initialize Tesseract worker", err);
-            }
-        };
-
-        initWorker();
-
         return () => {
+            // Cleanup on unmount
             workerRef.current?.terminate();
         };
     }, []);
@@ -255,8 +243,10 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
                 // Check worker availability
                 if (!workerRef.current) {
+                    // Lazy load Tesseract
+                    const TesseractModule = (await import('tesseract.js')).default;
                     // Fallback re-init if something happened
-                    workerRef.current = await Tesseract.createWorker('por');
+                    workerRef.current = await TesseractModule.createWorker('por');
                 }
 
                 // 2. OCR using persistent worker
