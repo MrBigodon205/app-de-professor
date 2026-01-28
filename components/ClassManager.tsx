@@ -84,7 +84,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overflow-x-hidden custom-scrollbar py-10 sm:py-20">
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overflow-x-hidden custom-scrollbar py-6 md:py-12 lg:py-20 scroll-smooth">
             {/* Backdrop with Blur */}
             <div
                 className="fixed inset-0 bg-slate-950/40 backdrop-blur-md animate-in fade-in duration-500"
@@ -93,12 +93,12 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
 
             {/* Modal Window - Glassmorphism style */}
             <div className={`
-                relative w-full max-w-2xl bg-white/90 dark:bg-slate-900/95 
+                relative w-full max-w-2xl bg-white/95 dark:bg-slate-900/98 
                 rounded-2xl sm:rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] 
                 border-t sm:border border-white/50 dark:border-white/10 
                 flex flex-col
                 animate-in slide-in-from-bottom duration-500 sm:zoom-in-95
-                backdrop-blur-xl mb-auto
+                backdrop-blur-xl mb-auto mt-4 md:mt-0
             `}>
 
                 {/* Header */}

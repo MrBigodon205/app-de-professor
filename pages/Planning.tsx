@@ -289,15 +289,17 @@ export const Planning: React.FC = () => {
 
             // --- UPDATED NAVIGATION LOGIC ---
             if (formatted.length > 0) {
-                // If on desktop and nothing selected/editing, auto-select first
-                if (!selectedPlanId && !showForm && !viewMode && window.innerWidth >= 1024) {
-                    setSelectedPlanId(formatted[0].id);
-                }
-                // If something was selected but NOT found in the new list (e.g. series swap), RESET
-                else if (selectedPlanId && !formatted.find(p => p.id === selectedPlanId)) {
-                    setSelectedPlanId(null);
+                const isCurrentFound = selectedPlanId ? formatted.find(p => p.id === selectedPlanId) : false;
+
+                if (!selectedPlanId || !isCurrentFound) {
                     setViewMode(false);
                     setShowForm(false);
+                    if (window.innerWidth >= 1024) {
+                        setSelectedPlanId(formatted[0].id);
+                        setViewMode(true);
+                    } else {
+                        setSelectedPlanId(null);
+                    }
                 }
             } else {
                 // No plans for this series, ensure reset

@@ -283,17 +283,17 @@ export const Activities: React.FC = () => {
 
             // --- UPDATED NAVIGATION LOGIC ---
             if (formatted.length > 0) {
-                // If on desktop and nothing selected/editing, auto-select first
-                if (!selectedActivityId && !isEditing && window.innerWidth >= 1024) {
-                    setSelectedActivityId(formatted[0].id);
-                }
-                // If something was selected but NOT found in current series list, RESET
-                else if (selectedActivityId && !formatted.find(a => a.id === selectedActivityId)) {
-                    setSelectedActivityId(null);
+                const isCurrentFound = selectedActivityId ? formatted.find(a => a.id === selectedActivityId) : false;
+
+                if (!selectedActivityId || !isCurrentFound) {
                     setIsEditing(false);
+                    if (window.innerWidth >= 1024) {
+                        setSelectedActivityId(formatted[0].id);
+                    } else {
+                        setSelectedActivityId(null);
+                    }
                 }
             } else {
-                // No activities for this series
                 setSelectedActivityId(null);
                 setIsEditing(false);
             }
