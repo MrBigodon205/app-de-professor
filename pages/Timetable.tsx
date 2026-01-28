@@ -483,7 +483,7 @@ export const Timetable: React.FC = () => {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+                            className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
                         >
                             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
                                 <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -558,7 +558,8 @@ export const Timetable: React.FC = () => {
                             <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
                                 <button
                                     onClick={() => setIsConfigModalOpen(false)}
-                                    className={`w-full py-3 rounded-xl bg-${theme.primaryColor} hover:bg-${theme.primaryColor}-dark text-white font-bold shadow-lg shadow-${theme.primaryColor}/20 transition-all`}
+                                    className="w-full py-3 rounded-xl text-white font-bold transition-all hover:brightness-110 active:scale-[0.98] shadow-lg"
+                                    style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}40` }}
                                 >
                                     Concluir
                                 </button>
