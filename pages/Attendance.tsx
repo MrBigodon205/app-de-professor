@@ -120,17 +120,9 @@ const MiniCalendar: React.FC<{
                     </button>
                 </div>
 
-                <div className="relative">
-
-                    <div className="grid grid-cols-7 gap-1 lg:gap-3 mb-2">
-                        {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(day => (
-                            <div key={day} className="text-center text-[10px] lg:text-sm font-black text-text-muted py-1 uppercase tracking-widest">
-                                {day}
-                            </div>
-                        ))}
-                    </div>
+                <div className="grid grid-cols-7 gap-1">
                     {days.map((day, i) => {
-                        if (!day) return <div key={`empty-${i}`} className="h-10 w-10" />;
+                        if (!day) return <div key={`empty-${i}`} className="size-10" />;
                         return (
                             <button
                                 key={day || `empty-${i}`}
@@ -166,17 +158,8 @@ const MiniCalendar: React.FC<{
                         );
                     })}
                 </div>
+            </motion.div>
         </div>
-
-                {/* Mobile Close Button */ }
-    <button
-        onClick={onClose}
-        className="w-full mt-3 py-2 bg-surface-subtle text-text-muted rounded-lg font-bold text-[10px] sm:hidden hover:bg-surface-hover transition-colors"
-    >
-        Fechar
-    </button>
-            </motion.div >
-        </>
     );
 };
 
@@ -858,17 +841,12 @@ export const Attendance: React.FC = () => {
                     </div>
 
                     <div className={`flex items-center gap-2 px-4 h-11 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-500/20 font-bold text-sm ml-2`}>
-                        {isOnline ? (pendingCount > 0 ? (
-                            <>
-                                <span className="material-symbols-outlined text-lg animate-spin">sync</span>
-                                Sincronizando ({pendingCount})
-                            </>
-                        ) : (
+                        {isOnline ? (
                             <>
                                 <span className="material-symbols-outlined text-lg">cloud_done</span>
                                 Online
                             </>
-                        )) : (
+                        ) : (
                             <>
                                 <span className="material-symbols-outlined text-lg">cloud_off</span>
                                 Offline ({pendingCount})
