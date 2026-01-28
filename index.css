@@ -631,8 +631,7 @@ body {
     .card {
         /* Promote to composite layer to prevent repaints during scroll - removed transform override */
         will-change: transform, opacity;
-        /* Ensure touch scrolling feels native */
-        touch-action: pan-y;
+
         -webkit-overflow-scrolling: touch;
 
         /* Reduce heavy GPU effects on mobile - AGGRESSIVE OPTIMIZATION */
@@ -682,7 +681,6 @@ body {
 .overflow-y-auto,
 .custom-scrollbar {
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
 }
 
 @media screen and (max-width: 768px) {

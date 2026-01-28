@@ -599,19 +599,19 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             <AnimatePresence>
                 {showCropper && (
                     <div className="fixed inset-0 z-[110] flex flex-col bg-slate-950 animate-in fade-in duration-300">
-                        <div className="flex-1 relative flex items-center justify-center p-4 overflow-auto custom-scrollbar">
+                        <div className="flex-1 relative flex p-4 overflow-auto custom-scrollbar">
                             {ocrImage && (
                                 <ReactCrop
                                     crop={crop}
                                     onChange={(c) => setCrop(c)}
                                     onComplete={(c) => setCompletedCrop(c)}
-                                    className="flex-shrink-0 shadow-2xl shadow-black/50"
+                                    className="flex-shrink-0 shadow-2xl shadow-black/50 m-auto"
                                 >
                                     <img
                                         ref={imgRef}
                                         src={ocrImage}
                                         alt="Crop source"
-                                        className="max-w-full max-h-[70dvh] object-contain"
+                                        className="max-w-full object-contain"
                                     />
                                 </ReactCrop>
                             )}
@@ -821,17 +821,17 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border-subtle">
                                                     <button
                                                         onClick={() => setTransferringStudent(student)}
-                                                        className="flex-1 py-1.5 rounded-lg bg-surface-subtle hover:bg-amber-50 text-text-muted hover:text-amber-600 text-[10px] font-black uppercase tracking-wide transition-colors flex items-center justify-center gap-1"
+                                                        className="flex-1 py-1.5 rounded-lg bg-surface-subtle hover:bg-amber-50 text-text-muted hover:text-amber-600 text-[10px] font-bold uppercase tracking-tight transition-colors flex items-center justify-center gap-1 min-w-0"
                                                     >
-                                                        <span className="material-symbols-outlined text-base">move_up</span>
-                                                        Transferir
+                                                        <span className="material-symbols-outlined text-base shrink-0">move_up</span>
+                                                        <span className="truncate">Transferir</span>
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(student.id)}
-                                                        className="flex-1 py-1.5 rounded-lg bg-surface-subtle hover:bg-red-50 text-text-muted hover:text-red-600 text-[10px] font-black uppercase tracking-wide transition-colors flex items-center justify-center gap-1"
+                                                        className="flex-1 py-1.5 rounded-lg bg-surface-subtle hover:bg-red-50 text-text-muted hover:text-red-600 text-[10px] font-bold uppercase tracking-tight transition-colors flex items-center justify-center gap-1 min-w-0"
                                                     >
-                                                        <span className="material-symbols-outlined text-base">delete</span>
-                                                        Remover
+                                                        <span className="material-symbols-outlined text-base shrink-0">delete</span>
+                                                        <span className="truncate">Remover</span>
                                                     </button>
                                                 </div>
                                             </div>

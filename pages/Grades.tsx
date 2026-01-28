@@ -70,15 +70,15 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                 layoutId={`grade-row-res-${student.id}`}
                 className="hover:bg-surface-subtle transition-colors duration-150"
             >
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted font-mono">
+                <td className="sticky left-0 z-30 bg-surface-card px-4 py-4 whitespace-nowrap text-xs text-text-muted font-mono border-r border-transparent group-hover:bg-surface-subtle transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                     {student.number}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-4">
-                        <div className={`student-avatar student-avatar-sm bg-gradient-to-br ${student.color || 'from-indigo-600 to-indigo-800'}`}>
+                <td className="sticky left-12 z-30 bg-surface-card px-4 py-4 whitespace-nowrap border-r border-transparent group-hover:bg-surface-subtle transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                    <div className="flex items-center gap-3">
+                        <div className={`student-avatar size-8 text-xs bg-gradient-to-br ${student.color || 'from-indigo-600 to-indigo-800'}`}>
                             {student.initials}
                         </div>
-                        <div className="text-sm font-medium text-text-primary">
+                        <div className="text-xs font-bold text-text-primary">
                             {student.name}
                         </div>
                     </div>
@@ -105,17 +105,17 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                 }
             }}
             layoutId={`grade-row-${student.id}`}
-            className="hover:bg-surface-subtle transition-colors duration-150"
+            className="group hover:bg-surface-subtle transition-colors duration-150"
         >
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted font-mono">
+            <td className="sticky left-0 z-30 bg-surface-card px-4 py-4 whitespace-nowrap text-xs text-text-muted font-mono border-r border-transparent group-hover:bg-surface-subtle transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                 {student.number}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center gap-4">
-                    <div className={`student-avatar student-avatar-sm bg-gradient-to-br ${student.color || 'from-indigo-600 to-indigo-800'}`}>
+            <td className="sticky left-12 z-30 bg-surface-card px-4 py-4 whitespace-nowrap border-r border-transparent group-hover:bg-surface-subtle transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                <div className="flex items-center gap-3">
+                    <div className={`student-avatar size-8 text-xs bg-gradient-to-br ${student.color || 'from-indigo-600 to-indigo-800'}`}>
                         {student.initials}
                     </div>
-                    <div className="text-sm font-medium text-text-primary">
+                    <div className="text-xs font-bold text-text-primary truncate max-w-[150px]">
                         {student.name}
                     </div>
                 </div>
@@ -128,14 +128,14 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                 }
 
                 return (
-                    <td key={col.key} className="px-6 py-4 whitespace-nowrap">
+                    <td key={col.key} className="px-4 py-3 whitespace-nowrap">
                         <input
                             type="number"
                             inputMode="decimal"
                             min="0"
                             max={currentMax}
                             step="0.1"
-                            className={`w-full min-w-[60px] text-center bg-surface-subtle border border-border-default rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-${theme.baseColor}-500 focus:border-transparent transition-all font-mono text-sm shadow-sm`}
+                            className={`w-full min-w-[50px] text-center bg-surface-subtle border border-border-default rounded-lg px-1 py-1.5 focus:ring-2 focus:ring-${theme.baseColor}-500 focus:border-transparent transition-all font-mono text-xs shadow-sm`}
                             value={getGrade(col.key)}
                             onChange={(e) => onGradeChange(student.id, col.key, e.target.value)}
                             placeholder="-"
@@ -806,10 +806,10 @@ export const Grades: React.FC = () => {
                     <table className="w-full min-w-[800px] border-collapse">
                         <thead className={`bg-surface-subtle/50 backdrop-blur-md border-b border-border-default`}>
                             <tr>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider w-16">
+                                <th className="sticky left-0 z-40 bg-surface-subtle/95 backdrop-blur-md px-4 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider w-12 border-b border-border-default shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                                     Nº
                                 </th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider">
+                                <th className="sticky left-12 z-40 bg-surface-subtle/95 backdrop-blur-md px-4 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider min-w-[180px] border-b border-border-default shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                                     Nome
                                 </th>
                                 {selectedUnit === 'results' ? (
@@ -824,7 +824,7 @@ export const Grades: React.FC = () => {
                                 ) : (
                                     <>
                                         {currentConfig?.columns.map((col) => (
-                                            <th key={col.key} className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-32">
+                                            <th key={col.key} className="px-4 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-32">
                                                 <div className="flex flex-col items-center">
                                                     <span>{col.label}</span>
                                                     <span className="text-[10px] opacity-70 font-normal">

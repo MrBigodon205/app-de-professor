@@ -706,12 +706,12 @@ export const Attendance: React.FC = () => {
 
                     <div className="h-8 w-px bg-border-default mx-1 hidden sm:block"></div>
 
-                    <div className="flex items-center bg-surface-subtle rounded-2xl p-1 border border-border-default">
+                    <div className="flex items-center bg-surface-subtle rounded-xl p-1 border border-border-default overflow-x-auto max-w-full">
                         {['1', '2', '3'].map((unit) => (
                             <button
                                 key={unit}
                                 onClick={() => setSelectedUnit(unit)}
-                                className={`h-9 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${selectedUnit === unit
+                                className={`h-8 px-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${selectedUnit === unit
                                     ? `bg-surface-card text-${theme.primaryColor} shadow-sm ring-1 ring-border-subtle`
                                     : 'text-text-muted hover:text-text-primary'
                                     }`}
@@ -726,20 +726,20 @@ export const Attendance: React.FC = () => {
 
             {/* Quick Actions */}
             <div className="flex flex-wrap gap-1.5 sm:gap-2 p-1" data-tour="attendance-quick-actions">
-                <button onClick={() => markAll('P')} className="flex-1 min-w-[90px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 bg-emerald-500 text-white rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-emerald-500/20">
-                    <span className="material-symbols-outlined text-sm sm:text-lg">done_all</span>
-                    <span className="whitespace-nowrap">Presença Geral</span>
+                <button onClick={() => markAll('P')} className="flex-1 min-w-[70px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-4 py-2 sm:py-3 bg-emerald-500 text-white rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-emerald-500/20">
+                    <span className="material-symbols-outlined text-base sm:text-lg">done_all</span>
+                    <span className="whitespace-nowrap">Geral</span>
                 </button>
-                <button onClick={() => markAll('F')} className="flex-1 min-w-[90px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 bg-rose-50 dark:bg-rose-900/10 text-rose-600 dark:text-rose-400 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-900/20 transition-all border border-rose-100 dark:border-rose-900/20">
-                    <span className="material-symbols-outlined text-sm sm:text-lg">close</span>
+                <button onClick={() => markAll('F')} className="flex-1 min-w-[70px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-4 py-2 sm:py-3 bg-rose-50 dark:bg-rose-900/10 text-rose-600 dark:text-rose-400 rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-900/20 transition-all border border-rose-100 dark:border-rose-900/20">
+                    <span className="material-symbols-outlined text-base sm:text-lg">close</span>
                     Faltas
                 </button>
-                <button onClick={() => markAll('S')} className="flex-1 min-w-[90px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 bg-surface-subtle text-text-secondary rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-surface-hover transition-all">
-                    <span className="material-symbols-outlined text-sm sm:text-lg">event_busy</span>
-                    Sem Aula
+                <button onClick={() => markAll('S')} className="flex-1 min-w-[70px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-4 py-2 sm:py-3 bg-surface-subtle text-text-secondary rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-surface-hover transition-all">
+                    <span className="material-symbols-outlined text-base sm:text-lg">event_busy</span>
+                    S/A
                 </button>
-                <button onClick={() => markAll('')} className="flex-1 min-w-[90px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 bg-surface-card text-text-muted rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-surface-subtle transition-all border border-border-default">
-                    <span className="material-symbols-outlined text-sm sm:text-lg">history</span>
+                <button onClick={() => markAll('')} className="flex-1 min-w-[70px] sm:min-w-[140px] flex items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-4 py-2 sm:py-3 bg-surface-card text-text-muted rounded-xl sm:rounded-2xl text-[9px] sm:text-xs font-bold hover:bg-surface-subtle transition-all border border-border-default">
+                    <span className="material-symbols-outlined text-base sm:text-lg">history</span>
                     Reiniciar
                 </button>
             </div>
@@ -846,13 +846,13 @@ const AttendanceButton: React.FC<{
             title={label}
             className={`flex flex-col items-center gap-1 group/btn transition-all duration-300`}
         >
-            <div className={`size-12 landscape:size-9 rounded-2xl flex items-center justify-center transition-all duration-300 relative ${active
-                ? `bg-${c}-500 text-white shadow-lg shadow-${c}-500/30 scale-110 ring-4 ring-${c}-500/10`
+            <div className={`size-10 landscape:size-8 rounded-xl flex items-center justify-center transition-all duration-300 relative ${active
+                ? `bg-${c}-500 text-white shadow-md shadow-${c}-500/30 scale-105 ring-2 ring-${c}-500/10`
                 : `bg-slate-50 dark:bg-slate-800 text-slate-300 dark:text-slate-600 hover:bg-${c}-50 dark:hover:bg-${c}-900/20 hover:text-${c}-500 border border-transparent`
                 }`}>
-                <span className={`material-symbols-outlined ${active ? 'icon-filled' : ''} text-2xl landscape:text-xl`}>{icon}</span>
+                <span className={`material-symbols-outlined ${active ? 'icon-filled' : ''} text-xl landscape:text-lg`}>{icon}</span>
             </div>
-            <span className={`text-[9px] font-bold uppercase tracking-tighter transition-colors ${active ? `text-${c}-500` : 'text-transparent group-hover/btn:text-slate-400'}`}>
+            <span className={`text-[8px] font-bold uppercase tracking-tighter transition-colors ${active ? `text-${c}-500` : 'text-transparent group-hover/btn:text-slate-400'}`}>
                 {label}
             </span>
         </button>
@@ -869,14 +869,14 @@ interface AttendanceRowProps {
 // Mobile Card Component
 const MobileAttendanceCard = React.memo(({ student: s, status, onStatusChange, theme }: AttendanceRowProps) => {
     return (
-        <div className="bg-surface-card border border-border-default rounded-2xl p-4 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <div className="flex items-center gap-3 mb-4">
-                <div className={`student-avatar size-10 text-sm bg-gradient-to-br ${s.color || `from-indigo-600 to-indigo-800`}`}>
+        <div className="bg-surface-card border border-border-default rounded-xl p-3 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="flex items-center gap-3 mb-3">
+                <div className={`student-avatar size-8 text-xs bg-gradient-to-br ${s.color || `from-indigo-600 to-indigo-800`}`}>
                     {s.initials || s.name.substring(0, 2)}
                 </div>
                 <div className="flex flex-col min-w-0">
-                    <span className="font-bold text-sm text-text-primary truncate">{s.name}</span>
-                    <span className="text-[10px] uppercase font-bold text-text-muted">Nº {s.number} • ID: {s.id.substring(0, 6)}</span>
+                    <span className="font-bold text-xs text-text-primary truncate">{s.name}</span>
+                    <span className="text-[9px] uppercase font-bold text-text-muted">Nº {s.number} • ID: {s.id.substring(0, 6)}</span>
                 </div>
             </div>
 
