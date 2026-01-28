@@ -240,7 +240,7 @@ export const Attendance: React.FC = () => {
 
             if (attendanceError) throw attendanceError;
 
-            formattedStudents.sort((a, b) => parseInt(a.number) - parseInt(b.number));
+            formattedStudents.sort((a, b) => a.name.localeCompare(b.name));
 
             const newMap: any = {};
             formattedStudents.forEach(s => {

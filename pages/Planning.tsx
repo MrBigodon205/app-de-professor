@@ -947,9 +947,20 @@ export const Planning: React.FC = () => {
                                 Ativ.
                             </Link>
                         </div>
-                        <button onClick={handleNewPlan} className={`text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0`} title="Nova Aula" data-tour="planning-new-btn" style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}33` }}>
-                            <span className="material-symbols-outlined text-[20px]">add</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                            {hasDraft && !showForm && (
+                                <button
+                                    onClick={loadDraft}
+                                    className="size-9 bg-amber-500 text-white rounded-xl flex items-center justify-center transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+                                    title="Continuar Rascunho"
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">edit_note</span>
+                                </button>
+                            )}
+                            <button onClick={handleNewPlan} className={`text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0`} title="Nova Aula" data-tour="planning-new-btn" style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}33` }}>
+                                <span className="material-symbols-outlined text-[20px]">add</span>
+                            </button>
+                        </div>
                     </div>
                     {/* Bulk Selection Controls */}
                     <div className="flex gap-2 mb-4 landscape:mb-0">
@@ -989,7 +1000,7 @@ export const Planning: React.FC = () => {
                 {/* Section Filter Pills */}
                 {activeSeries && activeSeries.sections?.length > 0 && (
                     <div className="px-1">
-                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                        <div className="flex items-center gap-2 flex-wrap py-1">
                             <button
                                 onClick={() => setFilterSection('')}
                                 className={`shrink-0 px-5 py-2.5 lg:px-3 lg:py-1 rounded-xl text-sm font-black transition-all border-2 ${filterSection === ''
@@ -1317,12 +1328,12 @@ export const Planning: React.FC = () => {
                                 </div>
 
                                 {/* FOOTER ACTIONS */}
-                                <div className="max-w-4xl mx-auto mt-8 mb-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                                    <button onClick={() => { setIsEditing(false); setShowForm(false); }} className="px-6 py-2.5 rounded-xl text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+                                <div className="max-w-4xl mx-auto mt-8 mb-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                                    <button onClick={() => { setIsEditing(false); setShowForm(false); }} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200 dark:border-slate-700 sm:border-transparent">Cancelar</button>
                                     {selectedPlanId && (
-                                        <button onClick={handleDelete} className="px-6 py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors">Excluir</button>
+                                        <button onClick={handleDelete} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors bg-red-50 dark:bg-red-900/10 sm:bg-transparent sm:dark:bg-transparent">Excluir</button>
                                     )}
-                                    <button onClick={handleSave} className="px-8 py-2.5 rounded-xl text-white font-bold shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0" style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}40` }}>
+                                    <button onClick={handleSave} className="w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-xl text-white font-bold shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center" style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}40` }}>
                                         Salvar Aula
                                     </button>
                                 </div>

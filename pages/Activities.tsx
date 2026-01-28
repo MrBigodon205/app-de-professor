@@ -285,15 +285,17 @@ export const Activities: React.FC = () => {
             if (formatted.length > 0) {
                 const isCurrentFound = selectedActivityId ? formatted.find(a => a.id === selectedActivityId) : false;
 
-                if ((!selectedActivityId && !isEditing) || (selectedActivityId && !isCurrentFound)) {
-                    setIsEditing(false);
-                    if (window.innerWidth >= 1024) {
-                        if (selectedActivityId !== formatted[0].id) {
-                            setSelectedActivityId(formatted[0].id);
-                        }
-                    } else {
-                        if (selectedActivityId !== null) {
-                            setSelectedActivityId(null);
+                if (!isEditing) {
+                    if ((!selectedActivityId) || (selectedActivityId && !isCurrentFound)) {
+                        setIsEditing(false);
+                        if (window.innerWidth >= 1024) {
+                            if (formatted.length > 0 && selectedActivityId !== formatted[0].id) {
+                                setSelectedActivityId(formatted[0].id);
+                            }
+                        } else {
+                            if (selectedActivityId !== null) {
+                                setSelectedActivityId(null);
+                            }
                         }
                     }
                 }
@@ -865,9 +867,20 @@ export const Activities: React.FC = () => {
                                 <span className="hidden landscape:block text-xs">Ativ.</span>
                             </button>
                         </div>
-                        <button onClick={handleNewActivity} className={`text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0`} title="Nova Atividade" data-tour="activities-new-btn" style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}33` }}>
-                            <span className="material-symbols-outlined text-[20px]">add</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                            {hasDraft && !isEditing && (
+                                <button
+                                    onClick={loadDraft}
+                                    className="size-9 bg-amber-500 text-white rounded-xl flex items-center justify-center transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+                                    title="Continuar Rascunho"
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">edit_note</span>
+                                </button>
+                            )}
+                            <button onClick={handleNewActivity} className={`text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0`} title="Nova Atividade" data-tour="activities-new-btn" style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}33` }}>
+                                <span className="material-symbols-outlined text-[20px]">add</span>
+                            </button>
+                        </div>
                     </div>
                     {/* Bulk Selection Controls */}
                     <div className="flex gap-2 mb-4 landscape:mb-0">
@@ -917,7 +930,7 @@ export const Activities: React.FC = () => {
                 {/* Section Switcher Tabs - Matching Planning.tsx */}
                 {activeSeries && activeSeries.sections?.length > 0 && (
                     <div className="px-1">
-                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                        <div className="flex items-center gap-2 flex-wrap py-1">
                             <button
                                 onClick={() => setFilterSection('')}
                                 className={`shrink-0 px-5 py-2.5 lg:px-3 lg:py-1 rounded-xl text-sm font-black transition-all border-2 ${filterSection === ''
@@ -1221,15 +1234,15 @@ export const Activities: React.FC = () => {
                             </div>
 
                             {/* Static Footer Actions - Part of the scrollable flow */}
-                            <div className="max-w-4xl mx-auto mt-8 mb-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                                <button onClick={() => setIsEditing(false)} className="px-6 py-2.5 rounded-xl text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+                            <div className="max-w-4xl mx-auto mt-8 mb-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                                <button onClick={() => setIsEditing(false)} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200 dark:border-slate-700 sm:border-transparent">Cancelar</button>
                                 {selectedActivityId && (
-                                    <button onClick={handleDelete} className="px-6 py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors">Excluir</button>
+                                    <button onClick={handleDelete} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors bg-red-50 dark:bg-red-900/10 sm:bg-transparent sm:dark:bg-transparent">Excluir</button>
                                 )}
                                 <button
                                     onClick={handleSave}
                                     disabled={loading}
-                                    className={`px-8 py-2.5 rounded-xl text-white font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center gap-2`}
+                                    className={`w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-xl text-white font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-2`}
                                     style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}33` }}
                                 >
                                     {loading && <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>}

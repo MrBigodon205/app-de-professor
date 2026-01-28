@@ -229,7 +229,7 @@ export const Grades: React.FC = () => {
             });
 
             // Sort by number (Dexie might not return sorted)
-            formatted.sort((a, b) => parseInt(a.number) - parseInt(b.number));
+            formatted.sort((a, b) => a.name.localeCompare(b.name));
 
             setStudents(formatted);
         } catch (error) {

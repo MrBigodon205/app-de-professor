@@ -558,8 +558,8 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
             {
                 isAdding && (
-                    <div className={`bg-${theme.primaryColor}/5 border-2 border-dashed border-${theme.primaryColor}/20 p-8 rounded-3xl animate-in fade-in slide-in-from-top-4 duration-300`}>
-                        <div className="flex items-center gap-3 mb-6">
+                    <div className={`bg-${theme.primaryColor}/5 border-2 border-dashed border-${theme.primaryColor}/20 p-4 sm:p-8 rounded-3xl animate-in fade-in slide-in-from-top-4 duration-300`}>
+                        <div className="flex items-center gap-3 mb-4 sm:mb-6">
                             <span className={`material-symbols-outlined text-${theme.primaryColor}`}>person_add</span>
                             <h4 className="font-black text-text-primary uppercase tracking-widest text-sm">Adicionar Novo Aluno</h4>
                         </div>
@@ -571,13 +571,13 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 placeholder="Digite o nome completo do aluno..."
                                 title="Nome do Aluno"
                                 aria-label="Nome do Aluno"
-                                className={`flex-1 h-14 px-6 rounded-2xl border-2 border-border-default bg-surface-card focus:ring-4 focus:ring-${theme.primaryColor}/10 focus:border-${theme.primaryColor} transition-all font-bold`}
+                                className={`flex-1 h-12 sm:h-14 px-4 sm:px-6 rounded-2xl border-2 border-border-default bg-surface-card focus:ring-4 focus:ring-${theme.primaryColor}/10 focus:border-${theme.primaryColor} transition-all font-bold`}
                                 autoFocus
                             />
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleAddStudent}
-                                    className="h-14 px-8 text-white rounded-2xl font-black shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+                                    className="h-12 sm:h-14 px-6 sm:px-8 text-white rounded-2xl font-black shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
                                     style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}30` }}
                                 >
                                     <span className="material-symbols-outlined text-xl">save</span>
@@ -585,7 +585,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 </button>
                                 <button
                                     onClick={() => setIsAdding(false)}
-                                    className="h-14 px-6 bg-surface-card text-text-muted rounded-2xl font-black border border-border-default hover:bg-surface-subtle transition-all"
+                                    className="h-12 sm:h-14 px-4 sm:px-6 bg-surface-card text-text-muted rounded-2xl font-black border border-border-default hover:bg-surface-subtle transition-all"
                                 >
                                     Cancelar
                                 </button>
@@ -818,19 +818,19 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                     </div>
                                                 )}
 
-                                                <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border-subtle">
+                                                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border-subtle">
                                                     <button
                                                         onClick={() => setTransferringStudent(student)}
-                                                        className="flex-1 py-2 rounded-lg bg-surface-subtle hover:bg-amber-50 text-text-muted hover:text-amber-600 text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1"
+                                                        className="flex-1 py-1.5 rounded-lg bg-surface-subtle hover:bg-amber-50 text-text-muted hover:text-amber-600 text-[10px] font-black uppercase tracking-wide transition-colors flex items-center justify-center gap-1"
                                                     >
-                                                        <span className="material-symbols-outlined text-sm">move_up</span>
+                                                        <span className="material-symbols-outlined text-base">move_up</span>
                                                         Transferir
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(student.id)}
-                                                        className="flex-1 py-2 rounded-lg bg-surface-subtle hover:bg-red-50 text-text-muted hover:text-red-600 text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1"
+                                                        className="flex-1 py-1.5 rounded-lg bg-surface-subtle hover:bg-red-50 text-text-muted hover:text-red-600 text-[10px] font-black uppercase tracking-wide transition-colors flex items-center justify-center gap-1"
                                                     >
-                                                        <span className="material-symbols-outlined text-sm">delete</span>
+                                                        <span className="material-symbols-outlined text-base">delete</span>
                                                         Remover
                                                     </button>
                                                 </div>

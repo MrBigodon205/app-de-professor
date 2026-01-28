@@ -86,7 +86,7 @@ export const Observations: React.FC = () => {
                 userId: s.user_id,
                 units: s.units || {}
             }));
-            formattedStudents.sort((a, b) => parseInt(a.number) - parseInt(b.number));
+            formattedStudents.sort((a, b) => a.name.localeCompare(b.name));
             setStudents(formattedStudents);
 
             if (formattedStudents.length > 0) {
