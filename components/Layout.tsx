@@ -471,9 +471,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col items-start leading-tight max-w-[80px] md:max-w-none">
-                  <span className="text-[10px] md:text-[11px] font-black text-text-primary truncate w-full text-left">{currentUser?.name?.split(' ')[0]}</span>
-                  <span className="text-[8px] md:text-[9px] font-bold text-text-muted uppercase tracking-widest font-mono truncate w-full text-left">{theme.subject || activeSubject}</span>
+                <div className="hidden md:flex flex-col items-start leading-tight">
+                  <span className="text-[11px] font-black text-text-primary truncate w-full text-left">{currentUser?.name?.split(' ')[0]}</span>
+                  <span className="text-[9px] font-bold text-text-muted uppercase tracking-widest font-mono truncate w-full text-left">{theme.subject || activeSubject}</span>
                 </div>
               </button>
             </div>
