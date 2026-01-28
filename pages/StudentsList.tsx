@@ -8,6 +8,8 @@ import { Student } from '../types';
 import { supabase } from '../lib/supabase';
 import { TransferStudentModal } from '../components/TransferStudentModal';
 import { BulkTransferModal } from '../components/BulkTransferModal';
+import Cropper from 'react-easy-crop';
+import Tesseract from 'tesseract.js';
 
 interface StudentsListProps {
     mode?: 'manage' | 'report';
@@ -60,11 +62,20 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
     const [isProcessing, setIsProcessing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [transferringStudent, setTransferringStudent] = useState<Student | null>(null);
-    const [isBulkTransferring, setIsBulkTransferring] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editName, setEditName] = useState('');
+    const [isBulkTransferring, setIsBulkTransferring] = useState(false);
+
+    // OCR State
+    const [ocrImage, setOcrImage] = useState<string | null>(null);
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+    const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+    const [showCropper, setShowCropper] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const imageInputRef = useRef<HTMLInputElement>(null);
 
     const handleEdit = (student: Student) => {
         setEditingId(student.id);
@@ -165,6 +176,87 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
         reader.readAsText(file);
         // Reset input to allow selecting same file again if needed
         e.target.value = '';
+    };
+
+    const handleImageSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setOcrImage(reader.result as string);
+                setShowCropper(true);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    };
+
+    const performOCR = async () => {
+        if (!ocrImage || !croppedAreaPixels) return;
+
+        setIsOcrProcessing(true);
+        try {
+            // 1. Create canvas to get cropped image
+            const canvas = document.createElement('canvas');
+            const img = new Image();
+            img.src = ocrImage;
+
+            await new Promise((resolve) => { img.onload = resolve; });
+
+            canvas.width = croppedAreaPixels.width;
+            canvas.height = croppedAreaPixels.height;
+            const ctx = canvas.getContext('2d');
+
+            if (ctx) {
+                ctx.drawImage(
+                    img,
+                    croppedAreaPixels.x,
+                    croppedAreaPixels.y,
+                    croppedAreaPixels.width,
+                    croppedAreaPixels.height,
+                    0,
+                    0,
+                    croppedAreaPixels.width,
+                    croppedAreaPixels.height
+                );
+
+                // 2. OCR using Tesseract.js (Portuguese)
+                const { data: { text } } = await Tesseract.recognize(
+                    canvas.toDataURL('image/jpeg', 0.8),
+                    'por',
+                    {
+                        logger: m => console.log(m),
+                        workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@v5.0.0/dist/worker.min.js',
+                        langPath: 'https://tessdata.projectnaptha.com/4.0.0',
+                        corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@v5.0.0/tesseract-core.wasm.js'
+                    }
+                );
+
+                // 3. Clean and populate
+                const cleanedNames = text.split('\n')
+                    .map(line => {
+                        // Heuristic: remove leading numbers/dots/dashes
+                        let cleaned = line.replace(/^[0-9\s.-]+/, '').trim();
+                        // Remove common OCR noise
+                        cleaned = cleaned.replace(/[|\\/_]/g, '');
+                        return cleaned;
+                    })
+                    .filter(name => name.length > 3) // Filter short noise strings
+                    .join('\n');
+
+                setImportText(prev => prev ? `${prev}\n${cleanedNames}` : cleanedNames);
+                setShowCropper(false);
+                setOcrImage(null);
+            }
+        } catch (error) {
+            console.error("OCR Error:", error);
+            alert("Erro ao ler imagem. Tente novamente ou use texto.");
+        } finally {
+            setIsOcrProcessing(false);
+        }
     };
 
     const handleAddStudent = async () => {
@@ -364,13 +456,34 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                         className="flex-1 h-14 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600 transition-all flex items-center justify-center gap-3 font-black group shadow-sm"
                                     >
                                         <span className="material-symbols-outlined group-hover:bounce" style={{ color: theme.primaryColorHex }}>attach_file</span>
-                                        <span>Anexar Arquivo (TXT/CSV)</span>
+                                        <span className="hidden sm:inline">Texto (TXT/CSV)</span>
+                                        <span className="sm:hidden">Texto</span>
+                                    </button>
+                                    <button
+                                        onClick={() => imageInputRef.current?.click()}
+                                        className="flex-1 h-14 rounded-2xl border-2 border-indigo-200 dark:border-indigo-900 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-300 hover:border-indigo-300 transition-all flex items-center justify-center gap-3 font-black group shadow-sm"
+                                    >
+                                        <span className="material-symbols-outlined group-hover:scale-110 transition-transform">photo_camera</span>
+                                        <span className="hidden sm:inline">Via Foto/Imagem</span>
+                                        <span className="sm:hidden">Imagem</span>
                                     </button>
                                     <input
                                         type="file"
                                         ref={fileInputRef}
                                         onChange={handleFileImport}
                                         accept="text/plain,text/csv,application/vnd.ms-excel"
+                                        title="Importar arquivo de texto ou CSV"
+                                        aria-label="Importar arquivo de texto ou CSV"
+                                        className="hidden"
+                                    />
+                                    <input
+                                        type="file"
+                                        ref={imageInputRef}
+                                        onChange={handleImageSelection}
+                                        accept="image/*"
+                                        capture="environment"
+                                        title="Importar lista via foto ou imagem"
+                                        aria-label="Importar lista via foto ou imagem"
                                         className="hidden"
                                     />
                                 </div>
@@ -378,6 +491,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 <textarea
                                     value={importText}
                                     onChange={(e) => setImportText(e.target.value)}
+                                    title="Lista de nomes para importação"
                                     placeholder="Alice Silva&#10;Bernardo Souza&#10;Carlos Henrique..."
                                     className="w-full h-48 md:h-64 p-6 rounded-3xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-4 transition-all resize-none font-bold leading-relaxed custom-scrollbar text-sm md:text-base outline-none"
                                     style={{ '--tw-ring-color': `${theme.primaryColorHex}20` } as any}
@@ -436,6 +550,8 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 value={newStudentName}
                                 onChange={(e) => setNewStudentName(e.target.value)}
                                 placeholder="Digite o nome completo do aluno..."
+                                title="Nome do Aluno"
+                                aria-label="Nome do Aluno"
                                 className={`flex-1 h-14 px-6 rounded-2xl border-2 border-border-default bg-surface-card focus:ring-4 focus:ring-${theme.primaryColor}/10 focus:border-${theme.primaryColor} transition-all font-bold`}
                                 autoFocus
                             />
@@ -460,6 +576,75 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                 )
             }
 
+            {/* OCR Cropper Overlay */}
+            <AnimatePresence>
+                {showCropper && (
+                    <div className="fixed inset-0 z-[110] flex flex-col bg-slate-950 animate-in fade-in duration-300">
+                        <div className="flex-1 relative">
+                            {ocrImage && (
+                                <Cropper
+                                    image={ocrImage}
+                                    crop={crop}
+                                    zoom={zoom}
+                                    aspect={undefined}
+                                    onCropChange={setCrop}
+                                    onCropComplete={onCropComplete}
+                                    onZoomChange={setZoom}
+                                />
+                            )}
+                        </div>
+                        <div className="bg-white dark:bg-slate-900 p-6 flex flex-col gap-4 border-t border-slate-200 dark:border-slate-800">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-sm flex items-center gap-2">
+                                    <span className="material-symbols-outlined" style={{ color: theme.primaryColorHex }}>crop_free</span>
+                                    Ajuste a imagem para focar nos nomes
+                                </h3>
+                                <button onClick={() => setShowCropper(false)} className="p-2 text-slate-400">
+                                    <span className="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-4 mb-4">
+                                <span className="material-symbols-outlined text-slate-400">zoom_in</span>
+                                <input
+                                    type="range"
+                                    value={zoom}
+                                    min={1}
+                                    max={3}
+                                    step={0.1}
+                                    aria-label="Zoom"
+                                    title="Ajustar Zoom"
+                                    onChange={(e) => setZoom(Number(e.target.value))}
+                                    className="flex-1 h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                />
+                            </div>
+
+                            <button
+                                onClick={performOCR}
+                                disabled={isOcrProcessing}
+                                className="w-full h-14 rounded-2xl text-white font-black shadow-xl flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+                                style={{ backgroundColor: theme.primaryColorHex }}
+                            >
+                                {isOcrProcessing ? (
+                                    <>
+                                        <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                        Lendo nomes...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="material-symbols-outlined">auto_fix_high</span>
+                                        Extrair Nomes da Imagem
+                                    </>
+                                )}
+                            </button>
+                            <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                Dica: Tente enquadrar apenas a coluna com os nomes dos alunos
+                            </p>
+                        </div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             <div className={`transition-all duration-300 ${loading ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
 
                 {mode === 'report' ? (
@@ -474,6 +659,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                             <input
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Buscar aluno por nome ou número..."
+                                title="Buscar Aluno"
                                 className="w-full h-12 pl-12 pr-4 bg-surface-card border border-border-default rounded-xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
                             />
                             {searchQuery && (
