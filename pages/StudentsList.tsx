@@ -8,7 +8,8 @@ import { Student } from '../types';
 import { supabase } from '../lib/supabase';
 import { TransferStudentModal } from '../components/TransferStudentModal';
 import { BulkTransferModal } from '../components/BulkTransferModal';
-import Cropper from 'react-easy-crop';
+import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import Tesseract from 'tesseract.js';
 
 interface StudentsListProps {
@@ -68,14 +69,41 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
     // OCR State
     const [ocrImage, setOcrImage] = useState<string | null>(null);
-    const [crop, setCrop] = useState({ x: 0, y: 0 });
-    const [zoom, setZoom] = useState(1);
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+    const [crop, setCrop] = useState<Crop>({
+        unit: '%',
+        x: 5,
+        y: 5,
+        width: 90,
+        height: 90
+    });
+    const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
     const [isOcrProcessing, setIsOcrProcessing] = useState(false);
     const [showCropper, setShowCropper] = useState(false);
+    const imgRef = useRef<HTMLImageElement>(null);
+    const workerRef = useRef<Tesseract.Worker | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
+
+    // Initialize Worker on Mount
+    useEffect(() => {
+        const initWorker = async () => {
+            try {
+                const worker = await Tesseract.createWorker('por', 1, {
+                    errorHandler: err => console.error(err)
+                });
+                workerRef.current = worker;
+            } catch (err) {
+                console.error("Failed to initialize Tesseract worker", err);
+            }
+        };
+
+        initWorker();
+
+        return () => {
+            workerRef.current?.terminate();
+        };
+    }, []);
 
     const handleEdit = (student: Student) => {
         setEditingId(student.id);
@@ -185,66 +213,68 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             reader.onload = () => {
                 setOcrImage(reader.result as string);
                 setShowCropper(true);
+                // Reset crop
+                setCrop({ unit: '%', x: 5, y: 5, width: 90, height: 90 });
             };
             reader.readAsDataURL(file);
         }
     };
 
-    const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
-        setCroppedAreaPixels(croppedAreaPixels);
-    };
-
     const performOCR = async () => {
-        if (!ocrImage || !croppedAreaPixels) return;
+        if (!imgRef.current || !completedCrop) return;
 
         setIsOcrProcessing(true);
         try {
             // 1. Create canvas to get cropped image
             const canvas = document.createElement('canvas');
-            const img = new Image();
-            img.src = ocrImage;
+            const img = imgRef.current;
 
-            await new Promise((resolve) => { img.onload = resolve; });
+            // Use the displayed image's natural dimensions vs displayed dimensions
+            const scaleX = img.naturalWidth / img.width;
+            const scaleY = img.naturalHeight / img.height;
 
-            canvas.width = croppedAreaPixels.width;
-            canvas.height = croppedAreaPixels.height;
+            const pixelRatio = window.devicePixelRatio || 1;
+
+            canvas.width = completedCrop.width * scaleX;
+            canvas.height = completedCrop.height * scaleY;
+
             const ctx = canvas.getContext('2d');
-
             if (ctx) {
+                // Optimize image for OCR (Grayscale + High Contrast approach could go here)
                 ctx.drawImage(
                     img,
-                    croppedAreaPixels.x,
-                    croppedAreaPixels.y,
-                    croppedAreaPixels.width,
-                    croppedAreaPixels.height,
+                    completedCrop.x * scaleX,
+                    completedCrop.y * scaleY,
+                    completedCrop.width * scaleX,
+                    completedCrop.height * scaleY,
                     0,
                     0,
-                    croppedAreaPixels.width,
-                    croppedAreaPixels.height
+                    canvas.width,
+                    canvas.height
                 );
 
-                // 2. OCR using Tesseract.js (Portuguese)
-                const { data: { text } } = await Tesseract.recognize(
-                    canvas.toDataURL('image/jpeg', 0.8),
-                    'por',
-                    {
-                        logger: m => console.log(m),
-                        workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@v5.0.0/dist/worker.min.js',
-                        langPath: 'https://tessdata.projectnaptha.com/4.0.0',
-                        corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@v5.0.0/tesseract-core.wasm.js'
-                    }
-                );
+                // Check worker availability
+                if (!workerRef.current) {
+                    // Fallback re-init if something happened
+                    workerRef.current = await Tesseract.createWorker('por');
+                }
+
+                // 2. OCR using persistent worker
+                // Using 'image/png' might be slightly cleaner than jpeg for text
+                const { data: { text } } = await workerRef.current.recognize(canvas.toDataURL('image/png'));
 
                 // 3. Clean and populate
                 const cleanedNames = text.split('\n')
                     .map(line => {
-                        // Heuristic: remove leading numbers/dots/dashes
-                        let cleaned = line.replace(/^[0-9\s.-]+/, '').trim();
-                        // Remove common OCR noise
-                        cleaned = cleaned.replace(/[|\\/_]/g, '');
+                        // Remove digits, dots, dashes at START of line (numbering)
+                        let cleaned = line.replace(/^[\d\s.-]+/, '').trim();
+                        // Remove common OCR noise characters anywhere
+                        cleaned = cleaned.replace(/[|\\/_(){}\[\]]/g, '');
+                        // Aggressive cleanup for single-letter noise
+                        if (cleaned.length <= 2) return '';
                         return cleaned;
                     })
-                    .filter(name => name.length > 3) // Filter short noise strings
+                    .filter(name => name.length >= 3) // Filter short noise strings
                     .join('\n');
 
                 setImportText(prev => prev ? `${prev}\n${cleanedNames}` : cleanedNames);
@@ -253,7 +283,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             }
         } catch (error) {
             console.error("OCR Error:", error);
-            alert("Erro ao ler imagem. Tente novamente ou use texto.");
+            alert("Erro ao ler imagem.");
         } finally {
             setIsOcrProcessing(false);
         }
@@ -579,65 +609,54 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             <AnimatePresence>
                 {showCropper && (
                     <div className="fixed inset-0 z-[110] flex flex-col bg-slate-950 animate-in fade-in duration-300">
-                        <div className="flex-1 relative">
+                        <div className="flex-1 relative flex items-center justify-center p-4 overflow-auto">
                             {ocrImage && (
-                                <Cropper
-                                    image={ocrImage}
+                                <ReactCrop
                                     crop={crop}
-                                    zoom={zoom}
-                                    aspect={undefined}
-                                    onCropChange={setCrop}
-                                    onCropComplete={onCropComplete}
-                                    onZoomChange={setZoom}
-                                />
+                                    onChange={(c) => setCrop(c)}
+                                    onComplete={(c) => setCompletedCrop(c)}
+                                    className="max-h-[70vh] shadow-2xl shadow-black/50"
+                                >
+                                    <img
+                                        ref={imgRef}
+                                        src={ocrImage}
+                                        alt="Crop source"
+                                        className="max-w-full max-h-[70vh] object-contain"
+                                    />
+                                </ReactCrop>
                             )}
                         </div>
-                        <div className="bg-white dark:bg-slate-900 p-6 flex flex-col gap-4 border-t border-slate-200 dark:border-slate-800">
+                        <div className="bg-white dark:bg-slate-900 p-6 flex flex-col gap-4 border-t border-slate-200 dark:border-slate-800 z-20">
                             <div className="flex items-center justify-between mb-2">
                                 <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-sm flex items-center gap-2">
                                     <span className="material-symbols-outlined" style={{ color: theme.primaryColorHex }}>crop_free</span>
-                                    Ajuste a imagem para focar nos nomes
+                                    Ajuste a área de seleção
                                 </h3>
                                 <button onClick={() => setShowCropper(false)} className="p-2 text-slate-400">
                                     <span className="material-symbols-outlined">close</span>
                                 </button>
                             </div>
 
-                            <div className="flex items-center gap-4 mb-4">
-                                <span className="material-symbols-outlined text-slate-400">zoom_in</span>
-                                <input
-                                    type="range"
-                                    value={zoom}
-                                    min={1}
-                                    max={3}
-                                    step={0.1}
-                                    aria-label="Zoom"
-                                    title="Ajustar Zoom"
-                                    onChange={(e) => setZoom(Number(e.target.value))}
-                                    className="flex-1 h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                />
-                            </div>
-
                             <button
                                 onClick={performOCR}
-                                disabled={isOcrProcessing}
+                                disabled={isOcrProcessing || !completedCrop}
                                 className="w-full h-14 rounded-2xl text-white font-black shadow-xl flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
                                 style={{ backgroundColor: theme.primaryColorHex }}
                             >
                                 {isOcrProcessing ? (
                                     <>
                                         <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                        Lendo nomes...
+                                        Processando...
                                     </>
                                 ) : (
                                     <>
                                         <span className="material-symbols-outlined">auto_fix_high</span>
-                                        Extrair Nomes da Imagem
+                                        Extrair Nomes da Seleção
                                     </>
                                 )}
                             </button>
                             <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                Dica: Tente enquadrar apenas a coluna com os nomes dos alunos
+                                Arraste os cantos ou a área para selecionar a coluna de nomes
                             </p>
                         </div>
                     </div>

@@ -93,12 +93,12 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
 
             {/* Modal Window - Glassmorphism style */}
             <div className={`
-                relative w-full max-w-2xl bg-white/95 dark:bg-slate-900/98 
+                relative w-full max-w-2xl bg-white dark:bg-slate-900 
                 rounded-2xl sm:rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] 
                 border-t sm:border border-white/50 dark:border-white/10 
                 flex flex-col
                 animate-in slide-in-from-bottom duration-500 sm:zoom-in-95
-                backdrop-blur-xl mb-auto mt-4 md:mt-0
+                mb-auto mt-4 md:mt-0
             `}>
 
                 {/* Header */}
@@ -178,7 +178,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                             key={cls.id}
                                             className={`group relative rounded-2xl transition-all duration-300 overflow-hidden ${activeSeries?.id === cls.id
                                                 ? `bg-white dark:bg-slate-800 shadow-xl shadow-black/10 ring-1 ring-slate-100 dark:ring-white/10`
-                                                : 'bg-slate-50/50 dark:bg-white/[0.03] hover:bg-white dark:hover:bg-white/[0.06] border border-transparent hover:border-slate-100 dark:hover:border-white/5'
+                                                : 'bg-slate-50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-100 dark:hover:border-white/5'
                                                 }`}
                                         >
                                             <div className="p-4 flex flex-col gap-4">
