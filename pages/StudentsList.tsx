@@ -599,19 +599,19 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             <AnimatePresence>
                 {showCropper && (
                     <div className="fixed inset-0 z-[110] flex flex-col bg-slate-950 animate-in fade-in duration-300">
-                        <div className="flex-1 relative flex items-center justify-center p-4 overflow-hidden">
+                        <div className="flex-1 relative flex items-center justify-center p-4 overflow-auto custom-scrollbar">
                             {ocrImage && (
                                 <ReactCrop
                                     crop={crop}
                                     onChange={(c) => setCrop(c)}
                                     onComplete={(c) => setCompletedCrop(c)}
-                                    className="max-h-full flex-shrink-0 shadow-2xl shadow-black/50"
+                                    className="flex-shrink-0 shadow-2xl shadow-black/50"
                                 >
                                     <img
                                         ref={imgRef}
                                         src={ocrImage}
                                         alt="Crop source"
-                                        className="max-w-full max-h-[calc(100vh-150px)] object-contain"
+                                        className="max-w-full max-h-[70dvh] object-contain"
                                     />
                                 </ReactCrop>
                             )}
