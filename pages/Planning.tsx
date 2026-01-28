@@ -60,6 +60,7 @@ export const Planning: React.FC = () => {
     const [filterSection, setFilterSection] = useState('');
     const [viewerFile, setViewerFile] = useState<{ name: string; url: string; } | null>(null);
     const [isImporterOpen, setIsImporterOpen] = useState(false);
+    const [hasDraft, setHasDraft] = useState(false);
 
     // Helper for offline ID generation
     const generateUUID = () => {
@@ -70,6 +71,72 @@ export const Planning: React.FC = () => {
             var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
         });
+    };
+
+    // --- DRAFT PERSISTENCE ---
+    useEffect(() => {
+        const key = `draft_planning_${currentUser?.id}_${selectedSeriesId}`;
+        if (showForm) {
+            const draft = {
+                formTitle, formStartDate, formEndDate, formDescription,
+                formSection, formObjectives, formBncc, formMethodology,
+                formResources, formAssessment, formDuration, formThemeArea,
+                formCoordinator, formActivityType, formSubject,
+                isEditing, selectedPlanId, activeTab
+            };
+            localStorage.setItem(key, JSON.stringify(draft));
+        }
+    }, [
+        formTitle, formStartDate, formEndDate, formDescription,
+        formSection, formObjectives, formBncc, formMethodology,
+        formResources, formAssessment, formDuration, formThemeArea,
+        formCoordinator, formActivityType, formSubject,
+        showForm, activeTab
+    ]);
+
+    useEffect(() => {
+        if (!currentUser || !selectedSeriesId) return;
+        const key = `draft_planning_${currentUser.id}_${selectedSeriesId}`;
+        const saved = localStorage.getItem(key);
+        setHasDraft(!!saved);
+    }, [selectedSeriesId, currentUser, showForm]);
+
+    const loadDraft = () => {
+        const key = `draft_planning_${currentUser?.id}_${selectedSeriesId}`;
+        const saved = localStorage.getItem(key);
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                setFormTitle(data.formTitle || '');
+                setFormStartDate(data.formStartDate || '');
+                setFormEndDate(data.formEndDate || '');
+                setFormDescription(data.formDescription || '');
+                setFormSection(data.formSection || '');
+                setFormObjectives(data.formObjectives || '');
+                setFormBncc(data.formBncc || '');
+                setFormMethodology(data.formMethodology || '');
+                setFormResources(data.formResources || '');
+                setFormAssessment(data.formAssessment || '');
+                setFormDuration(data.formDuration || '');
+                setFormThemeArea(data.formThemeArea || '');
+                setFormCoordinator(data.formCoordinator || '');
+                setFormActivityType(data.formActivityType || '');
+                setFormSubject(data.formSubject || '');
+                setIsEditing(data.isEditing || false);
+                setSelectedPlanId(data.selectedPlanId || null);
+                setActiveTab(data.activeTab || 'geral');
+                setShowForm(true);
+                setViewMode(false);
+            } catch (e) {
+                console.error("Failed to load draft", e);
+            }
+        }
+    };
+
+    const clearDraft = () => {
+        const key = `draft_planning_${currentUser?.id}_${selectedSeriesId}`;
+        localStorage.removeItem(key);
+        setHasDraft(false);
     };
 
     // Bulk Delete State
@@ -331,6 +398,7 @@ export const Planning: React.FC = () => {
         setFormCoordinator('');
         setFormActivityType('');
         setFormSubject(activeSubject || '');
+        clearDraft();
     };
 
     const handleNewPlan = () => {
@@ -526,6 +594,7 @@ export const Planning: React.FC = () => {
             setShowForm(false);
             setViewMode(true);
             setIsEditing(false);
+            clearDraft();
 
         } catch (e: any) {
             console.error(e);
@@ -919,13 +988,26 @@ export const Planning: React.FC = () => {
     return (
         <main className="flex flex-col lg:flex-row gap-4 md:gap-6 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 md:pb-8 relative fluid-p-m fluid-gap-m px-4 md:px-0 w-full h-full overflow-hidden">
             {/* Landscape FAB for New Plan */}
-            <button
-                onClick={handleNewPlan}
-                className="hidden landscape:flex fixed bottom-6 right-6 z-50 bg-primary hover:bg-primary-dark text-white size-12 rounded-2xl shadow-xl border border-white/20 items-center justify-center transition-all hover:scale-110 active:scale-95 lg:hidden"
-                title="Nova Aula"
-            >
-                <span className="material-symbols-outlined text-3xl">add</span>
-            </button>
+            <div className="hidden landscape:flex fixed bottom-6 right-6 z-50 flex-col gap-3 lg:hidden">
+                {hasDraft && !showForm && (
+                    <motion.button
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        onClick={loadDraft}
+                        className="size-12 bg-amber-500 text-white rounded-2xl shadow-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                        title="Continuar Rascunho"
+                    >
+                        <span className="material-symbols-outlined">edit_note</span>
+                    </motion.button>
+                )}
+                <button
+                    onClick={handleNewPlan}
+                    className="bg-primary hover:bg-primary-dark text-white size-12 rounded-2xl shadow-xl border border-white/20 flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                    title="Nova Aula"
+                >
+                    <span className="material-symbols-outlined text-3xl">add</span>
+                </button>
+            </div>
             <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain" title="Adicionar anexo" aria-label="Adicionar anexo" />
 
             {/* ANIMATION VARIANTS */}
@@ -1122,15 +1204,26 @@ export const Planning: React.FC = () => {
                         <p className="text-slate-500 max-w-md mb-8 leading-relaxed">
                             Organize seus roteiros, alinhe com a BNCC e anexe materiais para sua turma de <span className={`text-${theme.primaryColor} font-bold`}>{theme.subject}</span>.
                         </p>
-                        <button
-                            onClick={handleNewPlan}
-                            className={`group relative inline-flex items-center justify-center gap-3 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden`}
-                            style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 20px 25px -5px ${theme.primaryColorHex}33` }}
-                        >
-                            <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">add</span>
-                            Criar Nova Aula
-                            <div className="absolute inset-0 rounded-2xl ring-2 ring-white/20 group-hover:ring-white/40 transition-all"></div>
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button
+                                onClick={handleNewPlan}
+                                className={`group relative inline-flex items-center justify-center gap-3 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden`}
+                                style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 20px 25px -5px ${theme.primaryColorHex}33` }}
+                            >
+                                <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">add</span>
+                                Criar Nova Aula
+                                <div className="absolute inset-0 rounded-2xl ring-2 ring-white/20 group-hover:ring-white/40 transition-all"></div>
+                            </button>
+                            {hasDraft && (
+                                <button
+                                    onClick={loadDraft}
+                                    className="inline-flex items-center justify-center gap-3 bg-amber-500 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl shadow-amber-500/20 hover:-translate-y-1 transition-all"
+                                >
+                                    <span className="material-symbols-outlined">edit_note</span>
+                                    Continuar Rascunho
+                                </button>
+                            )}
+                        </div>
                     </div>
                 ) : showForm ? (
                     <div className="flex-1 flex flex-col h-full overflow-hidden relative">

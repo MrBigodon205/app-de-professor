@@ -44,6 +44,7 @@ export const Activities: React.FC = () => {
             return v.toString(16);
         });
     };
+
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -66,6 +67,59 @@ export const Activities: React.FC = () => {
     const [filterSection, setFilterSection] = useState('');
     const [isDragging, setIsDragging] = useState(false);
     const [isImporterOpen, setIsImporterOpen] = useState(false);
+    const [hasDraft, setHasDraft] = useState(false);
+
+    // --- DRAFT PERSISTENCE ---
+    useEffect(() => {
+        const key = `draft_activities_${currentUser?.id}_${selectedSeriesId}`;
+        if (isEditing) {
+            const draft = {
+                formTitle, formType, formDate, formStartDate, formEndDate,
+                formDescription, formSeriesId, formSection,
+                selectedActivityId, isEditing
+            };
+            localStorage.setItem(key, JSON.stringify(draft));
+        }
+    }, [
+        formTitle, formType, formDate, formStartDate, formEndDate,
+        formDescription, formSeriesId, formSection,
+        isEditing
+    ]);
+
+    useEffect(() => {
+        if (!currentUser || !selectedSeriesId) return;
+        const key = `draft_activities_${currentUser.id}_${selectedSeriesId}`;
+        const saved = localStorage.getItem(key);
+        setHasDraft(!!saved);
+    }, [selectedSeriesId, currentUser, isEditing]);
+
+    const loadDraft = () => {
+        const key = `draft_activities_${currentUser?.id}_${selectedSeriesId}`;
+        const saved = localStorage.getItem(key);
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                setFormTitle(data.formTitle || '');
+                setFormType(data.formType || 'Prova');
+                setFormDate(data.formDate || '');
+                setFormStartDate(data.formStartDate || '');
+                setFormEndDate(data.formEndDate || '');
+                setFormDescription(data.formDescription || '');
+                setFormSeriesId(data.formSeriesId || '');
+                setFormSection(data.formSection || '');
+                setSelectedActivityId(data.selectedActivityId || null);
+                setIsEditing(data.isEditing || true);
+            } catch (e) {
+                console.error("Failed to load draft", e);
+            }
+        }
+    };
+
+    const clearDraft = () => {
+        const key = `draft_activities_${currentUser?.id}_${selectedSeriesId}`;
+        localStorage.removeItem(key);
+        setHasDraft(false);
+    };
 
     // ANIMATIONS
     const containerVariants: any = {
@@ -365,6 +419,7 @@ export const Activities: React.FC = () => {
         setFormSeriesId(selectedSeriesId);
         // Smart Default: Use filterSection if global section is not set
         setFormSection(selectedSection || filterSection || '');
+        clearDraft();
     };
 
     const handleSelectActivity = (act: Activity) => {
@@ -531,6 +586,7 @@ export const Activities: React.FC = () => {
             await fetchActivities(true);
             if (finalId) setSelectedActivityId(finalId);
             setIsEditing(false);
+            clearDraft();
 
         } catch (e: any) {
             console.error("Save Error", e);
@@ -963,13 +1019,26 @@ export const Activities: React.FC = () => {
     return (
         <div className="flex flex-col lg:flex-row gap-4 md:gap-6 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 md:pb-8 relative fluid-p-m fluid-gap-m px-4 md:px-0 w-full h-full overflow-hidden">
             {/* Landscape FAB for New Activity */}
-            <button
-                onClick={handleNewActivity}
-                className="hidden landscape:flex fixed bottom-6 right-6 z-50 bg-indigo-600 hover:bg-indigo-700 text-white size-12 rounded-2xl shadow-xl border border-white/20 items-center justify-center transition-all hover:scale-110 active:scale-95 lg:hidden"
-                title="Nova Atividade"
-            >
-                <span className="material-symbols-outlined text-3xl">add</span>
-            </button>
+            <div className="hidden landscape:flex fixed bottom-6 right-6 z-50 flex-col gap-3 lg:hidden">
+                {hasDraft && !isEditing && (
+                    <motion.button
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        onClick={loadDraft}
+                        className="size-12 bg-amber-500 text-white rounded-2xl shadow-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                        title="Continuar Rascunho"
+                    >
+                        <span className="material-symbols-outlined">edit_note</span>
+                    </motion.button>
+                )}
+                <button
+                    onClick={handleNewActivity}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white size-12 rounded-2xl shadow-xl border border-white/20 flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                    title="Nova Atividade"
+                >
+                    <span className="material-symbols-outlined text-3xl">add</span>
+                </button>
+            </div>
             {/* Hidden File Input */}
             <input
                 id="activity-file-upload"
@@ -1161,15 +1230,26 @@ export const Activities: React.FC = () => {
                         <p className="text-slate-500 max-w-md mb-8 leading-relaxed">
                             Crie e distribua provas, trabalhos e deveres de casa para sua turma de <span className={`text-${theme.primaryColor} font-bold`}>{theme.subject}</span> de forma organizada.
                         </p>
-                        <button
-                            onClick={handleNewActivity}
-                            className={`group relative inline-flex items-center justify-center gap-3 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden`}
-                            style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 20px 25px -5px ${theme.primaryColorHex}33` }}
-                        >
-                            <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">add</span>
-                            Criar Nova Atividade
-                            <div className="absolute inset-0 rounded-2xl ring-2 ring-white/20 group-hover:ring-white/40 transition-all"></div>
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button
+                                onClick={handleNewActivity}
+                                className={`group relative inline-flex items-center justify-center gap-3 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden`}
+                                style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 20px 25px -5px ${theme.primaryColorHex}33` }}
+                            >
+                                <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">add</span>
+                                Criar Nova Atividade
+                                <div className="absolute inset-0 rounded-2xl ring-2 ring-white/20 group-hover:ring-white/40 transition-all"></div>
+                            </button>
+                            {hasDraft && (
+                                <button
+                                    onClick={loadDraft}
+                                    className="inline-flex items-center justify-center gap-3 bg-amber-500 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl shadow-amber-500/20 hover:-translate-y-1 transition-all"
+                                >
+                                    <span className="material-symbols-outlined">edit_note</span>
+                                    Continuar Rascunho
+                                </button>
+                            )}
+                        </div>
                     </div>
                 ) : isEditing ? (
                     // --- EDIT / CREATE MODE ---
