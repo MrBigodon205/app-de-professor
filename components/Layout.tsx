@@ -190,7 +190,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const backgroundOrientation = useMemo(() => ({ x: springOrientX, y: springOrientY }), [springOrientX, springOrientY]);
 
   return (
-    <div className="flex h-dvh w-full bg-surface-page overflow-hidden lg:overflow-hidden selection:bg-primary/10 selection:text-primary">
+    <div className="fixed inset-0 w-full h-[100dvh] flex bg-surface-page overflow-hidden selection:bg-primary/10 selection:text-primary">
       {window.electronAPI?.isElectron && <DesktopTitleBar />}
       {/* Dynamic Background Pattern - Fixed and isolated */}
       <BackgroundPattern
