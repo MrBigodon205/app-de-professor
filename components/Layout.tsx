@@ -453,9 +453,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               {/* Subject Selector - HIDDEN on Mobile */}
               {currentUser && (
                 <div className="relative shrink-0 hidden md:block">
-                  <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold text-text-secondary hover:bg-surface-subtle hover:text-primary transition-colors">
+                  <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold text-text-secondary hover:bg-surface-subtle hover:text-primary transition-colors border border-border-subtle bg-surface-card/30">
                     <span className={`size-2 rounded-full bg-primary shadow-neon`}></span>
-                    <span className="hidden xs:inline max-w-[120px] truncate">{activeSubject}</span>
+                    <span className="inline-block max-w-[150px] truncate">{activeSubject}</span>
                     <span className="material-symbols-outlined text-xs">expand_more</span>
                   </button>
                   {/* Dropdown Logic Kept Same - Rendered via Portal or Absolute usually, reusing state */}
