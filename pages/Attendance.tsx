@@ -83,12 +83,12 @@ const MiniCalendar: React.FC<{
     };
 
     return (
-        <>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-0"
                 onClick={onClose}
             />
 
@@ -96,7 +96,7 @@ const MiniCalendar: React.FC<{
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute top-16 right-0 bg-surface-card backdrop-blur-2xl rounded-3xl shadow-2xl border border-border-default p-4 lg:p-8 landscape:p-2 z-50 w-[95%] max-w-[340px] lg:max-w-[500px] max-h-[90vh] landscape:max-h-[95vh] overflow-y-auto landscape:flex landscape:flex-row landscape:items-start landscape:gap-4 landscape:w-auto landscape:max-w-none"
+                className="bg-white dark:bg-slate-950 w-full max-w-[340px] rounded-[32px] shadow-2xl overflow-hidden relative z-10 animate-in zoom-in-95 duration-300 border border-slate-200 dark:border-slate-800 p-6"
             >
 
                 {/* Decorative background glow */}
@@ -105,29 +105,22 @@ const MiniCalendar: React.FC<{
                     <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full blur-3xl opacity-20" style={{ backgroundColor: theme.secondaryColorHex }}></div>
                 </div>
 
-                <div className="relative flex items-center justify-between mb-4 landscape:mb-0 landscape:flex-col landscape:gap-2 landscape:justify-center landscape:w-32 landscape:border-r landscape:border-border-default landscape:pr-2">
-                    <button onClick={() => changeMonth(-1)} className="p-3 hover:bg-surface-subtle rounded-xl text-text-muted transition-colors">
-                        <span className="material-symbols-outlined text-lg lg:text-2xl">expand_less</span>
+                <div className="relative flex items-center justify-between mb-6">
+                    <button onClick={() => changeMonth(-1)} className="size-10 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl text-slate-500 transition-colors">
+                        <span className="material-symbols-outlined text-xl">chevron_left</span>
                     </button>
-                    <span className="font-bold text-text-primary capitalize text-sm lg:text-2xl text-center leading-tight">
-                        {viewDate.toLocaleString('pt-BR', { month: 'long' })}<br />
-                        <span className="text-xs lg:text-base text-text-muted font-mono">{viewDate.getFullYear()}</span>
-                    </span>
-                    <button onClick={() => changeMonth(1)} className="p-3 hover:bg-surface-subtle rounded-xl text-text-muted transition-colors">
-                        <span className="material-symbols-outlined text-lg lg:text-2xl">expand_more</span>
-                    </button>
-
-                    {/* Mobile Close Button moved here for landscape side layout */}
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="hidden landscape:flex w-full mt-auto py-2 bg-surface-subtle text-text-muted rounded-lg font-bold text-[10px] uppercase tracking-widest hover:bg-surface-hover transition-colors justify-center"
-                    >
-                        Fechar
+                    <div className="text-center">
+                        <span className="block font-black text-slate-900 dark:text-white capitalize text-lg leading-tight">
+                            {viewDate.toLocaleString('pt-BR', { month: 'long' })}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{viewDate.getFullYear()}</span>
+                    </div>
+                    <button onClick={() => changeMonth(1)} className="size-10 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl text-slate-500 transition-colors">
+                        <span className="material-symbols-outlined text-xl">chevron_right</span>
                     </button>
                 </div>
 
-                <div className="relative landscape:flex-1">
+                <div className="relative">
 
                     <div className="grid grid-cols-7 gap-1 lg:gap-3 mb-2">
                         {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(day => (
@@ -136,54 +129,53 @@ const MiniCalendar: React.FC<{
                             </div>
                         ))}
                     </div>
-                    <div className="grid grid-cols-7 gap-1 lg:gap-3">
-                        {days.map((day, i) => {
-                            if (!day) return <div key={`empty-${i}`} className="h-9 w-9 lg:h-14 lg:w-14" />;
-                            return (
-                                <button
-                                    key={day || `empty-${i}`}
-                                    onClick={() => {
-                                        if (day) {
-                                            const newDateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-                                            onSelectDate(newDateStr);
-                                            onClose();
-                                        }
-                                    }}
-                                    className={`h-9 w-9 lg:h-14 lg:w-14 landscape:size-7 flex items-center justify-center rounded-full text-xs lg:text-sm transition-all relative group
-                                    ${isSelected(day as number)
-                                            ? 'text-white shadow-lg scale-110 font-black z-10'
-                                            : isToday(day as number)
-                                                ? 'font-bold'
-                                                : hasData(day as number)
-                                                    ? 'text-emerald-500 dark:text-emerald-400 font-black drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]'
-                                                    : 'text-text-secondary hover:bg-surface-hover'
-                                        }`}
-                                    style={
-                                        isSelected(day as number)
-                                            ? { backgroundColor: theme.primaryColorHex, color: '#fff', boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}4D` }
-                                            : isToday(day as number)
-                                                ? { backgroundColor: `${theme.primaryColorHex}1A`, color: theme.primaryColorHex }
-                                                : {}
+                    {days.map((day, i) => {
+                        if (!day) return <div key={`empty-${i}`} className="h-10 w-10" />;
+                        return (
+                            <button
+                                key={day || `empty-${i}`}
+                                onClick={() => {
+                                    if (day) {
+                                        const newDateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                                        onSelectDate(newDateStr);
+                                        onClose();
                                     }
-                                >
-                                    <span className="z-10">{day}</span>
-                                    {hasData(day as number) && !isSelected(day as number) && (
-                                        <div className="absolute bottom-1 w-1 h-1 rounded-full bg-emerald-500"></div>
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
+                                }}
+                                className={`h-9 w-9 lg:h-14 lg:w-14 landscape:size-7 flex items-center justify-center rounded-full text-xs lg:text-sm transition-all relative group
+                                    ${isSelected(day as number)
+                                        ? 'text-white shadow-lg scale-110 font-black z-10'
+                                        : isToday(day as number)
+                                            ? 'font-bold'
+                                            : hasData(day as number)
+                                                ? 'text-emerald-500 dark:text-emerald-400 font-black drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]'
+                                                : 'text-text-secondary hover:bg-surface-hover'
+                                    }`}
+                                style={
+                                    isSelected(day as number)
+                                        ? { backgroundColor: theme.primaryColorHex, color: '#fff', boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}4D` }
+                                        : isToday(day as number)
+                                            ? { backgroundColor: `${theme.primaryColorHex}1A`, color: theme.primaryColorHex }
+                                            : {}
+                                }
+                            >
+                                <span className="z-10">{day}</span>
+                                {hasData(day as number) && !isSelected(day as number) && (
+                                    <div className="absolute bottom-1 w-1 h-1 rounded-full bg-emerald-500"></div>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
+        </div>
 
-                {/* Mobile Close Button */}
-                <button
-                    onClick={onClose}
-                    className="w-full mt-3 py-2 bg-surface-subtle text-text-muted rounded-lg font-bold text-[10px] sm:hidden hover:bg-surface-hover transition-colors"
-                >
-                    Fechar
-                </button>
-            </motion.div>
+                {/* Mobile Close Button */ }
+    <button
+        onClick={onClose}
+        className="w-full mt-3 py-2 bg-surface-subtle text-text-muted rounded-lg font-bold text-[10px] sm:hidden hover:bg-surface-hover transition-colors"
+    >
+        Fechar
+    </button>
+            </motion.div >
         </>
     );
 };
