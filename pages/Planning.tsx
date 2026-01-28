@@ -482,20 +482,27 @@ export const Planning: React.FC = () => {
             if (selectedPlanId && isEditing && plans.some(p => p.id === selectedPlanId)) {
                 // UPDATE
                 action = 'UPDATE';
+                finalId = selectedPlanId;
             } else {
                 // CREATE or CLONE
-                finalId = generateUUID();
+                finalId = null; // Let Postgres generate BigInt ID
                 action = 'INSERT';
             }
 
             if (!finalId) throw new Error("Falha ao gerar ID");
 
             // --- ONLINE MODE (WEB) ---
-            const { error } = await supabase.from('plans').upsert({
+            const { data: savedData, error } = await supabase.from('plans').upsert({
                 ...planData,
-                id: finalId
-            });
+                ...(finalId ? { id: finalId } : {})
+            }).select();
+
             if (error) throw error;
+
+            const savedPlan = savedData?.[0];
+            if (savedPlan) {
+                finalId = savedPlan.id;
+            }
 
             // --- COMMON UI UPDATES ---
             alert(action === 'INSERT' ? "Planejamento criado com sucesso!" : "Planejamento atualizado com sucesso!");
