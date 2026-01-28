@@ -489,7 +489,7 @@ export const Planning: React.FC = () => {
                 action = 'INSERT';
             }
 
-            if (!finalId) throw new Error("Falha ao gerar ID");
+            if (finalId === undefined) throw new Error("Falha ao gerar ID");
 
             // --- ONLINE MODE (WEB) ---
             const { data: savedData, error } = await supabase.from('plans').upsert({
