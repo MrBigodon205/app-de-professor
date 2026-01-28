@@ -285,7 +285,7 @@ export const Activities: React.FC = () => {
             if (formatted.length > 0) {
                 const isCurrentFound = selectedActivityId ? formatted.find(a => a.id === selectedActivityId) : false;
 
-                if (!selectedActivityId || !isCurrentFound) {
+                if ((!selectedActivityId && !isEditing) || (selectedActivityId && !isCurrentFound)) {
                     setIsEditing(false);
                     if (window.innerWidth >= 1024) {
                         if (selectedActivityId !== formatted[0].id) {

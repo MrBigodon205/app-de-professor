@@ -291,7 +291,9 @@ export const Planning: React.FC = () => {
             if (formatted.length > 0) {
                 const isCurrentFound = selectedPlanId ? formatted.find(p => p.id === selectedPlanId) : false;
 
-                if (!selectedPlanId || !isCurrentFound) {
+                // Only auto-select if we are NOT currently in a form (creating or editing)
+                // This prevents "Creating" (showForm=true, selectedPlanId=null) from being closed
+                if ((!selectedPlanId && !showForm) || (selectedPlanId && !isCurrentFound)) {
                     setViewMode(false);
                     setShowForm(false);
                     if (window.innerWidth >= 1024) {

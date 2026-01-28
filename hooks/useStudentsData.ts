@@ -45,7 +45,7 @@ export const useStudentsData = (
                 units: s.units || {}
             }));
 
-            formatted.sort((a, b) => parseInt(a.number) - parseInt(b.number));
+            formatted.sort((a, b) => a.name.localeCompare(b.name));
             setStudents(formatted);
         } catch (error) {
             console.error('Error fetching students:', error);
