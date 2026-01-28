@@ -8,7 +8,6 @@ import { ClassProvider } from './contexts/ClassContext';
 
 import { HashRouter } from 'react-router-dom';
 
-import { OfflineProvider } from './contexts/OfflineContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -46,9 +45,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
         <HashRouter>
           <ThemeProvider>
             <ClassProvider>
-              <OfflineProvider>
-                <App />
-              </OfflineProvider>
+              <App />
             </ClassProvider>
           </ThemeProvider>
         </HashRouter>

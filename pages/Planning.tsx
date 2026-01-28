@@ -6,9 +6,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Plan, AttachmentFile } from '../types';
 import { supabase } from '../lib/supabase';
-import { db } from '../lib/db';
-import { useSync } from '../hooks/useSync';
-import { ENABLE_OFFLINE_MODE } from '../lib/offlineConfig';
 import DOMPurify from 'dompurify';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { DatePicker } from '../components/DatePicker';
@@ -22,7 +19,6 @@ export const Planning: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
     const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
-    const { triggerSync } = useSync();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // UI State
@@ -194,28 +190,8 @@ export const Planning: React.FC = () => {
 
         setLoading(true);
         try {
-            if (!ENABLE_OFFLINE_MODE) {
-                // ONLINE ONLY
-                const { error } = await supabase.from('plans').delete().in('id', selectedIds);
-                if (error) throw error;
-            } else {
-                // OFFLINE/HYBRID
-                // 1. Local Delete
-                await db.plans.bulkDelete(selectedIds);
-
-                // 2. Queue Delete
-                const timestamp = Date.now();
-                const queueItems = selectedIds.map(id => ({
-                    table: 'plans',
-                    action: 'DELETE',
-                    payload: { id },
-                    status: 'pending',
-                    createdAt: timestamp,
-                    retryCount: 0
-                }));
-                await db.syncQueue.bulkAdd(queueItems as any);
-                triggerSync();
-            }
+            const { error } = await supabase.from('plans').delete().in('id', selectedIds);
+            if (error) throw error;
 
             setPlans(prev => prev.filter(p => !selectedIds.includes(p.id)));
             setSelectedIds([]);
@@ -273,57 +249,17 @@ export const Planning: React.FC = () => {
         try {
             let planData: any[] = [];
 
-            if (!ENABLE_OFFLINE_MODE) {
-                // --- ONLINE ONLY MODE ---
-                let query = supabase.from('plans').select('*').eq('user_id', currentUser.id);
+            let query = supabase.from('plans').select('*').eq('user_id', currentUser.id);
 
-                if (selectedSeriesId) query = query.eq('series_id', selectedSeriesId);
-                if (activeSubject) {
-                    query = query.or(`subject.eq.${activeSubject},subject.is.null`);
-                }
-
-                const { data, error } = await query;
-                if (error) throw error;
-
-                const serverPlans = data || [];
-
-                // OPTIMISTIC UI: Get local pending items
-                const pendingPlans = await db.plans
-                    .filter(p => p.syncStatus === 'pending' && p.user_id === currentUser.id)
-                    .toArray();
-
-                // Merge
-                const planMap = new Map();
-                serverPlans.forEach(p => planMap.set(p.id.toString(), p));
-                pendingPlans.forEach(p => planMap.set(p.id.toString(), p));
-
-                planData = Array.from(planMap.values());
-
-                // Cache safe data
-                const pendingIds = new Set(pendingPlans.map(p => p.id.toString()));
-                const safeCacheData = serverPlans.filter(p => !pendingIds.has(p.id.toString()));
-
-                if (safeCacheData.length > 0) {
-                    await db.plans.bulkPut(safeCacheData.map(p => ({
-                        ...p,
-                        id: p.id.toString(),
-                        syncStatus: 'synced'
-                    })));
-                }
-
-            } else {
-                // --- HYBRID MODE (Offline) ---
-                console.log("Offline: Loading Plans from Dexie");
-                let collection = db.plans.where('user_id').equals(currentUser.id);
-                planData = await collection.toArray();
-
-                if (selectedSeriesId) {
-                    planData = planData.filter(p => p.series_id === selectedSeriesId || p.series_id === parseInt(selectedSeriesId));
-                }
-                if (activeSubject) {
-                    planData = planData.filter(p => p.subject === activeSubject);
-                }
+            if (selectedSeriesId) query = query.eq('series_id', selectedSeriesId);
+            if (activeSubject) {
+                query = query.or(`subject.eq.${activeSubject},subject.is.null`);
             }
+
+            const { data, error } = await query;
+            if (error) throw error;
+
+            planData = data || [];
 
             const formatted: Plan[] = planData.map(p => ({
                 id: p.id.toString(),
@@ -554,34 +490,12 @@ export const Planning: React.FC = () => {
 
             if (!finalId) throw new Error("Falha ao gerar ID");
 
-            if (!ENABLE_OFFLINE_MODE) {
-                // --- ONLINE MODE (WEB) ---
-                const { error } = await supabase.from('plans').upsert({
-                    ...planData,
-                    id: finalId
-                });
-                if (error) throw error;
-                // Success message below at common logic
-            } else {
-                // --- OFFLINE/HYBRID MODE ---
-                const localPayload = {
-                    ...planData,
-                    id: finalId,
-                    syncStatus: 'pending' as const
-                };
-                await db.plans.put(localPayload);
-
-                await db.syncQueue.add({
-                    table: 'plans',
-                    action: action,
-                    payload: { ...planData, id: finalId },
-                    status: 'pending',
-                    createdAt: Date.now(),
-                    retryCount: 0
-                });
-
-                triggerSync();
-            }
+            // --- ONLINE MODE (WEB) ---
+            const { error } = await supabase.from('plans').upsert({
+                ...planData,
+                id: finalId
+            });
+            if (error) throw error;
 
             // --- COMMON UI UPDATES ---
             alert(action === 'INSERT' ? "Planejamento criado com sucesso!" : "Planejamento atualizado com sucesso!");
@@ -610,26 +524,8 @@ export const Planning: React.FC = () => {
         setLoading(true);
         try {
 
-            if (!ENABLE_OFFLINE_MODE) {
-                // ONLINE ONLY
-                const { error } = await supabase.from('plans').delete().eq('id', selectedPlanId);
-                if (error) throw error;
-            } else {
-                // Local Delete
-                await db.plans.delete(selectedPlanId);
-
-                // Queue Delete
-                await db.syncQueue.add({
-                    table: 'plans',
-                    action: 'DELETE',
-                    payload: { id: selectedPlanId },
-                    status: 'pending',
-                    createdAt: Date.now(),
-                    retryCount: 0
-                });
-
-                triggerSync();
-            }
+            const { error } = await supabase.from('plans').delete().eq('id', selectedPlanId);
+            if (error) throw error;
 
             // UI Update
             setPlans(plans.filter(p => p.id !== selectedPlanId));

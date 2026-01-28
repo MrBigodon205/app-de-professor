@@ -32,14 +32,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // --- PROFILE FETCHING (With Offline Fallback) ---
     const fetchProfile = useCallback(async (uid: string, authUser?: any) => {
         try {
-            // Get freshest auth user if not provided or to ensure metadata is current
+            // Get freshest auth user if not provided
             let freshAuthUser = authUser;
             if (!freshAuthUser || !freshAuthUser.user_metadata) {
                 const { data } = await supabase.auth.getUser();
                 if (data.user) freshAuthUser = data.user;
             }
 
-            // 1. Try Network Fetch first (Standard Web)
+            // 1. Fetch from Supabase
             const { data: profile, error } = await supabase
                 .from('profiles')
                 .select('id, name, email, photo_url, subject, subjects')
@@ -47,13 +47,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 .single();
 
             if (profile) {
-                // Robust password check:
-                // 1. Metadata from Supabase Auth
-                // 2. Providers (email provider always has password)
-                // 3. FALLBACK: If user was retrieved from a session that didn't have metadata yet
                 const isEmailUser = freshAuthUser?.app_metadata?.providers?.includes('email');
                 const isPasswordSetInMeta = freshAuthUser?.user_metadata?.is_password_set === true;
-
                 const hasPasswordConfirmed = isEmailUser || isPasswordSetInMeta;
 
                 const finalUser: User = {
@@ -66,11 +61,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     isPasswordSet: !!hasPasswordConfirmed
                 };
 
-                // SUCCESS: Save to State AND Cache
                 setCurrentUser(finalUser);
                 setUserId(finalUser.id);
-                localStorage.setItem(`offline_profile_${finalUser.id}`, JSON.stringify(finalUser));
-                // ...
 
                 // Handle Subject Persistence
                 const storedSubject = localStorage.getItem('last_active_subject');
@@ -81,19 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
             }
         } catch (err) {
-            console.warn("Fetch profile failed (likely offline). Trying cache...", err);
-            // 2. OFFLINE FALLBACK: Load from Cache
-            try {
-                const cached = localStorage.getItem(`offline_profile_${uid}`);
-                if (cached) {
-                    const savedUser = JSON.parse(cached);
-                    console.log("Restored user from offline cache:", savedUser.name);
-                    setCurrentUser(savedUser);
-                    setUserId(savedUser.id);
-                }
-            } catch (e) {
-                console.error("Offline cache restore failed:", e);
-            }
+            console.error("Fetch profile failed:", err);
         }
     }, []);
 
@@ -103,47 +83,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const initSession = async () => {
             try {
-                // IMMEDIATE CACHE CHECK: If we have a user in localStorage, restore it INSTANTLY
-                // This removes the "white screen" or "spinner" delay entirely for repeat users
-                const lastUserId = localStorage.getItem('last_user_id');
-                if (lastUserId) {
-                    try {
-                        const cached = localStorage.getItem(`offline_profile_${lastUserId}`);
-                        if (cached) {
-                            const savedUser = JSON.parse(cached);
-                            if (mounted) {
-                                console.log("⚡ Instant Cache Restore:", savedUser.name);
-                                setCurrentUser(savedUser);
-                                setUserId(savedUser.id);
-                                setLoading(false); // Unblock UI immediately
-
-                                const storedSubject = localStorage.getItem('last_active_subject');
-                                if (storedSubject) setActiveSubject(storedSubject);
-                            }
-                        }
-                    } catch (e) { console.warn("Cache restore error", e); }
-                }
-
-                // CHECK NETWORK STATUS
-                if (!navigator.onLine) {
-                    console.warn("Offline mode detected at startup.");
-                    if (mounted) setLoading(false);
-                    return;
-                }
-
-                // ASYNC SUPABASE CHECK (Background)
-                const { data: { session }, error } = await supabase.auth.getSession();
+                const { data: { session } } = await supabase.auth.getSession();
 
                 if (session?.user) {
                     if (mounted) {
                         setUserId(session.user.id);
-                        localStorage.setItem('last_user_id', session.user.id);
-                        // Fetch fresh profile in background
                         await fetchProfile(session.user.id, session.user);
                     }
-                } else if (!lastUserId) {
-                    // Only stop loading if we didn't have a cached user. 
-                    // If we had a cached user, we stay logged in until explicit sign out or failure.
+                } else {
                     if (mounted) {
                         setCurrentUser(null);
                         setUserId(null);
@@ -184,9 +131,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // --- ACTIONS ---
 
     const login = useCallback(async (email: string, password: string) => {
-        if (!navigator.onLine) {
-            return { success: false, error: "Você está offline. Conecte-se para entrar." };
-        }
         try {
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;

@@ -5,8 +5,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Student, Occurrence } from '../types';
 import { supabase } from '../lib/supabase';
-import { db, LocalOccurrence } from '../lib/db';
-import { useSync } from '../hooks/useSync';
 import { DatePicker } from '../components/DatePicker';
 import { CategorySelect } from '../components/CategorySelect';
 
@@ -30,8 +28,6 @@ export const Observations: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
-    // Offline / Sync Hook
-    const { isOnline, pendingCount, triggerSync } = useSync();
 
     const [activeTab, setActiveTab] = useState<'occurrences' | 'history'>('occurrences');
     const [students, setStudents] = useState<Student[]>([]);
@@ -56,65 +52,28 @@ export const Observations: React.FC = () => {
             let studentsData: any[] = [];
             let occurrencesData: any[] = [];
 
-            if (navigator.onLine) {
-                // 1. Fetch Students (Online)
-                const { data: sData, error: sError } = await supabase
-                    .from('students')
-                    .select('*')
-                    .eq('series_id', selectedSeriesId)
-                    .eq('section', selectedSection)
-                    .eq('user_id', currentUser.id);
+            // 1. Fetch Students
+            const { data: sData, error: sError } = await supabase
+                .from('students')
+                .select('*')
+                .eq('series_id', selectedSeriesId)
+                .eq('section', selectedSection)
+                .eq('user_id', currentUser.id);
 
-                if (sError) throw sError;
-                studentsData = sData;
+            if (sError) throw sError;
+            studentsData = sData || [];
 
-                // Cache Students
-                await db.students.bulkPut(studentsData.map(s => ({ ...s, id: s.id.toString(), syncStatus: 'synced' })));
+            // 2. Fetch Occurrences
+            const { data: occData, error: occError } = await supabase
+                .from('occurrences')
+                .select(`*, student:students(name)`)
+                .eq('user_id', currentUser.id)
+                .eq('subject', activeSubject)
+                .order('date', { ascending: false });
 
-                // 2. Fetch Occurrences (Online)
-                const { data: occData, error: occError } = await supabase
-                    .from('occurrences')
-                    .select(`*, student:students(name)`)
-                    .eq('user_id', currentUser.id)
-                    .eq('subject', activeSubject)
-                    .order('date', { ascending: false });
+            if (occError) throw occError;
+            occurrencesData = occData || [];
 
-                if (occError) throw occError;
-                occurrencesData = occData;
-
-                // Cache Occurrences
-                await db.occurrences.bulkPut(occurrencesData.map(o => ({
-                    ...o,
-                    id: o.id.toString(),
-                    studentId: o.student_id ? o.student_id.toString() : '', // Map for Dexie index
-                    student_name: o.student?.name,
-                    syncStatus: 'synced'
-                })));
-
-            } else {
-                // Offline Fallback
-                console.log("Offline: Loading Observations from Dexie...");
-
-                const localStudents = await db.students
-                    .where({ series_id: selectedSeriesId, section: selectedSection, user_id: currentUser.id })
-                    .toArray();
-                studentsData = localStudents.map(s => ({ ...s, id: s.id.toString() }));
-
-                occurrencesData = await db.occurrences
-                    .where({ user_id: currentUser.id }) // Subject filtering if needed?
-                    .toArray();
-                // Filter by subject manually if not indexed
-                // We only cached user specific. If subject matters, we should have indexed it or filter now.
-                // db.ts occurrence index: 'id, studentId, syncStatus, user_id'
-                // Let's filter by subject in memory
-                if (activeSubject) {
-                    occurrencesData = occurrencesData.filter(o => o.subject === activeSubject);
-                }
-                // Filter by students in this class?
-                // The view shows "History" which might be all? 
-                // But typically we filter by studentId if selected, or just list all recent.
-                // The code below doesn't filter by class strictly unless we do it here.
-            }
 
             const formattedStudents: Student[] = studentsData.map(s => ({
                 id: s.id.toString(),
@@ -218,8 +177,8 @@ export const Observations: React.FC = () => {
         setSaving(true);
 
         try {
-            const payload = {
-                student_id: selectedStudentId, // string in UI, bigint in DB? Usually bigint.
+            const payload: any = {
+                student_id: selectedStudentId,
                 date: occurrenceDate,
                 type,
                 description,
@@ -228,54 +187,24 @@ export const Observations: React.FC = () => {
                 subject: activeSubject
             };
 
-            const isEdit = !!editingOccId;
-            const tempId = isEdit ? editingOccId : `temp-${Date.now()}`;
-
-            // 1. Save Local (Dexie)
-            const localRecord: LocalOccurrence = {
-                id: tempId,
-                studentId: selectedStudentId,
-                type,
-                description,
-                date: occurrenceDate,
-                unit: selectedUnit,
-                userId: currentUser.id,
-                student_name: students.find(s => s.id === selectedStudentId)?.name || 'Estudante',
-                syncStatus: 'pending',
-                // Add any other props needed for LocalOccurrence
-            };
-
-            await db.occurrences.put(localRecord);
-
-            // 2. Add to Queue
-            await db.syncQueue.add({
-                table: 'occurrences',
-                action: isEdit ? 'UPDATE' : 'INSERT',
-                payload: isEdit ? { ...payload, id: editingOccId } : payload,
-                status: 'pending',
-                createdAt: Date.now(),
-                retryCount: 0
-            });
-
-            // 3. Update UI Immediately (Optimistic)
-            if (isEdit) {
-                setOccurrences(prev => prev.map(o => o.id === editingOccId ? { ...o, ...localRecord } : o));
-                setEditingOccId(null);
-            } else {
-                const newOcc: Occurrence = { ...localRecord } as any; // Cast needed due to syncStatus
-                setOccurrences(prev => [newOcc, ...prev]);
+            if (editingOccId) {
+                payload.id = editingOccId;
             }
+
+            const { error } = await supabase.from('occurrences').upsert(payload);
+            if (error) throw error;
+
+            await fetchData(true);
 
             setDescription('');
             setType('Alerta');
             setSelectedUnit('1');
             setOccurrenceDate(new Date().toLocaleDateString('sv-SE'));
+            setEditingOccId(null);
 
-            // 4. Trigger Sync
-            triggerSync();
-
-        } catch (e) {
+        } catch (e: any) {
             console.error("Save Error", e);
+            alert("Erro ao salvar: " + e.message);
         } finally {
             setSaving(false);
         }
@@ -347,30 +276,18 @@ export const Observations: React.FC = () => {
         if (!window.confirm("Deseja realmente excluir este registro?")) return;
 
         try {
-            // 1. Delete Local
-            await db.occurrences.delete(id);
+            const { error } = await supabase.from('occurrences').delete().eq('id', id);
+            if (error) throw error;
 
-            // 2. Queue Delete (only if it's not a temp local ID that hasn't synced yet)
-            // If it starts with 'temp-', we just delete local and don't sync delete (since server doesn't know it)
-            if (!id.startsWith('temp-')) {
-                await db.syncQueue.add({
-                    table: 'occurrences',
-                    action: 'DELETE',
-                    payload: { id },
-                    status: 'pending',
-                    createdAt: Date.now(),
-                    retryCount: 0
-                });
-                triggerSync();
-            }
-
-            // 3. UI Update
-            setOccurrences(occurrences.filter(o => o.id !== id));
+            fetchData(true);
             const newSelected = new Set(selectedOccIds);
             newSelected.delete(id);
             setSelectedOccIds(newSelected);
 
-        } catch (e) { console.error(e) }
+        } catch (e: any) {
+            console.error("Delete Error", e);
+            alert("Erro ao excluir registro.");
+        }
     };
 
     const handleBulkDelete = async () => {
@@ -380,33 +297,15 @@ export const Observations: React.FC = () => {
         setSaving(true);
         try {
             const idsToDelete = Array.from(selectedOccIds);
+            const { error } = await supabase.from('occurrences').delete().in('id', idsToDelete);
+            if (error) throw error;
 
-            // 1. Local Delete
-            await db.occurrences.bulkDelete(idsToDelete);
-
-            // 2. Queue
-            const queueItems = idsToDelete
-                .filter(id => !id.toString().startsWith('temp-'))
-                .map(id => ({
-                    table: 'occurrences' as const,
-                    action: 'DELETE' as const,
-                    payload: { id },
-                    status: 'pending' as const,
-                    createdAt: Date.now(),
-                    retryCount: 0
-                }));
-
-            if (queueItems.length > 0) {
-                await db.syncQueue.bulkAdd(queueItems);
-                triggerSync();
-            }
-
-            // 3. UI
-            setOccurrences(occurrences.filter(o => !selectedOccIds.has(o.id)));
+            await fetchData(true);
             setSelectedOccIds(new Set());
 
-        } catch (e) {
-            console.error("Error in bulk delete:", e);
+        } catch (e: any) {
+            console.error("Bulk Delete Error", e);
+            alert("Erro ao excluir registros.");
         } finally {
             setSaving(false);
         }

@@ -6,8 +6,6 @@ import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
-import { useSync } from '../hooks/useSync';
-import { usePredictiveSync } from '../hooks/usePredictiveSync';
 import { ProfileModal } from './ProfileModal';
 import { PasswordSetupModal } from './PasswordSetupModal';
 
@@ -18,7 +16,6 @@ import { MobileClassSelector } from './MobileClassSelector';
 import { ClassManager } from './ClassManager';
 import { BackgroundPattern } from './BackgroundPattern';
 import { DesktopTitleBar } from './DesktopTitleBar';
-import { BackupService } from '../services/BackupService';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, logout, activeSubject, updateActiveSubject } = useAuth();
@@ -26,24 +23,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const { classes, activeSeries, selectedSeriesId, selectedSection, selectSeries, selectSection, removeClass: deleteSeries, addClass: addSeries, removeSection, addSection } = useClass();
   const location = useLocation();
 
-  // Auto-Backup Integration (PC Only)
-  useEffect(() => {
-    // 1. Check if we need to restore from file (on first load)
-    BackupService.checkAndRestore();
 
-    // 2. Set up auto-backup interval (every 5 minutes)
-    const backupInterval = setInterval(() => {
-      BackupService.performAutoBackup();
-    }, 5 * 60 * 1000);
-
-    return () => clearInterval(backupInterval);
-  }, []);
-
-  // 🔄 BACKGROUND SYNC: Active whenever Layout is mounted (Logged In)
-  const { isSyncing, pendingCount } = useSync();
-
-  // 🔮 PREDICTIVE SYNC: The "Clarividente" Robot
-  const { prefetchStatus } = usePredictiveSync();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
@@ -443,12 +423,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 <span className="material-symbols-outlined text-[10px] text-text-muted bg-surface-subtle rounded-full p-0.5">expand_more</span>
               </button>
 
-              {/* Sync Status */}
-              {(pendingCount > 0 || isSyncing) && (
-                <div className="flex items-center justify-center size-7 md:size-8 rounded-full bg-amber-500/10 text-amber-600 animate-pulse shrink-0" title="Sincronizando...">
-                  <span className={`material-symbols-outlined text-sm md:text-base ${isSyncing ? 'animate-spin' : ''}`}>{isSyncing ? 'sync' : 'cloud_upload'}</span>
-                </div>
-              )}
 
               {/* Subject Selector - HIDDEN on Mobile */}
               {currentUser && (

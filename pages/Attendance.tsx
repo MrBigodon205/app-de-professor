@@ -7,8 +7,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Student, AttendanceRecord } from '../types';
 import { supabase } from '../lib/supabase';
-import { db } from '../lib/db';
-import { useSync } from '../hooks/useSync';
 
 // Utility to convert tailwind color names or hex to RGB for jsPDF
 const getThemeRGB = (colorClass: string): [number, number, number] => {
@@ -181,8 +179,6 @@ export const Attendance: React.FC = () => {
     const [showCalendar, setShowCalendar] = useState(false);
     const calendarRef = useRef<HTMLDivElement>(null);
 
-    // Offline / Sync Hook
-    const { isOnline, pendingCount, triggerSync } = useSync();
 
     // Close calendar when clicking outside
     useEffect(() => {
@@ -210,74 +206,39 @@ export const Attendance: React.FC = () => {
         if (!silent) setLoading(true);
 
         try {
-            let formattedStudents: Student[] = [];
-            let todaysRecords: any[] = [];
+            // 1. Fetch Students (Online Only)
+            const { data: studentsData, error: studentsError } = await supabase
+                .from('students')
+                .select('*')
+                .eq('series_id', selectedSeriesId)
+                .eq('section', selectedSection)
+                .eq('user_id', currentUser.id);
 
-            // 1. Try to fetch from Supabase (Online)
-            if (navigator.onLine) {
-                const { data: studentsData, error: studentsError } = await supabase
-                    .from('students')
-                    .select('*')
-                    .eq('series_id', selectedSeriesId)
-                    .eq('section', selectedSection)
-                    .eq('user_id', currentUser.id);
+            if (studentsError) throw studentsError;
 
-                if (studentsError) throw studentsError;
+            const formattedStudents: Student[] = studentsData.map(s => ({
+                id: s.id.toString(),
+                name: s.name,
+                number: s.number,
+                initials: s.initials || '',
+                color: s.color || '',
+                classId: s.series_id.toString(),
+                section: s.section,
+                userId: s.user_id,
+                units: s.units || {}
+            }));
 
-                formattedStudents = studentsData.map(s => ({
-                    id: s.id.toString(),
-                    name: s.name,
-                    number: s.number,
-                    initials: s.initials || '',
-                    color: s.color || '',
-                    classId: s.series_id.toString(),
-                    section: s.section,
-                    userId: s.user_id,
-                    units: s.units || {}
-                }));
+            // Fetch Attendance
+            const { data: todaysRecords, error: attendanceError } = await supabase
+                .from('attendance')
+                .select('*')
+                .eq('date', selectedDate)
+                .eq('subject', activeSubject)
+                .eq('unit', selectedUnit)
+                .eq('user_id', currentUser.id)
+                .in('student_id', formattedStudents.map(s => s.id));
 
-                // Cache Students to Dexie
-                await db.students.bulkPut(formattedStudents.map(s => ({ ...s, syncStatus: 'synced' })));
-
-                // Fetch Attendance
-                const { data: records, error: attendanceError } = await supabase
-                    .from('attendance')
-                    .select('*')
-                    .eq('date', selectedDate)
-                    .eq('subject', activeSubject) // Ensure subject matches
-                    .eq('unit', selectedUnit)
-                    .eq('user_id', currentUser.id)
-                    .in('student_id', formattedStudents.map(s => s.id));
-
-                if (attendanceError) throw attendanceError;
-                todaysRecords = records;
-
-                // Cache Attendance to Dexie
-                // We need to be careful not to overwrite "pending" changes if we didn't sync them yet.
-                // But for simplicity, we assume sync runs first. 
-                // A safer way is valid, but let's blindly cache "synced" status for what we got from server.
-                await db.attendance.bulkPut(todaysRecords.map(r => ({ ...r, syncStatus: 'synced' })));
-
-            } else {
-                // 2. Offline Fallback (Dexie)
-                console.log("Offline: Loading from Dexie...");
-
-                const localStudents = await db.students
-                    .where({ series_id: selectedSeriesId, section: selectedSection, user_id: currentUser.id })
-                    .toArray();
-
-                formattedStudents = localStudents.map(s => ({ ...s, id: s.id.toString() })); // Ensure ID string
-
-                // Fetch Local Attendance
-                // Dexie filtering
-                todaysRecords = await db.attendance
-                    .where({ date: selectedDate, subject: activeSubject, unit: selectedUnit, user_id: currentUser.id })
-                    .toArray();
-
-                // Filter by student IDs to match the class
-                const studentIds = new Set(formattedStudents.map(s => s.id));
-                todaysRecords = todaysRecords.filter(r => studentIds.has(r.student_id.toString()));
-            }
+            if (attendanceError) throw attendanceError;
 
             formattedStudents.sort((a, b) => parseInt(a.number) - parseInt(b.number));
 
@@ -290,15 +251,9 @@ export const Attendance: React.FC = () => {
             setStudents(formattedStudents);
             setAttendanceMap(newMap);
 
-            // Fetch active dates (Online only or Cache?)
-            // If offline, we might skip or load from local full scan (expensive?)
-            // For now, only online or skip
-            if (navigator.onLine) fetchActiveDates(formattedStudents.map(s => s.id));
-
+            fetchActiveDates(formattedStudents.map(s => s.id));
         } catch (e) {
             console.error("Fetch data failed", e);
-            // Fallback to offline if error was network related?
-            // Already handled by check?
         } finally {
             if (!silent) setLoading(false);
         }
@@ -369,83 +324,38 @@ export const Attendance: React.FC = () => {
     };
 
     const updateRecord = async (studentId: string, status: string) => {
-        if (!currentUser) return;
+        if (!currentUser || !selectedSeriesId || !selectedSection) return;
         setIsSaving(true);
         try {
-            const payload = {
-                student_id: studentId,
+            const cleanPayload = {
+                student_id: parseInt(studentId),
                 date: selectedDate,
                 status: status,
-                series_id: selectedSeriesId,
+                series_id: parseInt(selectedSeriesId),
                 section: selectedSection,
                 user_id: currentUser.id,
                 subject: activeSubject,
                 unit: selectedUnit
             };
 
-            // 1. Save Local (Dexie)
             if (status === '') {
-                // Delete local
-                await db.attendance
-                    .where({ student_id: studentId, date: selectedDate, subject: activeSubject })
-                    .delete();
+                await supabase
+                    .from('attendance')
+                    .delete()
+                    .match({
+                        student_id: cleanPayload.student_id,
+                        date: selectedDate,
+                        subject: activeSubject,
+                        unit: selectedUnit
+                    });
             } else {
-                // Upsert local
-                // We must map snake_case to camelCase because LocalAttendance extends AttendanceRecord
-                const localRecord = {
-                    ...payload,
-                    studentId: payload.student_id,
-                    userId: payload.user_id,
-                    status: payload.status as any,
-                    syncStatus: 'pending' as const,
-                    id: `${studentId}-${selectedDate}-${activeSubject}-${selectedUnit}`
-                };
-
-                await db.attendance.put(localRecord);
-            }
-
-            // 2. Add to Sync Queue
-            await db.syncQueue.add({
-                table: 'attendance',
-                action: status === '' ? 'DELETE' : 'UPDATE', // Or UPSERT/INSERT
-                // For simplicity, we use UPDATE/UPSERT logic in useSync
-                payload: payload,
-                status: 'pending',
-                createdAt: Date.now(),
-                retryCount: 0
-            });
-
-            // 3. Direct Online Sync for Web (Instantaneous feel)
-            if (navigator.onLine) {
-                const cleanPayload = {
-                    student_id: parseInt(studentId),
-                    date: selectedDate,
-                    status: status,
-                    series_id: parseInt(selectedSeriesId),
-                    section: selectedSection,
-                    user_id: currentUser.id,
-                    subject: activeSubject,
-                    unit: selectedUnit
-                };
-
-                if (status === '') {
-                    await supabase
-                        .from('attendance')
-                        .delete()
-                        .match({ student_id: cleanPayload.student_id, date: selectedDate, subject: activeSubject, unit: selectedUnit });
-                } else {
-                    await supabase
-                        .from('attendance')
-                        .upsert(cleanPayload);
-                }
-            } else {
-                // Trigger Background Sync if offline
-                triggerSync();
+                await supabase
+                    .from('attendance')
+                    .upsert(cleanPayload);
             }
 
             // UI Update (Dates)
             if (status !== '') setActiveDates(prev => new Set(prev).add(selectedDate));
-
         } catch (e) {
             console.error(`Failed to update ${studentId}`, e);
         } finally {
@@ -454,7 +364,7 @@ export const Attendance: React.FC = () => {
     };
 
     const markAll = async (status: string) => {
-        if (!currentUser) return;
+        if (!currentUser || !selectedSeriesId || !selectedSection) return;
         setIsSaving(true);
         const newMap = { ...attendanceMap };
         students.forEach(s => newMap[s.id] = status);
@@ -462,61 +372,32 @@ export const Attendance: React.FC = () => {
         if (status !== '') setActiveDates(prev => new Set(prev).add(selectedDate));
 
         try {
-            // Batch process for Local + Queue
-            // Dexie bulkPut is fast
-            const start = Date.now();
-
             const records = students.map(s => ({
-                student_id: s.id,
+                student_id: parseInt(s.id),
                 date: selectedDate,
-                status: status as any, // Cast to any/enum
-                series_id: selectedSeriesId,
+                status: status,
+                series_id: parseInt(selectedSeriesId),
                 section: selectedSection,
                 user_id: currentUser.id,
                 subject: activeSubject,
-                unit: selectedUnit,
-                studentId: s.id, // Required by LocalAttendance
-                userId: currentUser.id, // Required by LocalAttendance
-                syncStatus: 'pending' as const,
-                id: `${s.id}-${selectedDate}-${activeSubject}-${selectedUnit}` // Required by LocalAttendance
+                unit: selectedUnit
             }));
 
             if (status === '') {
-                // Bulk Delete Local
-                // db.attendance.bulkDelete(keys)... hard with compound. iterating might be needed or specific query
-                await db.attendance
-                    .where('[studentId+date+subject+unit]')
-                    .anyOf(students.map(s => [s.id, selectedDate, activeSubject, selectedUnit]))
-                    .delete();
+                await supabase
+                    .from('attendance')
+                    .delete()
+                    .match({
+                        user_id: currentUser.id,
+                        date: selectedDate,
+                        subject: activeSubject,
+                        unit: selectedUnit,
+                        series_id: parseInt(selectedSeriesId),
+                        section: selectedSection
+                    });
             } else {
-                await db.attendance.bulkPut(records);
+                await supabase.from('attendance').upsert(records);
             }
-
-            // Queue - Add individual items (or we could support BULK_UPSERT action in queue? keeping simple for now)
-            // Ideally we add ONE 'BULK_UPDATE' item to queue, but useSync needs to support it. 
-            // For now, just add N items. It's okay.
-            const queueItems = students.map(s => ({
-                table: 'attendance' as const,
-                action: status === '' ? 'DELETE' as const : 'UPDATE' as const,
-                payload: {
-                    student_id: s.id,
-                    date: selectedDate,
-                    status: status,
-                    series_id: selectedSeriesId,
-                    section: selectedSection,
-                    user_id: currentUser.id,
-                    subject: activeSubject,
-                    unit: selectedUnit
-                },
-                status: 'pending' as const,
-                createdAt: Date.now(),
-                retryCount: 0
-            }));
-
-            await db.syncQueue.bulkAdd(queueItems);
-
-            triggerSync();
-
         } catch (e) {
             console.error("Bulk update failed", e);
         } finally {
@@ -840,19 +721,6 @@ export const Attendance: React.FC = () => {
                         ))}
                     </div>
 
-                    <div className={`flex items-center gap-2 px-4 h-11 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-500/20 font-bold text-sm ml-2`}>
-                        {isOnline ? (
-                            <>
-                                <span className="material-symbols-outlined text-lg">cloud_done</span>
-                                Online
-                            </>
-                        ) : (
-                            <>
-                                <span className="material-symbols-outlined text-lg">cloud_off</span>
-                                Offline ({pendingCount})
-                            </>
-                        )}
-                    </div>
                 </div>
             </div>
 

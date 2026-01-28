@@ -6,10 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
-import { supabase } from '../lib/supabase';
-import { db } from '../lib/db';
-import { useSync } from '../hooks/useSync';
 import { Student, Grades as GradesType } from '../types';
+import { supabase } from '../lib/supabase';
 import DOMPurify from 'dompurify';
 import { UNIT_CONFIGS, calculateUnitTotal, calculateAnnualSummary, getStatusResult } from '../utils/gradeCalculations';
 
@@ -181,86 +179,38 @@ export const Grades: React.FC = () => {
     const pendingChangesRef = useRef<{ [studentId: string]: GradeData }>({});
     const saveTimeoutRefs = useRef<{ [key: string]: any }>({});
 
-    // Offline / Sync Hook
-    const { isOnline, pendingCount, triggerSync } = useSync();
 
     // Fetch Data
     const fetchData = async (silent = false) => {
         if (!currentUser || !selectedSeriesId || !selectedSection) return;
         if (!silent) setLoading(true);
         try {
-            let studentsData: any[] = [];
-            let gradesData: any[] = [];
+            // 1. Fetch Students (Online Only)
+            const { data: studentsData, error: sError } = await supabase
+                .from('students')
+                .select('*')
+                .eq('series_id', selectedSeriesId)
+                .eq('section', selectedSection)
+                .eq('user_id', currentUser.id)
+                .order('number', { ascending: true });
 
-            if (navigator.onLine) {
-                // 1. Fetch Students (Online)
-                const { data: sData, error: sError } = await supabase
-                    .from('students')
-                    .select('*')
-                    .eq('series_id', selectedSeriesId)
-                    .eq('section', selectedSection)
-                    .eq('user_id', currentUser.id)
-                    .order('number', { ascending: true });
+            if (sError) throw sError;
 
-                if (sError) throw sError;
-                studentsData = sData;
+            // 2. Fetch Grades (Online Only)
+            const studentIds = studentsData.map(s => s.id);
+            const { data: gradesData, error: gError } = await supabase
+                .from('grades')
+                .select('*')
+                .in('student_id', studentIds)
+                .eq('subject', activeSubject)
+                .eq('user_id', currentUser.id);
 
-                // Cache Students
-                // Ensure IDs are strings for Dexie consistency
-                await db.students.bulkPut(studentsData.map(s => ({ ...s, id: s.id.toString(), syncStatus: 'synced' })));
-
-                // 2. Fetch Grades (Online)
-                const studentIds = studentsData.map(s => s.id);
-                const { data: gData, error: gError } = await supabase
-                    .from('grades')
-                    .select('*')
-                    .in('student_id', studentIds)
-                    .eq('subject', activeSubject)
-                    .eq('user_id', currentUser.id);
-
-                if (gError) throw gError;
-                gradesData = gData;
-
-                // Cache Grades
-                // Map to LocalGrades schema (student_id string)
-                await db.grades.bulkPut(gradesData.map(g => ({
-                    ...g,
-                    student_id: g.student_id.toString(),
-                    series_id: selectedSeriesId, // Might be missing in fetch if not selected?
-                    section: selectedSection, // Assuming match
-                    syncStatus: 'synced'
-                })));
-
-            } else {
-                // Offline Fallback
-                console.log("Offline: Loading Grades from Dexie...");
-
-                const localStudents = await db.students
-                    .where({ series_id: selectedSeriesId, section: selectedSection, user_id: currentUser.id })
-                    .toArray();
-                studentsData = localStudents.map(s => ({ ...s, id: parseInt(s.id) })); // Convert back to number for legacy logic if needed? 
-                // Actually types say ID is string. But database student_id is number (bigint).
-                // Let's keep ID as string in formatted list.
-                // But loop below expects matching types.
-                // studentsData in Online block comes from Supabase (any).
-
-                // Grades
-                gradesData = await db.grades
-                    .where({ user_id: currentUser.id, subject: activeSubject }) // series/section filtering might be needed if stored
-                    .toArray();
-
-                // Filter grades by student IDs
-                const sIds = new Set(localStudents.map(s => s.id));
-                gradesData = gradesData.filter(g => sIds.has(g.student_id));
-            }
+            if (gError) throw gError;
 
             // 3. Merge
             const formatted: Student[] = studentsData.map(s => {
-                // Find all grade records for this student
-                // Handle student_id mismatch (string vs number)
                 const sGrades = gradesData?.filter(g => g.student_id.toString() === s.id.toString()) || [];
                 const unitsMap: any = {};
-
                 sGrades.forEach(g => {
                     unitsMap[g.unit] = g.data || {};
                 });
@@ -271,7 +221,7 @@ export const Grades: React.FC = () => {
                     number: s.number,
                     initials: s.initials || '',
                     color: s.color || '',
-                    classId: s.series_id?.toString() || selectedSeriesId, // Fallback
+                    classId: s.series_id?.toString() || selectedSeriesId,
                     section: s.section,
                     userId: s.user_id,
                     units: unitsMap
@@ -378,30 +328,10 @@ export const Grades: React.FC = () => {
                     subject: activeSubject
                 };
 
-                // 1. Save Local (Dexie)
-                const localPayload = {
-                    ...payload,
-                    student_id: studentId, // Convert to string for Dexie
-                    series_id: selectedSeriesId!, // Convert to string
-                    syncStatus: 'pending' as const
-                    // Compound key [student_id+unit+subject] handles uniqueness
-                };
-
-                await db.grades.put(localPayload as any); // Cast to match LocalGrades (student_id string)
-
-                // 2. Add to Queue
-                // We use standard payload update for Supabase processing
-                await db.syncQueue.add({
-                    table: 'grades',
-                    action: 'UPDATE', // Use Update/Upsert logic
-                    payload: payload, // Send original types to Supabase
-                    status: 'pending',
-                    createdAt: Date.now(),
-                    retryCount: 0
-                });
-
-                // 3. Trigger Sync
-                triggerSync();
+                // 1. Direct Online Save
+                await supabase
+                    .from('grades')
+                    .upsert(payload);
 
                 // if (error) throw error; // No error throwing here, we handle sync errors in queue
                 // Saved successfully locally.
@@ -721,24 +651,6 @@ export const Grades: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {/* Sync Badge */}
-                    <div className={`hidden md:flex items-center gap-2 px-3 py-1 rounded-full border font-bold text-sm transition-all ${isOnline
-                        ? (pendingCount > 0 ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800')
-                        : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:border-slate-700'}`}>
-                        {isOnline ? (pendingCount > 0 ? (
-                            <>
-                                <span className="material-symbols-outlined text-sm animate-spin">sync</span>
-                                <span className="hidden sm:inline">Sync ({pendingCount})</span>
-                            </>
-                        ) : (
-                            <span className="material-symbols-outlined text-sm">cloud_done</span>
-                        )) : (
-                            <>
-                                <span className="material-symbols-outlined text-sm">cloud_off</span>
-                                <span className="hidden sm:inline">Offline ({pendingCount})</span>
-                            </>
-                        )}
-                    </div>
 
                     {/* Saving Indicator */}
                     {isSaving ? (
@@ -761,6 +673,46 @@ export const Grades: React.FC = () => {
                         <span className="material-symbols-outlined text-lg">download</span>
                         <span className="landscape:hidden">Exportar PDF</span>
                     </button>
+                </div>
+
+                {/* Mobile Landscape Compact Controls */}
+                <div className="hidden landscape:flex md:hidden w-full items-center gap-2 justify-between mt-2 pt-2 border-t border-border-subtle">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-text-muted whitespace-nowrap">{activeSeries?.name || 'Série?'} - {selectedSection}</span>
+                        <span className="text-text-disabled">|</span>
+                        <select
+                            value={selectedUnit}
+                            onChange={(e) => setSelectedUnit(e.target.value)}
+                            className="bg-transparent text-xs font-bold text-indigo-600 dark:text-indigo-400 border-none outline-none p-0 cursor-pointer"
+                            aria-label="Seletor de Unidade"
+                        >
+                            {['1', '2', '3', 'final', 'recovery', 'results'].map(unit => (
+                                <option key={unit} value={unit} className="text-text-primary bg-surface-card">
+                                    {{
+                                        '1': '1ª Un.',
+                                        '2': '2ª Un.',
+                                        '3': '3ª Un.',
+                                        'final': 'Final',
+                                        'recovery': 'Recup.',
+                                        'results': 'Total'
+                                    }[unit]}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => {
+                                alert("Use o modo retrato para trocar de turma.");
+                            }}
+                            className="bg-surface-subtle p-1.5 rounded-lg text-text-muted"
+                        >
+                            <span className="material-symbols-outlined text-lg">tune</span>
+                        </button>
+                        <button onClick={() => setShowExportModal(true)} className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 p-1.5 rounded-lg">
+                            <span className="material-symbols-outlined text-lg">download</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -844,36 +796,6 @@ export const Grades: React.FC = () => {
                             </div>
                         </motion.div>
 
-                        {/* Mobile Landscape Compact Controls */}
-                        <div className="hidden landscape:flex w-full items-center gap-2 justify-between">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-text-muted whitespace-nowrap">{activeSeries?.name || 'Série?'} - {selectedSection}</span>
-                                <span className="text-text-disabled">|</span>
-                                <select
-                                    value={selectedUnit}
-                                    onChange={(e) => setSelectedUnit(e.target.value)}
-                                    className="bg-transparent text-xs font-bold text-indigo-600 dark:text-indigo-400 border-none outline-none p-0 cursor-pointer"
-                                    aria-label="Seletor de Unidade"
-                                >
-                                    {[1, 2, 3, 4].map(unit => (
-                                        <option key={unit} value={unit} className="text-text-primary bg-surface-card">{unit}ª Un.</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => {
-                                        alert("Use o modo retrato para trocar de turma.");
-                                    }}
-                                    className="bg-surface-subtle p-1.5 rounded-lg text-text-muted"
-                                >
-                                    <span className="material-symbols-outlined text-lg">tune</span>
-                                </button>
-                                <button onClick={() => setShowExportModal(true)} className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 p-1.5 rounded-lg">
-                                    <span className="material-symbols-outlined text-lg">download</span>
-                                </button>
-                            </div>
-                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

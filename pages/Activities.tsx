@@ -6,8 +6,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Activity, AttachmentFile, Student } from '../types';
 import { supabase } from '../lib/supabase';
-import { db } from '../lib/db';
-import { useSync } from '../hooks/useSync';
 import DOMPurify from 'dompurify';
 import { DatePicker } from '../components/DatePicker';
 import { RichTextEditor } from '../components/RichTextEditor';
@@ -18,7 +16,6 @@ import { DynamicSelect } from '../components/DynamicSelect';
 import FileViewerModal from '../components/FileViewerModal';
 import { FileImporterModal } from '../components/FileImporterModal';
 import { useStudentsData } from '../hooks/useStudentsData';
-import { ENABLE_OFFLINE_MODE } from '../lib/offlineConfig';
 
 // Fallback types if fetch fails
 const DEFAULT_ACTIVITY_TYPES = ['Prova', 'Trabalho', 'Dever de Casa', 'Seminário', 'Pesquisa', 'Conteúdo', 'Outro'];
@@ -27,7 +24,6 @@ export const Activities: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
     const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
-    const { isOnline, triggerSync } = useSync();
 
     // UI State
     const [activities, setActivities] = useState<Activity[]>([]);
@@ -177,31 +173,8 @@ export const Activities: React.FC = () => {
         if (!window.confirm(`Tem certeza que deseja excluir ${selectedIds.length} atividades?`)) return;
 
         try {
-            if (!ENABLE_OFFLINE_MODE) {
-                // ONLINE ONLY
-                const { error } = await supabase.from('activities').delete().in('id', selectedIds);
-                if (error) throw error;
-            } else {
-                // OFFLINE MODE
-                // Local Bulk Delete
-                await db.activities.bulkDelete(selectedIds);
-
-                // Queue Bulk Delete (Add individually to queue for simpler processing or support bulk payload?)
-                // Helper standardizes individual queue items usually.
-                // Let's loop.
-                const timestamp = Date.now();
-                const queueItems = selectedIds.map(id => ({
-                    table: 'activities',
-                    action: 'DELETE',
-                    payload: { id },
-                    status: 'pending',
-                    createdAt: timestamp,
-                    retryCount: 0
-                }));
-
-                await db.syncQueue.bulkAdd(queueItems as any);
-                triggerSync();
-            }
+            const { error } = await supabase.from('activities').delete().in('id', selectedIds);
+            if (error) throw error;
 
             setActivities(prev => prev.filter(a => !selectedIds.includes(a.id)));
             setSelectedIds([]);
@@ -266,69 +239,19 @@ export const Activities: React.FC = () => {
         if (!currentUser) return;
         if (!silent) setLoading(true);
         try {
-            let activityData: any[] = [];
+            let query = supabase.from('activities').select('*').eq('user_id', currentUser.id);
 
-            if (navigator.onLine) {
-                let query = supabase.from('activities').select('*').eq('user_id', currentUser.id);
-
-                if (selectedSeriesId) {
-                    query = query.eq('series_id', selectedSeriesId);
-                }
-                if (activeSubject) {
-                    query = query.or(`subject.eq.${activeSubject},subject.is.null`);
-                }
-
-                const { data, error } = await query;
-                if (error) throw error;
-
-                // 1. Get Server Data
-                let serverActivities = data || [];
-
-                // 2. Get Local Pending Items (Optimistic UI) - FIX: Use table('activities') not db.activities directly if not pure Dexie
-                // Actually db.activities IS a Dexie table.
-                const pendingActivities = await db.activities
-                    .filter(a => a.syncStatus === 'pending' && a.user_id === currentUser.id)
-                    .toArray();
-
-                // 3. Merge: Server + Pending (Pending overwrites server if same ID)
-                const activityMap = new Map();
-                serverActivities.forEach(a => activityMap.set(a.id.toString(), a));
-                pendingActivities.forEach(a => activityMap.set(a.id.toString(), {
-                    ...a,
-                    // If it's a temp ID (UUID), it won't clash with server IDs usually, or it will eventually.
-                    // Ideally we should use same UUID.
-                }));
-
-                activityData = Array.from(activityMap.values());
-
-                // 4. Cache Server Data to Dexie (Safely)
-                // We only overwrite items that are NOT pending locally.
-                const pendingIds = new Set(pendingActivities.map(p => p.id.toString()));
-                const safeCacheData = serverActivities.filter(a => !pendingIds.has(a.id.toString()));
-
-                if (safeCacheData.length > 0) {
-                    await db.activities.bulkPut(safeCacheData.map(a => ({
-                        ...a,
-                        id: a.id.toString(),
-                        syncStatus: 'synced'
-                    })));
-                }
-
-            } else {
-                // Offline Fallback
-                console.log("Offline: Loading Activities from Dexie");
-                let collection = db.activities.where('user_id').equals(currentUser.id);
-                // Dexie filtering limitations: compound index needed for complex queries
-                // We'll filter in memory after fetching by User
-                activityData = await collection.toArray();
-
-                if (selectedSeriesId) {
-                    activityData = activityData.filter(a => a.series_id === selectedSeriesId || a.series_id === parseInt(selectedSeriesId));
-                }
-                if (activeSubject) {
-                    activityData = activityData.filter(a => !a.subject || a.subject === activeSubject);
-                }
+            if (selectedSeriesId) {
+                query = query.eq('series_id', selectedSeriesId);
             }
+            if (activeSubject) {
+                query = query.or(`subject.eq.${activeSubject},subject.is.null`);
+            }
+
+            const { data, error } = await query;
+            if (error) throw error;
+
+            const activityData = data || [];
 
             const formatted: Activity[] = activityData.map(a => ({
                 id: a.id.toString(),
@@ -447,17 +370,9 @@ export const Activities: React.FC = () => {
             return;
         }
 
-        // [OFFLINE CHECK] File uploads require internet
-        const hasNewFiles = formFiles.some(f => f.url.startsWith('data:'));
-        if (hasNewFiles && !navigator.onLine) {
-            alert("Você está Offline. O envio de novos arquivos requer internet.");
-            return;
-        }
-
-        setLoading(true);
 
         try {
-            // --- FILE UPLOAD LOGIC (Online Only) ---
+            // --- FILE UPLOAD LOGIC ---
             const processedFiles = await Promise.all(formFiles.map(async (file) => {
                 if (file.url.startsWith('data:')) {
                     const parts = file.url.split(';base64,');
@@ -489,7 +404,7 @@ export const Activities: React.FC = () => {
                 return file;
             }));
 
-            const activityData = {
+            const payload = {
                 title: formTitle,
                 type: formType,
                 date: formDate,
@@ -500,87 +415,21 @@ export const Activities: React.FC = () => {
                 section: formSection || null,
                 files: processedFiles,
                 user_id: currentUser?.id,
-                subject: activeSubject
+                subject: activeSubject,
+                id: isEditing && selectedActivityId ? selectedActivityId : undefined
             };
 
-            // 1. Create/Update Logic (Online vs Offline)
+            const { data, error } = await supabase
+                .from('activities')
+                .upsert(payload)
+                .select()
+                .single();
+
+            if (error) throw error;
+
             let finalId = selectedActivityId;
-
-            if (!ENABLE_OFFLINE_MODE) {
-                // --- ONLINE MODE (WEB) ---
-                // Direct Supabase Write
-
-                // Clean data for Supabase (remove internal flags if any, though activities table matches mostly)
-                const payload = {
-                    ...activityData,
-                    id: isEditing && selectedActivityId ? selectedActivityId : undefined // Let Supabase gen UUID if creating? Or use our gen?
-                    // Supabase auto-gen ID is better if we don't have UUID locally.
-                    // But if we use 'upsert', we should provide ID if updating.
-                };
-
-                // Prepare Upsert
-                // If ID is present, it updates. If not, it creates. (Need to trust Supabase ID gen if undefined)
-
-                const { data, error } = await supabase
-                    .from('activities')
-                    .upsert(payload)
-                    .select()
-                    .single();
-
-                if (error) throw error;
-
-                if (data) finalId = data.id;
-                alert("Atividade salva com sucesso!");
-
-            } else {
-                // --- OFFLINE/HYBRID MODE ---
-                if (isEditing && selectedActivityId) {
-                    // UPDATE
-                    const localPayload = {
-                        ...activityData,
-                        id: selectedActivityId,
-                        completions: currentActivity?.completions || [],
-                        syncStatus: 'pending' as const
-                    };
-                    await db.activities.put(localPayload);
-
-                    await db.syncQueue.add({
-                        table: 'activities',
-                        action: 'UPDATE',
-                        payload: { ...activityData, id: selectedActivityId },
-                        status: 'pending',
-                        createdAt: Date.now(),
-                        retryCount: 0
-                    });
-                    alert("Atividade salva na fila de sincronização!");
-
-                } else {
-                    // CREATE
-                    const newId = generateUUID();
-                    finalId = newId;
-
-                    const localPayload = {
-                        ...activityData,
-                        id: newId,
-                        completions: [],
-                        syncStatus: 'pending' as const
-                    };
-                    await db.activities.add(localPayload);
-
-                    await db.syncQueue.add({
-                        table: 'activities',
-                        action: 'INSERT',
-                        payload: { ...activityData, completions: [], id: newId },
-                        status: 'pending',
-                        createdAt: Date.now(),
-                        retryCount: 0
-                    });
-                    alert("Atividade criada localmente!");
-                }
-
-                // Trigger Sync
-                triggerSync();
-            }
+            if (data) finalId = data.id;
+            alert("Atividade salva com sucesso!");
 
             // Refresh UI
             await fetchActivities(true);
@@ -605,43 +454,15 @@ export const Activities: React.FC = () => {
             : [...completions, studentId];
 
         try {
-            if (!ENABLE_OFFLINE_MODE) {
-                // ONLINE ONLY
-                const { data, error } = await supabase
-                    .from('activities')
-                    .update({ completions: newCompletions })
-                    .eq('id', currentActivity.id)
-                    .select()
-                    .single();
-                if (error) throw error;
-                await fetchActivities(true);
-
-            } else {
-                // OFFLINE MODE
-                // 1. Update Local (Dexie)
-                const updatedActivity = { ...currentActivity, completions: newCompletions, syncStatus: 'pending' as const };
-
-                // Map activity back to DB shape if needed, but Dexie stores full objects mostly
-                // We need to be careful not to lose other fields. currentActivity comes from state/Dexie.
-                await db.activities.put(updatedActivity);
-
-                // 2. Queue Update
-                await db.syncQueue.add({
-                    table: 'activities',
-                    action: 'UPDATE',
-                    payload: { ...updatedActivity },
-                    status: 'pending',
-                    createdAt: Date.now(),
-                    retryCount: 0
-                });
-
-                // 3. Trigger & Refresh
-                triggerSync();
-                await fetchActivities(true);
-            }
-
+            const { error } = await supabase
+                .from('activities')
+                .update({ completions: newCompletions })
+                .eq('id', currentActivity.id);
+            if (error) throw error;
+            await fetchActivities(true);
         } catch (e) {
             console.error("Completion toggle failed", e);
+            alert("Erro ao atualizar conclusão.");
         }
     };
 
@@ -649,42 +470,19 @@ export const Activities: React.FC = () => {
         if (!currentActivity || students.length === 0) return;
 
         const allStudentIds = students.map(s => s.id);
-        // Toggle Logic: If all selected, deselect all. Otherwise, select all.
         const allSelected = currentActivity.completions?.length === students.length;
         const newCompletions = allSelected ? [] : allStudentIds;
 
         try {
-            if (!ENABLE_OFFLINE_MODE) {
-                // ONLINE ONLY
-                const { data, error } = await supabase
-                    .from('activities')
-                    .update({ completions: newCompletions })
-                    .eq('id', currentActivity.id)
-                    .select()
-                    .single();
-                if (error) throw error;
-                await fetchActivities(true);
-
-            } else {
-                // OFFLINE MODE
-                const updatedActivity = { ...currentActivity, completions: newCompletions, syncStatus: 'pending' as const };
-                await db.activities.put(updatedActivity);
-
-                await db.syncQueue.add({
-                    table: 'activities',
-                    action: 'UPDATE',
-                    payload: { ...updatedActivity },
-                    status: 'pending',
-                    createdAt: Date.now(),
-                    retryCount: 0
-                });
-
-                triggerSync();
-                await fetchActivities(true);
-            }
-
+            const { error } = await supabase
+                .from('activities')
+                .update({ completions: newCompletions })
+                .eq('id', currentActivity.id);
+            if (error) throw error;
+            await fetchActivities(true);
         } catch (e) {
             console.error("Select All failed", e);
+            alert("Erro ao selecionar todos.");
         }
     };
 
@@ -697,28 +495,8 @@ export const Activities: React.FC = () => {
         setLoading(true);
 
         try {
-            if (!ENABLE_OFFLINE_MODE) {
-                // --- ONLINE MODE (WEB) ---
-                const { error } = await supabase.from('activities').delete().eq('id', selectedActivityId);
-                if (error) throw error;
-
-            } else {
-                // --- OFFLINE/HYBRID MODE ---
-                // Local Delete
-                await db.activities.delete(selectedActivityId);
-
-                // Queue Delete
-                await db.syncQueue.add({
-                    table: 'activities',
-                    action: 'DELETE',
-                    payload: { id: selectedActivityId },
-                    status: 'pending',
-                    createdAt: Date.now(),
-                    retryCount: 0
-                });
-
-                triggerSync();
-            }
+            const { error } = await supabase.from('activities').delete().eq('id', selectedActivityId);
+            if (error) throw error;
 
             // Cleanup UI (Common)
             const remaining = activities.filter(a => a.id !== selectedActivityId);

@@ -1,159 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { db } from '../lib/db';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { Student } from '../types';
-
-// Unified Offline-First Hook (Hybrid Strategy)
-// Strategy: ALWAYS Read from Local DB (Dexie) if Offline Mode Enabled
-// If Online Mode Only: Read directly from Supabase.
-import { ENABLE_OFFLINE_MODE } from '../lib/offlineConfig';
 
 export const useStudentsData = (
     seriesId: string | undefined,
     section: string | undefined,
     userId: string | undefined
 ) => {
-    // --- MODE 1: OFFLINE / HYBRID (PC APP) ---
-    if (ENABLE_OFFLINE_MODE) {
-        const [loading, setLoading] = useState(true);
-
-        // 1. LIVE QUERY: Always listen to Dexie. This is our "Source of Truth" for the UI.
-        const students = useLiveQuery(async () => {
-            if (!seriesId || !userId) return [];
-
-            let collection = db.students
-                .where('[user_id+series_id]')
-                .equals([userId, parseInt(seriesId)]);
-
-            const localStudents = await collection.filter(s => {
-                const student = s as any;
-                let match = student.user_id === userId && (student.series_id === parseInt(seriesId) || student.series_id.toString() === seriesId);
-
-                if (section && section !== '') {
-                    match = match && student.section === section;
-                }
-
-                match = match && student.syncStatus !== 'deleted';
-                return match;
-            }).toArray();
-
-            return localStudents.sort((a, b) => parseInt(a.number) - parseInt(b.number)).map((s: any) => ({
-                ...s,
-                id: s.id.toString(),
-                classId: s.series_id?.toString() || '',
-                units: s.units || {}
-            })) as unknown as Student[];
-        }, [seriesId, section, userId]) || [];
-
-        // 2. BACKGROUND SYNC: Fetch from Server and Update Cache
-        const syncWithServer = useCallback(async () => {
-            if (!navigator.onLine || !userId || !seriesId) {
-                setLoading(false);
-                return;
-            }
-
-            try {
-                let query = supabase
-                    .from('students')
-                    .select('*')
-                    .eq('series_id', seriesId)
-                    .eq('user_id', userId);
-
-                if (section) {
-                    query = query.eq('section', section);
-                }
-
-                const { data, error } = await query;
-                if (error) throw error;
-
-                const serverStudents = data || [];
-
-                await db.transaction('rw', db.students, async () => {
-                    const remoteIds = new Set(serverStudents.map(s => s.id));
-
-                    const toCache = serverStudents.map(s => ({
-                        ...s,
-                        series_id: typeof s.series_id === 'string' ? parseInt(s.series_id) : s.series_id,
-                        syncStatus: 'synced'
-                    }));
-
-                    const existing = await db.students.where('series_id').equals(parseInt(seriesId)).toArray();
-                    const pendingMap = new Map(existing.filter(e => e.syncStatus === 'pending').map(e => [e.id, e]));
-
-                    const finalCache = toCache.map(remote => {
-                        if (pendingMap.has(remote.id)) {
-                            return pendingMap.get(remote.id);
-                        }
-                        return remote;
-                    });
-
-                    await db.students.bulkPut(finalCache as any);
-
-                    const localToDelete = existing.filter(l =>
-                        l.syncStatus === 'synced' &&
-                        !remoteIds.has(l.id) &&
-                        (section ? l.section === section : true)
-                    );
-
-                    if (localToDelete.length > 0) {
-                        await db.students.bulkDelete(localToDelete.map(l => l.id));
-                    }
-                });
-
-            } catch (err) {
-                console.error("Sync Students Failed:", err);
-            } finally {
-                setLoading(false);
-            }
-        }, [seriesId, section, userId]);
-
-        useEffect(() => {
-            syncWithServer();
-        }, [syncWithServer]);
-
-        // Dexie CRUD wrappers
-        const addStudent = async (studentData: any) => {
-            const payload = {
-                ...studentData,
-                series_id: parseInt(studentData.seriesId || studentData.series_id),
-                syncStatus: 'pending'
-            };
-            delete payload.seriesId;
-            await db.students.put(payload);
-            await db.syncQueue.add({
-                table: 'students', action: 'INSERT', payload, status: 'pending', createdAt: Date.now(), retryCount: 0
-            });
-        };
-
-        const updateStudent = async (id: string, updates: any) => {
-            const student = await db.students.get(id);
-            if (!student) return;
-            const updated = { ...student, ...updates, syncStatus: 'pending' };
-            await db.students.put(updated);
-            await db.syncQueue.add({
-                table: 'students', action: 'UPDATE', payload: updated, status: 'pending', createdAt: Date.now(), retryCount: 0
-            });
-        };
-
-        const deleteStudent = async (id: string) => {
-            await db.students.delete(id);
-            await db.syncQueue.add({
-                table: 'students', action: 'DELETE', payload: { id }, status: 'pending', createdAt: Date.now(), retryCount: 0
-            });
-        };
-
-        return {
-            students: students as unknown as Student[],
-            loading,
-            addStudent,
-            updateStudent,
-            deleteStudent,
-            refresh: syncWithServer
-        };
-    }
-
-    // --- MODE 2: ONLINE ONLY (WEB APP) ---
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -206,7 +59,6 @@ export const useStudentsData = (
     }, [seriesId, section, userId]);
 
     const addStudent = async (data: any) => {
-        // Direct Supabase Insert
         const { seriesId, userId: uid, id: _tempId, ...rest } = data;
         const cleanData = {
             ...rest,
