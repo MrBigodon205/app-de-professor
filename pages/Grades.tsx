@@ -629,90 +629,47 @@ export const Grades: React.FC = () => {
             <motion.div className="hidden" animate={{ opacity: 0 }} /> {/* Hack to ensure motion is used/defined if needed elsewhere */}
             {/* Header Controls */}
             <div className="glass-card-soft fluid-p-s flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
-                <div className="flex gap-2 bg-surface-subtle p-1 rounded-lg overflow-x-auto max-w-full no-scrollbar" data-tour="grades-units">
+                <div className="flex flex-wrap gap-2 bg-surface-subtle p-1 rounded-lg w-full md:w-auto" data-tour="grades-units">
                     {['1', '2', '3', 'final', 'recovery', 'results'].map((unit) => (
                         <button
                             key={unit}
                             onClick={() => setSelectedUnit(unit)}
-                            className={`px-4 py-2 landscape:py-1 landscape:px-2 rounded-md text-sm font-bold transition-all duration-200 whitespace-nowrap ${selectedUnit === unit
+                            className={`flex-1 md:flex-none px-3 py-2 rounded-md text-sm font-bold transition-all duration-200 whitespace-nowrap ${selectedUnit === unit
                                 ? `text-white shadow-md transform scale-105`
                                 : 'text-text-muted hover:bg-surface-card'
                                 }`}
                             style={selectedUnit === unit ? { backgroundColor: theme.primaryColorHex } : {}}
                         >
-                            <span className="landscape:hidden">
-                                {unit === 'final' ? 'Prova Final' : unit === 'recovery' ? 'Recuperação' : unit === 'results' ? 'Resultado' : `${unit}ª Unidade`}
-                            </span>
-                            <span className="hidden landscape:block">
-                                {unit === 'final' ? 'Final' : unit === 'recovery' ? 'Recup.' : unit === 'results' ? 'Total' : `${unit}ª`}
+                            <span>
+                                {unit === 'final' ? 'Final' : unit === 'recovery' ? 'Recuperação' : unit === 'results' ? 'Resultado' : `${unit}ª Unidade`}
                             </span>
                         </button>
                     ))}
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full md:w-auto justify-end">
 
                     {/* Saving Indicator */}
                     {isSaving ? (
-                        <span className="flex items-center text-amber-500 text-sm font-bold bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800 transition-all">
+                        <span className="hidden sm:flex items-center text-amber-500 text-sm font-bold bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800 transition-all">
                             <span className="material-symbols-outlined text-sm mr-2 animate-pulse">cloud_upload</span>
                             Salvando...
                         </span>
                     ) : (
-                        <span className="flex items-center text-emerald-600 dark:text-emerald-400 text-sm font-bold bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 landscape:py-0.5 landscape:px-2 rounded-full border border-emerald-200 dark:border-emerald-800 transition-all">
-                            <span className="material-symbols-outlined text-sm mr-2 landscape:mr-0">check_circle</span>
-                            <span className="landscape:hidden">Salvo</span>
+                        <span className="hidden sm:flex items-center text-emerald-600 dark:text-emerald-400 text-sm font-bold bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 transition-all">
+                            <span className="material-symbols-outlined text-sm mr-2">check_circle</span>
+                            <span>Salvo</span>
                         </span>
                     )}
 
                     <button
                         onClick={() => setShowExportModal(true)}
-                        className={`flex items-center space-x-2 px-4 py-2 landscape:py-1 landscape:px-3 bg-${theme.baseColor}-500 hover:bg-${theme.baseColor}-600 text-white rounded-lg transition-colors shadow-md shadow-${theme.baseColor}-500/20`}
+                        className={`flex items-center space-x-2 px-4 py-2 bg-${theme.baseColor}-500 hover:bg-${theme.baseColor}-600 text-white rounded-lg transition-colors shadow-md shadow-${theme.baseColor}-500/20`}
                         data-tour="grades-export"
                     >
                         <span className="material-symbols-outlined text-lg">download</span>
-                        <span className="landscape:hidden">Exportar PDF</span>
+                        <span>Exportar PDF</span>
                     </button>
-                </div>
-
-                {/* Mobile Landscape Compact Controls */}
-                <div className="hidden landscape:flex md:hidden w-full items-center gap-2 justify-between mt-2 pt-2 border-t border-border-subtle">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-text-muted whitespace-nowrap">{activeSeries?.name || 'Série?'} - {selectedSection}</span>
-                        <span className="text-text-disabled">|</span>
-                        <select
-                            value={selectedUnit}
-                            onChange={(e) => setSelectedUnit(e.target.value)}
-                            className="bg-transparent text-xs font-bold text-indigo-600 dark:text-indigo-400 border-none outline-none p-0 cursor-pointer"
-                            aria-label="Seletor de Unidade"
-                        >
-                            {['1', '2', '3', 'final', 'recovery', 'results'].map(unit => (
-                                <option key={unit} value={unit} className="text-text-primary bg-surface-card">
-                                    {{
-                                        '1': '1ª Un.',
-                                        '2': '2ª Un.',
-                                        '3': '3ª Un.',
-                                        'final': 'Final',
-                                        'recovery': 'Recup.',
-                                        'results': 'Total'
-                                    }[unit]}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => {
-                                alert("Use o modo retrato para trocar de turma.");
-                            }}
-                            className="bg-surface-subtle p-1.5 rounded-lg text-text-muted"
-                        >
-                            <span className="material-symbols-outlined text-lg">tune</span>
-                        </button>
-                        <button onClick={() => setShowExportModal(true)} className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 p-1.5 rounded-lg">
-                            <span className="material-symbols-outlined text-lg">download</span>
-                        </button>
-                    </div>
                 </div>
             </div>
 
