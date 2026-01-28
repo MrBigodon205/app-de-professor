@@ -530,11 +530,10 @@ export const Planning: React.FC = () => {
 
             await fetchPlans(true);
 
-            if (action === 'INSERT') {
-                setSelectedPlanId(finalId);
-            }
+            // Return to list to avoid "Not Found" errors
+            setSelectedPlanId(null);
             setShowForm(false);
-            setViewMode(true);
+            setViewMode(false);
             setIsEditing(false);
             clearDraft();
 
@@ -1338,7 +1337,7 @@ export const Planning: React.FC = () => {
 
 
                 ) : (
-                    <div className="flex-1 overflow-y-auto relative animate-in fade-in h-full custom-scrollbar bg-slate-50 dark:bg-black/20">
+                    <div className="flex-1 overflow-y-auto relative animate-in fade-in h-[100dvh] md:h-full custom-scrollbar bg-slate-50 dark:bg-black/20">
                         {currentPlan ? (
                             <div className="flex flex-col min-h-full">
                                 {/* Premium Header */}

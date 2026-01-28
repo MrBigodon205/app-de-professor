@@ -450,7 +450,10 @@ export const Activities: React.FC = () => {
 
             // Refresh UI
             await fetchActivities(true);
-            if (finalId) setSelectedActivityId(finalId);
+            // Refresh UI
+            await fetchActivities(true);
+            // Return to list to avoid "Not Found" errors
+            setSelectedActivityId(null);
             setIsEditing(false);
             clearDraft();
 
@@ -1048,7 +1051,7 @@ export const Activities: React.FC = () => {
                     </div>
                 ) : isEditing ? (
                     // --- EDIT / CREATE MODE ---
-                    <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+                    <div className="flex-1 flex flex-col h-[100dvh] md:h-full overflow-hidden relative">
                         {/* EDITOR HEADER */}
                         <div className="p-6 landscape:p-3 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark z-20 sticky top-0 shadow-sm">
                             <div className="flex items-center gap-4">
@@ -1240,7 +1243,7 @@ export const Activities: React.FC = () => {
                 ) : (
                     // --- VIEW MODE ---
                     currentActivity && (
-                        <div className="flex-1 overflow-y-auto relative animate-in fade-in">
+                        <div className="flex-1 overflow-y-auto relative animate-in fade-in h-[100dvh] md:h-full">
                             {/* Header Image/Gradient */}
                             <div className={`h-48 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden`}>
                                 <div className="absolute inset-0 opacity-10 flex flex-wrap gap-8 justify-end p-8 rotate-12 scale-150 pointer-events-none">
