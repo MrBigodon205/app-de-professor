@@ -898,7 +898,12 @@ export const Planning: React.FC = () => {
         return plans.filter(plan => {
             const matchesSearch = plan.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                 (plan.description && plan.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
-            const matchesSection = !filterSection || plan.section === filterSection;
+            const matchesSection = !filterSection ||
+                plan.section === filterSection ||
+                plan.section === 'Todas' ||
+                plan.section === 'Todas as Turmas' ||
+                plan.section === 'Única' ||
+                !plan.section;
             return matchesSearch && matchesSection;
         });
     }, [plans, debouncedSearchTerm, filterSection]);

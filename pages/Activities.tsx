@@ -800,6 +800,8 @@ export const Activities: React.FC = () => {
             const matchesSection = filterSection === '' ||
                 a.section === filterSection ||
                 a.section === 'Todas as Turmas' ||
+                a.section === 'Todas' ||
+                a.section === 'Única' ||
                 !a.section;
             return matchesSearch && matchesSection;
         });

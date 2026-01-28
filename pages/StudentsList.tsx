@@ -392,7 +392,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
     return (
         <div className="max-w-[1200px] mx-auto flex flex-col gap-4 md:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 lg:pb-12">
-            <div className={`bg-surface-card p-4 md:p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-border-default flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-8 relative overflow-hidden group`}>
+            <div className={`bg-surface-card p-3 md:p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-border-default flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-8 relative overflow-hidden group`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700`}></div>
 
                 <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 relative z-10 w-full lg:w-auto">
@@ -400,7 +400,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                         <span className="material-symbols-outlined text-2xl md:text-3xl">groups</span>
                     </div>
                     <div className="flex flex-col text-center md:text-left">
-                        <h1 className="text-xl md:text-3xl font-black text-text-primary tracking-tight">Gerenciar Turma</h1>
+                        <h1 className="text-lg md:text-3xl font-black text-text-primary tracking-tight">Gerenciar Turma</h1>
                         <p className="text-xs md:text-base text-text-muted font-medium">Alunos de <span className={`text-${theme.primaryColor} font-bold`}>{activeSeries?.name} • {selectedSection}</span></p>
                     </div>
                 </div>
@@ -751,7 +751,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                     <div className="flex flex-col">
 
                         {/* A. MOBILE CARD VIEW (< md) */}
-                        <div className="md:hidden flex flex-col gap-3">
+                        <div className="md:hidden flex flex-col gap-2">
                             {students.length === 0 ? (
                                 <div className="py-12 text-center bg-surface-card rounded-[24px] border border-border-default">
                                     <div className="size-16 rounded-full bg-surface-subtle flex items-center justify-center mb-4 mx-auto">
@@ -765,14 +765,14 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     <motion.div
                                         layoutId={`student-card-mobile-${student.id}`}
                                         key={student.id}
-                                        className={`bg-surface-card p-3 rounded-xl border border-border-default shadow-sm relative overflow-hidden ${selectedIds.includes(student.id) ? 'ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
+                                        className={`bg-surface-card p-2.5 rounded-xl border border-border-default shadow-sm relative overflow-hidden ${selectedIds.includes(student.id) ? 'ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
                                     >
-                                        <div className="flex items-center gap-3 relative z-10 w-full">
+                                        <div className="flex items-center gap-2 relative z-10 w-full">
                                             {/* Checkbox */}
                                             <div className="">
                                                 <input
                                                     type="checkbox"
-                                                    className="size-5 rounded-md border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
+                                                    className="size-4 rounded-md border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
                                                     checked={selectedIds.includes(student.id)}
                                                     onChange={() => toggleSelect(student.id)}
                                                     aria-label={`Selecionar ${student.name}`}
@@ -797,21 +797,21 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                     <div className="flex items-center gap-1 shrink-0">
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleEdit(student); }}
-                                                            className="size-8 rounded-lg bg-surface-subtle text-text-muted hover:text-primary active:scale-95 transition-all flex items-center justify-center"
+                                                            className="size-7 rounded-lg bg-surface-subtle text-text-muted hover:text-primary active:scale-95 transition-all flex items-center justify-center"
                                                         >
-                                                            <span className="material-symbols-outlined text-lg">edit</span>
+                                                            <span className="material-symbols-outlined text-base">edit</span>
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); setTransferringStudent(student); }}
-                                                            className="size-8 rounded-lg bg-surface-subtle text-amber-600/70 hover:text-amber-600 active:scale-95 transition-all flex items-center justify-center"
+                                                            className="size-7 rounded-lg bg-surface-subtle text-amber-600/70 hover:text-amber-600 active:scale-95 transition-all flex items-center justify-center"
                                                         >
-                                                            <span className="material-symbols-outlined text-lg">move_up</span>
+                                                            <span className="material-symbols-outlined text-base">move_up</span>
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }}
-                                                            className="size-8 rounded-lg bg-surface-subtle text-red-600/70 hover:text-red-600 active:scale-95 transition-all flex items-center justify-center"
+                                                            className="size-7 rounded-lg bg-surface-subtle text-red-600/70 hover:text-red-600 active:scale-95 transition-all flex items-center justify-center"
                                                         >
-                                                            <span className="material-symbols-outlined text-lg">delete</span>
+                                                            <span className="material-symbols-outlined text-base">delete</span>
                                                         </button>
                                                     </div>
                                                 </div>
