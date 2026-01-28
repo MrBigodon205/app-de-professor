@@ -293,18 +293,11 @@ export const Planning: React.FC = () => {
 
                 // Only auto-select if we are NOT currently in a form (creating or editing)
                 // This prevents "Creating" (showForm=true, selectedPlanId=null) from being closed
-                if ((!selectedPlanId && !showForm) || (selectedPlanId && !isCurrentFound)) {
-                    setViewMode(false);
-                    setShowForm(false);
-                    if (window.innerWidth >= 1024) {
-                        if (selectedPlanId !== formatted[0].id) {
-                            setSelectedPlanId(formatted[0].id);
-                            setViewMode(true);
-                        }
-                    } else {
-                        if (selectedPlanId !== null) {
-                            setSelectedPlanId(null);
-                        }
+                // Only auto-select first on Desktop if nothing selected and not creating
+                if (!selectedPlanId && !showForm && window.innerWidth >= 1024) {
+                    if (formatted.length > 0 && selectedPlanId !== formatted[0].id) {
+                        setSelectedPlanId(formatted[0].id);
+                        setViewMode(true);
                     }
                 }
             } else {
