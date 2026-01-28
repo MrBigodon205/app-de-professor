@@ -703,6 +703,11 @@ body {
     /* Firefox */
 }
 
+/* Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
 /* --- PHASE 7: DEEP POLISH UTILITIES --- */
 
 /* Premium Buttons: Gradient + Glow + Lift */

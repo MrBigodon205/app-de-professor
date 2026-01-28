@@ -629,7 +629,7 @@ export const Grades: React.FC = () => {
             <motion.div className="hidden" animate={{ opacity: 0 }} /> {/* Hack to ensure motion is used/defined if needed elsewhere */}
             {/* Header Controls */}
             <div className="glass-card-soft fluid-p-s flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
-                <div className="flex gap-2 bg-surface-subtle p-1 rounded-lg overflow-x-auto max-w-full" data-tour="grades-units">
+                <div className="flex gap-2 bg-surface-subtle p-1 rounded-lg overflow-x-auto max-w-full no-scrollbar" data-tour="grades-units">
                     {['1', '2', '3', 'final', 'recovery', 'results'].map((unit) => (
                         <button
                             key={unit}
