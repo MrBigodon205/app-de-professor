@@ -395,60 +395,62 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             <div className={`bg-surface-card p-4 md:p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-border-default flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-8 relative overflow-hidden group`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700`}></div>
 
-                <div className="flex items-center gap-6 relative z-10 w-full lg:w-auto">
-                    <div className={`hidden sm:flex size-16 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
-                        <span className="material-symbols-outlined text-3xl">groups</span>
+                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 relative z-10 w-full lg:w-auto">
+                    <div className={`flex size-12 md:size-16 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
+                        <span className="material-symbols-outlined text-2xl md:text-3xl">groups</span>
                     </div>
-                    <div className="flex flex-col">
-                        <h1 className="text-3xl font-black text-text-primary tracking-tight">Gerenciar Turma</h1>
-                        <p className="text-text-muted font-medium">Lista de alunos organizada para <span className={`text-${theme.primaryColor} font-bold`}>{activeSeries?.name} • {selectedSection}</span></p>
+                    <div className="flex flex-col text-center md:text-left">
+                        <h1 className="text-xl md:text-3xl font-black text-text-primary tracking-tight">Gerenciar Turma</h1>
+                        <p className="text-xs md:text-base text-text-muted font-medium">Alunos de <span className={`text-${theme.primaryColor} font-bold`}>{activeSeries?.name} • {selectedSection}</span></p>
                     </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto relative z-10 transition-all">
+                <div className="flex flex-row items-center gap-2 w-full lg:w-auto relative z-10 transition-all">
                     {mode === 'manage' ? (
                         <>
                             {selectedIds.length > 0 ? (
-                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 animate-in fade-in zoom-in w-full sm:w-auto">
+                                <div className="flex flex-row items-center gap-2 animate-in fade-in zoom-in w-full">
                                     <button
                                         onClick={() => setIsBulkTransferring(true)}
-                                        className="flex items-center justify-center gap-3 bg-amber-100 hover:bg-amber-200 text-amber-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
+                                        className="flex-1 flex items-center justify-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-600 font-bold h-10 md:h-12 px-2 rounded-xl transition-all active:scale-95 text-xs md:text-base"
                                     >
-                                        <span className="material-symbols-outlined text-xl">move_up</span>
-                                        Transferir ({selectedIds.length})
+                                        <span className="material-symbols-outlined text-lg">move_up</span>
+                                        <span className="truncate">Transferir ({selectedIds.length})</span>
                                     </button>
                                     <button
                                         onClick={handleBulkDelete}
-                                        className="flex items-center justify-center gap-3 bg-red-100 hover:bg-red-200 text-red-600 font-bold h-12 px-6 rounded-2xl transition-all active:scale-95"
+                                        className="flex-1 flex items-center justify-center gap-2 bg-red-100 hover:bg-red-200 text-red-600 font-bold h-10 md:h-12 px-2 rounded-xl transition-all active:scale-95 text-xs md:text-base"
                                     >
-                                        <span className="material-symbols-outlined text-xl">delete</span>
-                                        Remover
+                                        <span className="material-symbols-outlined text-lg">delete</span>
+                                        <span className="truncate">Remover</span>
                                     </button>
                                 </div>
                             ) : (
-                                <button
-                                    data-tour="students-import-btn"
-                                    onClick={() => setIsImporting(true)}
-                                    className="flex items-center justify-center gap-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-text-primary font-bold h-12 px-6 rounded-2xl transition-all active:scale-95 w-full sm:w-auto"
-                                >
-                                    <span className="material-symbols-outlined text-xl">playlist_add</span>
-                                    Importar
-                                </button>
+                                <div className="flex gap-2 w-full">
+                                    <button
+                                        data-tour="students-import-btn"
+                                        onClick={() => setIsImporting(true)}
+                                        className="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-text-primary font-bold h-10 md:h-12 px-3 rounded-xl transition-all active:scale-95 text-xs md:text-base"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">playlist_add</span>
+                                        Importar
+                                    </button>
+                                    <button
+                                        data-tour="students-add-btn"
+                                        onClick={() => setIsAdding(!isAdding)}
+                                        className={`flex-1 flex items-center justify-center gap-2 hover:opacity-90 text-white font-bold h-10 md:h-12 px-3 rounded-xl shadow-lg shadow-${theme.primaryColor}/20 transition-all active:scale-95 text-xs md:text-base`}
+                                        style={{ backgroundColor: theme.primaryColorHex }}
+                                    >
+                                        <span className="material-symbols-outlined text-lg">add_circle</span>
+                                        Novo Aluno
+                                    </button>
+                                </div>
                             )}
-                            <button
-                                data-tour="students-add-btn"
-                                onClick={() => setIsAdding(!isAdding)}
-                                className={`flex items-center justify-center gap-3 hover:opacity-90 text-white font-bold h-12 px-6 rounded-2xl shadow-lg shadow-${theme.primaryColor}/20 transition-all active:scale-95 w-full sm:w-auto`}
-                                style={{ backgroundColor: theme.primaryColorHex }}
-                            >
-                                <span className="material-symbols-outlined text-xl">add_circle</span>
-                                Novo Aluno
-                            </button>
                         </>
                     ) : (
-                        <div className="bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-300 px-6 py-3 rounded-2xl font-bold border border-indigo-100 dark:border-indigo-800 flex items-center gap-2">
+                        <div className="w-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-300 px-4 py-3 rounded-xl font-bold border border-indigo-100 dark:border-indigo-800 flex items-center justify-center gap-2 text-xs md:text-base">
                             <span className="material-symbols-outlined">touch_app</span>
-                            Selecione um aluno para visualizar o relatório
+                            Selecione um aluno
                         </div>
                     )}
                 </div>
@@ -611,7 +613,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                         ref={imgRef}
                                         src={ocrImage}
                                         alt="Crop source"
-                                        className="max-w-full object-contain"
+                                        className="max-w-full max-h-[75vh] object-contain"
                                     />
                                 </ReactCrop>
                             )}
@@ -763,77 +765,78 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     <motion.div
                                         layoutId={`student-card-mobile-${student.id}`}
                                         key={student.id}
-                                        className={`bg-surface-card p-4 rounded-2xl border border-border-default shadow-sm relative overflow-hidden ${selectedIds.includes(student.id) ? 'ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
+                                        className={`bg-surface-card p-3 rounded-xl border border-border-default shadow-sm relative overflow-hidden ${selectedIds.includes(student.id) ? 'ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
                                     >
-                                        <div className="flex items-start gap-4 relative z-10">
+                                        <div className="flex items-center gap-3 relative z-10 w-full">
                                             {/* Checkbox */}
-                                            <div className="pt-1">
+                                            <div className="">
                                                 <input
                                                     type="checkbox"
-                                                    className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
+                                                    className="size-5 rounded-md border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
                                                     checked={selectedIds.includes(student.id)}
                                                     onChange={() => toggleSelect(student.id)}
+                                                    aria-label={`Selecionar ${student.name}`}
                                                 />
                                             </div>
 
                                             {/* Content */}
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <span className="inline-block px-1.5 py-0.5 rounded-md bg-surface-subtle border border-border-subtle text-[10px] font-mono font-bold text-text-muted mb-1">
-                                                            #{student.number}
-                                                        </span>
-                                                        <h3 className="font-black text-text-primary text-base leading-tight truncate pr-2">
+                                                <div className="flex justify-between items-center gap-2">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-0.5">
+                                                            <span className="inline-block px-1.5 py-0.5 rounded-md bg-surface-subtle border border-border-subtle text-[10px] font-mono font-bold text-text-muted">
+                                                                #{student.number}
+                                                            </span>
+                                                        </div>
+                                                        <h3 className="font-bold text-text-primary text-sm leading-tight truncate">
                                                             {student.name}
                                                         </h3>
                                                     </div>
 
-                                                    {/* Actions Menu (Simple Edit Button for now on mobile) */}
-                                                    <button
-                                                        onClick={() => handleEdit(student)}
-                                                        className="p-2 bg-surface-subtle rounded-xl text-text-muted hover:text-primary active:scale-95 transition-all"
-                                                    >
-                                                        <span className="material-symbols-outlined text-xl">edit</span>
-                                                    </button>
+                                                    {/* Quick Actions */}
+                                                    <div className="flex items-center gap-1 shrink-0">
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleEdit(student); }}
+                                                            className="size-8 rounded-lg bg-surface-subtle text-text-muted hover:text-primary active:scale-95 transition-all flex items-center justify-center"
+                                                        >
+                                                            <span className="material-symbols-outlined text-lg">edit</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); setTransferringStudent(student); }}
+                                                            className="size-8 rounded-lg bg-surface-subtle text-amber-600/70 hover:text-amber-600 active:scale-95 transition-all flex items-center justify-center"
+                                                        >
+                                                            <span className="material-symbols-outlined text-lg">move_up</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }}
+                                                            className="size-8 rounded-lg bg-surface-subtle text-red-600/70 hover:text-red-600 active:scale-95 transition-all flex items-center justify-center"
+                                                        >
+                                                            <span className="material-symbols-outlined text-lg">delete</span>
+                                                        </button>
+                                                    </div>
                                                 </div>
 
                                                 {/* Editing State Inline */}
                                                 {editingId === student.id && (
-                                                    <div className="mt-3 animate-in fade-in slide-in-from-top-2">
+                                                    <div className="mt-2 animate-in fade-in slide-in-from-top-2">
                                                         <div className="flex items-center gap-2">
                                                             <input
                                                                 type="text"
                                                                 value={editName}
                                                                 onChange={(e) => setEditName(e.target.value)}
-                                                                className="flex-1 h-10 px-3 rounded-lg border-2 border-primary bg-white dark:bg-black font-bold text-sm focus:outline-none"
+                                                                className="flex-1 h-9 px-2 rounded-lg border-2 border-primary bg-white dark:bg-black font-bold text-sm focus:outline-none"
                                                                 autoFocus
+                                                                title="Editar Nome do Aluno"
                                                             />
                                                             <button
                                                                 onClick={saveEdit}
-                                                                className="size-10 rounded-lg bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 active:scale-90 transition-all font-black"
+                                                                className="size-9 rounded-lg bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 active:scale-90 transition-all font-black"
                                                             >
-                                                                <span className="material-symbols-outlined">check</span>
+                                                                <span className="material-symbols-outlined text-sm">check</span>
                                                             </button>
                                                         </div>
                                                     </div>
                                                 )}
-
-                                                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border-subtle">
-                                                    <button
-                                                        onClick={() => setTransferringStudent(student)}
-                                                        className="flex-1 py-1.5 rounded-lg bg-surface-subtle hover:bg-amber-50 text-text-muted hover:text-amber-600 text-[10px] font-bold uppercase tracking-tight transition-colors flex items-center justify-center gap-1 min-w-0"
-                                                    >
-                                                        <span className="material-symbols-outlined text-base shrink-0">move_up</span>
-                                                        <span className="truncate">Transferir</span>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(student.id)}
-                                                        className="flex-1 py-1.5 rounded-lg bg-surface-subtle hover:bg-red-50 text-text-muted hover:text-red-600 text-[10px] font-bold uppercase tracking-tight transition-colors flex items-center justify-center gap-1 min-w-0"
-                                                    >
-                                                        <span className="material-symbols-outlined text-base shrink-0">delete</span>
-                                                        <span className="truncate">Remover</span>
-                                                    </button>
-                                                </div>
                                             </div>
                                         </div>
                                     </motion.div>
