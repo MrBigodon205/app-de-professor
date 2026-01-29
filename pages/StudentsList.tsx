@@ -840,9 +840,9 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
                                             {/* Content */}
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-start gap-3">
+                                                <div className="flex items-center justify-between gap-3">
                                                     {/* Name & ID Stacked to save horizontal space */}
-                                                    <div className="min-w-0 max-w-[65%] flex flex-col justify-center">
+                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
                                                         <h3 className="font-bold text-text-primary text-[0.85rem] leading-tight truncate capitalize">
                                                             {student.name.toLowerCase()}
                                                         </h3>
