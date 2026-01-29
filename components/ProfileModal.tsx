@@ -179,7 +179,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                     onClick={onClose}
                 ></div>
 
-                <div className="relative glass-card-premium w-full h-full md:h-auto md:max-h-[85vh] md:max-w-4xl overflow-hidden flex flex-col md:flex-row shadow-2xl border-0 md:border border-white/20">
+                <div className="relative glass-card-premium w-full h-[100dvh] md:h-auto md:max-h-[85vh] md:max-w-4xl overflow-hidden flex flex-col md:flex-row shadow-2xl border-0 md:border border-white/20">
 
                     {/* HERO HEADER (Mobile Only) - Reduced Height */}
                     <div className="relative h-24 md:hidden shrink-0 overflow-hidden">
@@ -201,7 +201,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                         {/* Avatar Upload - Compact on Mobile */}
                         <div className="relative group mb-4 -mt-12 md:mt-4 z-10">
                             <div className="relative p-1 rounded-full bg-gradient-to-br from-white/50 to-white/10 backdrop-blur-md shadow-2xl shadow-black/20">
-                                <div className="size-24 md:size-32 rounded-full overflow-hidden relative border-4 border-surface-card bg-surface-subtle">
+                                <div className="size-20 md:size-32 rounded-full overflow-hidden relative border-4 border-surface-card bg-surface-subtle">
                                     {currentUser.photoUrl ? (
                                         <img
                                             src={currentUser.photoUrl}
@@ -287,7 +287,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                             <span className="material-symbols-outlined text-xl group-hover:rotate-90 transition-transform duration-300">close</span>
                         </button>
 
-                        <div className="p-4 md:p-10 max-w-2xl mx-auto min-h-full flex flex-col pb-20 md:pb-10">
+                        <div className="p-4 md:p-10 max-w-2xl mx-auto md:min-h-full flex flex-col pb-20 md:pb-10">
                             <div className="mb-6 md:mb-8 mt-2 md:mt-0">
                                 <h1 className="text-2xl md:text-3xl font-black text-text-primary mb-1 md:mb-2 tracking-tight">
                                     {activeTab === 'profile' ? 'Editar Perfil' : 'Segurança'}
@@ -366,7 +366,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                                         </div>
                                     </div>
 
-                                    <div className="pt-4 md:pt-6 mt-auto border-t border-border-default flex justify-end">
+                                    <div className="pt-4 md:pt-6 mt-6 md:mt-auto border-t border-border-default flex justify-end">
                                         <button
                                             onClick={handleSaveProfile}
                                             disabled={loading}
