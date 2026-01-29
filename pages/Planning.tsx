@@ -594,134 +594,200 @@ export const Planning: React.FC = () => {
         }
     };
 
-    const handleExportPDF = () => {
+    const handleExportPDF = async () => {
         if (!currentPlan) return;
+        setLoading(true);
 
-        const doc = new jsPDF({
-            orientation: 'landscape',
-            unit: 'mm',
-            format: 'a4'
-        });
+        try {
+            const doc = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4'
+            });
 
-        const margin = 10;
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const contentWidth = pageWidth - (margin * 2);
+            // Load logo image
+            let logoData: string | null = null;
+            try {
+                const loadImage = (src: string): Promise<string> => {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.crossOrigin = "Anonymous";
+                        img.src = src; // Assuming /logo-censc.png is in public folder
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext('2d');
+                            if (ctx) {
+                                ctx.drawImage(img, 0, 0);
+                                resolve(canvas.toDataURL('image/png'));
+                            } else {
+                                reject(new Error("Could not create canvas context"));
+                            }
+                        };
+                        img.onerror = (e) => reject(e);
+                    });
+                };
+                logoData = await loadImage('/logo-censc.png');
+            } catch (e) {
+                console.warn("Logo load failed, falling back to text", e);
+            }
 
-        // Header Section
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Turma:', margin, margin + 5);
-        doc.setFont('helvetica', 'normal');
-        const sectionName = (currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
-            ? `${activeSeries?.name} - ${currentPlan.section}`
-            : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`;
-        doc.text(sectionName, margin + 25, margin + 5);
-        doc.line(margin + 25, margin + 6, margin + 120, margin + 6);
+            const margin = 10;
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const contentWidth = pageWidth - (margin * 2);
 
-        doc.setFont('helvetica', 'bold');
-        doc.text('Professor:', margin, margin + 12);
-        doc.setFont('helvetica', 'normal');
-        doc.text(currentUser?.name?.toUpperCase() || '', margin + 25, margin + 12);
-        doc.line(margin + 25, margin + 13, margin + 120, margin + 13);
+            // Watermark (If logo loaded)
+            if (logoData) {
+                try {
+                    doc.saveGraphicsState();
+                    // Set transparency
+                    doc.setGState(new (doc as any).GState({ opacity: 0.1 }));
 
-        doc.setFont('helvetica', 'bold');
-        doc.text('Componente:', margin, margin + 19);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(3, 105, 161); // #0369a1
-        doc.text(currentPlan.subject || '', margin + 25, margin + 19);
-        doc.line(margin + 25, margin + 20, margin + 120, margin + 20);
-        doc.setTextColor(0, 0, 0);
+                    const wmWidth = 100; // Size in mm
+                    const wmHeight = wmWidth * 1.0;
+                    const wmX = (pageWidth - wmWidth) / 2;
+                    const wmY = (pageHeight - wmHeight) / 2;
 
-        doc.setFont('helvetica', 'bold');
-        doc.text('Período:', margin, margin + 26);
-        doc.setFont('helvetica', 'normal');
-        const periodText = `${new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} até ${new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}`;
-        doc.text(periodText, margin + 25, margin + 26);
-        doc.line(margin + 25, margin + 27, margin + 120, margin + 27);
+                    doc.addImage(logoData, 'PNG', wmX, wmY, wmWidth, wmHeight);
+                    doc.restoreGraphicsState();
+                } catch (e) {
+                    console.warn("Watermark failed", e);
+                }
+            }
 
-        doc.setFont('helvetica', 'bold');
-        doc.text('Coordenação:', margin, margin + 33);
-        doc.setFont('helvetica', 'normal');
-        doc.text(currentPlan.coordinator_name || 'MOISÉS FERREIRA', margin + 25, margin + 33);
-        doc.line(margin + 25, margin + 34, margin + 120, margin + 34);
+            // Header Section
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Turma:', margin, margin + 5);
+            doc.setFont('helvetica', 'normal');
+            const sectionName = (currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
+                ? `${activeSeries?.name} - ${currentPlan.section}`
+                : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`;
+            doc.text(sectionName, margin + 25, margin + 5);
+            doc.line(margin + 25, margin + 6, margin + 120, margin + 6);
 
-        // Logo Section
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(28);
-        doc.setTextColor(14, 165, 233); // #0ea5e9
-        doc.text('CENSC', pageWidth - margin - 50, margin + 15);
-        doc.setFontSize(8);
-        doc.text('CENTRO EDUCACIONAL', pageWidth - margin - 50, margin + 22);
-        doc.text('NOSSA SRA DO CENÁCULO', pageWidth - margin - 50, margin + 26);
-        doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Professor:', margin, margin + 12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(currentUser?.name?.toUpperCase() || '', margin + 25, margin + 12);
+            doc.line(margin + 25, margin + 13, margin + 120, margin + 13);
 
-        doc.setLineWidth(0.5);
-        doc.line(margin, margin + 40, pageWidth - margin, margin + 40);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Componente:', margin, margin + 19);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(3, 105, 161); // #0369a1
+            doc.text(currentPlan.subject || '', margin + 25, margin + 19);
+            doc.line(margin + 25, margin + 20, margin + 120, margin + 20);
+            doc.setTextColor(0, 0, 0);
 
-        // Content Table
-        const tableTop = margin + 45;
-        const colWidths = [0.17, 0.16, 0.16, 0.31, 0.10, 0.10].map(w => w * contentWidth);
-        const headers = ['HABILIDADES', 'OBJETO CONH.', 'RECURSOS', 'DESENVOLVIMENTO', 'DURAÇÃO', 'TIPO'];
+            doc.setFont('helvetica', 'bold');
+            doc.text('Período:', margin, margin + 26);
+            doc.setFont('helvetica', 'normal');
+            const periodText = `${new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} até ${new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}`;
+            doc.text(periodText, margin + 25, margin + 26);
+            doc.line(margin + 25, margin + 27, margin + 120, margin + 27);
 
-        doc.setFillColor(217, 217, 217);
-        doc.rect(margin, tableTop, contentWidth, 10, 'F');
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'bold');
+            doc.setFont('helvetica', 'bold');
+            doc.text('Coordenação:', margin, margin + 33);
+            doc.setFont('helvetica', 'normal');
+            doc.text(currentPlan.coordinator_name || 'MOISÉS FERREIRA', margin + 25, margin + 33);
+            doc.line(margin + 25, margin + 34, margin + 120, margin + 34);
 
-        let currentX = margin;
-        headers.forEach((h, i) => {
-            doc.rect(currentX, tableTop, colWidths[i], 10);
-            doc.text(h, currentX + (colWidths[i] / 2), tableTop + 6, { align: 'center' });
-            currentX += colWidths[i];
-        });
+            // LOGO (Top Right)
+            if (logoData) {
+                const logoW = 35;
+                const logoH = 35;
+                doc.addImage(logoData, 'PNG', pageWidth - margin - logoW - 10, margin - 5, logoW, logoH);
 
-        // Content Data
-        const rowHeight = 80;
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        currentX = margin;
+                // Add Text Next to logo if needed, but usually logo contains text. 
+                // If the logo provided is just the symbol, we might need text. 
+                // Assuming logo-censc.png is the full logo.
+            } else {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(28);
+                doc.setTextColor(14, 165, 233); // #0ea5e9
+                doc.text('CENSC', pageWidth - margin - 50, margin + 15);
+                doc.setFontSize(8);
+                doc.text('CENTRO EDUCACIONAL', pageWidth - margin - 50, margin + 22);
+                doc.text('NOSSA SRA DO CENÁCULO', pageWidth - margin - 50, margin + 26);
+                doc.setTextColor(0, 0, 0);
+            }
 
-        // Habilidades
-        doc.rect(currentX, tableTop + 10, colWidths[0], rowHeight);
-        const habText = [
-            ...(currentPlan.bncc_codes?.split('\n').filter(Boolean) || []),
-            (currentPlan.objectives ? currentPlan.objectives.replace(/<[^>]+>/g, ' ') : '')
-        ].join('\n');
-        doc.text(doc.splitTextToSize(habText, colWidths[0] - 4), currentX + 2, tableTop + 15);
+            doc.setLineWidth(0.5);
+            doc.line(margin, margin + 40, pageWidth - margin, margin + 40);
 
-        currentX += colWidths[0];
-        doc.rect(currentX, tableTop + 10, colWidths[1], rowHeight);
-        doc.text(doc.splitTextToSize(currentPlan.title, colWidths[1] - 4), currentX + 2, tableTop + 15);
+            // Content Table
+            const tableTop = margin + 45;
+            const colWidths = [0.17, 0.16, 0.16, 0.31, 0.10, 0.10].map(w => w * contentWidth);
+            const headers = ['HABILIDADES', 'OBJETO CONH.', 'RECURSOS', 'DESENVOLVIMENTO', 'DURAÇÃO', 'TIPO'];
 
-        currentX += colWidths[1];
-        doc.rect(currentX, tableTop + 10, colWidths[2], rowHeight);
-        doc.text(doc.splitTextToSize(currentPlan.resources || '', colWidths[2] - 4), currentX + 2, tableTop + 15);
+            doc.setFillColor(217, 217, 217);
+            doc.rect(margin, tableTop, contentWidth, 10, 'F');
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
 
-        currentX += colWidths[2];
-        doc.rect(currentX, tableTop + 10, colWidths[3], rowHeight);
-        const devText = [
-            currentPlan.methodology || '',
-            (currentPlan.description ? currentPlan.description.replace(/<[^>]+>/g, ' ') : '')
-        ].join('\n\n');
-        doc.text(doc.splitTextToSize(devText, colWidths[3] - 4), currentX + 2, tableTop + 15);
+            let currentX = margin;
+            headers.forEach((h, i) => {
+                doc.rect(currentX, tableTop, colWidths[i], 10);
+                doc.text(h, currentX + (colWidths[i] / 2), tableTop + 6, { align: 'center' });
+                currentX += colWidths[i];
+            });
 
-        currentX += colWidths[3];
-        doc.rect(currentX, tableTop + 10, colWidths[4], rowHeight);
-        doc.text(currentPlan.duration || '', currentX + (colWidths[4] / 2), tableTop + 15, { align: 'center' });
+            // Content Data
+            const rowHeight = 80;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            currentX = margin;
 
-        currentX += colWidths[4];
-        doc.rect(currentX, tableTop + 10, colWidths[5], rowHeight);
-        doc.text(currentPlan.activity_type || '', currentX + (colWidths[5] / 2), tableTop + 15, { align: 'center' });
+            // Habilidades
+            doc.rect(currentX, tableTop + 10, colWidths[0], rowHeight);
+            const habText = [
+                ...(currentPlan.bncc_codes?.split('\n').filter(Boolean) || []),
+                (currentPlan.objectives ? currentPlan.objectives.replace(/<[^>]+>/g, ' ') : '')
+            ].join('\n');
+            doc.text(doc.splitTextToSize(habText, colWidths[0] - 4), currentX + 2, tableTop + 15);
 
-        // Footer
-        const footerTop = tableTop + 10 + rowHeight + 5;
-        doc.setFont('helvetica', 'bold');
-        doc.text('OBSERVAÇÕES:', margin, footerTop);
-        doc.rect(margin, footerTop + 2, contentWidth, 20);
-        doc.line(margin, footerTop + 9, pageWidth - margin, footerTop + 9);
-        doc.line(margin, footerTop + 16, pageWidth - margin, footerTop + 16);
+            currentX += colWidths[0];
+            doc.rect(currentX, tableTop + 10, colWidths[1], rowHeight);
+            doc.text(doc.splitTextToSize(currentPlan.title, colWidths[1] - 4), currentX + 2, tableTop + 15);
 
-        doc.save(`Planejamento-${currentPlan.title}.pdf`);
+            currentX += colWidths[1];
+            doc.rect(currentX, tableTop + 10, colWidths[2], rowHeight);
+            doc.text(doc.splitTextToSize(currentPlan.resources || '', colWidths[2] - 4), currentX + 2, tableTop + 15);
+
+            currentX += colWidths[2];
+            doc.rect(currentX, tableTop + 10, colWidths[3], rowHeight);
+            const devText = [
+                currentPlan.methodology || '',
+                (currentPlan.description ? currentPlan.description.replace(/<[^>]+>/g, ' ') : '')
+            ].join('\n\n');
+            doc.text(doc.splitTextToSize(devText, colWidths[3] - 4), currentX + 2, tableTop + 15);
+
+            currentX += colWidths[3];
+            doc.rect(currentX, tableTop + 10, colWidths[4], rowHeight);
+            doc.text(currentPlan.duration || '', currentX + (colWidths[4] / 2), tableTop + 15, { align: 'center' });
+
+            currentX += colWidths[4];
+            doc.rect(currentX, tableTop + 10, colWidths[5], rowHeight);
+            doc.text(currentPlan.activity_type || '', currentX + (colWidths[5] / 2), tableTop + 15, { align: 'center' });
+
+            // Footer
+            const footerTop = tableTop + 10 + rowHeight + 5;
+            doc.setFont('helvetica', 'bold');
+            doc.text('OBSERVAÇÕES:', margin, footerTop);
+            doc.rect(margin, footerTop + 2, contentWidth, 20);
+            doc.line(margin, footerTop + 9, pageWidth - margin, footerTop + 9);
+            doc.line(margin, footerTop + 16, pageWidth - margin, footerTop + 16);
+
+            doc.save(`Planejamento-${currentPlan.title}.pdf`);
+        } catch (e: any) {
+            console.error(e);
+            alert("Erro ao gerar PDF: " + e.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleExportWord = () => {
