@@ -628,7 +628,7 @@ export const Planning: React.FC = () => {
                         img.onerror = (e) => reject(e);
                     });
                 };
-                logoData = await loadImage('/logo-censc.png');
+                logoData = await loadImage('/watermark_censc.png');
             } catch (e) {
                 console.warn("Logo load failed, falling back to text", e);
             }
@@ -790,10 +790,22 @@ export const Planning: React.FC = () => {
         }
     };
 
-    const handleExportWord = () => {
+    const handleExportWord = async () => {
         if (!currentPlan) return;
 
-        const logoUrl = "https://i.imgur.com/7pZ0s1x.png"; // Placeholder or use text if image not available. 
+        // Load watermark for Word (Base64)
+        let watermarkBase64 = '';
+        try {
+            const response = await fetch('/watermark_censc.png');
+            const blob = await response.blob();
+            watermarkBase64 = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.readAsDataURL(blob);
+            });
+        } catch (e) {
+            console.warn("Failed to load watermark for Word", e);
+        }
         // Since I cannot upload images to the user's public web, I will use a text structure or base64 if available. 
         // User asked for "Exactly equal", I will try to replicate the CENSC logo with text/css if I can't embed the image easily.
         // Actually, HTML export to Word supports base64 images often, but sometimes it blocks. Text is safer.
@@ -844,8 +856,13 @@ export const Planning: React.FC = () => {
                 </head>
                 <body>
                     <div class="Section1">
+                        <!-- WATERMARK (Absolute Positioned) -->
+                        <div style="position: absolute; width: 100%; height: 100%; z-index: -1; display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 0.1;">
+                            <img src="${watermarkBase64}" style="width: 500px; height: auto;" />
+                        </div>
+
                         <!-- HEADER MATCHING IMAGE -->
-                        <table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 20px;">
+                        <table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 20px; position: relative; z-index: 1;">
                             <tr>
                                 <td style="width: 65%; vertical-align: top; border: none; padding: 0;">
                                     <table style="width: 100%; border-collapse: collapse; border: none;">
@@ -1415,7 +1432,11 @@ export const Planning: React.FC = () => {
                 ) : (
                     <div className="flex-1 overflow-y-auto relative animate-in fade-in h-[100dvh] md:h-full custom-scrollbar bg-slate-50 dark:bg-black/20">
                         {currentPlan ? (
-                            <div className="flex flex-col min-h-full">
+                            <div className="flex flex-col min-h-full relative">
+                                {/* SCREEN WATERMARK */}
+                                <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.05] overflow-hidden">
+                                    <img src="/watermark_censc.png" className="w-[600px] max-w-full" alt="" />
+                                </div>
                                 {/* Premium Header */}
                                 <div className={`h-48 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden shrink-0`}>
                                     <div className="absolute inset-0 opacity-10 flex flex-wrap gap-8 justify-end p-8 rotate-12 scale-150 pointer-events-none">
@@ -1725,7 +1746,7 @@ export const Planning: React.FC = () => {
                                     {/* PRINTABLE CONTENT (Matches CENSC Layout) */}
                                     <div className="printable-content bg-white p-[10mm] hidden print:block relative h-full">
                                         <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none print:fixed">
-                                            <img src="/logo-censc.png" className="w-[500px] opacity-[0.08] grayscale" alt="" />
+                                            <img src="/watermark_censc.png" className="w-[500px] opacity-[0.08]" alt="" />
                                         </div>
                                         <div className="relative z-10 w-full">
                                             <div className="flex justify-between items-start mb-4 border-b-2 border-black pb-4">
