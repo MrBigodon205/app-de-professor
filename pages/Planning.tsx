@@ -1437,9 +1437,13 @@ export const Planning: React.FC = () => {
                     <div className="flex-1 overflow-y-auto relative animate-in fade-in h-[100dvh] md:h-full custom-scrollbar bg-slate-50 dark:bg-black/20">
                         {currentPlan ? (
                             <div className="flex flex-col min-h-full relative isolate">
-                                {/* SCREEN WATERMARK */}
-                                <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.10]">
-                                    <img src="/logo.svg" className="w-[600px] max-w-full" alt="" />
+                                {/* SCREEN WATERMARK (Composite Vector) */}
+                                <div className="fixed inset-0 z-0 flex flex-col items-center justify-center pointer-events-none opacity-[0.10]">
+                                    <div className="flex items-center gap-4">
+                                        <img src="/logo.svg" className="w-32 h-auto" alt="" />
+                                        <span className="text-8xl font-bold text-[#0ea5e9] tracking-tighter" style={{ fontFamily: 'Arial, sans-serif' }}>CENSC</span>
+                                    </div>
+                                    <div className="text-2xl text-cyan-500 font-medium mt-[-10px] ml-12">Centro Educacional Nossa Srª do Cenáculo</div>
                                 </div>
                                 {/* Premium Header */}
                                 <div className={`h-48 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden shrink-0`}>
@@ -1749,8 +1753,12 @@ export const Planning: React.FC = () => {
 
                                     {/* PRINTABLE CONTENT (Matches CENSC Layout) */}
                                     <div className="printable-content bg-white p-[10mm] hidden print:block relative h-full">
-                                        <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none print:fixed print:visible">
-                                            <img src="/logo.svg" className="min-w-[500px] w-1/2 opacity-[0.15]" alt="" />
+                                        <div className="fixed inset-0 z-0 flex flex-col items-center justify-center pointer-events-none print:fixed print:visible opacity-[0.15]">
+                                            <div className="flex items-center gap-6">
+                                                <img src="/logo.svg" className="w-40 h-auto" alt="" />
+                                                <span className="text-[6rem] font-bold text-[#0ea5e9] tracking-tighter leading-none">CENSC</span>
+                                            </div>
+                                            <div className="text-2xl text-cyan-500 font-medium mt-2 pl-10">Centro Educacional Nossa Srª do Cenáculo</div>
                                         </div>
                                         <div className="relative z-10 w-full">
                                             <div className="flex justify-between items-start mb-4 border-b-2 border-black pb-4">
