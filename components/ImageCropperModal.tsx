@@ -85,6 +85,7 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ isOpen, im
                             max={3}
                             step={0.1}
                             title="Ajustar Zoom"
+                            placeholder="Ajustar Zoom"
                             aria-labelledby="Zoom"
                             onChange={(e) => setZoom(Number(e.target.value))}
                             className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700 accent-primary"
@@ -92,21 +93,17 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ isOpen, im
                         <span className="material-symbols-outlined text-slate-400 text-sm">add</span>
                     </div>
 
-                    <button
-                        onClick={handleSave}
-                        disabled={loading}
-                        className={`w-full py-3 rounded-xl font-bold text-white flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02] active:scale-95 transition-all bg-${theme.primaryColor} hover:bg-${theme.primaryColor}/90`}
-                        style={{ backgroundColor: theme.primaryColorHex }}
+                    className={`w-full py-3 rounded-xl font-bold text-white flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02] active:scale-95 transition-all bg-${theme.primaryColor} hover:bg-${theme.primaryColor}/90`}
                     >
-                        {loading ? (
-                            <span className="material-symbols-outlined animate-spin">refresh</span>
-                        ) : (
-                            <span className="material-symbols-outlined">check</span>
-                        )}
-                        Confirmar Recorte
-                    </button>
-                </div>
+                    {loading ? (
+                        <span className="material-symbols-outlined animate-spin">refresh</span>
+                    ) : (
+                        <span className="material-symbols-outlined">check</span>
+                    )}
+                    Confirmar Recorte
+                </button>
             </div>
         </div>
+        </div >
     )
 }
