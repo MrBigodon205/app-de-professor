@@ -828,6 +828,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                             <div className="flex items-center flex-shrink-0">
                                                 <input
                                                     type="checkbox"
+                                                    aria-label="Selecionar aluno"
                                                     className="size-5 rounded border-2 border-slate-300 dark:border-slate-600 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer accent-indigo-600"
                                                     checked={selectedIds.includes(student.id)}
                                                     onChange={() => toggleSelect(student.id)}
@@ -853,6 +854,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                             className="flex-1 h-8 px-2 rounded border border-indigo-500 bg-white dark:bg-black font-bold text-sm focus:outline-none"
                                                             autoFocus
                                                             onClick={(e) => e.stopPropagation()}
+                                                            aria-label="Editar nome do aluno"
                                                         />
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); saveEdit(); }}

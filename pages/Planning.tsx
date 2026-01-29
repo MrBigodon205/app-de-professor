@@ -1656,107 +1656,99 @@ export const Planning: React.FC = () => {
 
                                     <div className="border-t border-slate-100 dark:border-slate-800 my-8 print:hidden"></div>
 
-                                    {/* PRINTABLE CONTENT (Matches CENSC Layout - Landscape) */}
-                                    <div className="printable-content bg-white p-[10mm] hidden print:block">
-                                        <div className="flex justify-between items-start mb-6">
-                                            <table className="w-full border-collapse border-none">
-                                                <tbody>
-                                                    <tr>
-                                                        <td className="w-[65%] align-top border-none p-0">
-                                                            <table className="w-full border-collapse border-none">
-                                                                <tbody>
-                                                                    <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Turma:</span></td>
-                                                                        <td className="border-b border-black py-1 px-2">
-                                                                            <span className="text-sm font-bold">
-                                                                                {(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
-                                                                                    ? `${activeSeries?.name} - ${currentPlan.section}`
-                                                                                    : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`}
-                                                                            </span>
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Professor:</span></td>
-                                                                        <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentUser?.name}</span></td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Componente:</span></td>
-                                                                        <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold text-[#0369a1]">{currentPlan.subject}</span></td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Período:</span></td>
-                                                                        <td className="border-b border-black py-1 px-2">
-                                                                            <span className="text-sm font-bold">
-                                                                                {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} até {new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                                                            </span>
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td className="w-24 py-1"><span className="text-xs font-bold">Coordenação:</span></td>
-                                                                        <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentPlan.coordinator_name || 'MOISÉS FERREIRA'}</span></td>
-                                                                    </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </td>
-                                                        <td className="w-[1%] border-l border-slate-300"></td>
-                                                        <td className="w-[34%] align-middle text-right">
-                                                            <div className="flex flex-col items-end">
-                                                                <div className="text-[#0ea5e9] text-5xl font-black leading-none">CENSC</div>
-                                                                <div className="text-[#0ea5e9] text-[8px] font-bold uppercase mt-1 leading-tight">CENTRO EDUCACIONAL<br />NOSSA SRA DO CENÁCULO</div>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                    {/* PRINTABLE CONTENT (Matches CENSC Layout) */}
+                                    <div className="printable-content bg-white p-[10mm] hidden print:block relative h-full">
+                                        <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none print:fixed">
+                                            <img src="/logo-censc.png" className="w-[500px] opacity-[0.08] grayscale" alt="" />
                                         </div>
-                                        <div className="border-b-2 border-black mb-6 w-full"></div>
-                                        <div className="border border-black">
-                                            <table className="w-full border-collapse table-fixed">
-                                                <thead>
-                                                    <tr className="bg-[#d9d9d9]">
-                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[17%] text-center align-middle">HABILIDADE(s)<br />CONTEMPLADA(s)</th>
-                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">OBJETO DE<br />CONHECIMENTO</th>
-                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">RECURSOS<br />UTILIZADOS</th>
-                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[31%] text-center align-middle">DESENVOLVIMENTO</th>
-                                                        <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">DURAÇÃO</th>
-                                                        <th className="border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">TIPO DE<br />ATIVIDADE</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td className="border-r border-black p-2 text-[11px] align-top h-[400px]">
-                                                            <ul className="list-disc pl-4 space-y-1">
-                                                                {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
-                                                                    <li key={i}>{code}</li>
-                                                                ))}
-                                                                {currentPlan.objectives && (
-                                                                    <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives).replace(/<[^>]+>/g, ' ') }}></li>
-                                                                )}
-                                                            </ul>
-                                                        </td>
-                                                        <td className="border-r border-black p-2 text-[11px] align-top font-bold">
-                                                            <ul className="list-disc pl-4"><li>{currentPlan.title}</li></ul>
-                                                        </td>
-                                                        <td className="border-r border-black p-2 text-[11px] align-top">
-                                                            <ul className="list-disc pl-4"><li>{currentPlan.resources}</li></ul>
-                                                        </td>
-                                                        <td className="border-r border-black p-2 text-[11px] align-top">
-                                                            <ul className="list-disc pl-4 space-y-2">
-                                                                {currentPlan.methodology && <li>{currentPlan.methodology}</li>}
-                                                                {currentPlan.description && (
-                                                                    <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description).replace(/<[^>]+>/g, ' ') }}></li>
-                                                                )}
-                                                            </ul>
-                                                        </td>
-                                                        <td className="border-r border-black p-2 text-[11px] align-top text-center">
-                                                            <ul className="list-disc pl-4"><li>{currentPlan.duration}</li></ul>
-                                                        </td>
-                                                        <td className="border-black p-2 text-[11px] align-top text-center">
-                                                            <ul className="list-disc pl-4"><li>{currentPlan.activity_type}</li></ul>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                        <div className="relative z-10 w-full">
+                                            <div className="flex justify-between items-start mb-4 border-b-2 border-black pb-4">
+                                                <div className="w-[65%]">
+                                                    <table className="w-full border-collapse border-none">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td className="w-24 py-1.5"><span className="text-sm font-bold">Turma:</span></td>
+                                                                <td className="border-b border-black py-1 px-2">
+                                                                    <span className="text-sm font-bold">
+                                                                        {(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
+                                                                            ? `${activeSeries?.name} - ${currentPlan.section}`
+                                                                            : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`}
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td className="w-24 py-1.5"><span className="text-sm font-bold">Professor:</span></td>
+                                                                <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentUser?.name}</span></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td className="w-24 py-1.5"><span className="text-sm font-bold">Componente:</span></td>
+                                                                <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold text-[#0369a1]">{currentPlan.subject}</span></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td className="w-24 py-1.5"><span className="text-sm font-bold">Coordenação:</span></td>
+                                                                <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentPlan.coordinator_name || 'MOISÉS FERREIRA'}</span></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div className="w-[34%] flex flex-col items-center justify-center pl-4 border-l border-slate-300 min-h-[140px]">
+                                                    <img src="/logo-censc.png" className="h-20 w-auto mb-3 object-contain" alt="CENSC" />
+                                                    <div className="text-center leading-none">
+                                                        <div className="text-xl font-black uppercase text-[#0ea5e9]">PLANO DE AULA</div>
+                                                        <div className="text-2xl font-black text-slate-800 tracking-widest mt-1">
+                                                            {currentPlan.startDate ? new Date(currentPlan.startDate).getFullYear() : new Date().getFullYear()}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="border border-black">
+                                                <table className="w-full border-collapse table-fixed">
+                                                    <thead>
+                                                        <tr className="bg-[#d9d9d9]">
+                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[17%] text-center align-middle">HABILIDADE(s)<br />CONTEMPLADA(s)</th>
+                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">OBJETO DE<br />CONHECIMENTO</th>
+                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">RECURSOS<br />UTILIZADOS</th>
+                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[31%] text-center align-middle">DESENVOLVIMENTO</th>
+                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">DURAÇÃO</th>
+                                                            <th className="border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">TIPO DE<br />ATIVIDADE</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td className="border-r border-black p-2 text-[11px] align-top h-[400px]">
+                                                                <ul className="list-disc pl-4 space-y-1">
+                                                                    {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
+                                                                        <li key={i}>{code}</li>
+                                                                    ))}
+                                                                    {currentPlan.objectives && (
+                                                                        <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives).replace(/<[^>]+>/g, ' ') }}></li>
+                                                                    )}
+                                                                </ul>
+                                                            </td>
+                                                            <td className="border-r border-black p-2 text-[11px] align-top font-bold">
+                                                                <ul className="list-disc pl-4"><li>{currentPlan.title}</li></ul>
+                                                            </td>
+                                                            <td className="border-r border-black p-2 text-[11px] align-top">
+                                                                <ul className="list-disc pl-4"><li>{currentPlan.resources}</li></ul>
+                                                            </td>
+                                                            <td className="border-r border-black p-2 text-[11px] align-top">
+                                                                <ul className="list-disc pl-4 space-y-2">
+                                                                    {currentPlan.methodology && <li>{currentPlan.methodology}</li>}
+                                                                    {currentPlan.description && (
+                                                                        <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description).replace(/<[^>]+>/g, ' ') }}></li>
+                                                                    )}
+                                                                </ul>
+                                                            </td>
+                                                            <td className="border-r border-black p-2 text-[11px] align-top text-center">
+                                                                <ul className="list-disc pl-4"><li>{currentPlan.duration}</li></ul>
+                                                            </td>
+                                                            <td className="border-black p-2 text-[11px] align-top text-center">
+                                                                <ul className="list-disc pl-4"><li>{currentPlan.activity_type}</li></ul>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
