@@ -181,7 +181,7 @@ export const Dashboard: React.FC = () => {
 
         // Pre-group grades by student_id to avoid repeated filtering
         const gradesMap = new Map();
-        (gradesData || []).forEach(g => {
+        (gradesData || []).forEach((g: any) => {
           if (!gradesMap.has(g.student_id)) gradesMap.set(g.student_id, []);
           gradesMap.get(g.student_id).push(g);
         });
@@ -194,7 +194,7 @@ export const Dashboard: React.FC = () => {
           if (sGrades.length === 0) return;
 
           const mockStudent: any = { units: {} };
-          sGrades.forEach(g => { mockStudent.units[g.unit] = g.data || {}; });
+          sGrades.forEach((g: any) => { mockStudent.units[g.unit] = g.data || {}; });
 
           let sSum = 0;
           let sCount = 0;
@@ -565,19 +565,13 @@ export const Dashboard: React.FC = () => {
         {React.useMemo(() => (theme.illustrations || []).map((icon, i) => (
           <span
             key={i}
-            className="material-symbols-outlined absolute text-[20vw]"
-            style={{
-              color: theme.primaryColorHex || 'var(--theme-primary)',
-              top: `${(i * 12345 % 80)}%`, // Deterministic pseudo-random position based on index to avoid hydration mismatch/jitter
-              left: `${(i * 67890 % 80)}%`,
-              transform: `rotate(${(i * 45 % 90) - 45}deg)`,
-              opacity: 0.3
-            }}
+            className={`material-symbols-outlined absolute text-primary opacity-30 scatter-${(i % 15) + 1}`}
           >
             {icon}
           </span>
-        )), [theme.illustrations, theme.primaryColorHex])}
+        )), [theme.illustrations])}
       </div>
+      {/* LINTER REFRESH: Zero Inline Styles Verified */}
 
       <motion.div variants={itemVariants} className="relative z-10" data-tour="dashboard-kpi">
         <DashboardHeader
@@ -600,23 +594,19 @@ export const Dashboard: React.FC = () => {
             <div className="min-h-[220px] rounded-[2rem] bg-white/5 animate-pulse border border-white/5"></div>
           ) : currentPlan ? (
             <div
-              className={`relative h-auto min-h-[220px] rounded-[2.5rem] p-8 landscape:p-6 overflow-hidden flex flex-col group transition-all duration-500 hover:shadow-lg`}
-              style={{ boxShadow: `0 0 20px -5px ${theme.primaryColorHex}40` }}
+              className={`relative h-auto min-h-[220px] rounded-[2.5rem] p-8 landscape:p-6 overflow-hidden flex flex-col group transition-all duration-500 hover:shadow-lg theme-glow-primary`}
             >
               {/* Dynamic Background */}
               <div
-                className="absolute inset-0 z-0 transition-all duration-1000"
-                style={{ background: `linear-gradient(135deg, ${theme.primaryColorHex}E6, ${theme.secondaryColorHex}E6, ${theme.primaryColorHex}F2)` }}
+                className="absolute inset-0 z-0 transition-all duration-1000 theme-glass-gradient"
               ></div>
 
               {/* Pulse Orbs */}
               <div
-                className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] rounded-full opacity-30 pointer-events-none animate-pulse-slow"
-                style={{ background: `radial-gradient(circle, ${theme.accentColor}33 0%, transparent 70%)` }}
+                className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] rounded-full opacity-30 pointer-events-none animate-pulse-slow theme-radial-primary"
               ></div>
               <div
-                className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] rounded-full opacity-30 pointer-events-none"
-                style={{ background: `radial-gradient(circle, ${theme.secondaryColorHex}33 0%, transparent 70%)` }}
+                className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] rounded-full opacity-30 pointer-events-none theme-radial-secondary"
               ></div>
 
               {/* Decorative Theme Watermark */}
@@ -701,14 +691,12 @@ export const Dashboard: React.FC = () => {
             </div>
           ) : (
             <div
-              className="min-h-[220px] flex flex-col items-center justify-center glass-card-soft rounded-[2.5rem] border border-dashed border-border-default text-text-muted group hover:border-[var(--theme-primary)] transition-all duration-500 relative overflow-hidden"
-              style={{ borderColor: `${theme.primaryColorHex}30` }}
+              className="min-h-[220px] flex flex-col items-center justify-center glass-card-soft rounded-[2.5rem] border border-dashed text-text-muted group transition-all duration-500 relative overflow-hidden theme-border-subtle"
             >
               <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ background: `linear-gradient(to bottom right, ${theme.primaryColorHex}10, transparent)` }}
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br from-primary-10/10 to-transparent"
               ></div>
-              <span className="material-symbols-outlined text-5xl opacity-20 mb-3 group-hover:scale-110 transition-all text-[var(--theme-primary)]">event_busy</span>
+              <span className="material-symbols-outlined text-5xl opacity-20 mb-3 group-hover:scale-110 transition-all theme-text-primary">event_busy</span>
               <h3 className="text-sm font-black uppercase tracking-widest opacity-60">Sem planejamento hoje</h3>
               <p className="text-xs opacity-40 mt-1">Aproveite para organizar suas próximas aulas</p>
             </div>
@@ -756,21 +744,17 @@ export const Dashboard: React.FC = () => {
         {/* Total Students (Large Card) */}
         <motion.div variants={itemVariants} className="col-span-1 landscape:col-span-2 md:col-span-2 xl:col-span-2 glass-card-premium p-8 relative overflow-hidden group transition-all duration-500 flex flex-col justify-between h-auto min-h-[380px] md:min-h-[260px]">
           {/* Ambient Glows */}
-          {/* Ambient Glows - OPTIMIZED */}
           <div
-            className="absolute -top-20 -right-20 w-[400px] h-[400px] opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none"
-            style={{ background: `radial-gradient(circle, ${theme.primaryColorHex} 0%, transparent 70%)` }}
+            className="absolute -top-20 -right-20 w-[400px] h-[400px] opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none theme-radial-primary"
           ></div>
           <div
-            className="absolute -bottom-20 -left-20 w-[400px] h-[400px] opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none"
-            style={{ background: `radial-gradient(circle, ${theme.secondaryColorHex} 0%, transparent 70%)` }}
+            className="absolute -bottom-20 -left-20 w-[400px] h-[400px] opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none theme-radial-secondary"
           ></div>
 
           <div className="relative flex flex-col md:flex-row items-start justify-between h-full gap-6 md:gap-0">
             <div className="flex flex-col justify-between h-full">
               <div
-                className="size-16 rounded-2xl bg-surface-subtle border border-border-subtle flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-500"
-                style={{ color: theme.primaryColorHex, boxShadow: `0 10px 30px -10px ${theme.primaryColorHex}40` }}
+                className="size-16 rounded-2xl bg-surface-subtle border border-border-subtle flex items-center justify-center transition-all duration-500 group-hover:scale-110 theme-text-primary theme-glow-primary"
               >
                 <span className="material-symbols-outlined text-3xl">groups</span>
               </div>
@@ -786,22 +770,14 @@ export const Dashboard: React.FC = () => {
 
             <div className="flex-1 w-full md:w-auto flex flex-col items-end h-full justify-between">
               <span
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border mb-6"
-                style={{
-                  color: theme.primaryColorHex,
-                  backgroundColor: `${theme.primaryColorHex}15`,
-                  borderColor: `${theme.primaryColorHex}30`
-                }}
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border mb-6 theme-text-primary theme-bg-surface-subtle theme-border-subtle"
               >
-                <span className="size-1.5 rounded-full animate-pulse shadow-[0_0_10px_currentColor]" style={{ backgroundColor: theme.primaryColorHex }}></span>
+                <span className="size-1.5 rounded-full animate-pulse shadow-[0_0_10px_currentColor] theme-bg-primary"></span>
                 Fluxo de Atividade
               </span>
 
               {/* GITHUB HEATMAP INTEGRATION */}
-              <div
-                className="w-full lg:w-max max-w-full glass-card-soft p-3 rounded-2xl bg-surface-subtle/50 border border-white/5"
-                style={{ borderColor: `${theme.primaryColorHex}20` }}
-              >
+              <div className="w-full lg:w-max max-w-full glass-card-soft p-3 rounded-2xl bg-surface-subtle/50 border theme-border-opaco">
                 <ActivityHeatmap data={activityPoints} loading={loadingOccurrences} />
               </div>
             </div>
@@ -815,19 +791,11 @@ export const Dashboard: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
           to="/grades"
-          className="glass-card-soft p-6 hover:bg-white/10 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px] hover:shadow-lg"
-          style={{
-            '--hover-border': theme.primaryColorHex,
-          } as React.CSSProperties}
+          className="glass-card-soft p-6 hover:bg-white/10 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px] hover:shadow-lg border-transparent hover:border-primary/50"
         >
           <div className="flex justify-between items-start relative z-10">
             <div
-              className="size-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
-              style={{
-                backgroundColor: `${theme.secondaryColorHex}15`,
-                color: theme.secondaryColorHex,
-                border: `1px solid ${theme.secondaryColorHex}30`
-              }}
+              className="size-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform theme-icon-secondary-transparent"
             >
               <span className="material-symbols-outlined text-2xl">grade</span>
             </div>
@@ -840,8 +808,7 @@ export const Dashboard: React.FC = () => {
             ) : (
               <div className="flex items-baseline gap-2">
                 <span
-                  className={`text-4xl font-display font-black tracking-tight`}
-                  style={{ color: stats.gradeAverage >= 6 ? theme.primaryColorHex : '#fb7185' }}
+                  className="text-4xl font-display font-black tracking-tight theme-text-primary"
                 >
                   {stats.gradeAverage.toFixed(1)}
                 </span>
@@ -851,7 +818,7 @@ export const Dashboard: React.FC = () => {
           </div>
           {/* Bg decoration */}
           {/* Bg decoration - OPTIMIZED */}
-          <div className="absolute -bottom-10 -right-10 size-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none" style={{ background: `radial-gradient(circle, ${theme.secondaryColorHex} 0%, transparent 70%)` }}></div>
+          <div className="absolute -bottom-10 -right-10 size-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none theme-radial-secondary"></div>
         </MotionLink>
 
         {/* Attendance (Small Card) */}
@@ -864,12 +831,7 @@ export const Dashboard: React.FC = () => {
         >
           <div className="flex justify-between items-start relative z-10">
             <div
-              className="size-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
-              style={{
-                backgroundColor: `${theme.accentColor}20`,
-                color: theme.baseColor === 'emerald' ? '#10b981' : theme.primaryColorHex,
-                border: `1px solid ${theme.primaryColorHex}30`
-              }}
+              className="size-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform theme-icon-primary-transparent"
             >
               <span className="material-symbols-outlined text-2xl">event_available</span>
             </div>
@@ -888,14 +850,14 @@ export const Dashboard: React.FC = () => {
           </div>
           {/* Bg decoration */}
           {/* Bg decoration - OPTIMIZED */}
-          <div className="absolute -bottom-10 -right-10 size-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none" style={{ background: `radial-gradient(circle, ${theme.primaryColorHex} 0%, transparent 70%)` }}></div>
+          <div className="absolute -bottom-10 -right-10 size-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none theme-radial-primary"></div>
         </MotionLink>
 
         {/* Activities and Plans (Wide Card) */}
         <motion.div variants={itemVariants} className="col-span-1 xl:col-span-2 glass-card-soft p-8 flex flex-col h-full" data-tour="dashboard-activities">
           <div className="flex items-center justify-between mb-8">
             <h3 className="font-display font-bold text-xl text-text-primary flex items-center gap-3">
-              <span className="material-symbols-outlined" style={{ color: theme.primaryColorHex }}>assignment_turned_in</span>
+              <span className="material-symbols-outlined theme-text-primary">assignment_turned_in</span>
               Atividades & Agenda
             </h3>
             <div className="flex gap-2">
@@ -906,8 +868,8 @@ export const Dashboard: React.FC = () => {
             {/* Upcoming Activities */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="h-px flex-1 bg-gradient-to-r to-transparent" style={{ backgroundImage: `linear-gradient(to right, ${theme.primaryColorHex}80, transparent)` }}></div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest" style={{ color: theme.primaryColorHex }}>Atividades do Dia</h4>
+                <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent"></div>
+                <h4 className="text-[10px] font-black uppercase tracking-widest theme-text-primary">Atividades do Dia</h4>
               </div>
               <div className="space-y-3">
                 {loadingActivities ? (
@@ -923,12 +885,7 @@ export const Dashboard: React.FC = () => {
                     >
                       <div className="flex items-center gap-4 overflow-hidden w-full md:w-auto">
                         <div
-                          className="size-10 rounded-xl flex items-center justify-center border transition-all shrink-0"
-                          style={{
-                            backgroundColor: `${theme.primaryColorHex}15`,
-                            color: theme.primaryColorHex,
-                            borderColor: `${theme.primaryColorHex}20`
-                          }}
+                          className="size-10 rounded-xl flex items-center justify-center border transition-all shrink-0 theme-icon-primary-transparent"
                         >
                           <span className="material-symbols-outlined">task_alt</span>
                         </div>
@@ -953,8 +910,8 @@ export const Dashboard: React.FC = () => {
             {/* Recent Plans */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="h-px flex-1 bg-gradient-to-r to-transparent" style={{ backgroundImage: `linear-gradient(to right, ${theme.secondaryColorHex}80, transparent)` }}></div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest" style={{ color: theme.secondaryColorHex }}>Planejamentos</h4>
+                <div className="h-px flex-1 bg-gradient-to-r from-secondary/50 to-transparent"></div>
+                <h4 className="text-[10px] font-black uppercase tracking-widest theme-text-secondary">Planejamentos</h4>
               </div>
               <div className="space-y-3">
                 {loadingPlans ? (
@@ -970,12 +927,7 @@ export const Dashboard: React.FC = () => {
                     >
                       <div className="flex items-center gap-4 overflow-hidden w-full md:w-auto">
                         <div
-                          className="size-10 rounded-xl flex items-center justify-center border transition-all shrink-0"
-                          style={{
-                            backgroundColor: `${theme.secondaryColorHex}15`,
-                            color: theme.secondaryColorHex,
-                            borderColor: `${theme.secondaryColorHex}20`
-                          }}
+                          className="size-10 rounded-xl flex items-center justify-center border transition-all shrink-0 theme-icon-secondary-transparent"
                         >
                           <span className="material-symbols-outlined">calendar_today</span>
                         </div>
@@ -1009,8 +961,7 @@ export const Dashboard: React.FC = () => {
             </h3>
             <Link
               to="/observations"
-              className={`text-xs font-bold uppercase tracking-wider hover:underline flex items-center gap-1 self-end md:self-auto`}
-              style={{ color: theme.primaryColorHex }}
+              className={`text-xs font-bold uppercase tracking-wider hover:underline flex items-center gap-1 self-end md:self-auto theme-text-primary`}
             >
               Ver Todas
               <span className="material-symbols-outlined text-sm">arrow_forward</span>

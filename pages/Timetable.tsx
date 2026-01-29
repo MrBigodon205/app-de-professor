@@ -198,6 +198,9 @@ export const Timetable: React.FC = () => {
         };
     };
 
+    const getHexColor = (colorClass: string) => {
+        return '#4f46e5'; // Simplified as we are moving to CSS vars
+    };
     const getSlotItem = (day: DayOfWeek, start: string) => {
         return schedule.find(s => s.dayOfWeek === day && s.startTime === start);
     };
@@ -337,7 +340,7 @@ export const Timetable: React.FC = () => {
                     <div className="min-w-[800px] bg-white dark:bg-slate-900 rounded-[24px] shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-4">
 
                         {/* Header Row */}
-                        <div className="grid gap-4 mb-4" style={{ gridTemplateColumns: `80px repeat(${visibleDays.length}, 1fr)` }}>
+                        <div className="grid gap-4 mb-4 grid-cols-[80px_repeat(5,1fr)]">
                             <div className="flex items-center justify-center p-4">
                                 <span className="text-slate-400 font-black uppercase text-xs tracking-widest">Horário</span>
                             </div>
@@ -351,7 +354,7 @@ export const Timetable: React.FC = () => {
                         {/* Time Rows */}
                         <div className="space-y-3">
                             {config.slots.map((slot, index) => (
-                                <div key={index} className="grid gap-3 group" style={{ gridTemplateColumns: `80px repeat(${visibleDays.length}, 1fr)` }}>
+                                <div key={index} className="grid gap-3 group grid-cols-[80px_repeat(5,1fr)]">
                                     {/* Time Column */}
                                     <div className="flex items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800/50">
                                         <div className="flex flex-col items-center">
@@ -498,6 +501,12 @@ export const Timetable: React.FC = () => {
                             exit={{ opacity: 0, scale: 0.95 }}
                             className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[32px] shadow-2xl overflow-hidden flex flex-col"
                         >
+                            <div className={`h-40 bg-gradient-to-br ${theme.bgGradient} relative rounded-t-[32px] md:rounded-t-[40px] overflow-hidden z-0`}>
+                                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_2px_2px,_white_1px,_transparent_0)] bg-[length:24px_24px]"></div>
+                                <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 transform translate-x-4 -translate-y-4 transition-transform group-hover:scale-110 duration-700">
+                                    <span className="material-symbols-outlined text-[120px] text-white">{theme.icon}</span>
+                                </div>
+                            </div>
                             <div className="p-3 sm:p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
                                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                                     <span className="material-symbols-outlined text-slate-400">tune</span>
@@ -575,8 +584,7 @@ export const Timetable: React.FC = () => {
                             <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
                                 <button
                                     onClick={() => setIsConfigModalOpen(false)}
-                                    className="w-full py-3 rounded-xl text-white font-bold transition-all hover:brightness-110 active:scale-[0.98] shadow-lg text-base"
-                                    style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}40` }}
+                                    className="w-full py-3 rounded-xl text-white font-bold transition-all hover:brightness-110 active:scale-[0.98] shadow-lg text-base theme-bg-primary theme-shadow-primary"
                                 >
                                     Concluir e Salvar
                                 </button>

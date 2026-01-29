@@ -148,12 +148,13 @@ export const Activities: React.FC = () => {
             }
             const reader = new FileReader();
             reader.onload = (event) => {
-                if (event.target?.result) {
+                const target = event.target;
+                if (target?.result) {
                     setFormFiles(prev => [...prev, {
                         id: generateUUID(),
                         name: file.name,
                         size: `${(file.size / 1024).toFixed(1)} KB`,
-                        url: event.target.result as string
+                        url: target.result as string
                     }]);
                 }
             };
@@ -864,7 +865,7 @@ export const Activities: React.FC = () => {
                                 <span className="landscape:hidden">Aulas</span>
                                 <span className="hidden landscape:block text-xs">Aulas</span>
                             </Link>
-                            <button className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 shadow-sm landscape:p-1.5 whitespace-nowrap`} style={{ color: theme.primaryColorHex }}>
+                            <button className="px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 shadow-sm landscape:p-1.5 whitespace-nowrap theme-text-primary">
                                 <span className="landscape:hidden">Atividades</span>
                                 <span className="hidden landscape:block text-xs">Ativ.</span>
                             </button>
@@ -879,7 +880,7 @@ export const Activities: React.FC = () => {
                                     <span className="material-symbols-outlined text-[20px]">edit_note</span>
                                 </button>
                             )}
-                            <button onClick={handleNewActivity} className={`text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0`} title="Nova Atividade" data-tour="activities-new-btn" style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}33` }}>
+                            <button onClick={handleNewActivity} className="text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0 theme-bg-primary theme-shadow-primary" title="Nova Atividade" data-tour="activities-new-btn">
                                 <span className="material-symbols-outlined text-[20px]">add</span>
                             </button>
                         </div>
@@ -936,10 +937,9 @@ export const Activities: React.FC = () => {
                             <button
                                 onClick={() => setFilterSection('')}
                                 className={`shrink-0 px-5 py-2.5 lg:px-3 lg:py-1 rounded-xl text-sm font-black transition-all border-2 ${filterSection === ''
-                                    ? `bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-transparent shadow-md`
+                                    ? `theme-bg-primary theme-gradient-to-br text-white border-transparent theme-shadow-primary`
                                     : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
                                     }`}
-                                style={filterSection === '' ? { backgroundColor: theme.primaryColorHex, backgroundImage: `linear-gradient(to bottom right, ${theme.primaryColorHex}, ${theme.secondaryColor})`, boxShadow: `0 4px 6px -1px ${theme.primaryColorHex}33` } : {}}
                             >
                                 Todas
                             </button>
@@ -948,10 +948,9 @@ export const Activities: React.FC = () => {
                                     key={sec}
                                     onClick={() => setFilterSection(sec)}
                                     className={`shrink-0 px-5 py-2.5 lg:px-3 lg:py-1 rounded-xl text-sm font-black transition-all border-2 ${filterSection === sec
-                                        ? `bg-gradient-to-br from-indigo-500 to-indigo-700 text-white border-transparent shadow-md`
+                                        ? `theme-bg-primary theme-gradient-to-br text-white border-transparent theme-shadow-primary`
                                         : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
                                         }`}
-                                    style={filterSection === sec ? { backgroundColor: theme.primaryColorHex, backgroundImage: `linear-gradient(to bottom right, ${theme.primaryColorHex}, ${theme.secondaryColor})`, boxShadow: `0 4px 6px -1px ${theme.primaryColorHex}33` } : {}}
                                 >
                                     Turma {sec}
                                 </button>
@@ -990,16 +989,15 @@ export const Activities: React.FC = () => {
                                     onClick={() => isSelectionMode ? toggleSelection(act.id) : handleSelectActivity(act)}
                                     className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${isSelectionMode
                                         ? (selectedIds.includes(act.id) ? 'bg-indigo-50 border-indigo-500 dark:bg-indigo-900/20 dark:border-indigo-500' : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800')
-                                        : (selectedActivityId === act.id ? `bg-white dark:bg-surface-dark shadow-lg ring-1` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600')
+                                        : (selectedActivityId === act.id ? `bg-white dark:bg-surface-dark shadow-lg ring-1 theme-ring-primary theme-border-primary theme-shadow-primary` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600')
                                         }`}
-                                    style={!isSelectionMode && selectedActivityId === act.id ? { borderColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}1a`, '--tw-ring-color': theme.primaryColorHex } as React.CSSProperties : {}}
                                 >
                                     {isSelectionMode && (
                                         <div className={`absolute left-4 top-1/2 -translate-y-1/2 size-5 rounded border-2 flex items-center justify-center transition-all z-10 ${selectedIds.includes(act.id) ? 'bg-indigo-500 border-indigo-500' : 'border-slate-300 bg-white'}`}>
                                             {selectedIds.includes(act.id) && <span className="material-symbols-outlined text-sm text-white font-bold">check</span>}
                                         </div>
                                     )}
-                                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedActivityId === act.id ? '' : 'bg-transparent group-hover:bg-slate-200'} transition-all`} style={{ backgroundColor: selectedActivityId === act.id ? theme.primaryColorHex : undefined }}></div>
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedActivityId === act.id ? 'theme-bg-primary' : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
                                     <div className={`pl-4 w-full ${isSelectionMode ? 'pl-16 landscape:pl-16' : 'landscape:pl-0'}`}>
                                         <div className="flex justify-between items-center mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
                                             <h4 className={`font-bold text-base md:text-lg truncate pr-2 flex-1 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
@@ -1046,8 +1044,7 @@ export const Activities: React.FC = () => {
                         <div className="flex flex-col sm:flex-row gap-3">
                             <button
                                 onClick={handleNewActivity}
-                                className={`group relative inline-flex items-center justify-center gap-3 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden`}
-                                style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 20px 25px -5px ${theme.primaryColorHex}33` }}
+                                className={`group relative inline-flex items-center justify-center gap-3 text-white text-lg font-bold py-4 px-8 rounded-2xl transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden theme-bg-primary theme-shadow-primary`}
                             >
                                 <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">add</span>
                                 Criar Nova Atividade
@@ -1244,8 +1241,7 @@ export const Activities: React.FC = () => {
                                 <button
                                     onClick={handleSave}
                                     disabled={loading}
-                                    className={`w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-xl text-white font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-2`}
-                                    style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}33` }}
+                                    className={`w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-xl text-white font-bold transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-2 theme-bg-primary theme-shadow-primary`}
                                 >
                                     {loading && <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>}
                                     {loading ? 'Salvando...' : 'Salvar Atividade'}
@@ -1383,8 +1379,7 @@ export const Activities: React.FC = () => {
                                             <div className="grid grid-cols-2 gap-x-8 gap-y-2">
                                                 {students.map((s, idx) => (
                                                     <div key={s.id}
-                                                        className="flex items-center justify-between gap-3 border-b border-slate-100 py-1 animate-in slide-in-from-bottom-2 fade-in duration-500 fill-mode-backwards"
-                                                        style={{ animationDelay: `${idx * 50}ms` }}
+                                                        className="flex items-center justify-between gap-3 border-b border-slate-100 py-1 animate-in slide-in-from-bottom-2 fade-in duration-500 fill-mode-backwards theme-animate-delay"
                                                     >
                                                         <span className="text-xs truncate min-w-0 flex-1">{s.number}. {s.name}</span>
                                                         <div className="size-4 border border-slate-300 flex items-center justify-center shrink-0">
@@ -1538,16 +1533,15 @@ export const Activities: React.FC = () => {
                                                         key={s.id}
                                                         variants={itemVariants}
                                                         className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${isDone
-                                                            ? `bg-white dark:bg-slate-800/50`
+                                                            ? 'theme-bg-surface-subtle theme-border-soft'
                                                             : 'bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 hover:border-slate-200'}`}
                                                         onClick={() => toggleCompletion(s.id)}
-                                                        style={isDone ? { backgroundColor: `${theme.primaryColorHex}0D`, borderColor: `${theme.primaryColorHex}33` } : {}}
                                                     >
                                                         <div className="flex items-center gap-3 min-w-0">
                                                             <span className="text-xs font-mono text-slate-400 shrink-0 min-w-[1.5rem]">{s.number}</span>
                                                             <span className={`text-sm font-bold truncate ${isDone ? `text-${theme.primaryColor}` : 'text-slate-600 dark:text-slate-300'}`}>{s.name}</span>
                                                         </div>
-                                                        <div className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 shrink-0`} style={isDone ? { backgroundColor: theme.primaryColorHex, borderColor: theme.primaryColorHex, color: 'white', transform: 'scale(1.1)', boxShadow: `0 1px 2px 0 ${theme.primaryColorHex}4d` } : { borderColor: '#e2e8f0' /* slate-200 */ }}>
+                                                        <div className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 shrink-0 ${isDone ? 'theme-bg-primary theme-border-primary text-white scale-110 theme-shadow-primary' : 'border-slate-200'}`}>
                                                             {isDone && <span className="material-symbols-outlined text-[16px] font-bold animate-in zoom-in spin-in-180 duration-300">check</span>}
                                                         </div>
                                                     </motion.div>

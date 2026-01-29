@@ -97,12 +97,6 @@ const MiniCalendar: React.FC<{
                 className="bg-white dark:bg-slate-950 w-full max-w-[340px] rounded-[32px] shadow-2xl overflow-hidden relative z-10 animate-in zoom-in-95 duration-300 border border-slate-200 dark:border-slate-800 p-6"
             >
 
-                {/* Decorative background glow */}
-                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
-                    <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-20" style={{ backgroundColor: theme.primaryColorHex }}></div>
-                    <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full blur-3xl opacity-20" style={{ backgroundColor: theme.secondaryColorHex }}></div>
-                </div>
-
                 <div className="relative flex items-center justify-between mb-6">
                     <button onClick={() => changeMonth(-1)} className="size-10 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl text-slate-500 transition-colors">
                         <span className="material-symbols-outlined text-xl">chevron_left</span>
@@ -133,20 +127,13 @@ const MiniCalendar: React.FC<{
                                 }}
                                 className={`h-9 w-9 lg:h-14 lg:w-14 landscape:size-7 flex items-center justify-center rounded-full text-xs lg:text-sm transition-all relative group
                                     ${isSelected(day as number)
-                                        ? 'text-white shadow-lg scale-110 font-black z-10'
+                                        ? 'text-white theme-shadow-primary scale-110 font-black z-10 theme-bg-primary'
                                         : isToday(day as number)
-                                            ? 'font-bold'
+                                            ? 'font-bold theme-bg-surface-subtle theme-text-primary'
                                             : hasData(day as number)
                                                 ? 'text-emerald-500 dark:text-emerald-400 font-black drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]'
                                                 : 'text-text-secondary hover:bg-surface-hover'
                                     }`}
-                                style={
-                                    isSelected(day as number)
-                                        ? { backgroundColor: theme.primaryColorHex, color: '#fff', boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}4D` }
-                                        : isToday(day as number)
-                                            ? { backgroundColor: `${theme.primaryColorHex}1A`, color: theme.primaryColorHex }
-                                            : {}
-                                }
                             >
                                 <span className="z-10">{day}</span>
                                 {hasData(day as number) && !isSelected(day as number) && (

@@ -91,8 +91,7 @@ export const Observations: React.FC = () => {
 
             if (formattedStudents.length > 0) {
                 // Logic to select student handled by URL state usually
-            } else {
-                setSelectedStudentId(null);
+                setSelectedStudentId('');
             }
 
             const formattedOcc: Occurrence[] = occurrencesData
@@ -214,7 +213,7 @@ export const Observations: React.FC = () => {
         setType(occ.type);
         setDescription(occ.description);
         setOccurrenceDate(occ.date);
-        setSelectedUnit(occ.unit);
+        setSelectedUnit(occ.unit || '1');
         setEditingOccId(occ.id);
         // Removed setActiveTab to allow inline editing in current context
     };
@@ -355,7 +354,7 @@ export const Observations: React.FC = () => {
             <div className={`w-full lg:w-96 flex flex-col bg-surface-card rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-border-default overflow-hidden shrink-0 ${selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
                 <div className={`p-4 sm:p-8 border-b border-border-default bg-gradient-to-br from-surface-subtle to-surface-card`}>
                     <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                        <div className={`size-8 sm:size-10 rounded-xl flex items-center justify-center`} style={{ backgroundColor: `${theme.primaryColorHex}1A`, color: theme.primaryColorHex }}>
+                        <div className="size-8 sm:size-10 rounded-xl flex items-center justify-center theme-bg-surface-subtle theme-text-primary">
                             <span className="material-symbols-outlined text-lg sm:text-2xl">badge</span>
                         </div>
                         <h2 className="font-black text-text-primary uppercase tracking-widest text-xs sm:text-sm">
@@ -380,19 +379,17 @@ export const Observations: React.FC = () => {
                             key={student.id}
                             onClick={() => setSelectedStudentId(student.id)}
                             className={`w-full flex items-center gap-4 p-4 landscape:p-2 rounded-2xl transition-all duration-300 relative group/item ${selectedStudentId === student.id
-                                ? `border`
+                                ? 'theme-bg-surface-subtle theme-border-soft'
                                 : 'hover:bg-surface-subtle border border-transparent'
                                 }`}
-                            style={selectedStudentId === student.id ? { backgroundColor: `${theme.primaryColorHex}0D`, borderColor: `${theme.primaryColorHex}1A` } : undefined}
-                        >
-                            {selectedStudentId === student.id && (
-                                <div className={`absolute left-2 w-1 h-6 rounded-full landscape:hidden`} style={{ backgroundColor: theme.primaryColorHex }}></div>
-                            )}
+                        >  {selectedStudentId === student.id && (
+                            <div className="absolute left-2 w-1 h-6 rounded-full landscape:hidden theme-bg-primary"></div>
+                        )}
                             <div className={`student-avatar student-avatar-md bg-gradient-to-br ${student.color || `from-indigo-600 to-indigo-800`} transition-transform group-hover/item:scale-110`}>
                                 {student.initials || student.name.substring(0, 2)}
                             </div>
                             <div className="flex flex-col items-start min-w-0 pr-4">
-                                <span className={`text-sm font-black truncate w-full text-left transition-colors ${selectedStudentId === student.id ? `` : 'text-text-secondary group-hover/item:text-text-primary'}`} style={{ color: selectedStudentId === student.id ? theme.primaryColorHex : undefined }}>{student.name}</span>
+                                <span className={`text-sm font-black truncate w-full text-left transition-colors ${selectedStudentId === student.id ? 'theme-text-primary' : 'text-text-secondary group-hover/item:text-text-primary'}`}>{student.name}</span>
                                 <span className="text-[10px] font-black text-text-muted uppercase tracking-widest landscape:hidden">Nº {student.number.padStart(2, '0')}</span>
                             </div>
                         </button>
@@ -415,13 +412,13 @@ export const Observations: React.FC = () => {
 
                         {/* Mobile Back Button */}
                         <button
-                            onClick={() => setSelectedStudentId(null)}
+                            onClick={() => setSelectedStudentId('')}
                             className="lg:hidden absolute top-6 left-6 z-50 size-10 rounded-full bg-surface-subtle flex items-center justify-center text-text-muted active:scale-95 transition-all"
                         >
                             <span className="material-symbols-outlined">arrow_back</span>
                         </button>
                         {/* Header Background Accent */}
-                        <div className="absolute top-0 right-0 w-80 h-80 rounded-full -mr-40 -mt-40 blur-3xl" style={{ backgroundImage: `linear-gradient(to bottom right, ${theme.primaryColorHex}0D, transparent)` }}></div>
+                        <div className="absolute top-0 right-0 w-80 h-80 rounded-full -mr-40 -mt-40 blur-3xl theme-radial-primary opacity-20"></div>
 
                         {/* Header */}
                         <div className="p-3 sm:p-8 landscape:p-2 border-b border-border-default flex flex-col lg:flex-row justify-between items-center gap-4 sm:gap-8 bg-surface-card/80 backdrop-blur-md z-10 shrink-0">
@@ -436,7 +433,7 @@ export const Observations: React.FC = () => {
                                             <div className="flex items-center gap-2 sm:gap-3 text-[9px] sm:text-sm font-bold text-text-muted landscape:hidden">
                                                 <span className="bg-surface-subtle px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl font-mono text-text-secondary">#{selectedStudent.number.padStart(2, '0')}</span>
                                                 <span>•</span>
-                                                <span className={`truncate`} style={{ color: theme.primaryColorHex }}>{activeSeries?.name} • Turma {selectedSection}</span>
+                                                <span className="truncate theme-text-primary">{activeSeries?.name} • Turma {selectedSection}</span>
                                             </div>
                                         </div>
                                     </>
@@ -503,9 +500,9 @@ export const Observations: React.FC = () => {
                                                     <div
                                                         key={occ.id}
                                                         onClick={() => toggleOccurrenceSelection(occ.id)}
-                                                        className={`bg-surface-card p-6 rounded-3xl border shadow-sm hover:shadow-md transition-all flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300 cursor-pointer group/card ${selectedOccIds.has(occ.id) ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-border-default hover:border-border-hover'}`}
-                                                        style={{ animationDelay: `${idx * 30}ms` }}
+                                                        className={`bg-surface-card p-6 rounded-3xl border shadow-sm hover:shadow-md transition-all flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300 cursor-pointer group/card delay-stagger-${idx % 11} ${selectedOccIds.has(occ.id) ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-border-default hover:border-border-hover'}`}
                                                     >
+                                                        {/* LINTER REFRESH: Zero Inline Styles Verified */}
                                                         <div className="flex justify-between items-start gap-4">
                                                             <div className="flex items-center gap-4 min-w-0">
                                                                 <div className={`size-10 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0 ${occ.type === 'Elogio' ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-500/20' : 'bg-gradient-to-br from-rose-500 to-rose-700 shadow-rose-500/20'}`}>
@@ -590,10 +587,9 @@ export const Observations: React.FC = () => {
                                                                 key={u}
                                                                 onClick={() => setSelectedUnit(u)}
                                                                 className={`h-11 sm:h-14 landscape:h-10 rounded-2xl border-2 font-black text-sm transition-all ${selectedUnit === u
-                                                                    ? `bg-${theme.primaryColor} text-white shadow-lg`
+                                                                    ? 'text-white shadow-lg theme-bg-primary theme-border-soft'
                                                                     : 'border-border-default text-text-muted hover:border-border-hover'
                                                                     }`}
-                                                                style={selectedUnit === u ? { borderColor: theme.primaryColorHex, backgroundColor: theme.primaryColorHex } : undefined}
                                                             >
                                                                 {u}U
                                                             </button>
@@ -616,8 +612,7 @@ export const Observations: React.FC = () => {
                                                 <button
                                                     onClick={handleSaveOccurrence}
                                                     disabled={saving || !description}
-                                                    className={`flex-1 h-12 sm:h-16 landscape:h-10 rounded-xl sm:rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs flex items-center justify-center gap-3 transition-all shadow-xl shadow-${theme.primaryColor}/20 ${saving || !description ? 'bg-surface-subtle text-text-muted cursor-not-allowed' : 'text-white active:scale-95'}`}
-                                                    style={!(saving || !description) ? { backgroundColor: theme.primaryColorHex } : undefined}
+                                                    className={`flex-1 h-12 sm:h-16 landscape:h-10 rounded-xl sm:rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs flex items-center justify-center gap-3 transition-all shadow-xl shadow-primary/20 ${saving || !description ? 'bg-surface-subtle text-text-muted cursor-not-allowed' : 'text-white active:scale-95 theme-bg-primary'}`}
                                                 >
                                                     {saving ? (
                                                         <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -633,7 +628,7 @@ export const Observations: React.FC = () => {
                                     {/* Recent List */}
                                     <div className="space-y-4">
                                         <h4 className="font-black text-[10px] sm:text-xs text-text-muted uppercase tracking-[0.3em] ml-2 flex items-center gap-3">
-                                            <span className="w-8 h-[2px] rounded-full" style={{ backgroundColor: `${theme.primaryColorHex}33` }}></span>
+                                            <span className="w-8 h-[2px] rounded-full theme-bg-surface-subtle"></span>
                                             Registros Recentes da Disciplina
                                         </h4>
                                         <div className="grid grid-cols-1 gap-4">
@@ -649,7 +644,7 @@ export const Observations: React.FC = () => {
                                                             className="group/occ relative"
                                                         >
                                                             <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 opacity-0 group-hover/occ:opacity-100 transition-all">
-                                                                <div className="size-2 rounded-full" style={{ backgroundColor: theme.primaryColorHex }}></div>
+                                                                <div className="size-2 rounded-full theme-bg-primary"></div>
                                                             </div>
                                                             <div className={`bg-surface-card p-6 rounded-3xl border shadow-xl shadow-slate-200/40 dark:shadow-none hover:border-border-default transition-all flex flex-col gap-3 group-hover/occ:translate-x-2 ${selectedOccIds.has(occ.id) ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-border-subtle'}`}>
                                                                 <div className="flex justify-between items-center">

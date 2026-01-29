@@ -23,8 +23,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 <div className="relative group">
                     {/* Pulsing glow background */}
                     <div
-                        className="absolute -inset-1 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 animate-pulse"
-                        style={{ background: `linear-gradient(to right, ${theme.primaryColorHex}, ${theme.secondaryColorHex})` }}
+                        className="absolute -inset-1 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 animate-pulse theme-gradient-to-r"
                     ></div>
 
                     <div className="relative size-16 md:size-20 landscape:size-12 rounded-full border-4 border-surface-card shadow-2xl overflow-hidden bg-surface-card group-hover:scale-105 transition-transform duration-500">
@@ -36,8 +35,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                             />
                         ) : (
                             <div
-                                className="size-full flex items-center justify-center text-white font-bold text-2xl"
-                                style={{ background: `linear-gradient(to bottom right, ${theme.primaryColorHex}, ${theme.secondaryColorHex})` }}
+                                className="size-full flex items-center justify-center text-white font-bold text-2xl theme-gradient-to-br"
                             >
                                 {currentUser?.name?.substring(0, 2).toUpperCase()}
                             </div>
@@ -55,8 +53,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
                         <h1 className="text-2xl md:text-4xl landscape:text-xl font-black tracking-tight text-text-primary">
                             Seu Painel <span
-                                className="text-transparent bg-clip-text"
-                                style={{ backgroundImage: `linear-gradient(to right, ${theme.primaryColorHex}, ${theme.secondaryColorHex})` }}
+                                className="theme-text-gradient"
                             >
                                 {isContextSelected ? contextName : 'Geral'}
                             </span>

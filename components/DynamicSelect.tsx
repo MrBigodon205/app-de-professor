@@ -96,21 +96,15 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                                 onChange(opt.value);
                                 setIsOpen(false);
                             }}
-                            style={value === opt.value ? {
-                                backgroundColor: `${theme.primaryColorHex}1a`, // 10% opacity
-                                color: theme.primaryColorHex,
-                                boxShadow: `0 0 0 2px ${theme.primaryColorHex}33` // ring
-                            } : {}}
                             className={`flex items-center gap-4 p-3 lg:p-4 landscape:p-2.5 rounded-xl transition-all duration-200 text-left
                                 ${value === opt.value
-                                    ? ''
+                                    ? 'theme-bg-surface-subtle theme-text-primary theme-ring-primary'
                                     : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
                                 }`}
                         >
                             {opt.icon && (
                                 <div
-                                    className={`size-10 lg:size-12 landscape:size-9 rounded-full flex items-center justify-center ${value === opt.value ? `shadow-lg` : `bg-slate-100 dark:bg-slate-800 text-slate-500`}`}
-                                    style={value === opt.value ? { backgroundColor: theme.primaryColorHex, color: 'white', boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}4d` } : {}}
+                                    className={`size-10 lg:size-12 landscape:size-9 rounded-full flex items-center justify-center ${value === opt.value ? `theme-bg-primary text-white theme-shadow-primary` : `bg-slate-100 dark:bg-slate-800 text-slate-500`}`}
                                 >
                                     <span className="material-symbols-outlined text-xl lg:text-2xl landscape:text-lg">{opt.icon}</span>
                                 </div>
@@ -119,7 +113,7 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                                 {opt.label}
                             </span>
                             {value === opt.value && (
-                                <span className="material-symbols-outlined ml-auto" style={{ color: theme.primaryColorHex }}>check_circle</span>
+                                <span className="material-symbols-outlined ml-auto theme-text-primary">check_circle</span>
                             )}
                         </button>
                     ))}

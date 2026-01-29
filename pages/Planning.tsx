@@ -945,7 +945,7 @@ export const Planning: React.FC = () => {
                 <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 landscape:p-2">
                     <div className="flex justify-between items-center mb-4 landscape:mb-0 landscape:gap-2">
                         <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                            <button className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 shadow-sm landscape:py-1`} style={{ color: theme.primaryColorHex }}>
+                            <button className="px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-white dark:bg-slate-700 shadow-sm landscape:py-1 theme-text-primary">
                                 Aulas
                             </button>
                             <Link to="/activities" className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all landscape:py-1">
@@ -962,7 +962,7 @@ export const Planning: React.FC = () => {
                                     <span className="material-symbols-outlined text-[20px]">edit_note</span>
                                 </button>
                             )}
-                            <button onClick={handleNewPlan} className={`text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0`} title="Nova Aula" data-tour="planning-new-btn" style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}33` }}>
+                            <button onClick={handleNewPlan} className="text-white size-9 rounded-xl flex items-center justify-center transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0 theme-bg-primary theme-shadow-primary" title="Nova Aula" data-tour="planning-new-btn">
                                 <span className="material-symbols-outlined text-[20px]">add</span>
                             </button>
                         </div>
@@ -1082,7 +1082,7 @@ export const Planning: React.FC = () => {
                                         {selectedIds.includes(plan.id) && <span className="material-symbols-outlined text-sm text-white font-bold">check</span>}
                                     </div>
                                 )}
-                                <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedPlanId === plan.id ? '' : 'bg-transparent group-hover:bg-slate-200'} transition-all z-20`} style={{ backgroundColor: selectedPlanId === plan.id ? theme.primaryColorHex : undefined }}></div>
+                                <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedPlanId === plan.id ? 'theme-bg-primary' : 'bg-transparent group-hover:bg-slate-200'} transition-all z-20`}></div>
                                 <div className={`pl-4 w-full transition-all duration-300 ${isSelectionMode ? 'pl-16 landscape:pl-16' : 'landscape:pl-0'}`}>
 
                                     <div className="flex justify-between items-start mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
@@ -1141,8 +1141,7 @@ export const Planning: React.FC = () => {
                         <div className="flex flex-col sm:flex-row gap-3">
                             <button
                                 onClick={handleNewPlan}
-                                className={`group relative inline-flex items-center justify-center gap-3 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden`}
-                                style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 20px 25px -5px ${theme.primaryColorHex}33` }}
+                                className="group relative inline-flex items-center justify-center gap-3 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden theme-bg-primary theme-shadow-primary"
                             >
                                 <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">add</span>
                                 Criar Nova Aula
@@ -1338,7 +1337,7 @@ export const Planning: React.FC = () => {
                                     {selectedPlanId && (
                                         <button onClick={handleDelete} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors bg-red-50 dark:bg-red-900/10 sm:bg-transparent sm:dark:bg-transparent">Excluir</button>
                                     )}
-                                    <button onClick={handleSave} className="w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-xl text-white font-bold shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center" style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}40` }}>
+                                    <button onClick={handleSave} className="w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-xl text-white font-bold shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center theme-bg-primary theme-shadow-primary">
                                         Salvar Aula
                                     </button>
                                 </div>

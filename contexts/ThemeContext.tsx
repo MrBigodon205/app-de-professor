@@ -324,6 +324,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         root.style.setProperty('--theme-primary', themeValue.primaryColorHex);
         root.style.setProperty('--theme-secondary', themeValue.secondaryColorHex);
+        root.style.setProperty('--theme-primary-alpha', `${themeValue.primaryColorHex}40`);
         // Add a subtle tint for backgrounds
         root.style.setProperty('--theme-surface', `${themeValue.primaryColorHex}10`);
     }, [themeValue]);

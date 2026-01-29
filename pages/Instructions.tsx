@@ -224,7 +224,7 @@ export const Instructions: React.FC = () => {
                                     </p>
                                     <div className="mt-4 flex justify-center">
                                         <div className="flex gap-1 p-1 bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm scale-90">
-                                            <div className="px-3 py-1 rounded-full text-white text-[10px] font-bold" style={{ backgroundColor: theme.primaryColorHex }}>6º A</div>
+                                            <div className="px-3 py-1 rounded-full text-white text-[10px] font-bold theme-bg-primary">6º A</div>
                                             <div className="px-3 py-1 rounded-full text-slate-400 text-[10px] font-bold">6º B</div>
                                         </div>
                                     </div>
@@ -258,7 +258,7 @@ export const Instructions: React.FC = () => {
                             <div className="bg-slate-100 dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-4">
                                 <div className="text-[10px] font-black uppercase text-slate-400">Exemplo de Navegação</div>
                                 <div className="flex gap-2 p-2 bg-white dark:bg-black/40 rounded-full border border-slate-200 dark:border-slate-700">
-                                    <div className={`px-4 py-1.5 rounded-full text-white text-xs font-bold shadow-sm`} style={{ backgroundColor: theme.primaryColorHex }}>6º Ano A</div>
+                                    <div className="px-4 py-1.5 rounded-full text-white text-xs font-bold shadow-sm theme-bg-primary">6º Ano A</div>
                                     <div className="px-4 py-1.5 rounded-full text-slate-400 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">B</div>
                                     <div className="px-4 py-1.5 rounded-full text-slate-400 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">C</div>
                                 </div>

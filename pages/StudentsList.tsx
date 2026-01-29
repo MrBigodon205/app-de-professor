@@ -423,7 +423,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     {activeSeries?.name} • {selectedSection}
                                 </h1>
                                 <div className="flex items-center gap-2 mt-1.5">
-                                    <div className="size-1.5 rounded-full animate-pulse" style={{ backgroundColor: theme.primaryColorHex }}></div>
+                                    <div className="size-1.5 rounded-full animate-pulse theme-bg-primary"></div>
                                     <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest opacity-80">
                                         {students.length} {students.length === 1 ? 'Matriculado' : 'Matriculados'}
                                     </p>
@@ -435,11 +435,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                         <div className="grid grid-cols-2 gap-2 w-full">
                             <button
                                 onClick={() => setIsAdding(!isAdding)}
-                                className={`relative group flex items-center justify-center gap-1.5 h-12 rounded-xl text-white text-xs font-black transition-all active:scale-[0.97] overflow-hidden`}
-                                style={{
-                                    background: `linear-gradient(135deg, ${theme.primaryColorHex}, ${theme.secondaryColorHex || theme.primaryColorHex})`,
-                                    boxShadow: `0 4px 12px -4px ${theme.primaryColorHex}60`
-                                }}
+                                className={`relative group flex items-center justify-center gap-1.5 h-12 rounded-xl text-white text-xs font-black transition-all active:scale-[0.97] overflow-hidden theme-gradient-to-br theme-shadow-primary`}
                             >
                                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 <span className="material-symbols-outlined text-lg">person_add</span>
@@ -503,8 +499,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     </button>
                                     <button
                                         onClick={() => setIsAdding(!isAdding)}
-                                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 md:px-5 py-2.5 rounded-xl bg-${theme.primaryColor} text-white font-bold shadow-lg shadow-${theme.primaryColor}/25 hover:brightness-110 transition-all active:scale-95`}
-                                        style={{ backgroundColor: theme.primaryColorHex }}
+                                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 md:px-5 py-2.5 rounded-xl text-white font-bold shadow-lg transition-all active:scale-95 theme-bg-primary theme-shadow-primary"
                                     >
                                         <span className="material-symbols-outlined text-xl">add_circle</span>
                                         <span className="md:hidden">Novo</span>
@@ -528,7 +523,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 animate-in fade-in duration-300">
                         <div className="bg-white dark:bg-slate-900 rounded-[32px] w-full max-w-2xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-300 border-2 border-border-default max-h-[90dvh] overflow-y-auto custom-scrollbar flex flex-col">
                             <div className="flex items-center gap-4 mb-6">
-                                <div className="size-12 rounded-2xl flex items-center justify-center bg-slate-100 dark:bg-slate-800" style={{ color: theme.primaryColorHex }}>
+                                <div className="size-12 rounded-2xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 theme-text-primary">
                                     <span className="material-symbols-outlined">publish</span>
                                 </div>
                                 <div>
@@ -543,7 +538,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                         onClick={() => fileInputRef.current?.click()}
                                         className="flex-1 h-14 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600 transition-all flex items-center justify-center gap-3 font-black group shadow-sm"
                                     >
-                                        <span className="material-symbols-outlined group-hover:bounce" style={{ color: theme.primaryColorHex }}>attach_file</span>
+                                        <span className="material-symbols-outlined group-hover:bounce theme-text-primary">attach_file</span>
                                         <span className="hidden sm:inline">Texto (TXT/CSV)</span>
                                         <span className="sm:hidden">Texto</span>
                                     </button>
@@ -580,12 +575,11 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     onChange={(e) => setImportText(e.target.value)}
                                     title="Lista de nomes para importação"
                                     placeholder="Alice Silva&#10;Bernardo Souza&#10;Carlos Henrique..."
-                                    className="w-full h-48 md:h-64 p-6 rounded-3xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-4 transition-all resize-none font-bold leading-relaxed custom-scrollbar text-sm md:text-base outline-none"
-                                    style={{ '--tw-ring-color': `${theme.primaryColorHex}20` } as any}
+                                    className="w-full h-48 md:h-64 p-6 rounded-3xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-4 transition-all resize-none font-bold leading-relaxed custom-scrollbar text-sm md:text-base outline-none focus:ring-primary/20"
                                 />
                                 <div className="flex items-center justify-between mt-3 px-2">
                                     <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                        <span className="size-2 rounded-full" style={{ backgroundColor: theme.primaryColorHex }}></span>
+                                        <span className="size-2 rounded-full theme-bg-primary"></span>
                                         {importText.split('\n').filter(n => n.trim().length > 0).length} nomes identificados
                                     </span>
                                     <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Pressione Enter para cada novo nome</span>
@@ -602,8 +596,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 </button>
                                 <button
                                     onClick={handleBulkImport}
-                                    className="flex-[2] h-14 rounded-2xl text-white font-black shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 uppercase tracking-widest text-xs"
-                                    style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}40` }}
+                                    className="flex-[2] h-14 rounded-2xl text-white font-black shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 uppercase tracking-widest text-xs theme-bg-primary theme-shadow-primary"
                                     disabled={isProcessing}
                                 >
                                     {isProcessing ? (
@@ -645,8 +638,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleAddStudent}
-                                    className="h-12 sm:h-14 px-6 sm:px-8 text-white rounded-2xl font-black shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
-                                    style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}30` }}
+                                    className="h-12 sm:h-14 px-6 sm:px-8 text-white rounded-2xl font-black shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 theme-bg-primary theme-shadow-primary"
                                 >
                                     <span className="material-symbols-outlined text-xl">save</span>
                                     Salvar
@@ -687,7 +679,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                         <div className="bg-white dark:bg-slate-900 p-6 flex flex-col gap-4 border-t border-slate-200 dark:border-slate-800 z-20">
                             <div className="flex items-center justify-between mb-2">
                                 <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-sm flex items-center gap-2">
-                                    <span className="material-symbols-outlined" style={{ color: theme.primaryColorHex }}>crop_free</span>
+                                    <span className="material-symbols-outlined theme-text-primary">crop_free</span>
                                     Ajuste a área de seleção
                                 </h3>
                                 <button onClick={() => setShowCropper(false)} className="p-2 text-slate-400">
@@ -698,8 +690,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                             <button
                                 onClick={performOCR}
                                 disabled={isOcrProcessing || !completedCrop}
-                                className="w-full h-14 rounded-2xl text-white font-black shadow-xl flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
-                                style={{ backgroundColor: theme.primaryColorHex }}
+                                className="w-full h-14 rounded-2xl text-white font-black shadow-xl flex items-center justify-center gap-3 transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 theme-bg-primary theme-shadow-primary"
                             >
                                 {isOcrProcessing ? (
                                     <>

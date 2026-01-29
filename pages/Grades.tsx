@@ -269,7 +269,7 @@ export const Grades: React.FC = () => {
                 if (!newUnits[selectedUnit]) newUnits[selectedUnit] = {};
 
                 // Dynamic Max Calculation
-                const col = UNIT_CONFIGS[selectedUnit as keyof typeof UNIT_CONFIGS]?.columns.find(c => c.key === field);
+                const col = UNIT_CONFIGS[selectedUnit as keyof typeof UNIT_CONFIGS]?.columns.find((c: any) => c.key === field);
                 let currentMax = col ? col.max : 10;
 
                 // Unit 3 Special Rule: If Talent Show > 0, Exam Max is 8
@@ -278,13 +278,13 @@ export const Grades: React.FC = () => {
                         ? numericValue
                         : (Number(newUnits[selectedUnit]['talentShow']) || 0);
 
-                    if (field === 'exam' && talentShowVal > 0) {
+                    if (field === 'exam' && (talentShowVal || 0) > 0) {
                         currentMax = 8.0;
                     }
                 }
 
                 let finalVal = numericValue;
-                if (finalVal > currentMax) finalVal = currentMax;
+                if (finalVal !== null && finalVal > currentMax) finalVal = currentMax;
 
                 newUnits[selectedUnit] = {
                     ...newUnits[selectedUnit],
@@ -294,7 +294,7 @@ export const Grades: React.FC = () => {
                 // Side Effect: If updating 'talentShow' in Unit 3, check if 'exam' needs clamping
                 if (selectedUnit === '3' && field === 'talentShow') {
                     const currentExam = Number(newUnits[selectedUnit]['exam']);
-                    if (numericValue > 0 && !isNaN(currentExam) && currentExam > 8) {
+                    if (numericValue !== null && numericValue > 0 && !isNaN(currentExam) && currentExam > 8) {
                         newUnits[selectedUnit]['exam'] = 8.0;
                     }
                 }
@@ -635,10 +635,9 @@ export const Grades: React.FC = () => {
                             key={unit}
                             onClick={() => setSelectedUnit(unit)}
                             className={`flex-1 md:flex-none px-3 py-2 rounded-md text-sm font-bold transition-all duration-200 whitespace-nowrap ${selectedUnit === unit
-                                ? `text-white shadow-md transform scale-105`
+                                ? 'theme-active shadow-md transform scale-105'
                                 : 'text-text-muted hover:bg-surface-card'
                                 }`}
-                            style={selectedUnit === unit ? { backgroundColor: theme.primaryColorHex } : {}}
                         >
                             <span>
                                 {unit === 'final' ? 'Final' : unit === 'recovery' ? 'Recuperação' : unit === 'results' ? 'Resultado' : `${unit}ª Unidade`}
@@ -752,11 +751,9 @@ export const Grades: React.FC = () => {
                                 </button>
                             </div>
                         </motion.div>
-
                     </motion.div>
                 )}
             </AnimatePresence>
-
 
             <div className="card overflow-hidden shadow-premium border-none">
                 <div className="overflow-x-auto">
@@ -780,7 +777,7 @@ export const Grades: React.FC = () => {
                                     </>
                                 ) : (
                                     <>
-                                        {currentConfig?.columns.map((col) => (
+                                        {currentConfig?.columns.map((col: any) => (
                                             <th key={col.key} className="px-4 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-32">
                                                 <div className="flex flex-col items-center">
                                                     <span>{col.label}</span>

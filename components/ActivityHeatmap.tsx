@@ -38,28 +38,12 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
         return result;
     }, [data, currentMonth]);
 
-    const getColor = (count: number): React.CSSProperties => {
-        if (count === 0) return {
-            backgroundColor: 'rgba(226, 232, 240, 0.3)', // Slate 200 light
-            borderColor: 'rgba(226, 232, 240, 0.5)',
-            // In dark mode we override this:
-            ...(document.documentElement.classList.contains('dark') ? {
-                backgroundColor: 'var(--color-surface-subtle)',
-                borderColor: 'var(--color-border-subtle)'
-            } : {})
-        };
-
-        const baseColor = theme?.primaryColorHex || '#06b6d4';
-
-        // GitHub Scale: 0, 1-2, 3-5, 6-9, 10+
-        // Adjusted for school context: 0, 1, 2, 3, 4+
-        if (count === 0) return { backgroundColor: 'var(--bg-contrast-5)' }; // CSS var handling
-
-        // Opacity Levels corresponding to GitHub intensity
-        if (count === 1) return { backgroundColor: `${baseColor}40` }; // L1
-        if (count === 2) return { backgroundColor: `${baseColor}80` }; // L2
-        if (count === 3) return { backgroundColor: `${baseColor}BF` }; // L3
-        return { backgroundColor: baseColor }; // L4 (Solid)
+    const getIntensityClass = (count: number): string => {
+        if (count === 0) return 'theme-heatmap-l0';
+        if (count === 1) return 'theme-heatmap-l1';
+        if (count === 2) return 'theme-heatmap-l2';
+        if (count === 3) return 'theme-heatmap-l3';
+        return 'theme-heatmap-l4';
     };
 
     if (loading) {
@@ -116,9 +100,8 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
                         {week.map((day, dIndex) => (
                             <div
                                 key={day.date}
-                                className="size-2.5 sm:size-3 rounded-[2px] transition-all hover:scale-125 hover:z-10 relative group"
-                                style={day.count > 0 ? getColor(day.count) : { backgroundColor: 'currentColor', opacity: 0.1 }} // Fallback for 0
-                                title={`${new Date(day.date + 'T12:00:00').toLocaleDateString('pt-BR')}: ${day.count} atividades`}
+                                className={`size-2.5 sm:size-3 rounded-[2px] transition-all hover:scale-125 hover:z-10 relative group ${day.date ? getIntensityClass(day.count) : 'opacity-10 bg-current'}`}
+                                title={day.date ? `${new Date(day.date + 'T12:00:00').toLocaleDateString('pt-BR')}: ${day.count} atividades` : ''}
                             >
                                 {/* Tooltip */}
                                 {/* <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block whitespace-nowrap bg-slate-900 text-white text-[10px] px-2 py-1 rounded">
@@ -134,10 +117,10 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
                 <span>Menos</span>
                 <div className="flex gap-[2px]">
                     <div className="size-2.5 rounded-[2px] opacity-10 bg-current"></div>
-                    <div className="size-2.5 rounded-[2px]" style={{ backgroundColor: `${theme.primaryColorHex}40` }}></div>
-                    <div className="size-2.5 rounded-[2px]" style={{ backgroundColor: `${theme.primaryColorHex}80` }}></div>
-                    <div className="size-2.5 rounded-[2px]" style={{ backgroundColor: `${theme.primaryColorHex}BF` }}></div>
-                    <div className="size-2.5 rounded-[2px]" style={{ backgroundColor: theme.primaryColorHex }}></div>
+                    <div className="size-2.5 rounded-[2px] theme-heatmap-l1"></div>
+                    <div className="size-2.5 rounded-[2px] theme-heatmap-l2"></div>
+                    <div className="size-2.5 rounded-[2px] theme-heatmap-l3"></div>
+                    <div className="size-2.5 rounded-[2px] theme-heatmap-l4"></div>
                 </div>
                 <span>Mais</span>
             </div>
