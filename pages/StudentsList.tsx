@@ -806,7 +806,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                     <div className="flex flex-col">
 
                         {/* A. MOBILE CARD VIEW (< md) */}
-                        <div className="md:hidden flex flex-col gap-1.5">
+                        <div className="md:hidden flex flex-col gap-2">
                             {students.length === 0 ? (
                                 <div className="py-12 text-center bg-surface-card rounded-[24px] border border-border-default">
                                     <div className="size-16 rounded-full bg-surface-subtle flex items-center justify-center mb-4 mx-auto">
@@ -820,57 +820,58 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     <motion.div
                                         layoutId={`student-card-mobile-${student.id}`}
                                         key={student.id}
-                                        className={`bg-surface-card p-3 rounded-[24px] border border-border-default shadow-md shadow-slate-200/40 dark:shadow-none relative overflow-hidden transition-all duration-300 ${selectedIds.includes(student.id) ? 'ring-2 ring-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20' : ''}`}
+                                        className={`bg-surface-card p-2.5 rounded-[24px] border border-border-default shadow-md shadow-slate-200/40 dark:shadow-none relative overflow-hidden transition-all duration-300 ${selectedIds.includes(student.id) ? 'ring-2 ring-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20' : ''}`}
                                     >
-                                        <div className="flex items-center gap-3 relative z-10 w-full">
+                                        <div className="flex items-center gap-2 relative z-10 w-full">
                                             {/* Checkbox - Premium Custom Look */}
-                                            <div className="flex items-center">
+                                            <div className="flex items-center flex-shrink-0">
                                                 <input
                                                     type="checkbox"
                                                     className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600 shadow-sm"
                                                     checked={selectedIds.includes(student.id)}
                                                     onChange={() => toggleSelect(student.id)}
+                                                    onClick={(e) => e.stopPropagation()}
                                                     aria-label={`Selecionar ${student.name}`}
                                                 />
                                             </div>
 
                                             {/* Content */}
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between gap-3">
+                                                <div className="flex items-center justify-between gap-2">
                                                     {/* Name & ID Stacked to save horizontal space */}
-                                                    <div className="flex-1 min-w-0 flex flex-col justify-center py-0.5">
-                                                        <h3 className="font-[900] text-text-primary text-[0.95rem] leading-none truncate capitalize tracking-tight mb-1">
+                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                        <h3 className="font-[800] text-text-primary text-sm leading-tight line-clamp-2 capitalize tracking-tight mb-0.5 break-words">
                                                             {student.name.toLowerCase()}
                                                         </h3>
                                                         <div className="flex items-center gap-1.5">
-                                                            <span className="text-[9px] font-black text-text-disabled uppercase tracking-widest opacity-40">
+                                                            <span className="text-[9px] font-black text-text-disabled uppercase tracking-wide opacity-50">
                                                                 MATRÍCULA
                                                             </span>
-                                                            <span className="text-[10px] font-mono font-bold text-text-muted/70 bg-surface-subtle/50 px-1.5 py-0.5 rounded-md border border-border-default/30">
+                                                            <span className="text-[10px] font-mono font-bold text-text-muted/70 bg-surface-subtle/50 px-1.5 py-px rounded-md border border-border-default/30">
                                                                 {student.number}
                                                             </span>
                                                         </div>
                                                     </div>
 
                                                     {/* Guaranteed Action Bar - Grouped Glass Style */}
-                                                    <div className="flex items-center p-0.5 bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-2xl border border-white/50 dark:border-white/10 shadow-sm gap-0.5">
+                                                    <div className="flex items-center flex-shrink-0 p-0.5 bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-xl border border-white/50 dark:border-white/10 shadow-sm gap-0.5">
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleEdit(student); }}
-                                                            className="size-9 rounded-xl text-indigo-600 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 active:scale-90 transition-all flex items-center justify-center"
+                                                            className="size-8 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 active:scale-90 transition-all flex items-center justify-center"
                                                         >
-                                                            <span className="material-symbols-outlined text-[19px]">edit</span>
+                                                            <span className="material-symbols-outlined text-[18px]">edit</span>
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); setTransferringStudent(student); }}
-                                                            className="size-9 rounded-xl text-amber-600/80 hover:bg-white dark:hover:bg-slate-800 active:scale-90 transition-all flex items-center justify-center"
+                                                            className="size-8 rounded-lg text-amber-600/80 hover:bg-white dark:hover:bg-slate-800 active:scale-90 transition-all flex items-center justify-center"
                                                         >
-                                                            <span className="material-symbols-outlined text-[19px]">move_up</span>
+                                                            <span className="material-symbols-outlined text-[18px]">move_up</span>
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }}
-                                                            className="size-9 rounded-xl text-red-600/80 hover:bg-white dark:hover:bg-slate-800 active:scale-90 transition-all flex items-center justify-center"
+                                                            className="size-8 rounded-lg text-red-600/80 hover:bg-white dark:hover:bg-slate-800 active:scale-90 transition-all flex items-center justify-center"
                                                         >
-                                                            <span className="material-symbols-outlined text-[19px]">delete</span>
+                                                            <span className="material-symbols-outlined text-[18px]">delete</span>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -883,13 +884,13 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                                 type="text"
                                                                 value={editName}
                                                                 onChange={(e) => setEditName(e.target.value)}
-                                                                className="flex-1 h-9 px-2 rounded-lg border-2 border-primary bg-white dark:bg-black font-bold text-sm focus:outline-none"
+                                                                className="flex-1 h-8 px-2 rounded-lg border-2 border-primary bg-white dark:bg-black font-bold text-sm focus:outline-none"
                                                                 autoFocus
                                                                 title="Editar Nome do Aluno"
                                                             />
                                                             <button
                                                                 onClick={saveEdit}
-                                                                className="size-9 rounded-lg bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 active:scale-90 transition-all font-black"
+                                                                className="size-8 rounded-lg bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 active:scale-90 transition-all font-black"
                                                             >
                                                                 <span className="material-symbols-outlined text-sm">check</span>
                                                             </button>
