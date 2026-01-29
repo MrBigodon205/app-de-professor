@@ -654,7 +654,23 @@ export const Planning: React.FC = () => {
                     const wmX = (pageWidth - wmSize) / 2;
                     const wmY = (pageHeight - wmSize) / 2;
 
-                    doc.addImage(logoData, 'PNG', wmX, wmY, wmSize, wmSize);
+                    const iconSize = 60;
+                    const startX = (pageWidth - 160) / 2;
+                    const startY = (pageHeight - 60) / 2;
+
+                    // 1. Draw Dove Icon
+                    doc.addImage(logoData, 'PNG', startX, startY, iconSize, iconSize * 0.8);
+
+                    // 2. Draw CENSC Text
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(50);
+                    doc.setTextColor(14, 165, 233); // #0ea5e9 Blue
+                    doc.text('CENSC', startX + 65, startY + 30);
+
+                    // 3. Draw Subtext
+                    doc.setFontSize(14);
+                    doc.setTextColor(6, 182, 212); // Cyan-500
+                    doc.text('Centro Educacional Nossa Srª do Cenáculo', startX + 5, startY + 50);
                     doc.restoreGraphicsState();
                 } catch (e) {
                     console.warn("Watermark failed", e);
