@@ -281,16 +281,24 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({ file, isOpen, onClose
                                             onClick={() => setDrawingColor(color)}
                                             title={`Cor: ${color}`}
                                             aria-label={`Selecionar cor ${color}`}
-                                            className={`size-6 rounded-full border-2 transition-transform hover:scale-110 ${drawingColor === color ? 'border-white scale-110' : 'border-transparent'}`}
-                                            style={{ backgroundColor: color }}
+                                            className={`size-6 rounded-full border-2 transition-transform hover:scale-110 ${drawingColor === color ? 'border-white scale-110' : 'border-transparent'} ${color === '#ef4444' ? 'bg-red-500' :
+                                                    color === '#22c55e' ? 'bg-green-500' :
+                                                        color === '#3b82f6' ? 'bg-blue-500' :
+                                                            color === '#eab308' ? 'bg-yellow-500' :
+                                                                'bg-white'
+                                                }`}
                                         />
                                     ))}
                                 </div>
                                 <button
-                                    className="md:hidden size-6 rounded-full border-2 border-white"
+                                    className={`md:hidden size-6 rounded-full border-2 border-white ${drawingColor === '#ef4444' ? 'bg-red-500' :
+                                            drawingColor === '#22c55e' ? 'bg-green-500' :
+                                                drawingColor === '#3b82f6' ? 'bg-blue-500' :
+                                                    drawingColor === '#eab308' ? 'bg-yellow-500' :
+                                                        'bg-white'
+                                        }`}
                                     title="Alterar cor de desenho"
                                     aria-label="Alterar cor de desenho"
-                                    style={{ backgroundColor: drawingColor }}
                                     onClick={() => {
                                         // Mobile color picker toggle could go here, for now just cycles or static
                                         const colors = ['#ef4444', '#22c55e', '#3b82f6', '#eab308', '#ffffff'];
