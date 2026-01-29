@@ -426,23 +426,23 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     </button>
                                 </div>
                             ) : (
-                                <div className="flex gap-2 w-full">
+                                <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
                                     <button
-                                        data-tour="students-import-btn"
                                         onClick={() => setIsImporting(true)}
-                                        className="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-text-primary font-bold h-10 md:h-12 px-3 rounded-xl transition-all active:scale-95 text-xs md:text-base"
+                                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 md:px-5 py-2.5 rounded-xl bg-surface-card border border-border-default text-text-primary font-bold shadow-sm hover:bg-surface-subtle transition-all active:scale-95`}
                                     >
-                                        <span className="material-symbols-outlined text-lg">playlist_add</span>
-                                        Importar
+                                        <span className="material-symbols-outlined text-xl">upload_file</span>
+                                        <span className="md:hidden">Importar</span>
+                                        <span className="hidden md:inline">Importar</span>
                                     </button>
                                     <button
-                                        data-tour="students-add-btn"
                                         onClick={() => setIsAdding(!isAdding)}
-                                        className={`flex-1 flex items-center justify-center gap-2 hover:opacity-90 text-white font-bold h-10 md:h-12 px-3 rounded-xl shadow-lg shadow-${theme.primaryColor}/20 transition-all active:scale-95 text-xs md:text-base`}
+                                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 md:px-5 py-2.5 rounded-xl bg-${theme.primaryColor} text-white font-bold shadow-lg shadow-${theme.primaryColor}/25 hover:brightness-110 transition-all active:scale-95`}
                                         style={{ backgroundColor: theme.primaryColorHex }}
                                     >
-                                        <span className="material-symbols-outlined text-lg">add_circle</span>
-                                        Novo Aluno
+                                        <span className="material-symbols-outlined text-xl">add_circle</span>
+                                        <span className="md:hidden">Novo</span>
+                                        <span className="hidden md:inline">Novo Aluno</span>
                                     </button>
                                 </div>
                             )}
@@ -782,13 +782,11 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                             {/* Content */}
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex justify-between items-center gap-2">
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 mb-0.5">
-                                                            <span className="inline-block px-1.5 py-0.5 rounded-md bg-surface-subtle border border-border-subtle text-[10px] font-mono font-bold text-text-muted">
-                                                                #{student.number}
-                                                            </span>
-                                                        </div>
-                                                        <h3 className="font-bold text-text-primary text-sm leading-tight truncate">
+                                                    <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                                                        <span className="shrink-0 inline-block px-1.5 py-0.5 rounded bg-surface-subtle border border-border-subtle text-[10px] font-mono font-bold text-text-muted">
+                                                            #{student.number}
+                                                        </span>
+                                                        <h3 className="font-bold text-text-primary text-[0.85rem] leading-tight truncate">
                                                             {student.name}
                                                         </h3>
                                                     </div>
