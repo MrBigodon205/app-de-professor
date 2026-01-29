@@ -837,36 +837,36 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
                                             {/* Content */}
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-3">
-                                                    {/* Name & ID */}
-                                                    <div className="flex-1 min-w-0 flex items-center gap-2">
-                                                        <span className="shrink-0 text-[10px] font-mono font-bold text-text-disabled">
-                                                            #{student.number}
-                                                        </span>
+                                                <div className="flex items-center justify-between gap-3">
+                                                    {/* Name & ID Stacked to save horizontal space */}
+                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
                                                         <h3 className="font-bold text-text-primary text-[0.85rem] leading-tight truncate capitalize">
                                                             {student.name.toLowerCase()}
                                                         </h3>
+                                                        <span className="text-[10px] font-mono font-medium text-text-disabled mt-0.5">
+                                                            #{student.number}
+                                                        </span>
                                                     </div>
 
-                                                    {/* Quick Actions (Enforced size to prevent truncation) */}
-                                                    <div className="flex items-center gap-1 shrink-0 bg-surface-card pl-1">
+                                                    {/* Guaranteed Action Bar */}
+                                                    <div className="flex items-center gap-1 shrink-0">
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleEdit(student); }}
-                                                            className="size-7 rounded-lg bg-surface-subtle text-text-muted hover:text-primary active:scale-110 transition-all flex items-center justify-center border border-border-subtle"
+                                                            className="size-7 rounded-lg bg-surface-subtle text-text-muted hover:text-primary active:scale-110 transition-all flex items-center justify-center border border-border-default/50"
                                                         >
-                                                            <span className="material-symbols-outlined text-base">edit</span>
+                                                            <span className="material-symbols-outlined text-[17px]">edit</span>
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); setTransferringStudent(student); }}
-                                                            className="size-7 rounded-lg bg-surface-subtle text-amber-600/70 hover:text-amber-600 active:scale-110 transition-all flex items-center justify-center border border-border-subtle"
+                                                            className="size-7 rounded-lg bg-surface-subtle text-amber-600/70 hover:text-amber-600 active:scale-110 transition-all flex items-center justify-center border border-border-default/50"
                                                         >
-                                                            <span className="material-symbols-outlined text-base">move_up</span>
+                                                            <span className="material-symbols-outlined text-[17px]">move_up</span>
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }}
-                                                            className="size-7 rounded-lg bg-surface-subtle text-red-600/70 hover:text-red-600 active:scale-110 transition-all flex items-center justify-center border border-border-subtle"
+                                                            className="size-7 rounded-lg bg-surface-subtle text-red-600/70 hover:text-red-600 active:scale-110 transition-all flex items-center justify-center border border-border-default/50"
                                                         >
-                                                            <span className="material-symbols-outlined text-base">delete</span>
+                                                            <span className="material-symbols-outlined text-[17px]">delete</span>
                                                         </button>
                                                     </div>
                                                 </div>
