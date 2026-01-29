@@ -392,16 +392,72 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
     return (
         <div className="max-w-[1200px] mx-auto flex flex-col gap-4 md:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 lg:pb-12">
-            <div className={`bg-surface-card p-3 md:p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-border-default flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-8 relative overflow-hidden group`}>
+            {/* HEADER AREA */}
+
+            {/* 1. MOBILE HEADER (Compact, Action-Focused) */}
+            <div className="md:hidden flex flex-col gap-3 w-full animate-in slide-in-from-top-2 duration-300">
+                {mode === 'manage' && selectedIds.length > 0 ? (
+                    /* Mobile Bulk Actions (Replaces Title) */
+                    <div className="bg-surface-card p-3 rounded-xl border border-border-default shadow-sm flex items-center gap-2 animate-in fade-in zoom-in">
+                        <button
+                            onClick={() => setIsBulkTransferring(true)}
+                            className="flex-1 flex items-center justify-center gap-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-bold h-10 px-2 rounded-lg text-xs"
+                        >
+                            <span className="material-symbols-outlined text-lg">move_up</span>
+                            Transferir ({selectedIds.length})
+                        </button>
+                        <button
+                            onClick={handleBulkDelete}
+                            className="flex-1 flex items-center justify-center gap-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold h-10 px-2 rounded-lg text-xs"
+                        >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                            Remover
+                        </button>
+                    </div>
+                ) : (
+                    /* Normal Mobile Header */
+                    <>
+                        <div className="flex items-center justify-between px-1">
+                            <div>
+                                <h1 className="text-xl font-black text-text-primary leading-none tracking-tight">
+                                    {activeSeries?.name} • {selectedSection}
+                                </h1>
+                                <p className="text-xs text-text-muted font-medium mt-1">
+                                    {students.length} {students.length === 1 ? 'Aluno' : 'Alunos'}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setIsImporting(true)}
+                                className="size-9 rounded-full bg-surface-subtle border border-border-default text-text-muted flex items-center justify-center active:scale-95 transition-all"
+                            >
+                                <span className="material-symbols-outlined text-xl">upload_file</span>
+                            </button>
+                        </div>
+
+                        {/* Mobile Main Action (Full Width) */}
+                        <button
+                            onClick={() => setIsAdding(!isAdding)}
+                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-${theme.primaryColor} text-white font-bold shadow-lg shadow-${theme.primaryColor}/20 hover:brightness-110 active:scale-95 transition-all`}
+                            style={{ backgroundColor: theme.primaryColorHex }}
+                        >
+                            <span className="material-symbols-outlined text-xl">person_add</span>
+                            Adicionar Novo Aluno
+                        </button>
+                    </>
+                )}
+            </div>
+
+            {/* 2. DESKTOP HEADER (Original Card Style - Hidden on Mobile) */}
+            <div className={`hidden md:flex bg-surface-card p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-border-default flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700`}></div>
 
-                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 relative z-10 w-full lg:w-auto">
-                    <div className={`flex size-12 md:size-16 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
-                        <span className="material-symbols-outlined text-2xl md:text-3xl">groups</span>
+                <div className="flex flex-col md:flex-row items-center gap-6 relative z-10 w-full lg:w-auto">
+                    <div className={`flex size-16 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
+                        <span className="material-symbols-outlined text-3xl">groups</span>
                     </div>
                     <div className="flex flex-col text-center md:text-left">
-                        <h1 className="text-lg md:text-3xl font-black text-text-primary tracking-tight">Gerenciar Turma</h1>
-                        <p className="text-xs md:text-base text-text-muted font-medium">Alunos de <span className={`text-${theme.primaryColor} font-bold`}>{activeSeries?.name} • {selectedSection}</span></p>
+                        <h1 className="text-3xl font-black text-text-primary tracking-tight">Gerenciar Turma</h1>
+                        <p className="text-base text-text-muted font-medium">Alunos de <span className={`text-${theme.primaryColor} font-bold`}>{activeSeries?.name} • {selectedSection}</span></p>
                     </div>
                 </div>
 
