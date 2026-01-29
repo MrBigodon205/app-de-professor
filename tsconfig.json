@@ -28,5 +28,11 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "mobile-app",
+    "release_v2"
+  ]
 }
