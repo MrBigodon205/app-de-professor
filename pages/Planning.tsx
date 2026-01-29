@@ -643,7 +643,7 @@ export const Planning: React.FC = () => {
                 try {
                     doc.saveGraphicsState();
                     // Set transparency
-                    doc.setGState(new (doc as any).GState({ opacity: 0.25 }));
+                    doc.setGState(new (doc as any).GState({ opacity: 1.0 }));
 
                     const wmWidth = 100; // Size in mm
                     const wmHeight = wmWidth * 1.0;
@@ -857,7 +857,7 @@ export const Planning: React.FC = () => {
                 <body>
                     <div class="Section1">
                         <!-- WATERMARK (Absolute Positioned) -->
-                        <div style="position: absolute; width: 100%; height: 100%; z-index: -1; display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 0.25;">
+                        <div style="position: absolute; width: 100%; height: 100%; z-index: -1; display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 1.0;">
                             <img src="${watermarkBase64}" style="width: 500px; height: auto;" />
                         </div>
 
@@ -1434,7 +1434,7 @@ export const Planning: React.FC = () => {
                         {currentPlan ? (
                             <div className="flex flex-col min-h-full relative isolate">
                                 {/* SCREEN WATERMARK */}
-                                <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.25]">
+                                <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[1.0]">
                                     <img src="/watermark_censc.png" className="w-[600px] max-w-full" alt="" />
                                 </div>
                                 {/* Premium Header */}
@@ -1746,7 +1746,7 @@ export const Planning: React.FC = () => {
                                     {/* PRINTABLE CONTENT (Matches CENSC Layout) */}
                                     <div className="printable-content bg-white p-[10mm] hidden print:block relative h-full">
                                         <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none print:fixed print:visible">
-                                            <img src="/watermark_censc.png" className="min-w-[500px] w-1/2 opacity-[0.2]" alt="" />
+                                            <img src="/watermark_censc.png" className="min-w-[500px] w-1/2 opacity-[1.0]" alt="" />
                                         </div>
                                         <div className="relative z-10 w-full">
                                             <div className="flex justify-between items-start mb-4 border-b-2 border-black pb-4">
