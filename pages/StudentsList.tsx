@@ -751,7 +751,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                     <div className="flex flex-col">
 
                         {/* A. MOBILE CARD VIEW (< md) */}
-                        <div className="md:hidden flex flex-col gap-2">
+                        <div className="md:hidden flex flex-col gap-1.5">
                             {students.length === 0 ? (
                                 <div className="py-12 text-center bg-surface-card rounded-[24px] border border-border-default">
                                     <div className="size-16 rounded-full bg-surface-subtle flex items-center justify-center mb-4 mx-auto">
@@ -765,7 +765,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     <motion.div
                                         layoutId={`student-card-mobile-${student.id}`}
                                         key={student.id}
-                                        className={`bg-surface-card p-2.5 rounded-xl border border-border-default shadow-sm relative overflow-hidden ${selectedIds.includes(student.id) ? 'ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
+                                        className={`bg-surface-card p-2 rounded-xl border border-border-default shadow-sm relative overflow-hidden ${selectedIds.includes(student.id) ? 'ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
                                     >
                                         <div className="flex items-center gap-2 relative z-10 w-full">
                                             {/* Checkbox */}
@@ -782,12 +782,12 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                             {/* Content */}
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex justify-between items-center gap-2">
-                                                    <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                                                    <div className="flex-1 min-w-0 flex items-center gap-2">
                                                         <span className="shrink-0 inline-block px-1.5 py-0.5 rounded bg-surface-subtle border border-border-subtle text-[10px] font-mono font-bold text-text-muted">
                                                             #{student.number}
                                                         </span>
-                                                        <h3 className="font-bold text-text-primary text-[0.85rem] leading-tight truncate">
-                                                            {student.name}
+                                                        <h3 className="font-bold text-text-primary text-[0.85rem] leading-tight truncate capitalize">
+                                                            {student.name.toLowerCase()}
                                                         </h3>
                                                     </div>
 
