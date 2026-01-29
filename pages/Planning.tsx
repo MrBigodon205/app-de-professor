@@ -628,7 +628,7 @@ export const Planning: React.FC = () => {
                         img.onerror = (e) => reject(e);
                     });
                 };
-                logoData = await loadImage('/logo_transparent.png');
+                logoData = await loadImage('/logo.svg');
             } catch (e) {
                 console.warn("Logo load failed, falling back to text", e);
             }
@@ -800,7 +800,7 @@ export const Planning: React.FC = () => {
         // Load watermark for Word (Base64) - using High Res Logo
         let watermarkBase64 = '';
         try {
-            const response = await fetch('/logo_transparent.png');
+            const response = await fetch('/logo.svg');
             const blob = await response.blob();
             watermarkBase64 = await new Promise((resolve) => {
                 const reader = new FileReader();
@@ -1438,8 +1438,8 @@ export const Planning: React.FC = () => {
                         {currentPlan ? (
                             <div className="flex flex-col min-h-full relative isolate">
                                 {/* SCREEN WATERMARK */}
-                                <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.15]">
-                                    <img src="/logo_transparent.png" className="w-[600px] max-w-full" alt="" />
+                                <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.10]">
+                                    <img src="/logo.svg" className="w-[600px] max-w-full" alt="" />
                                 </div>
                                 {/* Premium Header */}
                                 <div className={`h-48 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden shrink-0`}>
@@ -1750,7 +1750,7 @@ export const Planning: React.FC = () => {
                                     {/* PRINTABLE CONTENT (Matches CENSC Layout) */}
                                     <div className="printable-content bg-white p-[10mm] hidden print:block relative h-full">
                                         <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none print:fixed print:visible">
-                                            <img src="/logo_transparent.png" className="min-w-[500px] w-1/2 opacity-[0.15]" alt="" />
+                                            <img src="/logo.svg" className="min-w-[500px] w-1/2 opacity-[0.15]" alt="" />
                                         </div>
                                         <div className="relative z-10 w-full">
                                             <div className="flex justify-between items-start mb-4 border-b-2 border-black pb-4">
