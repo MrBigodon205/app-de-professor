@@ -419,30 +419,37 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                     <>
                         <div className="flex items-center justify-between px-1">
                             <div>
-                                <h1 className="text-xl font-black text-text-primary leading-none tracking-tight">
+                                <h1 className="text-2xl font-[900] text-text-primary leading-none tracking-tight">
                                     {activeSeries?.name} • {selectedSection}
                                 </h1>
-                                <p className="text-xs text-text-muted font-medium mt-1">
-                                    {students.length} {students.length === 1 ? 'Aluno' : 'Alunos'}
-                                </p>
+                                <div className="flex items-center gap-2 mt-1.5">
+                                    <div className="size-1.5 rounded-full animate-pulse" style={{ backgroundColor: theme.primaryColorHex }}></div>
+                                    <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest opacity-80">
+                                        {students.length} {students.length === 1 ? 'Matriculado' : 'Matriculados'}
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Mobile Actions Grid */}
-                        <div className="grid grid-cols-2 gap-2 w-full">
+                        {/* Mobile Actions Grid - High Performance UI */}
+                        <div className="grid grid-cols-2 gap-3 w-full">
                             <button
                                 onClick={() => setIsAdding(!isAdding)}
-                                className={`flex items-center justify-center gap-2 py-3 rounded-xl bg-${theme.primaryColor} text-white text-sm font-bold shadow-lg shadow-${theme.primaryColor}/20 hover:brightness-110 active:scale-95 transition-all`}
-                                style={{ backgroundColor: theme.primaryColorHex }}
+                                className={`relative group flex items-center justify-center gap-2.5 h-14 rounded-2xl text-white text-sm font-black transition-all active:scale-[0.97] overflow-hidden`}
+                                style={{
+                                    background: `linear-gradient(135deg, ${theme.primaryColorHex}, ${theme.secondaryColorHex || theme.primaryColorHex})`,
+                                    boxShadow: `0 8px 20px -6px ${theme.primaryColorHex}60`
+                                }}
                             >
-                                <span className="material-symbols-outlined text-lg">person_add</span>
+                                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <span className="material-symbols-outlined text-xl">person_add</span>
                                 <span>Novo</span>
                             </button>
                             <button
                                 onClick={() => setIsImporting(true)}
-                                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-surface-card border border-border-default text-text-primary text-sm font-bold shadow-sm hover:bg-surface-subtle active:scale-95 transition-all"
+                                className="flex items-center justify-center gap-2.5 h-14 rounded-2xl bg-surface-card/60 backdrop-blur-md border border-border-default text-text-primary text-sm font-black shadow-sm hover:bg-surface-subtle active:scale-[0.97] transition-all"
                             >
-                                <span className="material-symbols-outlined text-lg">upload_file</span>
+                                <span className="material-symbols-outlined text-xl text-text-muted">upload_file</span>
                                 <span>Importar</span>
                             </button>
                         </div>
@@ -824,14 +831,14 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     <motion.div
                                         layoutId={`student-card-mobile-${student.id}`}
                                         key={student.id}
-                                        className={`bg-surface-card p-2 rounded-xl border border-border-default shadow-sm relative overflow-hidden ${selectedIds.includes(student.id) ? 'ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
+                                        className={`bg-surface-card p-3 rounded-[24px] border border-border-default shadow-md shadow-slate-200/40 dark:shadow-none relative overflow-hidden transition-all duration-300 ${selectedIds.includes(student.id) ? 'ring-2 ring-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20' : ''}`}
                                     >
-                                        <div className="flex items-center gap-2 relative z-10 w-full">
-                                            {/* Checkbox */}
-                                            <div className="">
+                                        <div className="flex items-center gap-3 relative z-10 w-full">
+                                            {/* Checkbox - Premium Custom Look */}
+                                            <div className="flex items-center">
                                                 <input
                                                     type="checkbox"
-                                                    className="size-4 rounded-md border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
+                                                    className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600 shadow-sm"
                                                     checked={selectedIds.includes(student.id)}
                                                     onChange={() => toggleSelect(student.id)}
                                                     aria-label={`Selecionar ${student.name}`}
@@ -843,33 +850,38 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                 <div className="flex items-center justify-between gap-3">
                                                     {/* Name & ID Stacked to save horizontal space */}
                                                     <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                        <h3 className="font-bold text-text-primary text-[0.85rem] leading-tight truncate capitalize">
+                                                        <h3 className="font-[800] text-text-primary text-[0.9rem] leading-tight truncate capitalize tracking-tight">
                                                             {student.name.toLowerCase()}
                                                         </h3>
-                                                        <span className="text-[10px] font-mono font-medium text-text-disabled mt-0.5">
-                                                            #{student.number}
-                                                        </span>
+                                                        <div className="flex items-center gap-1.5 mt-1">
+                                                            <span className="text-[10px] font-black text-text-disabled uppercase tracking-widest opacity-60">
+                                                                ID-
+                                                            </span>
+                                                            <span className="text-[10px] font-mono font-bold text-text-muted">
+                                                                {student.number}
+                                                            </span>
+                                                        </div>
                                                     </div>
 
-                                                    {/* Guaranteed Action Bar */}
-                                                    <div className="flex items-center gap-1 shrink-0">
+                                                    {/* Guaranteed Action Bar - Grouped Glass Style */}
+                                                    <div className="flex items-center p-1 bg-surface-subtle/40 rounded-xl border border-border-default/50 gap-0.5">
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleEdit(student); }}
-                                                            className="size-7 rounded-lg bg-surface-subtle text-text-muted hover:text-primary active:scale-110 transition-all flex items-center justify-center border border-border-default/50"
+                                                            className="size-8 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 active:scale-110 transition-all flex items-center justify-center"
                                                         >
-                                                            <span className="material-symbols-outlined text-[17px]">edit</span>
+                                                            <span className="material-symbols-outlined text-[18px]">edit</span>
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); setTransferringStudent(student); }}
-                                                            className="size-7 rounded-lg bg-surface-subtle text-amber-600/70 hover:text-amber-600 active:scale-110 transition-all flex items-center justify-center border border-border-default/50"
+                                                            className="size-8 rounded-lg text-amber-600/80 hover:bg-white dark:hover:bg-slate-800 active:scale-110 transition-all flex items-center justify-center"
                                                         >
-                                                            <span className="material-symbols-outlined text-[17px]">move_up</span>
+                                                            <span className="material-symbols-outlined text-[18px]">move_up</span>
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }}
-                                                            className="size-7 rounded-lg bg-surface-subtle text-red-600/70 hover:text-red-600 active:scale-110 transition-all flex items-center justify-center border border-border-default/50"
+                                                            className="size-8 rounded-lg text-red-600/80 hover:bg-white dark:hover:bg-slate-800 active:scale-110 transition-all flex items-center justify-center"
                                                         >
-                                                            <span className="material-symbols-outlined text-[17px]">delete</span>
+                                                            <span className="material-symbols-outlined text-[18px]">delete</span>
                                                         </button>
                                                     </div>
                                                 </div>
