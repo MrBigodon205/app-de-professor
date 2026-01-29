@@ -426,23 +426,26 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     {students.length} {students.length === 1 ? 'Aluno' : 'Alunos'}
                                 </p>
                             </div>
-                            <button
-                                onClick={() => setIsImporting(true)}
-                                className="size-9 rounded-full bg-surface-subtle border border-border-default text-text-muted flex items-center justify-center active:scale-95 transition-all"
-                            >
-                                <span className="material-symbols-outlined text-xl">upload_file</span>
-                            </button>
                         </div>
 
-                        {/* Mobile Main Action (Full Width) */}
-                        <button
-                            onClick={() => setIsAdding(!isAdding)}
-                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-${theme.primaryColor} text-white font-bold shadow-lg shadow-${theme.primaryColor}/20 hover:brightness-110 active:scale-95 transition-all`}
-                            style={{ backgroundColor: theme.primaryColorHex }}
-                        >
-                            <span className="material-symbols-outlined text-xl">person_add</span>
-                            Adicionar Novo Aluno
-                        </button>
+                        {/* Mobile Actions Grid */}
+                        <div className="grid grid-cols-2 gap-2 w-full">
+                            <button
+                                onClick={() => setIsAdding(!isAdding)}
+                                className={`flex items-center justify-center gap-2 py-3 rounded-xl bg-${theme.primaryColor} text-white text-sm font-bold shadow-lg shadow-${theme.primaryColor}/20 hover:brightness-110 active:scale-95 transition-all`}
+                                style={{ backgroundColor: theme.primaryColorHex }}
+                            >
+                                <span className="material-symbols-outlined text-lg">person_add</span>
+                                <span>Novo</span>
+                            </button>
+                            <button
+                                onClick={() => setIsImporting(true)}
+                                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-surface-card border border-border-default text-text-primary text-sm font-bold shadow-sm hover:bg-surface-subtle active:scale-95 transition-all"
+                            >
+                                <span className="material-symbols-outlined text-lg">upload_file</span>
+                                <span>Importar</span>
+                            </button>
+                        </div>
                     </>
                 )}
             </div>
@@ -837,9 +840,9 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
                                             {/* Content */}
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between gap-3">
+                                                <div className="flex items-center justify-start gap-3">
                                                     {/* Name & ID Stacked to save horizontal space */}
-                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                    <div className="min-w-0 max-w-[65%] flex flex-col justify-center">
                                                         <h3 className="font-bold text-text-primary text-[0.85rem] leading-tight truncate capitalize">
                                                             {student.name.toLowerCase()}
                                                         </h3>
