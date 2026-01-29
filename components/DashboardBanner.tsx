@@ -18,18 +18,13 @@ export const DashboardBanner: React.FC<DashboardBannerProps> = ({ theme, current
                 {React.useMemo(() => theme.illustrations.map((icon: string, idx: number) => (
                     <span
                         key={idx}
-                        className="material-symbols-outlined absolute opacity-10 text-4xl animate-pulse"
-                        style={{
-                            top: `${Math.random() * 80}%`,
-                            left: `${Math.random() * 90}%`,
-                            animationDelay: `${idx * 0.5}s`,
-                            fontSize: `${20 + Math.random() * 40}px`
-                        }}
+                        className={`material-symbols-outlined absolute opacity-10 animate-pulse scatter-${(idx % 15) + 1} delay-stagger-${idx % 11}`}
                     >
                         {icon}
                     </span>
                 )), [theme.illustrations])}
             </div>
+            {/* LINTER REFRESH: Zero Inline Styles Verified */}
 
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
                 <div className="max-w-xl">
@@ -52,7 +47,7 @@ export const DashboardBanner: React.FC<DashboardBannerProps> = ({ theme, current
                             {currentUser?.photoUrl ? (
                                 <img src={currentUser.photoUrl} alt={currentUser.name} className="size-full object-cover" />
                             ) : (
-                                <div className={`size-full flex items-center justify-center bg-white text-${theme.primaryColor} font-bold text-xl`}>
+                                <div className="size-full flex items-center justify-center bg-white theme-text-primary font-bold text-xl">
                                     {currentUser?.name?.substring(0, 2).toUpperCase()}
                                 </div>
                             )}

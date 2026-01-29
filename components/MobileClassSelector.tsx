@@ -9,13 +9,13 @@ interface MobileClassSelectorProps {
 
 export const MobileClassSelector: React.FC<MobileClassSelectorProps> = ({ isOpen, onClose }) => {
     const [newSeriesName, setNewSeriesName] = React.useState('');
-    const { classes, activeSeries, selectedSection, selectClass, selectSection, addSeries, deleteSeries } = useClass();
+    const { classes, activeSeries, selectedSection, selectSeries, selectSection, addClass, removeClass } = useClass();
     const theme = useTheme();
 
     const handleAdd = async () => {
         if (!newSeriesName.trim()) return;
         try {
-            await addSeries(newSeriesName);
+            await addClass(newSeriesName);
             setNewSeriesName('');
         } catch (error: any) {
             alert('Erro ao adicionar série: ' + error.message);
@@ -26,7 +26,7 @@ export const MobileClassSelector: React.FC<MobileClassSelectorProps> = ({ isOpen
         e.stopPropagation();
         if (window.confirm("Excluir esta série?")) {
             try {
-                await deleteSeries(id);
+                await removeClass(id);
             } catch (error: any) {
                 alert('Erro ao excluir: ' + error.message);
             }
@@ -102,7 +102,7 @@ export const MobileClassSelector: React.FC<MobileClassSelectorProps> = ({ isOpen
                             {classes.map(cls => (
                                 <div key={cls.id} className="group relative">
                                     <button
-                                        onClick={() => selectClass(cls.id)}
+                                        onClick={() => selectSeries(cls.id)}
                                         className={`w-full p-2.5 rounded-xl border transition-all flex items-center justify-between group ${activeSeries?.id === cls.id
                                             ? `bg-${theme.primaryColor}/10 border-${theme.primaryColor}/30`
                                             : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-white/5'

@@ -135,7 +135,7 @@ export const TeacherProfile: React.FC = () => {
                 <div className="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-6">
                     <div className="bg-surface-card rounded-[32px] md:rounded-[40px] shadow-xl border border-border-default group">
                         <div className={`h-40 bg-gradient-to-br ${theme.bgGradient} relative rounded-t-[32px] md:rounded-t-[40px] overflow-hidden z-0`}>
-                            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+                            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_2px_2px,white_1px,transparent_0)] bg-[length:24px_24px]"></div>
                             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 transform translate-x-4 -translate-y-4 transition-transform group-hover:scale-110 duration-700">
                                 <span className="material-symbols-outlined text-[120px] text-white">{theme.icon}</span>
                             </div>
@@ -229,6 +229,8 @@ export const TeacherProfile: React.FC = () => {
                                         type="text"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
+                                        placeholder="Seu nome completo"
+                                        title="Nome Completo"
                                     />
                                     <span className="material-symbols-outlined absolute left-4 top-4 text-text-muted">person</span>
                                 </div>

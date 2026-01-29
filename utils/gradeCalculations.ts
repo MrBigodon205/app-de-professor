@@ -47,8 +47,8 @@ export const UNIT_CONFIGS: any = {
 
 export const calculateUnitTotal = (student: Student, unit: string) => {
     // If we pass in a raw units object instead of a full student, handle it
-    const unitsData = (student as any).units ? student.units : student;
-    const grades = unitsData?.[unit] || {};
+    const unitsData = (student as any).units || student;
+    const grades = (unitsData as any)?.[unit] || {};
 
     // Safety check if grades is undefined
     if (!grades) return 0;

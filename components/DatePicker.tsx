@@ -92,15 +92,13 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, 
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-full flex items-center justify-between font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl transition-all duration-200 outline-none ${compact ? 'p-2.5 h-10 sm:h-11' : 'p-3 h-14 sm:h-auto'} ${isOpen ? `ring-2 border-transparent bg-white dark:bg-black` : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                style={isOpen ? { ringColor: `${theme.primaryColorHex}80` } : undefined}
+                className={`w-full flex items-center justify-between font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl transition-all duration-200 outline-none ${compact ? 'p-2.5 h-10 sm:h-11' : 'p-3 h-14 sm:h-auto'} ${isOpen ? `ring-2 border-transparent bg-white dark:bg-black theme-ring-primary` : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
             >
                 <span className={`block truncate ${compact ? 'text-xs' : 'text-sm'} ${!value ? 'text-slate-400' : 'text-slate-900 dark:text-white font-bold'}`}>
                     {value ? formatDateDisplay(value) : (label || 'Selecionar data')}
                 </span>
                 <span
-                    className={`material-symbols-outlined text-slate-400 transition-transform duration-200 ${compact ? 'text-lg' : 'text-xl'} ${isOpen ? 'rotate-180' : ''}`}
-                    style={isOpen ? { color: theme.primaryColorHex } : undefined}
+                    className={`material-symbols-outlined text-slate-400 transition-transform duration-200 ${compact ? 'text-lg' : 'text-xl'} ${isOpen ? 'rotate-180 theme-text-primary' : ''}`}
                 >
                     calendar_month
                 </span>
@@ -118,8 +116,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, 
 
                         {/* Decorative background glow */}
                         <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
-                            <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-20" style={{ backgroundColor: theme.primaryColorHex }}></div>
-                            <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full blur-3xl opacity-20" style={{ backgroundColor: theme.secondaryColorHex }}></div>
+                            <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-20 theme-bg-primary"></div>
+                            <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full blur-3xl opacity-20 theme-bg-secondary"></div>
                         </div>
 
                         <div className="relative flex items-center justify-between mb-4 landscape:mb-0 landscape:flex-col landscape:gap-2 landscape:justify-center landscape:w-32 landscape:border-r landscape:border-slate-200/50 landscape:dark:border-slate-700/50 landscape:pr-2">
@@ -158,20 +156,15 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, 
                                             key={i}
                                             type="button"
                                             onClick={() => handleDateSelect(day, month, year)}
-                                            className={`h-9 w-9 lg:h-14 lg:w-14 landscape:h-8 landscape:w-8 flex flex-col items-center justify-center rounded-full relative transition-all duration-200 mx-auto group`}
-                                            style={
-                                                isSelected(day)
-                                                    ? { backgroundColor: theme.primaryColorHex, color: '#fff', boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}4D` }
-                                                    : isToday(day)
-                                                        ? { backgroundColor: `${theme.primaryColorHex}1A`, color: theme.primaryColorHex }
-                                                        : {}
-                                            }
+                                            className={`h-9 w-9 lg:h-14 lg:w-14 landscape:h-8 landscape:w-8 flex flex-col items-center justify-center rounded-full relative transition-all duration-200 mx-auto group ${isSelected(day) ? 'theme-bg-primary text-white theme-shadow-primary' :
+                                                isToday(day) ? 'theme-bg-surface-subtle theme-text-primary' : ''
+                                                }`}
                                         >
                                             <span
                                                 className={`text-xs lg:text-sm leading-none z-10 ${isSelected(day) ? 'font-black scale-110' :
-                                                        isToday(day) ? 'font-bold' :
-                                                            hasMark(day) ? 'font-black text-emerald-500' :
-                                                                'text-slate-600 dark:text-slate-300 group-hover:bg-slate-100 dark:group-hover:bg-slate-800'
+                                                    isToday(day) ? 'font-bold' :
+                                                        hasMark(day) ? 'font-black text-emerald-500' :
+                                                            'text-slate-600 dark:text-slate-300 group-hover:bg-slate-100 dark:group-hover:bg-slate-800'
                                                     }`}
                                             >
                                                 {day}
@@ -195,7 +188,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, 
                         </button>
                     </div>
                 </>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 };

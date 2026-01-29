@@ -99,9 +99,8 @@ export const TransferStudentModal: React.FC<TransferStudentModalProps> = ({ isOp
                                         <button
                                             key={section}
                                             onClick={() => setTargetSection(section)}
-                                            style={targetSection === section ? { backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}4d` } : {}}
                                             className={`size-12 rounded-xl flex items-center justify-center font-black transition-all ${targetSection === section
-                                                ? `text-white shadow-lg`
+                                                ? `text-white theme-bg-primary theme-shadow-primary`
                                                 : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
                                                 }`}
                                         >
@@ -138,8 +137,7 @@ export const TransferStudentModal: React.FC<TransferStudentModalProps> = ({ isOp
                     <button
                         onClick={handleTransfer}
                         disabled={loading || !targetSeriesId || !targetSection}
-                        className="flex-[2] h-14 rounded-2xl text-white font-black transition-all shadow-xl disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 uppercase tracking-widest text-xs hover:brightness-110 active:scale-[0.98]"
-                        style={{ backgroundColor: theme.primaryColorHex, boxShadow: `0 10px 15px -3px ${theme.primaryColorHex}40` }}
+                        className="flex-[2] h-14 rounded-2xl text-white font-black transition-all disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 uppercase tracking-widest text-xs hover:brightness-110 active:scale-[0.98] theme-bg-primary theme-shadow-primary"
                     >
                         {loading ? (
                             <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
