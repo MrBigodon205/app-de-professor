@@ -419,12 +419,12 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                     <>
                         <div className="flex items-center justify-between px-1">
                             <div>
-                                <h1 className="text-2xl font-[900] text-text-primary leading-none tracking-tight">
-                                    {activeSeries?.name} • {selectedSection}
+                                <h1 className="text-[1.75rem] font-[900] text-text-primary leading-[0.9] tracking-tighter">
+                                    {activeSeries?.name}<span className="opacity-20 mx-1.5">/</span>{selectedSection}
                                 </h1>
-                                <div className="flex items-center gap-2 mt-1.5">
-                                    <div className="size-1.5 rounded-full animate-pulse theme-bg-primary"></div>
-                                    <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest opacity-80">
+                                <div className="flex items-center gap-2 mt-2">
+                                    <div className={`size-2 rounded-full animate-pulse theme-bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]`}></div>
+                                    <p className="text-[10px] text-text-muted font-black uppercase tracking-[0.2em] opacity-80">
                                         {students.length} {students.length === 1 ? 'Matriculado' : 'Matriculados'}
                                     </p>
                                 </div>
@@ -840,39 +840,39 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center justify-between gap-3">
                                                     {/* Name & ID Stacked to save horizontal space */}
-                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                        <h3 className="font-[800] text-text-primary text-[0.9rem] leading-tight truncate capitalize tracking-tight">
+                                                    <div className="flex-1 min-w-0 flex flex-col justify-center py-0.5">
+                                                        <h3 className="font-[900] text-text-primary text-[0.95rem] leading-none truncate capitalize tracking-tight mb-1">
                                                             {student.name.toLowerCase()}
                                                         </h3>
-                                                        <div className="flex items-center gap-1.5 mt-1">
-                                                            <span className="text-[10px] font-black text-text-disabled uppercase tracking-widest opacity-60">
-                                                                ID-
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-[9px] font-black text-text-disabled uppercase tracking-widest opacity-40">
+                                                                MATRÍCULA
                                                             </span>
-                                                            <span className="text-[10px] font-mono font-bold text-text-muted">
+                                                            <span className="text-[10px] font-mono font-bold text-text-muted/70 bg-surface-subtle/50 px-1.5 py-0.5 rounded-md border border-border-default/30">
                                                                 {student.number}
                                                             </span>
                                                         </div>
                                                     </div>
 
                                                     {/* Guaranteed Action Bar - Grouped Glass Style */}
-                                                    <div className="flex items-center p-1 bg-surface-subtle/40 rounded-xl border border-border-default/50 gap-0.5">
+                                                    <div className="flex items-center p-0.5 bg-white/40 dark:bg-white/5 backdrop-blur-md rounded-2xl border border-white/50 dark:border-white/10 shadow-sm gap-0.5">
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleEdit(student); }}
-                                                            className="size-8 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 active:scale-110 transition-all flex items-center justify-center"
+                                                            className="size-9 rounded-xl text-indigo-600 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 active:scale-90 transition-all flex items-center justify-center"
                                                         >
-                                                            <span className="material-symbols-outlined text-[18px]">edit</span>
+                                                            <span className="material-symbols-outlined text-[19px]">edit</span>
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); setTransferringStudent(student); }}
-                                                            className="size-8 rounded-lg text-amber-600/80 hover:bg-white dark:hover:bg-slate-800 active:scale-110 transition-all flex items-center justify-center"
+                                                            className="size-9 rounded-xl text-amber-600/80 hover:bg-white dark:hover:bg-slate-800 active:scale-90 transition-all flex items-center justify-center"
                                                         >
-                                                            <span className="material-symbols-outlined text-[18px]">move_up</span>
+                                                            <span className="material-symbols-outlined text-[19px]">move_up</span>
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }}
-                                                            className="size-8 rounded-lg text-red-600/80 hover:bg-white dark:hover:bg-slate-800 active:scale-110 transition-all flex items-center justify-center"
+                                                            className="size-9 rounded-xl text-red-600/80 hover:bg-white dark:hover:bg-slate-800 active:scale-90 transition-all flex items-center justify-center"
                                                         >
-                                                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                            <span className="material-symbols-outlined text-[19px]">delete</span>
                                                         </button>
                                                     </div>
                                                 </div>
