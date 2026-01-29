@@ -81,7 +81,7 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                     <span className="font-black text-slate-800 dark:text-white uppercase tracking-widest text-[0.65rem] lg:text-[0.75rem]">
                         {label || placeholder}
                     </span>
-                    <button type="button" onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                    <button type="button" onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors" title="Fechar">
                         <span className="material-symbols-outlined text-xl">close</span>
                     </button>
                 </div>
