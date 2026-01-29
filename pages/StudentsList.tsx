@@ -818,63 +818,75 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                             ) : (
                                 students.map((student) => (
                                     <motion.div
-                                        layoutId={`student-card-mobile-${student.id}`}
+                                        layoutId={`student-row-mobile-${student.id}`}
                                         key={student.id}
-                                        className={`bg-surface-card p-3 rounded-[20px] border border-border-default shadow-sm relative overflow-hidden transition-all duration-300 ${selectedIds.includes(student.id) ? 'ring-2 ring-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20' : 'hover:border-indigo-500/30'}`}
+                                        className={`group relative overflow-hidden transition-all duration-200 border-b border-border-subtle last:border-0 ${selectedIds.includes(student.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card'}`}
+                                        onClick={() => toggleSelect(student.id)}
                                     >
-                                        <div className="flex items-center gap-3 relative z-10 w-full">
+                                        <div className="flex items-center gap-3 p-3 w-full">
                                             {/* Checkbox */}
                                             <div className="flex items-center flex-shrink-0">
                                                 <input
                                                     type="checkbox"
-                                                    className="size-5 rounded-md border-2 border-slate-300 dark:border-slate-600 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer accent-indigo-600"
+                                                    className="size-5 rounded border-2 border-slate-300 dark:border-slate-600 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer accent-indigo-600"
                                                     checked={selectedIds.includes(student.id)}
                                                     onChange={() => toggleSelect(student.id)}
                                                     onClick={(e) => e.stopPropagation()}
                                                 />
                                             </div>
 
-                                            {/* Avatar (Generated) */}
-                                            <div className="flex-shrink-0 size-10 rounded-full bg-surface-subtle border border-border-subtle flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-black text-sm shadow-inner group-hover:scale-105 transition-transform">
-                                                {student.name.charAt(0).toUpperCase()}
+                                            {/* Number Badge (imitating Desktop) */}
+                                            <div className="flex-shrink-0">
+                                                <span className="font-mono text-xs font-bold text-text-muted bg-surface-subtle px-1.5 py-0.5 rounded">
+                                                    {student.number}
+                                                </span>
                                             </div>
 
-                                            {/* Content */}
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex flex-col justify-center">
-                                                    <h3 className="font-bold text-text-primary text-sm leading-tight line-clamp-2 capitalize tracking-tight mb-0.5 break-words">
+                                            {/* Content (Name) */}
+                                            <div className="flex-1 min-w-0 flex items-center">
+                                                {editingId === student.id ? (
+                                                    <div className="flex items-center gap-2 w-full animate-in fade-in zoom-in-95">
+                                                        <input
+                                                            type="text"
+                                                            value={editName}
+                                                            onChange={(e) => setEditName(e.target.value)}
+                                                            className="flex-1 h-8 px-2 rounded border border-indigo-500 bg-white dark:bg-black font-bold text-sm focus:outline-none"
+                                                            autoFocus
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); saveEdit(); }}
+                                                            className="size-8 rounded bg-indigo-500 text-white flex items-center justify-center shadow-sm"
+                                                        >
+                                                            <span className="material-symbols-outlined text-sm">check</span>
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <h3 className="font-bold text-text-primary text-sm leading-tight line-clamp-2 capitalize break-words">
                                                         {student.name.toLowerCase()}
                                                     </h3>
-                                                    <div className="flex items-center gap-1.5 opacity-80">
-                                                        <span className="text-[10px] font-mono font-medium text-text-muted bg-surface-subtle px-1.5 py-0.5 rounded text-center min-w-[2rem]">
-                                                            #{student.number}
-                                                        </span>
-                                                    </div>
-                                                </div>
+                                                )}
                                             </div>
 
-                                            {/* Consolidated Actions (Soft) */}
-                                            <div className="flex items-center gap-1 flex-shrink-0">
+                                            {/* Actions (Desktop Style but compact) */}
+                                            <div className={`flex items-center gap-1 flex-shrink-0 ${editingId === student.id ? 'hidden' : ''}`}>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleEdit(student); }}
-                                                    className="size-8 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 flex items-center justify-center transition-colors active:scale-95"
-                                                    title="Editar"
+                                                    className="size-8 rounded-lg text-text-muted hover:text-indigo-600 hover:bg-surface-subtle transition-colors flex items-center justify-center"
                                                 >
-                                                    <span className="material-symbols-outlined text-[18px]">edit</span>
+                                                    <span className="material-symbols-outlined text-[20px]">edit</span>
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); setTransferringStudent(student); }}
-                                                    className="size-8 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 flex items-center justify-center transition-colors active:scale-95"
-                                                    title="Transferir"
+                                                    className="size-8 rounded-lg text-text-muted hover:text-amber-600 hover:bg-surface-subtle transition-colors flex items-center justify-center"
                                                 >
-                                                    <span className="material-symbols-outlined text-[18px]">move_up</span>
+                                                    <span className="material-symbols-outlined text-[20px]">move_up</span>
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }}
-                                                    className="size-8 rounded-lg bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 flex items-center justify-center transition-colors active:scale-95"
-                                                    title="Excluir"
+                                                    className="size-8 rounded-lg text-text-muted hover:text-red-600 hover:bg-surface-subtle transition-colors flex items-center justify-center"
                                                 >
-                                                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                    <span className="material-symbols-outlined text-[20px]">delete</span>
                                                 </button>
                                             </div>
                                         </div>
