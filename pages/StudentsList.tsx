@@ -432,24 +432,24 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                         </div>
 
                         {/* Mobile Actions Grid - High Performance UI */}
-                        <div className="grid grid-cols-2 gap-3 w-full">
+                        <div className="grid grid-cols-2 gap-2 w-full">
                             <button
                                 onClick={() => setIsAdding(!isAdding)}
-                                className={`relative group flex items-center justify-center gap-2.5 h-14 rounded-2xl text-white text-sm font-black transition-all active:scale-[0.97] overflow-hidden`}
+                                className={`relative group flex items-center justify-center gap-1.5 h-12 rounded-xl text-white text-xs font-black transition-all active:scale-[0.97] overflow-hidden`}
                                 style={{
                                     background: `linear-gradient(135deg, ${theme.primaryColorHex}, ${theme.secondaryColorHex || theme.primaryColorHex})`,
-                                    boxShadow: `0 8px 20px -6px ${theme.primaryColorHex}60`
+                                    boxShadow: `0 4px 12px -4px ${theme.primaryColorHex}60`
                                 }}
                             >
                                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <span className="material-symbols-outlined text-xl">person_add</span>
+                                <span className="material-symbols-outlined text-lg">person_add</span>
                                 <span>Novo</span>
                             </button>
                             <button
                                 onClick={() => setIsImporting(true)}
-                                className="flex items-center justify-center gap-2.5 h-14 rounded-2xl bg-surface-card/60 backdrop-blur-md border border-border-default text-text-primary text-sm font-black shadow-sm hover:bg-surface-subtle active:scale-[0.97] transition-all"
+                                className="flex items-center justify-center gap-1.5 h-12 rounded-xl bg-surface-card/60 backdrop-blur-md border border-border-default text-text-primary text-xs font-black shadow-sm hover:bg-surface-subtle active:scale-[0.97] transition-all"
                             >
-                                <span className="material-symbols-outlined text-xl text-text-muted">upload_file</span>
+                                <span className="material-symbols-outlined text-lg text-text-muted">upload_file</span>
                                 <span>Importar</span>
                             </button>
                         </div>
