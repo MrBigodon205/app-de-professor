@@ -280,6 +280,7 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({ file, isOpen, onClose
                                             key={color}
                                             onClick={() => setDrawingColor(color)}
                                             className={`size-6 rounded-full border-2 transition-transform hover:scale-110 ${drawingColor === color ? 'border-white scale-110' : 'border-transparent'}`}
+                                            title={`Cor ${color}`}
                                             style={{ backgroundColor: color }}
                                         />
                                     ))}
@@ -287,6 +288,7 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({ file, isOpen, onClose
                                 <button
                                     className="md:hidden size-6 rounded-full border-2 border-white"
                                     style={{ backgroundColor: drawingColor }}
+                                    title="Alterar cor"
                                     onClick={() => {
                                         // Mobile color picker toggle could go here, for now just cycles or static
                                         const colors = ['#ef4444', '#22c55e', '#3b82f6', '#eab308', '#ffffff'];

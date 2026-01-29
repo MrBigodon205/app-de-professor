@@ -84,6 +84,7 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ isOpen, im
                             min={1}
                             max={3}
                             step={0.1}
+                            title="Ajustar Zoom"
                             aria-labelledby="Zoom"
                             onChange={(e) => setZoom(Number(e.target.value))}
                             className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700 accent-primary"

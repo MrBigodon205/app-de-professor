@@ -433,6 +433,7 @@ export const Timetable: React.FC = () => {
                                         value={overrideSubject}
                                         onChange={(e) => setOverrideSubject(e.target.value)}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-700 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                        title="Selecionar Disciplina"
                                     >
                                         <option value="">Automático (Padrão)</option>
                                         {SUBJECTS.map(subject => (

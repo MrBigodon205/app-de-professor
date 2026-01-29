@@ -229,6 +229,8 @@ export const TeacherProfile: React.FC = () => {
                                         type="text"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
+                                        placeholder="Seu nome completo"
+                                        title="Nome Completo"
                                     />
                                     <span className="material-symbols-outlined absolute left-4 top-4 text-text-muted">person</span>
                                 </div>

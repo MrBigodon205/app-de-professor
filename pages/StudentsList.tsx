@@ -927,6 +927,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                         className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
                                                         checked={students.length > 0 && selectedIds.length === students.length}
                                                         onChange={toggleSelectAll}
+                                                        title="Selecionar todos os alunos"
                                                     />
                                                 </div>
                                             </th>
@@ -968,6 +969,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                                 className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
                                                                 checked={selectedIds.includes(student.id)}
                                                                 onChange={() => toggleSelect(student.id)}
+                                                                title={`Selecionar ${student.name}`}
                                                             />
                                                         </div>
                                                     </td>
@@ -984,6 +986,8 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                                     value={editName}
                                                                     onChange={(e) => setEditName(e.target.value)}
                                                                     className="h-10 px-4 rounded-xl border-2 border-indigo-500 bg-white dark:bg-black font-bold text-sm focus:outline-none shadow-lg shadow-indigo-500/20 w-full max-w-sm"
+                                                                    placeholder="Nome do aluno"
+                                                                    title="Editar nome do aluno"
                                                                     autoFocus
                                                                 />
                                                                 <button onClick={saveEdit} className="size-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 hover:scale-110 active:scale-95 transition-all">
