@@ -643,7 +643,7 @@ export const Planning: React.FC = () => {
                 try {
                     doc.saveGraphicsState();
                     // Set transparency
-                    doc.setGState(new (doc as any).GState({ opacity: 0.15 }));
+                    doc.setGState(new (doc as any).GState({ opacity: 0.10 }));
 
                     const wmWidth = 140; // Larger size
                     const wmHeight = wmWidth * (doc.internal.pageSize.getHeight() / doc.internal.pageSize.getWidth()) * 1.5; // Approximate aspect ratio
