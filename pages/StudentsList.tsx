@@ -166,8 +166,6 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
             if (error) throw error;
 
-            if (error) throw error;
-
             await refreshStudents();
             setSelectedIds([]);
         } catch (e) {
@@ -986,7 +984,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                                 </button>
                                                             </div>
                                                         ) : (
-                                                            <span className="font-bold text-text-primary text-base Group-hover:text-indigo-600 transition-colors">
+                                                            <span className="font-bold text-text-primary text-base group-hover:text-indigo-600 transition-colors">
                                                                 {student.name}
                                                             </span>
                                                         )}
