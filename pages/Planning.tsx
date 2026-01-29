@@ -628,7 +628,7 @@ export const Planning: React.FC = () => {
                         img.onerror = (e) => reject(e);
                     });
                 };
-                logoData = await loadImage('/watermark_censc.png');
+                logoData = await loadImage('/logo_transparent.png');
             } catch (e) {
                 console.warn("Logo load failed, falling back to text", e);
             }
@@ -638,19 +638,23 @@ export const Planning: React.FC = () => {
             const pageHeight = doc.internal.pageSize.getHeight();
             const contentWidth = pageWidth - (margin * 2);
 
-            // Watermark (If logo loaded)
+            // Watermark (Background Dove)
             if (logoData) {
                 try {
                     doc.saveGraphicsState();
                     // Set transparency
-                    doc.setGState(new (doc as any).GState({ opacity: 1.0 }));
+                    doc.setGState(new (doc as any).GState({ opacity: 0.15 }));
 
-                    const wmWidth = 100; // Size in mm
-                    const wmHeight = wmWidth * 1.0;
-                    const wmX = (pageWidth - wmWidth) / 2;
-                    const wmY = (pageHeight - wmHeight) / 2;
+                    const wmWidth = 140; // Larger size
+                    const wmHeight = wmWidth * (doc.internal.pageSize.getHeight() / doc.internal.pageSize.getWidth()) * 1.5; // Approximate aspect ratio
+                    // Use the image aspect ratio if possible, but 1.0 is safer if unknown. Let's assume square-ish for now or use original logic.
+                    // Actually, let's keep aspect ratio.
 
-                    doc.addImage(logoData, 'PNG', wmX, wmY, wmWidth, wmHeight);
+                    const wmSize = 120;
+                    const wmX = (pageWidth - wmSize) / 2;
+                    const wmY = (pageHeight - wmSize) / 2;
+
+                    doc.addImage(logoData, 'PNG', wmX, wmY, wmSize, wmSize);
                     doc.restoreGraphicsState();
                 } catch (e) {
                     console.warn("Watermark failed", e);
@@ -695,25 +699,25 @@ export const Planning: React.FC = () => {
             doc.text(currentPlan.coordinator_name || 'MOISÉS FERREIRA', margin + 25, margin + 33);
             doc.line(margin + 25, margin + 34, margin + 120, margin + 34);
 
-            // LOGO (Top Right)
+            // HEADER (Top Right)
+            // Draw "CENSC" text and Logo
             if (logoData) {
-                const logoW = 35;
-                const logoH = 35;
-                doc.addImage(logoData, 'PNG', pageWidth - margin - logoW - 10, margin - 5, logoW, logoH);
-
-                // Add Text Next to logo if needed, but usually logo contains text. 
-                // If the logo provided is just the symbol, we might need text. 
-                // Assuming logo-censc.png is the full logo.
-            } else {
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(28);
-                doc.setTextColor(14, 165, 233); // #0ea5e9
-                doc.text('CENSC', pageWidth - margin - 50, margin + 15);
-                doc.setFontSize(8);
-                doc.text('CENTRO EDUCACIONAL', pageWidth - margin - 50, margin + 22);
-                doc.text('NOSSA SRA DO CENÁCULO', pageWidth - margin - 50, margin + 26);
-                doc.setTextColor(0, 0, 0);
+                const logoW = 25;
+                const logoH = 25;
+                const logoX = pageWidth - margin - logoW;
+                const logoY = margin - 2;
+                doc.addImage(logoData, 'PNG', logoX, logoY, logoW, logoH);
             }
+
+            // Text: PLANO DE AULA 2026
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.setTextColor(14, 165, 233); // #0ea5e9 (Sky Blue)
+            doc.text('PLANO DE AULA', pageWidth - margin - 55, margin + 28, { align: 'right' });
+
+            doc.setFontSize(20);
+            doc.text('2026', pageWidth - margin - 55, margin + 35, { align: 'right' });
+            doc.setTextColor(0, 0, 0);
 
             doc.setLineWidth(0.5);
             doc.line(margin, margin + 40, pageWidth - margin, margin + 40);
@@ -793,10 +797,10 @@ export const Planning: React.FC = () => {
     const handleExportWord = async () => {
         if (!currentPlan) return;
 
-        // Load watermark for Word (Base64)
+        // Load watermark for Word (Base64) - using High Res Logo
         let watermarkBase64 = '';
         try {
-            const response = await fetch('/watermark_censc.png');
+            const response = await fetch('/logo_transparent.png');
             const blob = await response.blob();
             watermarkBase64 = await new Promise((resolve) => {
                 const reader = new FileReader();
@@ -857,7 +861,7 @@ export const Planning: React.FC = () => {
                 <body>
                     <div class="Section1">
                         <!-- WATERMARK (Absolute Positioned) -->
-                        <div style="position: absolute; width: 100%; height: 100%; z-index: -1; display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 1.0;">
+                        <div style="position: absolute; width: 100%; height: 100%; z-index: -1; display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 0.15;">
                             <img src="${watermarkBase64}" style="width: 500px; height: auto;" />
                         </div>
 
@@ -1434,8 +1438,8 @@ export const Planning: React.FC = () => {
                         {currentPlan ? (
                             <div className="flex flex-col min-h-full relative isolate">
                                 {/* SCREEN WATERMARK */}
-                                <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[1.0]">
-                                    <img src="/watermark_censc.png" className="w-[600px] max-w-full" alt="" />
+                                <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.15]">
+                                    <img src="/logo_transparent.png" className="w-[600px] max-w-full" alt="" />
                                 </div>
                                 {/* Premium Header */}
                                 <div className={`h-48 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden shrink-0`}>
@@ -1746,7 +1750,7 @@ export const Planning: React.FC = () => {
                                     {/* PRINTABLE CONTENT (Matches CENSC Layout) */}
                                     <div className="printable-content bg-white p-[10mm] hidden print:block relative h-full">
                                         <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none print:fixed print:visible">
-                                            <img src="/watermark_censc.png" className="min-w-[500px] w-1/2 opacity-[1.0]" alt="" />
+                                            <img src="/logo_transparent.png" className="min-w-[500px] w-1/2 opacity-[0.15]" alt="" />
                                         </div>
                                         <div className="relative z-10 w-full">
                                             <div className="flex justify-between items-start mb-4 border-b-2 border-black pb-4">
