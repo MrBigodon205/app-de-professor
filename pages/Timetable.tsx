@@ -548,6 +548,8 @@ export const Timetable: React.FC = () => {
                                                     value={slot.start}
                                                     onChange={(e) => updateSlot(index, 'start', e.target.value)}
                                                     className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-sm font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                                    title="Horário de Início"
+                                                    placeholder="Início"
                                                 />
                                                 <span className="text-slate-300">-</span>
                                                 <input
@@ -555,6 +557,8 @@ export const Timetable: React.FC = () => {
                                                     value={slot.end}
                                                     onChange={(e) => updateSlot(index, 'end', e.target.value)}
                                                     className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-sm font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                                    title="Horário de Término"
+                                                    placeholder="Término"
                                                 />
                                                 <button
                                                     onClick={() => removeSlot(index)}

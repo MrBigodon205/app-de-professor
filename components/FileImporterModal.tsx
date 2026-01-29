@@ -125,6 +125,7 @@ export const FileImporterModal: React.FC<FileImporterModalProps> = ({
                     accept={accept}
                     multiple={multiple}
                     title="Selecionar arquivo"
+                    placeholder="Selecionar arquivo"
                     onChange={(e) => {
                         onFileSelect(e.target.files);
                         onClose();
