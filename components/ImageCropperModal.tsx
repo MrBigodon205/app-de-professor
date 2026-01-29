@@ -93,17 +93,20 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ isOpen, im
                         <span className="material-symbols-outlined text-slate-400 text-sm">add</span>
                     </div>
 
-                    className={`w-full py-3 rounded-xl font-bold text-white flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02] active:scale-95 transition-all bg-${theme.primaryColor} hover:bg-${theme.primaryColor}/90`}
+                    <button
+                        onClick={handleSave}
+                        disabled={loading}
+                        className={`w-full py-3 rounded-xl font-bold text-white flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02] active:scale-95 transition-all bg-${theme.primaryColor} hover:bg-${theme.primaryColor}/90`}
                     >
-                    {loading ? (
-                        <span className="material-symbols-outlined animate-spin">refresh</span>
-                    ) : (
-                        <span className="material-symbols-outlined">check</span>
-                    )}
-                    Confirmar Recorte
-                </button>
+                        {loading ? (
+                            <span className="material-symbols-outlined animate-spin">refresh</span>
+                        ) : (
+                            <span className="material-symbols-outlined">check</span>
+                        )}
+                        Confirmar Recorte
+                    </button>
+                </div>
             </div>
-        </div>
         </div >
     )
 }
