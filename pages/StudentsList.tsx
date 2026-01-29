@@ -837,9 +837,10 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
                                             {/* Content */}
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex justify-between items-center gap-2">
+                                                <div className="flex items-center gap-3">
+                                                    {/* Name & ID */}
                                                     <div className="flex-1 min-w-0 flex items-center gap-2">
-                                                        <span className="shrink-0 inline-block px-1.5 py-0.5 rounded bg-surface-subtle border border-border-subtle text-[10px] font-mono font-bold text-text-muted">
+                                                        <span className="shrink-0 text-[10px] font-mono font-bold text-text-disabled">
                                                             #{student.number}
                                                         </span>
                                                         <h3 className="font-bold text-text-primary text-[0.85rem] leading-tight truncate capitalize">
@@ -847,23 +848,23 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                         </h3>
                                                     </div>
 
-                                                    {/* Quick Actions */}
-                                                    <div className="flex items-center gap-1 shrink-0">
+                                                    {/* Quick Actions (Enforced size to prevent truncation) */}
+                                                    <div className="flex items-center gap-1 shrink-0 bg-surface-card pl-1">
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleEdit(student); }}
-                                                            className="size-7 rounded-lg bg-surface-subtle text-text-muted hover:text-primary active:scale-95 transition-all flex items-center justify-center"
+                                                            className="size-7 rounded-lg bg-surface-subtle text-text-muted hover:text-primary active:scale-110 transition-all flex items-center justify-center border border-border-subtle"
                                                         >
                                                             <span className="material-symbols-outlined text-base">edit</span>
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); setTransferringStudent(student); }}
-                                                            className="size-7 rounded-lg bg-surface-subtle text-amber-600/70 hover:text-amber-600 active:scale-95 transition-all flex items-center justify-center"
+                                                            className="size-7 rounded-lg bg-surface-subtle text-amber-600/70 hover:text-amber-600 active:scale-110 transition-all flex items-center justify-center border border-border-subtle"
                                                         >
                                                             <span className="material-symbols-outlined text-base">move_up</span>
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }}
-                                                            className="size-7 rounded-lg bg-surface-subtle text-red-600/70 hover:text-red-600 active:scale-95 transition-all flex items-center justify-center"
+                                                            className="size-7 rounded-lg bg-surface-subtle text-red-600/70 hover:text-red-600 active:scale-110 transition-all flex items-center justify-center border border-border-subtle"
                                                         >
                                                             <span className="material-symbols-outlined text-base">delete</span>
                                                         </button>
