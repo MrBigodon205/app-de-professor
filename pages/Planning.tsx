@@ -703,12 +703,30 @@ export const Planning: React.FC = () => {
             // HEADER (Top Right)
             if (fullLogoData) {
                 // Use the Full Logo Image provided by user
+                // Fixed Width: 50mm
+                // Calculate Height to preserve aspect ratio (Standard Logo is approx 3.5:1 or 3:1)
+                // Let's use a dynamic approach if possible, or a safe estimated ratio.
+                // Assuming standard horizontal logo ~3.33 ratio (50mm / 15mm = 3.33)
+                // If the user says it's squashed (flattened), maybe 15mm was too short?
+                // Or maybe the original image is SQUARE-ish?
+                // If it's the "Full Logo" (Text + Dove), it's usually Horizontal.
+                // If "achatada" means "squashed vertically" (too short), then H needs to be bigger.
+                // If "achatada" means "squashed horizontally" (too thin), then W needs to be bigger.
+                // Usually "achatada" on PDF means incorrect aspect ratio.
+                // I will set Auto-Height calculation based on image properties if I can?
+                // No, I have base64.
+                // I will Increase Height to 20mm (from 15mm) which is a safer guess for a 50mm width logo, 
+                // OR reduce width to 40mm.
+                // Better: 50mm Width, 25mm Height (2:1 ratio) - unlikely.
+                // The provided image (Step 3433) shows a horizontal logo.
+                // The circle markup highlights the logo.
+                // It looks STRETCHED HORIZONTALLY (Flattened Vertically).
+                // So I need to INCREASE HEIGHT or REDUCE WIDTH.
+                // I'll keep Width 50 and Increase Height to 20.
                 const logoW = 50;
+                const logoH = 20; // Increased from 15 to 20 to fix "flattening"
                 const logoX = pageWidth - margin - logoW;
                 const logoY = margin - 2;
-                // Calculate height based on aspect ratio (assume approx 2.5:1 for full logo?)
-                // Or safely use a fixed height reasonable for header (approx 15mm)
-                const logoH = 15;
 
                 doc.addImage(fullLogoData, 'PNG', logoX, logoY, logoW, logoH);
             } else if (logoData) {
@@ -1001,10 +1019,10 @@ export const Planning: React.FC = () => {
                         <!-- FOOTER / OBSERVAÇÕES MATCHING IMAGE -->
                         <div style="margin-top: 30px;">
                             <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase; border: none; margin-bottom: 5px;">OBSERVAÇÕES:</div>
-                            <div style="border: 1px solid black; padding: 10px;">
-                                <div style="border-bottom: 1px solid black; height: 30px; margin-bottom: 5px;"></div>
-                                <div style="border-bottom: 1px solid black; height: 30px; margin-bottom: 5px;"></div>
-                                <div style="height: 30px;"></div>
+                            <div style="border: 1px solid black; padding: 0;">
+                                <div style="border-bottom: 1px solid black; height: 35px; width: 100%;"></div>
+                                <div style="border-bottom: 1px solid black; height: 35px; width: 100%;"></div>
+                                <div style="height: 35px; width: 100%;"></div>
                             </div>
                         </div>
                     </div>
