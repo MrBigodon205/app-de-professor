@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Student } from '../types';
 
@@ -10,14 +10,26 @@ export const useStudentsData = (
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchStudents = async () => {
+    // Mount Ref to prevent updates on unmounted components
+    const mountedRef = useRef(true);
+
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+        };
+    }, []);
+
+    const fetchStudents = useCallback(async () => {
         if (!userId || !seriesId || !section) {
-            setStudents([]);
-            setLoading(false);
+            if (mountedRef.current) {
+                setStudents([]);
+                setLoading(false);
+            }
             return;
         }
 
-        setLoading(true);
+        if (mountedRef.current) setLoading(true);
         try {
             // Direct Supabase Fetch
             let query = supabase
@@ -33,6 +45,9 @@ export const useStudentsData = (
             const { data, error } = await query;
             if (error) throw error;
 
+            // Check mount before heavy processing
+            if (!mountedRef.current) return;
+
             const formatted: Student[] = (data || []).map(s => ({
                 id: s.id.toString(),
                 name: s.name,
@@ -46,17 +61,20 @@ export const useStudentsData = (
             }));
 
             formatted.sort((a, b) => a.name.localeCompare(b.name));
-            setStudents(formatted);
+
+            if (mountedRef.current) {
+                setStudents(formatted);
+            }
         } catch (error) {
             console.error('Error fetching students:', error);
         } finally {
-            setLoading(false);
+            if (mountedRef.current) setLoading(false);
         }
-    };
+    }, [seriesId, section, userId]);
 
     useEffect(() => {
         fetchStudents();
-    }, [seriesId, section, userId]);
+    }, [fetchStudents]);
 
     const addStudent = async (data: any) => {
         const { seriesId, userId: uid, id: _tempId, ...rest } = data;

@@ -28,6 +28,16 @@ export const Observations: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
+    // Mount Ref for preventing state updates on unmounted component
+    const mountedRef = React.useRef(true);
+
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+        };
+    }, []);
+
 
     const [activeTab, setActiveTab] = useState<'occurrences' | 'history'>('occurrences');
     const [students, setStudents] = useState<Student[]>([]);
@@ -61,6 +71,8 @@ export const Observations: React.FC = () => {
                 .eq('user_id', currentUser.id);
 
             if (sError) throw sError;
+            if (sError) throw sError;
+            if (!mountedRef.current) return;
             studentsData = sData || [];
 
             // 2. Fetch Occurrences
@@ -72,6 +84,8 @@ export const Observations: React.FC = () => {
                 .order('date', { ascending: false });
 
             if (occError) throw occError;
+            if (occError) throw occError;
+            if (!mountedRef.current) return;
             occurrencesData = occData || [];
 
 
@@ -109,12 +123,14 @@ export const Observations: React.FC = () => {
             // Sort
             formattedOcc.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-            setOccurrences(formattedOcc);
+            if (mountedRef.current) {
+                setOccurrences(formattedOcc);
+            }
 
         } catch (e) {
             console.error("Error fetching data:", e);
         } finally {
-            if (!silent) setLoading(false);
+            if (!silent && mountedRef.current) setLoading(false);
         }
     }, [currentUser, selectedSeriesId, selectedSection, activeSubject, selectedStudentId]);
 

@@ -39,11 +39,11 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
     }, [data, currentMonth]);
 
     const getIntensityClass = (count: number): string => {
-        if (count === 0) return 'theme-heatmap-l0';
-        if (count === 1) return 'theme-heatmap-l1';
-        if (count === 2) return 'theme-heatmap-l2';
-        if (count === 3) return 'theme-heatmap-l3';
-        return 'theme-heatmap-l4';
+        if (count === 0) return 'bg-slate-200 dark:bg-white/10 opacity-50 dark:opacity-20';
+        if (count <= 5) return 'bg-emerald-300 dark:bg-emerald-500/50';
+        if (count <= 15) return 'bg-emerald-400 dark:bg-emerald-500/70';
+        if (count <= 30) return 'bg-emerald-500 dark:bg-emerald-500/90';
+        return 'bg-emerald-600 dark:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]'; // Added glow for max level
     };
 
     if (loading) {
@@ -89,26 +89,23 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
             </div>
 
             {/* Standard Calendar Grid (7 Cols) */}
-            <div className="grid grid-cols-7 gap-1 md:gap-2 w-full max-w-[200px] md:max-w-[320px]">
-                {/* Weekday Headers - Optional but helps structure */}
-                {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(d => (
-                    <div key={d} className="text-[10px] font-bold text-text-muted text-center">{d}</div>
+            <div className="grid grid-cols-7 gap-1.5 w-full max-w-[280px]">
+                {/* Weekday Headers */}
+                {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => (
+                    <div key={`${d}-${i}`} className="text-[10px] font-bold text-text-muted text-center py-1">{d}</div>
                 ))}
 
-                {weeks.map((week, wIndex) => (
-                    <div key={wIndex} className="flex flex-col gap-[3px]">
-                        {week.map((day, dIndex) => (
+                {paddedData.map((day, index) => (
+                    <div key={index} className="flex items-center justify-center aspect-square">
+                        {day.date ? (
                             <div
-                                key={day.date}
-                                className={`size-2.5 sm:size-3 rounded-[2px] transition-all hover:scale-125 hover:z-10 relative group ${day.date ? getIntensityClass(day.count) : 'opacity-10 bg-current'}`}
-                                title={day.date ? `${new Date(day.date + 'T12:00:00').toLocaleDateString('pt-BR')}: ${day.count} atividades` : ''}
+                                className={`w-full h-full rounded-[4px] transition-all hover:scale-110 relative group ${getIntensityClass(day.count)}`}
+                                title={`${new Date(day.date + 'T12:00:00').toLocaleDateString('pt-BR')}: ${day.count} atividades`}
                             >
-                                {/* Tooltip */}
-                                {/* <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block whitespace-nowrap bg-slate-900 text-white text-[10px] px-2 py-1 rounded">
-                                    {day.count} em {day.date}
-                                </div> */}
                             </div>
-                        ))}
+                        ) : (
+                            <div className="w-full h-full"></div>
+                        )}
                     </div>
                 ))}
             </div>
@@ -116,11 +113,11 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
             <div className="flex items-center gap-2 justify-end text-[9px] text-slate-400 font-medium px-1">
                 <span>Menos</span>
                 <div className="flex gap-[2px]">
-                    <div className="size-2.5 rounded-[2px] opacity-10 bg-current"></div>
-                    <div className="size-2.5 rounded-[2px] theme-heatmap-l1"></div>
-                    <div className="size-2.5 rounded-[2px] theme-heatmap-l2"></div>
-                    <div className="size-2.5 rounded-[2px] theme-heatmap-l3"></div>
-                    <div className="size-2.5 rounded-[2px] theme-heatmap-l4"></div>
+                    <div className="size-2.5 rounded-[2px] bg-slate-200 dark:bg-white/10 opacity-50 dark:opacity-20"></div>
+                    <div className="size-2.5 rounded-[2px] bg-emerald-300 dark:bg-emerald-500/50"></div>
+                    <div className="size-2.5 rounded-[2px] bg-emerald-400 dark:bg-emerald-500/70"></div>
+                    <div className="size-2.5 rounded-[2px] bg-emerald-500 dark:bg-emerald-500/90"></div>
+                    <div className="size-2.5 rounded-[2px] bg-emerald-600 dark:bg-emerald-500"></div>
                 </div>
                 <span>Mais</span>
             </div>

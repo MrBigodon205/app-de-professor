@@ -17,11 +17,16 @@ import { ClassManager } from './ClassManager';
 import { BackgroundPattern } from './BackgroundPattern';
 import { DesktopTitleBar } from './DesktopTitleBar';
 
+import { usePredictiveSync } from '../hooks/usePredictiveSync';
+
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, logout, activeSubject, updateActiveSubject } = useAuth();
   const theme = useTheme();
   const { classes, activeSeries, selectedSeriesId, selectedSection, selectSeries, selectSection, removeClass: deleteSeries, addClass: addSeries, removeSection, addSection } = useClass();
   const location = useLocation();
+
+  // Active Predictive Sync
+  usePredictiveSync();
 
 
 

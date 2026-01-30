@@ -32,6 +32,13 @@ export const Dashboard: React.FC = () => {
   const { selectedSeriesId, selectedSection, classes } = useClass();
   const theme = useTheme();
   const { currentUser, activeSubject } = useAuth();
+
+  // Mounted Ref
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
   // Granular loading states
   const [loadingCounts, setLoadingCounts] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -59,6 +66,14 @@ export const Dashboard: React.FC = () => {
     else setCurrentPlanIndex(0); // Loop back
   };
 
+  // Helper to strip HTML and decode entities for preview
+  const stripHtml = (html: string) => {
+    if (!html) return '';
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+  };
+
   const prevPlan = () => {
     if (currentPlanIndex > 0) setCurrentPlanIndex(curr => curr - 1);
     else setCurrentPlanIndex(todaysPlans.length - 1); // Loop back
@@ -79,13 +94,12 @@ export const Dashboard: React.FC = () => {
         setGlobalCount(data.globalCount || 0);
         setClassCount(data.classCount || 0);
         setStats(data.stats || { presentToday: 0, gradeAverage: 0, newObservations: 0 });
-        // Don't set loading to false here, let the network request finish to ensure freshness
-        // BUT we can perform a "background update" visual state if we wanted.
-        // For now, let's keep loading spinners but they might be redundant if data shows up.
-        // Actually, better UX: if cache exists, show it and hide main spinners?
-        // Let's decide to HIDE spinners if we have cache, effectively "Stale-While-Revalidate"
+        // OPTIMIZATION: If cache exists, HIDE spinners immediately
         setLoadingCounts(false);
         setLoadingStats(false);
+        setLoadingOccurrences(false);
+        setLoadingPlans(false);
+        setLoadingActivities(false);
       } catch (e) {
         console.warn("Failed to load dashboard cache", e);
       }
@@ -115,23 +129,23 @@ export const Dashboard: React.FC = () => {
 
   const fetchCounts = React.useCallback(async (silent = false) => {
     if (!currentUser) return;
-    // [CACHE STRATEGY] Check if we really need to show spinner
-    if (!silent && globalCount === 0) setLoadingCounts(true);
+    if (!silent && globalCount === 0 && mountedRef.current) setLoadingCounts(true);
 
     try {
-      const { count: gCount } = await supabase
+      // Parallelize Count Queries
+      const pGlobal = supabase
         .from('students')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', currentUser.id);
-      setGlobalCount(gCount || 0);
+
+      let pClass;
 
       if (selectedSeriesId) {
         let query = supabase.from('students').select('*', { count: 'exact', head: true })
           .eq('user_id', currentUser.id)
           .eq('series_id', selectedSeriesId);
         if (selectedSection) query = query.eq('section', selectedSection);
-        const { count: sCount } = await query;
-        setClassCount(sCount || 0);
+        pClass = query;
       } else {
         const { data: subjectClasses } = await supabase
           .from('classes')
@@ -142,36 +156,48 @@ export const Dashboard: React.FC = () => {
         const classIds = (subjectClasses || []).map(c => c.id);
 
         if (classIds.length > 0) {
-          const { count: subjCount } = await supabase
+          pClass = supabase
             .from('students')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', currentUser.id)
             .in('series_id', classIds);
-          setClassCount(subjCount || 0);
-        } else {
-          setClassCount(0);
         }
       }
+
+      const [resGlobal, resClass] = await Promise.all([pGlobal, pClass]);
+
+      if (mountedRef.current) {
+        setGlobalCount(resGlobal?.count || 0);
+        setClassCount(resClass?.count || 0);
+      }
+
     } catch (e) {
       console.error("Error fetching counts:", e);
     } finally {
-      if (!silent) setLoadingCounts(false);
+      if (!silent && mountedRef.current) setLoadingCounts(false);
     }
   }, [currentUser, selectedSeriesId, selectedSection, activeSubject]);
 
-  const fetchStats = React.useCallback(async (silent = false) => {
+  const fetchStats = React.useCallback(async (silent = false, prefetchedStudentIds?: string[]) => {
     if (!currentUser) return;
     if (!silent) setLoadingStats(true);
     try {
-      let studentsQuery = supabase.from('students').select('id').eq('user_id', currentUser.id);
-      if (selectedSeriesId) studentsQuery = studentsQuery.eq('series_id', selectedSeriesId);
-      if (selectedSection) studentsQuery = studentsQuery.eq('section', selectedSection);
+      let relevantIds: string[] = [];
 
-      const { data: studentsData } = await studentsQuery;
-      const relevantIds = (studentsData || []).map(s => s.id);
+      if (prefetchedStudentIds) {
+        relevantIds = prefetchedStudentIds;
+      } else {
+        // Fallback fetch if no IDs provided
+        let studentsQuery = supabase.from('students').select('id').eq('user_id', currentUser.id);
+        if (selectedSeriesId) studentsQuery = studentsQuery.eq('series_id', selectedSeriesId);
+        if (selectedSection) studentsQuery = studentsQuery.eq('section', selectedSection);
+        const { data: studentsData } = await studentsQuery;
+        relevantIds = (studentsData || []).map(s => s.id);
+      }
 
       if (relevantIds.length > 0) {
         // Group students by ID for faster lookup later
+        // OPTIMIZATION: Select only needed fields
         const { data: gradesData } = await supabase
           .from('grades')
           .select('student_id, unit, data')
@@ -224,32 +250,36 @@ export const Dashboard: React.FC = () => {
           .eq('user_id', currentUser.id)
           .eq('subject', activeSubject)
           .eq('date', today)
-          .eq('status', 'P');
+          .eq('status', 'P'); // Only count Presents
 
         const presentToday = (attData || []).filter(a => relevantIds.includes(a.student_id)).length;
 
-        setStats(prev => ({
-          ...prev,
-          presentToday,
-          gradeAverage: finalAvg
-        }));
+        if (mountedRef.current) {
+          setStats(prev => ({
+            ...prev,
+            presentToday,
+            gradeAverage: finalAvg
+          }));
+        }
 
       } else {
-        setStats(prev => ({ ...prev, presentToday: 0, gradeAverage: 0 }));
+        if (mountedRef.current) setStats(prev => ({ ...prev, presentToday: 0, gradeAverage: 0 }));
       }
 
     } catch (e) {
       console.error("Error fetching stats:", e);
     } finally {
-      if (!silent) setLoadingStats(false);
+      if (!silent && mountedRef.current) setLoadingStats(false);
     }
   }, [currentUser, selectedSeriesId, selectedSection, activeSubject]);
 
-  const fetchOccurrences = React.useCallback(async (silent = false) => {
+  const fetchOccurrences = React.useCallback(async (silent = false, prefetchedStudentIds?: string[]) => {
     if (!currentUser) return;
     if (!silent) setLoadingOccurrences(true);
     try {
       const today = new Date().toLocaleDateString('sv-SE');
+
+      // OPTIMIZATION: Use pre-fetched IDs to skip a query or use them in query
       let query = supabase.from('occurrences')
         .select(`
           id, student_id, type, date, description, unit, user_id, created_at,
@@ -260,28 +290,46 @@ export const Dashboard: React.FC = () => {
         .eq('date', today)
         .order('created_at', { ascending: false });
 
-      if (selectedSeriesId) {
-        const { data: sData } = await supabase.from('students').select('id').eq('series_id', selectedSeriesId).eq('user_id', currentUser.id);
-        const sIds = (sData || []).map(s => s.id);
-        if (sIds.length > 0) {
-          query = query.in('student_id', sIds);
-        } else {
-          setRecentOccurrences([]);
-          setStats(prev => ({ ...prev, newObservations: 0 }));
-          setLoadingOccurrences(false);
+      // If we have IDs, we just filter by them. If not, we do the old logic logic.
+      if (prefetchedStudentIds) {
+        if (prefetchedStudentIds.length === 0) {
+          // No students => No occurrences
+          if (mountedRef.current) {
+            setRecentOccurrences([]);
+            setStats(prev => ({ ...prev, newObservations: 0 }));
+            setLoadingOccurrences(false);
+          }
           return;
         }
+        query = query.in('student_id', prefetchedStudentIds);
       } else {
-        const { data: subjectClasses } = await supabase
-          .from('classes')
-          .select('id')
-          .eq('user_id', currentUser.id)
-          .or(`subject.eq.${activeSubject},subject.is.null`);
-        const sIds = (subjectClasses || []).map(c => c.id);
-        if (sIds.length > 0) {
-          const { data: students } = await supabase.from('students').select('id').in('series_id', sIds);
-          const studIds = (students || []).map(s => s.id);
-          if (studIds.length > 0) query = query.in('student_id', studIds);
+        // ... Fallback logic (Old Code) ...
+        if (selectedSeriesId) {
+          const { data: sData } = await supabase.from('students').select('id').eq('series_id', selectedSeriesId).eq('user_id', currentUser.id);
+          const sIds = (sData || []).map(s => s.id);
+          if (sIds.length > 0) {
+            query = query.in('student_id', sIds);
+          } else {
+            if (mountedRef.current) {
+              setRecentOccurrences([]);
+              setStats(prev => ({ ...prev, newObservations: 0 }));
+              setLoadingOccurrences(false);
+            }
+            return;
+          }
+        } else {
+          // Global (Subject filtered)
+          const { data: subjectClasses } = await supabase
+            .from('classes')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .or(`subject.eq.${activeSubject},subject.is.null`);
+          const sIds = (subjectClasses || []).map(c => c.id);
+          if (sIds.length > 0) {
+            const { data: students } = await supabase.from('students').select('id').in('series_id', sIds);
+            const studIds = (students || []).map(s => s.id);
+            if (studIds.length > 0) query = query.in('student_id', studIds);
+          }
         }
       }
 
@@ -299,14 +347,15 @@ export const Dashboard: React.FC = () => {
         userId: o.user_id
       }));
 
-      // [CACHE] Save to LocalStorage if needed (optional)
-      setRecentOccurrences(formatted);
-      setStats(prev => ({ ...prev, newObservations: (data || []).length }));
+      if (mountedRef.current) {
+        setRecentOccurrences(formatted);
+        setStats(prev => ({ ...prev, newObservations: (data || []).length }));
+      }
 
     } catch (e) {
       console.error("Error fetching occurrences (online):", e);
     } finally {
-      if (!silent) setLoadingOccurrences(false);
+      if (!silent && mountedRef.current) setLoadingOccurrences(false);
     }
   }, [currentUser, selectedSeriesId, activeSubject, selectedSection]);
 
@@ -435,13 +484,126 @@ export const Dashboard: React.FC = () => {
 
 
 
-  const refreshAll = React.useCallback((silent = true) => {
-    fetchCounts(silent);
-    fetchStats(silent);
-    fetchOccurrences(silent);
-    fetchPlans(silent);
-    fetchActivities(silent);
-  }, [fetchCounts, fetchStats, fetchOccurrences, fetchPlans, fetchActivities]);
+  // --- HEATMAP AGGREGATION ---
+  const [heatmapPoints, setHeatmapPoints] = useState<{ date: string; count: number; types: string[] }[]>([]);
+
+  const fetchHeatmapData = React.useCallback(async (silent = false) => {
+    if (!currentUser) return;
+    try {
+      const today = new Date();
+      // Fetch range: First day of current month to today (or end of month)
+      const year = today.getFullYear();
+      const month = today.getMonth(); // 0-indexed
+      const startDate = new Date(year, month, 1).toLocaleDateString('sv-SE');
+      const endDate = new Date(year, month + 1, 0).toLocaleDateString('sv-SE');
+
+      // 1. Attendance (High Volume: 1pt per present student)
+      const pAttendance = supabase
+        .from('attendance')
+        .select('date')
+        .eq('user_id', currentUser.id)
+        .gte('date', startDate)
+        .lte('date', endDate);
+
+      // 2. Plans (5pts per plan)
+      const pPlans = supabase
+        .from('plans')
+        .select('start_date')
+        .eq('user_id', currentUser.id)
+        .gte('start_date', startDate)
+        .lte('start_date', endDate);
+
+      // 3. Activities (5pts per activity)
+      const pActivities = supabase
+        .from('activities')
+        .select('date')
+        .eq('user_id', currentUser.id)
+        .gte('date', startDate)
+        .lte('date', endDate);
+
+      // 4. Occurrences (3pts per occurrence)
+      const pOccurrences = supabase
+        .from('occurrences')
+        .select('date')
+        .eq('user_id', currentUser.id)
+        .gte('date', startDate)
+        .lte('date', endDate);
+
+      const [resAtt, resPlans, resAct, resOcc] = await Promise.all([pAttendance, pPlans, pActivities, pOccurrences]);
+
+      const pointsMap = new Map<string, number>();
+
+      // Weighting Logic
+      (resAtt.data || []).forEach((row: any) => {
+        const d = row.date;
+        pointsMap.set(d, (pointsMap.get(d) || 0) + 1); // 1 pt
+      });
+
+      (resPlans.data || []).forEach((row: any) => {
+        const d = row.start_date;
+        pointsMap.set(d, (pointsMap.get(d) || 0) + 5); // 5 pts
+      });
+
+      (resAct.data || []).forEach((row: any) => {
+        const d = row.date;
+        pointsMap.set(d, (pointsMap.get(d) || 0) + 5); // 5 pts
+      });
+
+      (resOcc.data || []).forEach((row: any) => {
+        const d = row.date;
+        pointsMap.set(d, (pointsMap.get(d) || 0) + 3); // 3 pts
+      });
+
+      const pointsArray = Array.from(pointsMap.entries()).map(([date, count]) => ({
+        date,
+        count,
+        types: [] // Types are less relevant for the aggregate view now
+      }));
+
+      if (mountedRef.current) setHeatmapPoints(pointsArray);
+
+    } catch (e) {
+      console.error("Error fetching heatmap data", e);
+    }
+  }, [currentUser]);
+
+  const refreshAll = React.useCallback(async (silent = true) => {
+    // Shared Student ID Fetch Logic
+    let studentIds: string[] = [];
+    try {
+      if (selectedSeriesId) {
+        // Fetch ids for this series
+        let query = supabase.from('students').select('id').eq('series_id', selectedSeriesId).eq('user_id', currentUser?.id);
+        if (selectedSection) query = query.eq('section', selectedSection);
+        const { data } = await query;
+        studentIds = (data || []).map(s => s.id);
+      } else {
+        // Global
+        const { data: subjectClasses } = await supabase
+          .from('classes')
+          .select('id')
+          .eq('user_id', currentUser?.id)
+          .eq('subject', activeSubject);
+        const classIds = (subjectClasses || []).map(c => c.id);
+        if (classIds.length > 0) {
+          const { data } = await supabase.from('students').select('id').in('series_id', classIds);
+          studentIds = (data || []).map(s => s.id);
+        }
+      }
+    } catch (e) {
+      console.error("Failed fetching context student IDs", e);
+    }
+
+    // Parallel Execution with shared IDs
+    await Promise.all([
+      fetchCounts(silent),
+      fetchStats(silent, studentIds),
+      fetchOccurrences(silent, studentIds),
+      fetchPlans(silent),
+      fetchActivities(silent),
+      fetchHeatmapData(silent)
+    ]);
+  }, [fetchCounts, fetchStats, fetchOccurrences, fetchPlans, fetchActivities, fetchHeatmapData, selectedSeriesId, selectedSection, activeSubject, currentUser]);
 
   // --- OPTIMIZATION: Debounced Realtime Callback ---
   const refreshRef = React.useRef(refreshAll);
@@ -488,18 +650,7 @@ export const Dashboard: React.FC = () => {
   }, [currentUser?.id, debouncedRefresh]);
 
 
-  const activityPoints = React.useMemo(() => {
-    return recentOccurrences.reduce((acc: any[], occ) => {
-      const existing = acc.find(p => p.date === occ.date);
-      if (existing) {
-        existing.count++;
-        existing.types.push(occ.type);
-      } else {
-        acc.push({ date: occ.date, count: 1, types: [occ.type] });
-      }
-      return acc;
-    }, []);
-  }, [recentOccurrences]);
+
 
   const isContextSelected = !!selectedSeriesId;
   const displayCount = isContextSelected ? classCount : globalCount;
@@ -661,7 +812,7 @@ export const Dashboard: React.FC = () => {
                   <span className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Roteiro do Planejamento</span>
                   <div className="max-w-3xl bg-black/40 border border-white/20 p-4 rounded-xl">
                     <p className="text-white text-sm md:text-base font-medium leading-relaxed font-body line-clamp-2 mix-blend-plus-lighter">
-                      "{currentPlan.description.replace(/<[^>]*>/g, '')}"
+                      "{stripHtml(currentPlan.description)}"
                     </p>
                   </div>
                 </div>
@@ -778,7 +929,7 @@ export const Dashboard: React.FC = () => {
 
               {/* GITHUB HEATMAP INTEGRATION */}
               <div className="w-full lg:w-max max-w-full glass-card-soft p-3 rounded-2xl bg-surface-subtle/50 border theme-border-opaco">
-                <ActivityHeatmap data={activityPoints} loading={loadingOccurrences} />
+                <ActivityHeatmap data={heatmapPoints} loading={loadingOccurrences} />
               </div>
             </div>
           </div>

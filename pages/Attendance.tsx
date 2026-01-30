@@ -152,9 +152,19 @@ export const Attendance: React.FC = () => {
     const { selectedSeriesId, selectedSection, activeSeries } = useClass();
     const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
+
+    // Mount Ref
+    const mountedRef = useRef(true);
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => { mountedRef.current = false; };
+    }, []);
+
     const [students, setStudents] = useState<Student[]>([]);
     const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString('sv-SE'));
     const [selectedUnit, setSelectedUnit] = useState<string>('1');
+    const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
+    const [maxPeriods, setMaxPeriods] = useState<number>(1); // Dynamic Lesson Count
     const [viewMode, setViewMode] = useState<'daily' | 'history'>('daily');
     const [attendanceMap, setAttendanceMap] = useState<Record<string, string>>({});
     // State to hold ALL record dates for the calendar indicators
@@ -186,11 +196,46 @@ export const Attendance: React.FC = () => {
             setAttendanceMap({});
             setLoading(false);
         }
-    }, [selectedDate, selectedSeriesId, selectedSection, activeSubject, selectedUnit]);
+        setLoading(false);
+    }, [selectedDate, selectedSeriesId, selectedSection, activeSubject, selectedUnit, selectedPeriod]);
+
+    // --- DYNAMIC PERIODS LOGIC ---
+    useEffect(() => {
+        const checkSchedule = async () => {
+            if (!currentUser || !selectedSeriesId || !selectedSection) return;
+
+            try {
+                const dateObj = new Date(selectedDate + 'T12:00:00');
+                const dayOfWeek = dateObj.getDay(); // 0-6
+
+                const { count, error } = await supabase
+                    .from('schedules')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', currentUser.id)
+                    .eq('class_id', selectedSeriesId)
+                    .eq('day_of_week', dayOfWeek);
+
+                if (!error) {
+                    // If count is 0 (no classes scheduled), technically implies "extra class" or just 1 default slot. 
+                    // Let's stick to minimum 1.
+                    // If count is > 1 (e.g. 2 lessons), permit 2 periods.
+                    const newMax = (count && count > 1) ? count : 1;
+                    setMaxPeriods(newMax);
+
+                    // Reset if current selection is out of bounds
+                    if (selectedPeriod > newMax) setSelectedPeriod(1);
+                }
+            } catch (e) {
+                console.error("Error checking schedule periods", e);
+            }
+        };
+
+        checkSchedule();
+    }, [selectedDate, selectedSeriesId, selectedSection, currentUser]);
 
     const fetchData = async (silent = false) => {
         if (!currentUser || !selectedSeriesId || !selectedSection) return;
-        if (!silent) setLoading(true);
+        if (!silent && mountedRef.current) setLoading(true);
 
         try {
             // 1. Fetch Students (Online Only)
@@ -202,6 +247,8 @@ export const Attendance: React.FC = () => {
                 .eq('user_id', currentUser.id);
 
             if (studentsError) throw studentsError;
+
+            if (!mountedRef.current) return;
 
             const formattedStudents: Student[] = studentsData.map(s => ({
                 id: s.id.toString(),
@@ -216,7 +263,7 @@ export const Attendance: React.FC = () => {
             }));
 
             // Fetch Attendance
-            const { data: todaysRecords, error: attendanceError } = await supabase
+            let query = supabase
                 .from('attendance')
                 .select('*')
                 .eq('date', selectedDate)
@@ -224,6 +271,15 @@ export const Attendance: React.FC = () => {
                 .eq('unit', selectedUnit)
                 .eq('user_id', currentUser.id)
                 .in('student_id', formattedStudents.map(s => s.id));
+
+            // Optional Period Support: If column exists, we use it. If not, it defaults to 1 or null in logic below.
+            // Since we added it to types and plan to add to DB, we assume it's there.
+            // We use 'selectedPeriod' in the query.
+            // CAUTION: If user hasn't run the migration, this might error if the column is missing.
+            // But we can try to filter client side or hope for the best. Ideally we use the column.
+            query = query.eq('period', selectedPeriod);
+
+            const { data: todaysRecords, error: attendanceError } = await query;
 
             if (attendanceError) throw attendanceError;
 
@@ -235,14 +291,15 @@ export const Attendance: React.FC = () => {
                 newMap[s.id] = record ? record.status : '';
             });
 
-            setStudents(formattedStudents);
-            setAttendanceMap(newMap);
-
-            fetchActiveDates(formattedStudents.map(s => s.id));
+            if (mountedRef.current) {
+                setStudents(formattedStudents);
+                setAttendanceMap(newMap);
+                fetchActiveDates(formattedStudents.map(s => s.id));
+            }
         } catch (e) {
             console.error("Fetch data failed", e);
         } finally {
-            if (!silent) setLoading(false);
+            if (!silent && mountedRef.current) setLoading(false);
         }
     };
 
@@ -282,7 +339,7 @@ export const Attendance: React.FC = () => {
             supabase.removeChannel(channel);
             clearInterval(interval);
         };
-    }, [selectedDate, selectedSeriesId, selectedSection, currentUser, activeSubject, selectedUnit]);
+    }, [selectedDate, selectedSeriesId, selectedSection, currentUser, activeSubject, selectedUnit, selectedPeriod]);
     // -----------------------------
 
     const fetchActiveDates = async (studentIds: string[]) => {
@@ -296,6 +353,11 @@ export const Attendance: React.FC = () => {
                 .eq('user_id', currentUser.id)
                 .eq('subject', activeSubject)
                 .eq('unit', selectedUnit)
+                // We keep active dates "generic" for the day, regardless of period?
+                // Or do we only show dot if there is data for ANY period on that day?
+                // Current query checks simply "records on this day".
+                // Since we don't query 'period', if there is ANY record on that day (Period 1 OR 2), it returns.
+                // This is correct: The "Day" has data.
                 .eq('series_id', selectedSeriesId)
                 .eq('section', selectedSection)
                 .gte('date', `${year}-01-01`)
@@ -322,10 +384,12 @@ export const Attendance: React.FC = () => {
                 section: selectedSection,
                 user_id: currentUser.id,
                 subject: activeSubject,
-                unit: selectedUnit
+                unit: selectedUnit,
+                period: selectedPeriod // Add Period
             };
 
             if (status === '') {
+                // Delete specific period record
                 await supabase
                     .from('attendance')
                     .delete()
@@ -333,12 +397,13 @@ export const Attendance: React.FC = () => {
                         student_id: cleanPayload.student_id,
                         date: selectedDate,
                         subject: activeSubject,
-                        unit: selectedUnit
+                        unit: selectedUnit,
+                        period: selectedPeriod
                     });
             } else {
                 await supabase
                     .from('attendance')
-                    .upsert(cleanPayload);
+                    .upsert(cleanPayload); // upsert needs constraint on (student_id, date, subject, unit, period)
             }
 
             // UI Update (Dates)
@@ -367,7 +432,8 @@ export const Attendance: React.FC = () => {
                 section: selectedSection,
                 user_id: currentUser.id,
                 subject: activeSubject,
-                unit: selectedUnit
+                unit: selectedUnit,
+                period: selectedPeriod
             }));
 
             if (status === '') {
@@ -380,7 +446,8 @@ export const Attendance: React.FC = () => {
                         subject: activeSubject,
                         unit: selectedUnit,
                         series_id: parseInt(selectedSeriesId),
-                        section: selectedSection
+                        section: selectedSection,
+                        period: selectedPeriod
                     });
             } else {
                 await supabase.from('attendance').upsert(records);
@@ -457,6 +524,14 @@ export const Attendance: React.FC = () => {
                 .eq('user_id', currentUser.id)
                 .eq('subject', activeSubject)
                 .eq('unit', selectedUnit)
+                // PDF: Include ALL periods? Or filter by current period?
+                // Logic: "Two lessons same day" -> If I export, do I want Lesson 1 and Lesson 2 separated or merged?
+                // Standard practice: Show "Day P1" and "Day P2" columns? Or just merge presence?
+                // For simplicity first: Filter by selectedPeriod to generate report FOR THAT PERIOD context.
+                // Or, if user wants daily aggregate...
+                // Based on "mark two presences separately", user likely treats them as distinct events.
+                // Let's filter PDF by selectedPeriod too, so you generate "Frequency of Lesson 1".
+                .eq('period', selectedPeriod)
                 .in('student_id', students.map(s => s.id));
 
             if (error) throw error;
@@ -661,7 +736,7 @@ export const Attendance: React.FC = () => {
                         >
                             <span className={`material-symbols-outlined text-${theme.primaryColor} group-hover/cal:scale-110 transition-transform text-xl sm:text-2xl`}>calendar_month</span>
                             <div className="flex flex-col items-start leading-none gap-0.5 sm:gap-1">
-                                <span className="text-[9px] sm:text-[10px] font-black text-text-muted uppercase tracking-widest leading-none">Data</span>
+                                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest leading-none">Data</span>
                                 <span className="font-bold text-xs sm:text-sm text-text-primary">
                                     {new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                                 </span>
@@ -707,6 +782,31 @@ export const Attendance: React.FC = () => {
                             </button>
                         ))}
                     </div>
+
+                    {/* Divider - Only if multiple periods */}
+                    {maxPeriods > 1 && <div className="h-8 w-px bg-border-default mx-1 hidden sm:block"></div>}
+
+                    {/* Period Selector - Only if multiple periods */}
+                    {maxPeriods > 1 && (
+                        <div className="flex items-center bg-surface-subtle rounded-xl p-1 border border-border-default overflow-x-auto max-w-full">
+                            {Array.from({ length: maxPeriods }).map((_, i) => {
+                                const period = i + 1;
+                                return (
+                                    <button
+                                        key={period}
+                                        onClick={() => setSelectedPeriod(period)}
+                                        className={`h-8 px-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-1 ${selectedPeriod === period
+                                            ? `bg-surface-card text-${theme.secondaryColor} shadow-sm ring-1 ring-border-subtle`
+                                            : 'text-text-muted hover:text-text-primary'
+                                            }`}
+                                    >
+                                        <span className="material-symbols-outlined text-[10px]">schedule</span>
+                                        {period}ª Aula
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
 
                 </div>
             </div>

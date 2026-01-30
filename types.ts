@@ -88,6 +88,7 @@ export interface AttendanceRecord {
   status: 'P' | 'F' | 'J' | 'S';
   unit?: string;
   userId: string;
+  period?: number;
 }
 
 export interface Occurrence {

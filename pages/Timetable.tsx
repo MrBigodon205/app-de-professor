@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
-import { ScheduleItem, DayOfWeek, ClassConfig, SUBJECTS } from '../types';
+import { ScheduleItem, DayOfWeek, SUBJECTS } from '../types';
+import { THEME_MAP } from '../utils/themeMap';
 
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -123,7 +124,7 @@ export const Timetable: React.FC = () => {
         const selectedClass = classes.find(c => c.id === classId);
 
         const newItem: ScheduleItem = {
-            id: Math.random().toString(),
+            id: Math.random().toString(), // Optimistic ID
             userId: currentUser.id,
             dayOfWeek: selectedSlot.day,
             startTime: selectedSlot.startTime,
@@ -143,7 +144,15 @@ export const Timetable: React.FC = () => {
         setIsModalOpen(false);
 
         try {
-            const { error } = await supabase.from('schedules').upsert({
+            // ROBUST SAVE: Delete existing for this slot first, then insert new.
+            // This avoids issues with composite keys constraints missing in DB.
+            await supabase.from('schedules').delete().match({
+                user_id: currentUser.id,
+                day_of_week: newItem.dayOfWeek,
+                start_time: newItem.startTime
+            });
+
+            const { error } = await supabase.from('schedules').insert({
                 user_id: currentUser.id,
                 day_of_week: newItem.dayOfWeek,
                 start_time: newItem.startTime,
@@ -151,11 +160,14 @@ export const Timetable: React.FC = () => {
                 class_id: newItem.classId,
                 section: newItem.section,
                 subject: newItem.subject
-            }, { onConflict: 'user_id, day_of_week, start_time' });
+            });
 
             if (error) throw error;
         } catch (e) {
             console.error("Failed to save schedule", e);
+            alert("Erro ao salvar horário. Tente novamente.");
+            // Rollback optimistic update
+            fetchSchedule();
         }
     };
 
@@ -180,15 +192,10 @@ export const Timetable: React.FC = () => {
 
     // --- COLOR HELPERS ---
     const getSubjectTheme = (subject: string): { bg: string, text: string, border: string, dot: string } => {
-        // Map subjects to colors logic (consistent with ThemeContext)
-        const normalize = (s: string) => s?.toLowerCase() || '';
-        let color = 'indigo'; // Default
-
-        if (['matemática', 'física', 'química'].some(k => normalize(subject).includes(k))) color = 'indigo';
-        else if (['português', 'literatura', 'redação', 'inglês', 'espanhol'].some(k => normalize(subject).includes(k))) color = 'rose';
-        else if (['história', 'geografia', 'filosofia', 'sociologia', 'ensino religioso'].some(k => normalize(subject).includes(k))) color = 'amber';
-        else if (['biologia', 'ciências'].some(k => normalize(subject).includes(k))) color = 'emerald';
-        else if (['artes', 'educação física', 'projeto de vida'].some(k => normalize(subject).includes(k))) color = 'violet';
+        // Use shared THEME_MAP for consistent colors
+        const normalize = (s: string) => s || 'Geral';
+        const config = THEME_MAP[normalize(subject)] || THEME_MAP['Geral'];
+        const color = config.baseColor; // Use the base color from config
 
         return {
             bg: `bg-${color}-500/10 dark:bg-${color}-500/20`,
@@ -198,9 +205,6 @@ export const Timetable: React.FC = () => {
         };
     };
 
-    const getHexColor = (colorClass: string) => {
-        return '#4f46e5'; // Simplified as we are moving to CSS vars
-    };
     const getSlotItem = (day: DayOfWeek, start: string) => {
         return schedule.find(s => s.dayOfWeek === day && s.startTime === start);
     };

@@ -15,6 +15,7 @@ export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
         storage: window.localStorage,
         storageKey: 'supabase.auth.token' // Standardized key
     },
+    // performance settings
     db: {
         schema: 'public'
     },

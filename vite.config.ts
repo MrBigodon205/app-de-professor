@@ -53,8 +53,10 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: {
-            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-            'vendor-ui-core': ['framer-motion', 'lucide-react'],
+            'vendor-react': ['react', 'react-router-dom'],
+            'vendor-react-dom': ['react-dom'], // Isolate heavy react-dom
+            'vendor-ui': ['lucide-react'], // Lightweight UI utils
+            'vendor-framer': ['framer-motion'], // ISOLATE: Very heavy (100kb+)
             'vendor-charts': ['recharts'],
             'vendor-editor': ['react-quill-new'],
             'vendor-db': ['@supabase/supabase-js', 'dexie'],

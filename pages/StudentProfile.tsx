@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useClass } from '../contexts/ClassContext';
@@ -22,6 +22,13 @@ export const StudentProfile: React.FC = () => {
     const { selectedSeriesId, selectedSection, activeSeries, classes, selectSeries, selectSection } = useClass();
     const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
+
+    // Mount Ref
+    const mountedRef = useRef(true);
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => { mountedRef.current = false; };
+    }, []);
 
     const [students, setStudents] = useState<Student[]>([]);
     const [selectedStudentId, setSelectedStudentId] = useState<string>('');
@@ -56,6 +63,8 @@ export const StudentProfile: React.FC = () => {
                 studentsPromise,
                 independentPromises
             ]);
+
+            if (!mountedRef.current) return;
 
             if (studentsRes.error) throw studentsRes.error;
             const studentsData = studentsRes.data || [];
@@ -147,10 +156,11 @@ export const StudentProfile: React.FC = () => {
             setAttendance(formattedAtt);
             setActivities(formattedAct);
             setPlans(formattedPlans);
+            setPlans(formattedPlans);
         } catch (e) {
             console.error(e)
         } finally {
-            if (!silent) setLoading(false);
+            if (!silent && mountedRef.current) setLoading(false);
         }
     }, [currentUser, selectedSeriesId, selectedSection, activeSubject]);
 
