@@ -599,6 +599,14 @@ export const Planning: React.FC = () => {
         setLoading(true);
 
         try {
+            // Helper to strip HTML and decode entities
+            const stripHtmlAndDecode = (html: string) => {
+                if (!html) return '';
+                const tmp = document.createElement("DIV");
+                tmp.innerHTML = html;
+                return tmp.textContent || tmp.innerText || "";
+            };
+
             const doc = new jsPDF({
                 orientation: 'landscape',
                 unit: 'mm',
@@ -805,7 +813,7 @@ export const Planning: React.FC = () => {
             doc.rect(currentX, tableTop + 10, colWidths[0], rowHeight);
             const habText = [
                 ...(currentPlan.bncc_codes?.split('\n').filter(Boolean) || []),
-                (currentPlan.objectives ? currentPlan.objectives.replace(/<[^>]+>/g, ' ') : '')
+                (currentPlan.objectives ? stripHtmlAndDecode(currentPlan.objectives) : '')
             ].join('\n');
             doc.text(doc.splitTextToSize(habText, colWidths[0] - 4), currentX + 2, tableTop + 15);
 
@@ -821,7 +829,7 @@ export const Planning: React.FC = () => {
             doc.rect(currentX, tableTop + 10, colWidths[3], rowHeight);
             const devText = [
                 currentPlan.methodology || '',
-                (currentPlan.description ? currentPlan.description.replace(/<[^>]+>/g, ' ') : '')
+                (currentPlan.description ? stripHtmlAndDecode(currentPlan.description) : '')
             ].join('\n\n');
             doc.text(doc.splitTextToSize(devText, colWidths[3] - 4), currentX + 2, tableTop + 15);
 
