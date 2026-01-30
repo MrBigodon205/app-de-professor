@@ -605,11 +605,11 @@ export const Planning: React.FC = () => {
                 format: 'a4'
             });
 
-            // Load logo images
-            let logoData: string | null = null;
-            let fullLogoData: string | null = null;
+            // Load logo images with dimensions
+            let logoInfo: { data: string, width: number, height: number } | null = null;
+            let fullLogoInfo: { data: string, width: number, height: number } | null = null;
 
-            const loadImage = (src: string): Promise<string> => {
+            const loadImage = (src: string): Promise<{ data: string, width: number, height: number }> => {
                 return new Promise((resolve, reject) => {
                     const img = new Image();
                     img.crossOrigin = "Anonymous";
@@ -620,7 +620,11 @@ export const Planning: React.FC = () => {
                         const ctx = canvas.getContext('2d');
                         if (ctx) {
                             ctx.drawImage(img, 0, 0);
-                            resolve(canvas.toDataURL('image/png'));
+                            resolve({
+                                data: canvas.toDataURL('image/png'),
+                                width: img.width,
+                                height: img.height
+                            });
                         } else {
                             reject(new Error("Could not create canvas context"));
                         }
@@ -631,8 +635,8 @@ export const Planning: React.FC = () => {
             };
 
             try {
-                logoData = await loadImage('/logo_icon_clean.png');
-                fullLogoData = await loadImage('/logo_full_clean.png');
+                logoInfo = await loadImage('/logo_icon_clean.png');
+                fullLogoInfo = await loadImage('/logo_full_clean.png');
             } catch (e) {
                 console.warn("Logo load failed", e);
             }
@@ -643,24 +647,51 @@ export const Planning: React.FC = () => {
             const contentWidth = pageWidth - (margin * 2);
 
             // Watermark (Background Dove)
-            if (logoData) {
+            if (logoInfo) {
                 try {
                     doc.saveGraphicsState();
-                    // Set transparency
                     doc.setGState(new (doc as any).GState({ opacity: 0.10 }));
 
-                    // Draw Dove Icon (Watermark)
-                    // Use logo.svg
-                    const wmSize = 120; // 120mm
-                    const wmX = (pageWidth - wmSize) / 2;
-                    const wmY = (pageHeight - wmSize) / 2;
+                    const wmSize = 120; // 120mm Width
+                    // Calculate Height based on ratio
+                    const ratio = logoInfo.width / logoInfo.height;
+                    const wmH = wmSize / ratio;
 
-                    doc.addImage(logoData, 'PNG', wmX, wmY, wmSize, wmSize * 0.84); // SVG Aspect ratio approx 1.19
+                    const wmX = (pageWidth - wmSize) / 2;
+                    const wmY = (pageHeight - wmH) / 2;
+
+                    doc.addImage(logoInfo.data, 'PNG', wmX, wmY, wmSize, wmH);
                     doc.restoreGraphicsState();
                 } catch (e) {
                     console.warn("Watermark failed", e);
                 }
             }
+
+            // ... (Middle Header Code omitted in this replace, check context) ...
+            // Wait, I cannot omit middle code in replace_file_content if I span multiple blocks.
+            // I should use "TargetContent" wisely.
+            // The TargetContent below spans from `let logoData...` to `doc.addImage`.
+            // This is a large block. 
+            // I need to be careful about the "Header Section" lines (666-702) which I do NOT want to change but they are "in between" Watermark and Header Logo in the original file.
+            // Actually, in the code, Watermark (646) comes BEFORE Header text (666).
+            // Header Logo (704) comes AFTER logic.
+            // I must break this into 2 chunks or Replace the specific parts.
+            // BUT "loadImage" definition is at the top.
+            // So Chunk 1: Define loadImage + Load vars.
+            // Chunk 2: Watermark logic.
+            // Chunk 3: Logo logic.
+            // BUT `view_file` showed them sequential.
+            // I will target the `loadImage` block definition first.
+
+            // Wait, `replace_file_content` with massive block is risky if I don't include the middle.
+            // I will cancel and use MULTI REPLACE.
+
+            // Just kidding, I am rewriting the helper function `loadImage` and the `logoData` variables.
+            // They are lines 609-638.
+            // Then I need to update Watermark usage (Line 646).
+            // Then Header Logo usage (Line 704).
+            // I will use `multi_replace_file_content`.
+
 
             // Header Section
             doc.setFontSize(10);
@@ -701,42 +732,26 @@ export const Planning: React.FC = () => {
             doc.line(margin + 25, margin + 34, margin + 120, margin + 34);
 
             // HEADER (Top Right)
-            if (fullLogoData) {
+            // HEADER (Top Right)
+            if (fullLogoInfo) {
                 // Use the Full Logo Image provided by user
-                // Fixed Width: 50mm
-                // Calculate Height to preserve aspect ratio (Standard Logo is approx 3.5:1 or 3:1)
-                // Let's use a dynamic approach if possible, or a safe estimated ratio.
-                // Assuming standard horizontal logo ~3.33 ratio (50mm / 15mm = 3.33)
-                // If the user says it's squashed (flattened), maybe 15mm was too short?
-                // Or maybe the original image is SQUARE-ish?
-                // If it's the "Full Logo" (Text + Dove), it's usually Horizontal.
-                // If "achatada" means "squashed vertically" (too short), then H needs to be bigger.
-                // If "achatada" means "squashed horizontally" (too thin), then W needs to be bigger.
-                // Usually "achatada" on PDF means incorrect aspect ratio.
-                // I will set Auto-Height calculation based on image properties if I can?
-                // No, I have base64.
-                // I will Increase Height to 20mm (from 15mm) which is a safer guess for a 50mm width logo, 
-                // OR reduce width to 40mm.
-                // Better: 50mm Width, 25mm Height (2:1 ratio) - unlikely.
-                // The provided image (Step 3433) shows a horizontal logo.
-                // The circle markup highlights the logo.
-                // It looks STRETCHED HORIZONTALLY (Flattened Vertically).
-                // So I need to INCREASE HEIGHT or REDUCE WIDTH.
-                // I'll keep Width 50 and Increase Height to 20.
-                const logoW = 50;
-                const logoH = 20; // Increased from 15 to 20 to fix "flattening"
+                const logoW = 50; // Fixed Width 50mm
+                const ratio = fullLogoInfo.width / fullLogoInfo.height;
+                const logoH = logoW / ratio; // Dynamic Height
+
                 const logoX = pageWidth - margin - logoW;
                 const logoY = margin - 2;
 
-                doc.addImage(fullLogoData, 'PNG', logoX, logoY, logoW, logoH);
-            } else if (logoData) {
+                doc.addImage(fullLogoInfo.data, 'PNG', logoX, logoY, logoW, logoH);
+            } else if (logoInfo) {
                 // Fallback to Icon + Text if Full Logo fails
                 const logoW = 15;
-                const logoH = 12;
+                const ratio = logoInfo.width / logoInfo.height;
+                const logoH = logoW / ratio;
                 const logoX = pageWidth - margin - 50;
                 const logoY = margin - 2;
 
-                doc.addImage(logoData, 'PNG', logoX, logoY, logoW, logoH);
+                doc.addImage(logoInfo.data, 'PNG', logoX, logoY, logoW, logoH);
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(30);
                 doc.setTextColor(14, 165, 233);
