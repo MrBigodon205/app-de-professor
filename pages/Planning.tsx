@@ -1892,6 +1892,15 @@ export const Planning: React.FC = () => {
                                                     </tbody>
                                                 </table>
                                             </div>
+
+                                            {/* OBSERVATIONS FOOTER - ADDED MANUALLY */}
+                                            <div className="mt-4 flex-shrink-0 break-inside-avoid">
+                                                <div className="font-bold text-sm mb-1 uppercase">Observações:</div>
+                                                <div className="border border-black h-24 w-full">
+                                                    <div className="border-b border-black h-8 w-full"></div>
+                                                    <div className="border-b border-black h-8 w-full"></div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
