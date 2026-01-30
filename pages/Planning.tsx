@@ -969,7 +969,7 @@ export const Planning: React.FC = () => {
                                 <td style="width: 33%; vertical-align: top; border: none; text-align: right; padding: 0;">
                                     <div style="text-align: right;">
                                         ${fullLogoBase64
-                ? `<img src="${fullLogoBase64}" style="width: 100px; height: auto;" />`
+                ? `<img src="${fullLogoBase64}" style="width: 130px; height: auto;" />`
                 : `<div style="color: #0ea5e9; font-size: 36pt; font-weight: 900;">CENSC</div>`
             }
                                     </div>
@@ -997,28 +997,28 @@ export const Planning: React.FC = () => {
                                         <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">TIPO</td>
                                     </tr>
                                     <tr>
-                                        <td style="width: 17%; border: 1px solid #000; padding: 8px; font-size: 12pt; vertical-align: top; height: 80px;">
+                                        <td style="width: 17%; border: 1px solid #000; padding: 6px; font-size: 11pt; vertical-align: top; height: 50px;">
                                             <ul style="margin: 0; padding-left: 15px;">
                                                 ${(currentPlan.bncc_codes?.split('\n').filter(Boolean).map(c => `<li>${c}</li>`).join('') || '')}
                                                 ${currentPlan.objectives ? `<li>${currentPlan.objectives.replace(/<[^>]+>/g, ' ')}</li>` : ''}
                                             </ul>
                                         </td>
-                                        <td style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 12pt; vertical-align: top; font-weight: bold; height: 80px;">
+                                        <td style="width: 16%; border: 1px solid #000; padding: 6px; font-size: 11pt; vertical-align: top; height: 50px;">
                                             <ul style="margin: 0; padding-left: 15px;"><li>${currentPlan.title}</li></ul>
                                         </td>
-                                        <td style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 12pt; vertical-align: top; height: 80px;">
+                                        <td style="width: 16%; border: 1px solid #000; padding: 6px; font-size: 11pt; vertical-align: top; height: 50px;">
                                             <ul style="margin: 0; padding-left: 15px;"><li>${currentPlan.resources || ''}</li></ul>
                                         </td>
-                                        <td style="width: 31%; border: 1px solid #000; padding: 8px; font-size: 12pt; vertical-align: top; height: 80px;">
+                                        <td style="width: 31%; border: 1px solid #000; padding: 6px; font-size: 11pt; vertical-align: top; height: 50px;">
                                             <ul style="margin: 0; padding-left: 15px;">
                                                 ${currentPlan.methodology ? `<li>${currentPlan.methodology}</li>` : ''}
                                                 ${currentPlan.description ? `<li>${DOMPurify.sanitize(currentPlan.description).replace(/<[^>]+>/g, ' ')}</li>` : ''}
                                             </ul>
                                         </td>
-                                        <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 12pt; vertical-align: top; text-align: center; height: 80px;">
+                                        <td style="width: 10%; border: 1px solid #000; padding: 6px; font-size: 11pt; vertical-align: top; text-align: center; height: 50px;">
                                             <ul style="margin: 0; padding-left: 15px;"><li>${currentPlan.duration || ''}</li></ul>
                                         </td>
-                                        <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 12pt; vertical-align: top; text-align: center; height: 80px;">
+                                        <td style="width: 10%; border: 1px solid #000; padding: 6px; font-size: 11pt; vertical-align: top; text-align: center; height: 50px;">
                                             <ul style="margin: 0; padding-left: 15px;"><li>${currentPlan.activity_type || ''}</li></ul>
                                         </td>
                                     </tr>
