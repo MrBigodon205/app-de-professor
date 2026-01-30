@@ -631,11 +631,10 @@ export const Planning: React.FC = () => {
             };
 
             try {
-                logoData = await loadImage('/logo.svg');
-                // We construct the full logo programmatically using the Icon + Text
-                fullLogoData = null;
+                logoData = await loadImage('/logo_icon_clean.png');
+                fullLogoData = await loadImage('/logo_full_clean.png');
             } catch (e) {
-                console.warn("Logo load failed, falling back to text", e);
+                console.warn("Logo load failed", e);
             }
 
             const margin = 10;
@@ -701,27 +700,32 @@ export const Planning: React.FC = () => {
             doc.text(currentPlan.coordinator_name || 'MOISÉS FERREIRA', margin + 25, margin + 33);
             doc.line(margin + 25, margin + 34, margin + 120, margin + 34);
 
-            // HEADER (Top Right) - Composite: Icon + Text
-            if (logoData) {
+            // HEADER (Top Right)
+            if (fullLogoData) {
+                // Use the Full Logo Image provided by user
+                const logoW = 50;
+                const logoX = pageWidth - margin - logoW;
+                const logoY = margin - 2;
+                // Calculate height based on aspect ratio (assume approx 2.5:1 for full logo?)
+                // Or safely use a fixed height reasonable for header (approx 15mm)
+                const logoH = 15;
+
+                doc.addImage(fullLogoData, 'PNG', logoX, logoY, logoW, logoH);
+            } else if (logoData) {
+                // Fallback to Icon + Text if Full Logo fails
                 const logoW = 15;
-                const logoH = 12; // approx
-                // Layout: Icon CENSC
-                const logoX = pageWidth - margin - 50; // Start position
+                const logoH = 12;
+                const logoX = pageWidth - margin - 50;
                 const logoY = margin - 2;
 
-                // Draw Icon
                 doc.addImage(logoData, 'PNG', logoX, logoY, logoW, logoH);
-
-                // Draw Text "CENSC" next to it
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(30);
-                doc.setTextColor(14, 165, 233); // Blue
+                doc.setTextColor(14, 165, 233);
                 doc.text('CENSC', logoX + 16, logoY + 9);
-
-                // Draw Subtext below
                 doc.setFontSize(8);
-                doc.setTextColor(6, 182, 212); // Cyan
-                doc.text('Centro Educacional Nossa Srª do Cenáculo', logoX, logoY + 14);
+                doc.setTextColor(6, 182, 212);
+                doc.text('Centro Educacional Nossa Srª do Cenáculo', logoX + 16, logoY + 14);
             }
 
             // Text: PLANO DE AULA 2026
