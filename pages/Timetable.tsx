@@ -102,7 +102,7 @@ export const Timetable: React.FC = () => {
                     classId: item.class_id,
                     section: item.section,
                     subject: item.subject,
-                    className: classes.find(c => c.id === item.class_id)?.name
+                    className: classes.find(c => c.id.toString() === item.class_id.toString())?.name
                 })));
             }
         } catch (error) {
@@ -292,7 +292,7 @@ export const Timetable: React.FC = () => {
                             <div className="grid gap-3">
                                 {config.slots.map((slot, index) => {
                                     const item = getSlotItem(day.id, slot.start);
-                                    const assignedClass = classes.find(c => c.id === item?.classId);
+                                    const assignedClass = classes.find(c => c.id.toString() === item?.classId.toString());
                                     const styles = item ? getSubjectTheme(item.subject) : null;
 
                                     return (
@@ -377,7 +377,7 @@ export const Timetable: React.FC = () => {
                                     {/* Days Columns */}
                                     {visibleDays.map(day => {
                                         const item = getSlotItem(day.id, slot.start);
-                                        const assignedClass = classes.find(c => c.id === item?.classId);
+                                        const assignedClass = classes.find(c => c.id.toString() === item?.classId.toString());
                                         const styles = item ? getSubjectTheme(item.subject) : null;
 
                                         return (
