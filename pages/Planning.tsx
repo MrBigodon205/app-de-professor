@@ -1890,15 +1890,17 @@ export const Planning: React.FC = () => {
                                                     <tbody>
                                                         <tr>
 
-                                                            <td className="border-r border-black p-2 text-[11px] align-top min-h-[650px]">
-                                                                <ul className="list-disc pl-4 space-y-1">
-                                                                    {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
-                                                                        <li key={i}>{code}</li>
-                                                                    ))}
-                                                                    {currentPlan.objectives && (
-                                                                        <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives).replace(/<[^>]+>/g, ' ') }}></li>
-                                                                    )}
-                                                                </ul>
+                                                            <td className="border-r border-black p-2 text-[11px] align-top">
+                                                                <div style={{ minHeight: '600px' }}>
+                                                                    <ul className="list-disc pl-4 space-y-1">
+                                                                        {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
+                                                                            <li key={i}>{code}</li>
+                                                                        ))}
+                                                                        {currentPlan.objectives && (
+                                                                            <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives).replace(/<[^>]+>/g, ' ') }}></li>
+                                                                        )}
+                                                                    </ul>
+                                                                </div>
                                                             </td>
                                                             <td className="border-r border-black p-2 text-[11px] align-top font-bold">
                                                                 <ul className="list-disc pl-4"><li>{currentPlan.title}</li></ul>
