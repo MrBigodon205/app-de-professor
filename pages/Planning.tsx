@@ -728,21 +728,25 @@ export const Planning: React.FC = () => {
                 doc.text('Centro Educacional Nossa Srª do Cenáculo', logoX + 16, logoY + 14);
             }
 
-            // Text: PLANO DE AULA 2026
+            // Text: PLANO DE AULA 2026 - CENTERED BELOW HEADER
+            // Header finishes at margin + 34
+            // Title at margin + 42
+            const titleY = margin + 45;
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(16);
-            doc.setTextColor(14, 165, 233); // #0ea5e9 (Sky Blue)
-            doc.text('PLANO DE AULA', pageWidth - margin - 55, margin + 28, { align: 'right' });
+            doc.setFontSize(22);
+            doc.setTextColor(14, 165, 233); // Sky Blue
 
-            doc.setFontSize(20);
-            doc.text('2026', pageWidth - margin - 55, margin + 35, { align: 'right' });
+            const centerX = pageWidth / 2;
+            doc.text(`PLANO DE AULA – ${new Date(currentPlan.startDate + 'T12:00:00').getFullYear()}`, centerX, titleY, { align: 'center' });
+
             doc.setTextColor(0, 0, 0);
 
+            // Separator Line
             doc.setLineWidth(0.5);
-            doc.line(margin, margin + 40, pageWidth - margin, margin + 40);
+            doc.line(margin, titleY + 5, pageWidth - margin, titleY + 5);
 
-            // Content Table
-            const tableTop = margin + 45;
+            // Content Table - Push down
+            const tableTop = titleY + 10;
             const colWidths = [0.17, 0.16, 0.16, 0.31, 0.10, 0.10].map(w => w * contentWidth);
             const headers = ['HABILIDADES', 'OBJETO CONH.', 'RECURSOS', 'DESENVOLVIMENTO', 'DURAÇÃO', 'TIPO'];
 
@@ -826,8 +830,6 @@ export const Planning: React.FC = () => {
                 reader.onloadend = () => resolve(reader.result as string);
                 reader.readAsDataURL(blob);
             });
-        } catch (e) {
-            console.warn("Failed to load watermark for Word", e);
         } catch (e) {
             console.warn("Failed to load watermark for Word", e);
         }
