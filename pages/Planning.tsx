@@ -1766,7 +1766,7 @@ export const Planning: React.FC = () => {
                                     {/* PRINTABLE CONTENT (Matches CENSC Layout) */}
                                     <div className="printable-content bg-white p-[10mm] hidden print:block relative h-full">
                                         <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none print:fixed print:visible opacity-[0.15]">
-                                            <img src="/logo_icon.png" className="min-w-[500px] w-1/2" alt="" />
+                                            <img src="/logo_icon_clean.png" className="min-w-[500px] w-1/2" alt="" />
                                         </div>
                                         <div className="relative z-10 w-full">
                                             <div className="flex justify-between items-start mb-4 border-b-2 border-black pb-4">
@@ -1799,14 +1799,15 @@ export const Planning: React.FC = () => {
                                                         </tbody>
                                                     </table>
                                                 </div>
-                                                <div className="w-[34%] flex flex-col items-center justify-center pl-4 border-l border-slate-300 min-h-[140px]">
-                                                    <img src="/logo-censc.png" className="h-20 w-auto mb-3 object-contain" alt="CENSC" />
-                                                    <div className="text-center leading-none">
-                                                        <div className="text-xl font-black uppercase text-[#0ea5e9]">PLANO DE AULA</div>
-                                                        <div className="text-2xl font-black text-slate-800 tracking-widest mt-1">
-                                                            {currentPlan.startDate ? new Date(currentPlan.startDate).getFullYear() : new Date().getFullYear()}
-                                                        </div>
-                                                    </div>
+                                                <div className="w-[34%] flex flex-col items-end justify-start pl-4 min-h-[100px]">
+                                                    <img src="/logo_full_clean.png" className="w-[200px] h-auto object-contain" alt="CENSC" />
+                                                </div>
+                                            </div>
+
+                                            {/* Centered Title per User Request */}
+                                            <div className="w-full text-center pb-4 mb-2">
+                                                <div className="text-3xl font-black text-[#0ea5e9]">
+                                                    PLANO DE AULA – {currentPlan.startDate ? new Date(currentPlan.startDate).getFullYear() : new Date().getFullYear()}
                                                 </div>
                                             </div>
                                             <div className="border border-black">
