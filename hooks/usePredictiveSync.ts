@@ -17,7 +17,9 @@ export const usePredictiveSync = () => {
 
             const now = new Date();
             const currentDay = now.getDay(); // 0-6 (Sun-Sat)
-            const currentTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            console.log(`Predictive Sync Check: Day=${currentDay}, Time=${currentTime}`);
 
             try {
                 // Find matching schedule slot
