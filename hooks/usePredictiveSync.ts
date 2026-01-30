@@ -5,11 +5,19 @@ import { supabase } from '../lib/supabase';
 
 export const usePredictiveSync = () => {
     const { currentUser } = useAuth();
-    const { selectSeries, selectSection, classes, loading: classesLoading, selectedSeriesId } = useClass();
+    const { selectSeries, selectSection, classes, loading: classesLoading, selectedSeriesId, selectedSection } = useClass();
 
     // We use a ref to track the last auto-selected class to avoid "fighting" the user too much
     // or simply to log it.
     const lastAutoSelectedRef = useRef<string | null>(null);
+    // Refs to access latest state inside interval/effect without dependencies
+    const selectedSeriesIdRef = useRef(selectedSeriesId);
+    const selectedSectionRef = useRef(selectedSection);
+
+    useEffect(() => {
+        selectedSeriesIdRef.current = selectedSeriesId;
+        selectedSectionRef.current = selectedSection;
+    }, [selectedSeriesId, selectedSection]);
 
     useEffect(() => {
         const checkSchedule = async () => {
@@ -19,7 +27,7 @@ export const usePredictiveSync = () => {
             const currentDay = now.getDay(); // 0-6 (Sun-Sat)
             const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-            console.log(`Predictive Sync Check: Day=${currentDay}, Time=${currentTime}`);
+            // console.log(`Predictive Sync Check: Day=${currentDay}, Time=${currentTime}`);
 
             try {
                 // Find matching schedule slot
@@ -38,12 +46,11 @@ export const usePredictiveSync = () => {
                     .single();
 
                 if (error && error.code !== 'PGRST116') {
-                    console.error("Predictive Sync Error:", error);
+                    // console.error("Predictive Sync Error:", error);
                     return;
                 }
 
                 if (data) {
-                    console.log("Predictive Sync: Found Slot Match!", data);
                     // Match found!
                     // FIX: Ensure ID comparison is string-safe (Supabase might return number)
                     const targetClass = classes.find(c => c.id.toString() === data.class_id.toString());
@@ -59,22 +66,16 @@ export const usePredictiveSync = () => {
                     // Construct a unique key for the target
                     const targetKey = `${data.class_id}-${data.section}`;
 
-                    // We also check if the user is ALREADY on this class to avoid re-render loops or toasts
-                    // But we *should* enforce it if the user wants "Automation". 
-                    // However, if the user manually navigated away 10s ago, forcing them back every 30s is annoyingly aggressive.
-                    // User request: "Automaticamente vai". 
-                    // Implementation: We set it.
-
                     if (targetClass) {
-                        // Check current state via refs or just state? 
-                        // Accessing state inside interval is tricky if not in dependency array. 
-                        // But we are inside useEffect which depends on [classes].
-                        // To make this robust, we define this function inside useEffect.
+                        // Only switch if we are not already on it
+                        const currentKey = `${selectedSeriesIdRef.current}-${selectedSectionRef.current}`;
 
-                        selectSeries(data.class_id);
-                        selectSection(data.section);
-                        lastAutoSelectedRef.current = targetKey;
-                        // console.log(`Auto-switched to ${targetClass.name} ${data.section}`);
+                        if (currentKey !== targetKey) {
+                            console.log(`Predictive Sync: Switching to ${targetClass.name} ${data.section}`);
+                            selectSeries(data.class_id);
+                            selectSection(data.section);
+                            lastAutoSelectedRef.current = targetKey;
+                        }
                     }
                 } else {
                     // No match found (Free time)
@@ -88,12 +89,19 @@ export const usePredictiveSync = () => {
                     // OR just force clear.
                     // Given the user's specific complaint "não deve se prender", I will FORCE CLEAR.
 
-                    if (selectedSeriesId !== '') {
-                        // Only clear if we have something selected. 
-                        // This effectively "Resets" the dashboard to neutral when class ends.
+                    // Only clear if the CURRENT selection is the one we auto-selected previously
+                    // This prevents us from clearing a class the user manually navigated to.
+
+                    const currentKey = `${selectedSeriesIdRef.current}-${selectedSectionRef.current}`;
+
+                    // If we are currently on the "Auto" class, and now it's over/gone -> Release (Clear)
+                    if (lastAutoSelectedRef.current && currentKey === lastAutoSelectedRef.current) {
+                        console.log("Predictive Sync: releasing auto-selection (Free Time)");
                         selectSeries('');
                         selectSection('');
+                        lastAutoSelectedRef.current = null;
                     }
+                    // Else: User manually changed or we never auto-selected. Do nothing.
                 }
 
             } catch (e) {
@@ -105,11 +113,11 @@ export const usePredictiveSync = () => {
         checkSchedule();
 
         // Run every 60 seconds
-        const interval = setInterval(checkSchedule, 60000);
+        const interval = setInterval(checkSchedule, 10000); // Check every 10s for responsiveness
 
         return () => clearInterval(interval);
 
-    }, [currentUser, classesLoading, classes]); // Removing selectedSeriesId dependency to avoid loops, handling inside logic
+    }, [currentUser, classesLoading, classes]); // Refs allow us to omit selectedSeriesId from deps
 
     return {};
 };
