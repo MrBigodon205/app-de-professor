@@ -145,12 +145,14 @@ export const Timetable: React.FC = () => {
 
         try {
             // ROBUST SAVE: Delete existing for this slot first, then insert new.
-            // This avoids issues with composite keys constraints missing in DB.
-            await supabase.from('schedules').delete().match({
-                user_id: currentUser.id,
-                day_of_week: newItem.dayOfWeek,
-                start_time: newItem.startTime
-            });
+            // Using explicit .eq() for maximum compatibility
+            const { error: deleteError } = await supabase.from('schedules')
+                .delete()
+                .eq('user_id', currentUser.id)
+                .eq('day_of_week', newItem.dayOfWeek)
+                .eq('start_time', newItem.startTime);
+
+            if (deleteError) throw deleteError;
 
             const { error } = await supabase.from('schedules').insert({
                 user_id: currentUser.id,
@@ -163,9 +165,9 @@ export const Timetable: React.FC = () => {
             });
 
             if (error) throw error;
-        } catch (e) {
+        } catch (e: any) {
             console.error("Failed to save schedule", e);
-            alert("Erro ao salvar horário. Tente novamente.");
+            alert(`Erro ao salvar horário: ${e.message || 'Erro desconhecido'}`);
             // Rollback optimistic update
             fetchSchedule();
         }
@@ -180,13 +182,18 @@ export const Timetable: React.FC = () => {
         setIsModalOpen(false);
 
         try {
-            await supabase.from('schedules').delete().match({
-                user_id: currentUser.id,
-                day_of_week: selectedSlot.day,
-                start_time: selectedSlot.startTime
-            });
-        } catch (e) {
+            const { error } = await supabase.from('schedules')
+                .delete()
+                .eq('user_id', currentUser.id)
+                .eq('day_of_week', selectedSlot.day)
+                .eq('start_time', selectedSlot.startTime);
+
+            if (error) throw error;
+        } catch (e: any) {
             console.error("Failed to remove item", e);
+            alert(`Erro ao remover horário: ${e.message || 'Erro desconhecido'}`);
+            // Rollback optimistic update
+            fetchSchedule();
         }
     };
 

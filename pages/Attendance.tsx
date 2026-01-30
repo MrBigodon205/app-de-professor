@@ -262,40 +262,46 @@ export const Attendance: React.FC = () => {
                 units: s.units || {}
             }));
 
-            // Fetch Attendance
-            let query = supabase
-                .from('attendance')
-                .select('*')
-                .eq('date', selectedDate)
-                .eq('subject', activeSubject)
-                .eq('unit', selectedUnit)
-                .eq('user_id', currentUser.id)
-                .in('student_id', formattedStudents.map(s => s.id));
-
-            // Optional Period Support: If column exists, we use it. If not, it defaults to 1 or null in logic below.
-            // Since we added it to types and plan to add to DB, we assume it's there.
-            // We use 'selectedPeriod' in the query.
-            // CAUTION: If user hasn't run the migration, this might error if the column is missing.
-            // But we can try to filter client side or hope for the best. Ideally we use the column.
-            query = query.eq('period', selectedPeriod);
-
-            const { data: todaysRecords, error: attendanceError } = await query;
-
-            if (attendanceError) throw attendanceError;
-
+            // SORT AND SET STUDENTS IMMEDIATELY
             formattedStudents.sort((a, b) => a.name.localeCompare(b.name));
-
-            const newMap: any = {};
-            formattedStudents.forEach(s => {
-                const record = todaysRecords.find(r => r.student_id.toString() === s.id);
-                newMap[s.id] = record ? record.status : '';
-            });
-
             if (mountedRef.current) {
                 setStudents(formattedStudents);
-                setAttendanceMap(newMap);
-                fetchActiveDates(formattedStudents.map(s => s.id));
+                // Reset map initially while we try to fetch attendance
+                setAttendanceMap({});
             }
+
+            // Fetch Attendance (Isolated to prevent crash)
+            try {
+                let query = supabase
+                    .from('attendance')
+                    .select('*')
+                    .eq('date', selectedDate)
+                    .eq('subject', activeSubject)
+                    .eq('unit', selectedUnit)
+                    .eq('user_id', currentUser.id)
+                    .in('student_id', formattedStudents.map(s => s.id));
+
+                // Optional Period Support
+                query = query.eq('period', selectedPeriod);
+
+                const { data: todaysRecords, error: attendanceError } = await query;
+                if (attendanceError) throw attendanceError;
+
+                const newMap: any = {};
+                formattedStudents.forEach(s => {
+                    const record = todaysRecords.find(r => r.student_id.toString() === s.id);
+                    newMap[s.id] = record ? record.status : '';
+                });
+
+                if (mountedRef.current) {
+                    setAttendanceMap(newMap);
+                    fetchActiveDates(formattedStudents.map(s => s.id));
+                }
+            } catch (attError) {
+                console.warn("Attendance fetch failed (possibly missing column?)", attError);
+                // Students remain visible, map just stays empty
+            }
+
         } catch (e) {
             console.error("Fetch data failed", e);
         } finally {

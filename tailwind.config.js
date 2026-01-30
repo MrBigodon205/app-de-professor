@@ -7,6 +7,7 @@ export default {
         "./contexts/**/*.{js,ts,jsx,tsx}",
         "./hooks/**/*.{js,ts,jsx,tsx}",
         "./src/**/*.{js,ts,jsx,tsx}",
+        "./utils/**/*.{js,ts,jsx,tsx}",
         "./*.{js,ts,jsx,tsx}"
     ],
     darkMode: 'class',
