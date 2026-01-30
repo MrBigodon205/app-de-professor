@@ -828,6 +828,22 @@ export const Planning: React.FC = () => {
             });
         } catch (e) {
             console.warn("Failed to load watermark for Word", e);
+        } catch (e) {
+            console.warn("Failed to load watermark for Word", e);
+        }
+
+        // Load Full Logo for Word Header
+        let fullLogoBase64 = '';
+        try {
+            const response = await fetch('/logo_full_clean.png');
+            const blob = await response.blob();
+            fullLogoBase64 = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.readAsDataURL(blob);
+            });
+        } catch (e) {
+            console.warn("Failed to load full logo for Word", e);
         }
         // Since I cannot upload images to the user's public web, I will use a text structure or base64 if available. 
         // User asked for "Exactly equal", I will try to replicate the CENSC logo with text/css if I can't embed the image easily.
@@ -918,16 +934,22 @@ export const Planning: React.FC = () => {
                                     </table>
                                 </td>
                                 <td style="width: 2%; border-left: 1.5pt solid #d1d5db; padding: 0;"></td>
-                                <td style="width: 33%; vertical-align: middle; border: none; text-align: right; padding: 0;">
+                                <td style="width: 33%; vertical-align: top; border: none; text-align: right; padding: 0;">
                                     <div style="text-align: right;">
-                                        <div style="color: #0ea5e9; font-size: 36pt; font-weight: 900; font-family: 'Arial Black', sans-serif; letter-spacing: -2px; line-height: 1;">CENSC</div>
-                                        <div style="color: #0ea5e9; font-size: 9pt; font-weight: bold; text-transform: uppercase; margin-top: 5px; line-height: 1.2;">
-                                            CENTRO EDUCACIONAL<br>NOSSA SRA DO CENÁCULO
-                                        </div>
+                                        ${fullLogoBase64
+                ? `<img src="${fullLogoBase64}" style="width: 180px; height: auto;" />`
+                : `<div style="color: #0ea5e9; font-size: 36pt; font-weight: 900;">CENSC</div>`
+            }
                                     </div>
                                 </td>
                             </tr>
                         </table>
+                        
+                        <!-- CENTERED TITLE ROW -->
+                        <div style="text-align: center; margin-bottom: 20px; width: 100%;">
+                             <div style="font-size: 22pt; font-weight: 900; color: #0ea5e9;">PLANO DE AULA – ${new Date(currentPlan.startDate + 'T12:00:00').getFullYear()}</div>
+                        </div>
+
                         <div style="border-bottom: 1.5pt solid black; margin-bottom: 20px; width: 100%;"></div>
 
                         <!-- CONTENT TABLE MATCHING PDF -->
@@ -1792,6 +1814,15 @@ export const Planning: React.FC = () => {
                                                                 <td className="w-24 py-1.5"><span className="text-sm font-bold">Componente:</span></td>
                                                                 <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold text-[#0369a1]">{currentPlan.subject}</span></td>
                                                             </tr>
+                                                            {/* New Period Row */}
+                                                            <tr>
+                                                                <td className="w-24 py-1.5"><span className="text-sm font-bold">Período:</span></td>
+                                                                <td className="border-b border-black py-1 px-2">
+                                                                    <span className="text-sm font-bold">
+                                                                        {new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} até {new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
                                                             <tr>
                                                                 <td className="w-24 py-1.5"><span className="text-sm font-bold">Coordenação:</span></td>
                                                                 <td className="border-b border-black py-1 px-2"><span className="text-sm font-bold uppercase">{currentPlan.coordinator_name || 'MOISÉS FERREIRA'}</span></td>
@@ -1824,77 +1855,79 @@ export const Planning: React.FC = () => {
                                                     </thead>
                                                     <tbody>
                                                         <tr>
-                                                            <td className="border-r border-black p-2 text-[11px] align-top h-[400px]">
-                                                                <ul className="list-disc pl-4 space-y-1">
-                                                                    {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
-                                                                        <li key={i}>{code}</li>
-                                                                    ))}
-                                                                    {currentPlan.objectives && (
-                                                                        <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives).replace(/<[^>]+>/g, ' ') }}></li>
-                                                                    )}
-                                                                </ul>
-                                                            </td>
-                                                            <td className="border-r border-black p-2 text-[11px] align-top font-bold">
-                                                                <ul className="list-disc pl-4"><li>{currentPlan.title}</li></ul>
-                                                            </td>
-                                                            <td className="border-r border-black p-2 text-[11px] align-top">
-                                                                <ul className="list-disc pl-4"><li>{currentPlan.resources}</li></ul>
-                                                            </td>
-                                                            <td className="border-r border-black p-2 text-[11px] align-top">
-                                                                <ul className="list-disc pl-4 space-y-2">
-                                                                    {currentPlan.methodology && <li>{currentPlan.methodology}</li>}
-                                                                    {currentPlan.description && (
-                                                                        <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description).replace(/<[^>]+>/g, ' ') }}></li>
-                                                                    )}
-                                                                </ul>
-                                                            </td>
-                                                            <td className="border-r border-black p-2 text-[11px] align-top text-center">
-                                                                <ul className="list-disc pl-4"><li>{currentPlan.duration}</li></ul>
-                                                            </td>
-                                                            <td className="border-black p-2 text-[11px] align-top text-center">
-                                                                <ul className="list-disc pl-4"><li>{currentPlan.activity_type}</li></ul>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
+                                                            <body>
+                                                                <tr>
+                                                                    <td className="border-r border-black p-2 text-[11px] align-top min-h-[300px]">
+                                                                        <ul className="list-disc pl-4 space-y-1">
+                                                                            {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
+                                                                                <li key={i}>{code}</li>
+                                                                            ))}
+                                                                            {currentPlan.objectives && (
+                                                                                <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.objectives).replace(/<[^>]+>/g, ' ') }}></li>
+                                                                            )}
+                                                                        </ul>
+                                                                    </td>
+                                                                    <td className="border-r border-black p-2 text-[11px] align-top font-bold">
+                                                                        <ul className="list-disc pl-4"><li>{currentPlan.title}</li></ul>
+                                                                    </td>
+                                                                    <td className="border-r border-black p-2 text-[11px] align-top">
+                                                                        <ul className="list-disc pl-4"><li>{currentPlan.resources}</li></ul>
+                                                                    </td>
+                                                                    <td className="border-r border-black p-2 text-[11px] align-top">
+                                                                        <ul className="list-disc pl-4 space-y-2">
+                                                                            {currentPlan.methodology && <li>{currentPlan.methodology}</li>}
+                                                                            {currentPlan.description && (
+                                                                                <li dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPlan.description).replace(/<[^>]+>/g, ' ') }}></li>
+                                                                            )}
+                                                                        </ul>
+                                                                    </td>
+                                                                    <td className="border-r border-black p-2 text-[11px] align-top text-center">
+                                                                        <ul className="list-disc pl-4"><li>{currentPlan.duration}</li></ul>
+                                                                    </td>
+                                                                    <td className="border-black p-2 text-[11px] align-top text-center">
+                                                                        <ul className="list-disc pl-4"><li>{currentPlan.activity_type}</li></ul>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-surface-dark">
-                                <span className="material-symbols-outlined text-6xl text-slate-200 mb-4 font-black">search_off</span>
-                                <h3 className="text-xl font-bold text-slate-400">Plano não encontrado</h3>
-                                <p className="text-slate-400 text-sm mt-2 max-w-xs">O plano selecionado não foi encontrado ou foi excluído.</p>
-                                <button
-                                    onClick={() => { setSelectedPlanId(null); setViewMode(false); }}
-                                    className="mt-6 px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition-all"
-                                >
-                                    Voltar à Lista
-                                </button>
+                                ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-surface-dark">
+                                    <span className="material-symbols-outlined text-6xl text-slate-200 mb-4 font-black">search_off</span>
+                                    <h3 className="text-xl font-bold text-slate-400">Plano não encontrado</h3>
+                                    <p className="text-slate-400 text-sm mt-2 max-w-xs">O plano selecionado não foi encontrado ou foi excluído.</p>
+                                    <button
+                                        onClick={() => { setSelectedPlanId(null); setViewMode(false); }}
+                                        className="mt-6 px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition-all"
+                                    >
+                                        Voltar à Lista
+                                    </button>
+                                </div>
+                        )}
                             </div>
                         )}
                     </div>
-                )}
-            </div>
             {/* FILE VIEWER MODAL */}
-            {viewerFile && (
-                <FileViewerModal
-                    isOpen={!!viewerFile}
-                    onClose={() => setViewerFile(null)}
-                    file={viewerFile as any}
-                />
-            )}
+                {viewerFile && (
+                    <FileViewerModal
+                        isOpen={!!viewerFile}
+                        onClose={() => setViewerFile(null)}
+                        file={viewerFile as any}
+                    />
+                )}
 
-            <FileImporterModal
-                isOpen={isImporterOpen}
-                onClose={() => setIsImporterOpen(false)}
-                onFileSelect={(files) => {
-                    if (files) processFiles(Array.from(files));
-                }}
-                multiple
-            />
+                <FileImporterModal
+                    isOpen={isImporterOpen}
+                    onClose={() => setIsImporterOpen(false)}
+                    onFileSelect={(files) => {
+                        if (files) processFiles(Array.from(files));
+                    }}
+                    multiple
+                />
 
 
         </main>
