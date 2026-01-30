@@ -605,41 +605,38 @@ export const Planning: React.FC = () => {
                 format: 'a4'
             });
 
-            // Load logo image
+            // Load logo images
             let logoData: string | null = null;
-            try {
-                const loadImage = (src: string): Promise<string> => {
-                    return new Promise((resolve, reject) => {
-                        const img = new Image();
-                        img.crossOrigin = "Anonymous";
-                        img.src = src; // Assuming /logo-censc.png is in public folder
-                        img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            canvas.width = img.width;
-                            canvas.height = img.height;
-                            const ctx = canvas.getContext('2d');
-                            if (ctx) {
-                                ctx.drawImage(img, 0, 0);
-                                resolve(canvas.toDataURL('image/png'));
-                            } else {
-                                reject(new Error("Could not create canvas context"));
-                            }
-                        };
-                    };
-                    logoData = await loadImage('/logo_icon.png');
-                    // We also need the Full Logo for header if we want to reproduce the layout perfectly
-                    const fullLogoData = await loadImage('/logo_full.png');
+            let fullLogoData: string | null = null;
 
-                    return { logoData, fullLogoData };
-                } catch (e) {
-                    console.warn("Logo load failed", e);
-                    return null;
-                }
+            const loadImage = (src: string): Promise<string> => {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous";
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        if (ctx) {
+                            ctx.drawImage(img, 0, 0);
+                            resolve(canvas.toDataURL('image/png'));
+                        } else {
+                            reject(new Error("Could not create canvas context"));
+                        }
+                    };
+                    img.onerror = (e) => reject(e);
+                    img.src = src;
+                });
             };
 
-            const logos = await loadLogos();
-            const logoData = logos?.logoData;
-            const fullLogoData = logos?.fullLogoData;
+            try {
+                logoData = await loadImage('/logo_icon.png');
+                // We also need the Full Logo for header if we want to reproduce the layout perfectly
+                fullLogoData = await loadImage('/logo_full.png');
+            } catch (e) {
+                console.warn("Logo load failed, falling back to text", e);
+            }
 
             const margin = 10;
             const pageWidth = doc.internal.pageSize.getWidth();
