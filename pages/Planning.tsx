@@ -625,13 +625,21 @@ export const Planning: React.FC = () => {
                                 reject(new Error("Could not create canvas context"));
                             }
                         };
-                        img.onerror = (e) => reject(e);
-                    });
-                };
-                logoData = await loadImage('/watermark_template.png');
-            } catch (e) {
-                console.warn("Logo load failed, falling back to text", e);
-            }
+                    };
+                    logoData = await loadImage('/logo_icon.png');
+                    // We also need the Full Logo for header if we want to reproduce the layout perfectly
+                    const fullLogoData = await loadImage('/logo_full.png');
+
+                    return { logoData, fullLogoData };
+                } catch (e) {
+                    console.warn("Logo load failed", e);
+                    return null;
+                }
+            };
+
+            const logos = await loadLogos();
+            const logoData = logos?.logoData;
+            const fullLogoData = logos?.fullLogoData;
 
             const margin = 10;
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -663,14 +671,7 @@ export const Planning: React.FC = () => {
 
                     // 2. Draw CENSC Text
                     doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(50);
-                    doc.setTextColor(14, 165, 233); // #0ea5e9 Blue
-                    doc.text('CENSC', startX + 65, startY + 30);
-
-                    // 3. Draw Subtext
-                    doc.setFontSize(14);
-                    doc.setTextColor(6, 182, 212); // Cyan-500
-                    doc.text('Centro Educacional Nossa Srª do Cenáculo', startX + 5, startY + 50);
+                    doc.addImage(logoData, 'PNG', wmX, wmY, wmSize, wmSize * 0.8); // Assuming horizontal aspect ratio for dove
                     doc.restoreGraphicsState();
                 } catch (e) {
                     console.warn("Watermark failed", e);
@@ -716,7 +717,17 @@ export const Planning: React.FC = () => {
             doc.line(margin + 25, margin + 34, margin + 120, margin + 34);
 
             // HEADER (Top Right)
-            // Logo is already in the Background Template. We only need "PLANO DE AULA" and Date.
+            // Draw Full Logo (CENSC)
+            if (fullLogoData) {
+                const logoW = 50; // Width in mm
+                const logoY = margin - 2;
+                const img = new Image();
+                img.src = fullLogoData;
+                const ratio = img.height / img.width;
+                const logoH = logoW * ratio;
+                const logoX = pageWidth - margin - logoW;
+                doc.addImage(fullLogoData, 'PNG', logoX, logoY, logoW, logoH);
+            }
 
             // Text: PLANO DE AULA 2026
             doc.setFont('helvetica', 'bold');
@@ -806,10 +817,10 @@ export const Planning: React.FC = () => {
     const handleExportWord = async () => {
         if (!currentPlan) return;
 
-        // Load watermark for Word (Base64) - using High Res Logo
+        // Load watermark for Word
         let watermarkBase64 = '';
         try {
-            const response = await fetch('/watermark_template.png');
+            const response = await fetch('/logo_icon.png'); // Use Icon for watermark
             const blob = await response.blob();
             watermarkBase64 = await new Promise((resolve) => {
                 const reader = new FileReader();
@@ -869,9 +880,9 @@ export const Planning: React.FC = () => {
                 </head>
                 <body>
                     <div class="Section1">
-                        <!-- WATERMARK (Absolute Full Page) -->
-                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;">
-                            <img src="${watermarkBase64}" style="width: 100%; height: 100%; object-fit: cover;" />
+                        <!-- WATERMARK (Absolute Center) -->
+                        <div style="position: absolute; width: 100%; height: 100%; z-index: -1; display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 0.10;">
+                            <img src="${watermarkBase64}" style="width: 500px; height: auto;" />
                         </div>
 
                         <!-- HEADER MATCHING IMAGE -->
@@ -1446,9 +1457,9 @@ export const Planning: React.FC = () => {
                     <div className="flex-1 overflow-y-auto relative animate-in fade-in h-[100dvh] md:h-full custom-scrollbar bg-slate-50 dark:bg-black/20">
                         {currentPlan ? (
                             <div className="flex flex-col min-h-full relative isolate">
-                                {/* SCREEN WATERMARK (Template Image) */}
-                                <div className="fixed inset-0 z-0 pointer-events-none">
-                                    <img src="/watermark_template.png" className="w-full h-full object-cover opacity-[1.0]" alt="" />
+                                {/* SCREEN WATERMARK (Dove Icon) */}
+                                <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.10]">
+                                    <img src="/logo_icon.png" className="w-[600px] max-w-full" alt="" />
                                 </div>
                                 {/* Premium Header */}
                                 <div className={`h-48 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden shrink-0`}>
@@ -1758,12 +1769,13 @@ export const Planning: React.FC = () => {
 
                                     {/* PRINTABLE CONTENT (Matches CENSC Layout) */}
                                     <div className="printable-content bg-white p-[10mm] hidden print:block relative h-full">
-                                        <div className="fixed inset-0 z-0 pointer-events-none print:fixed print:visible">
-                                            <img src="/watermark_template.png" className="w-full h-full object-cover" alt="" />
+                                        <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none print:fixed print:visible opacity-[0.15]">
+                                            <img src="/logo_icon.png" className="min-w-[500px] w-1/2" alt="" />
                                         </div>
                                         <div className="relative z-10 w-full">
                                             <div className="flex justify-between items-start mb-4 border-b-2 border-black pb-4">
-                                                <div className="w-[65%]">
+                                                <div className="flex-1">
+                                                    {/* Left side content (Turma, Profit, etc) */}
                                                     <table className="w-full border-collapse border-none">
                                                         <tbody>
                                                             <tr>
