@@ -650,20 +650,12 @@ export const Planning: React.FC = () => {
                     // Set transparency
                     doc.setGState(new (doc as any).GState({ opacity: 0.10 }));
 
-                    const wmWidth = 140; // Larger size
-                    const wmHeight = wmWidth * (doc.internal.pageSize.getHeight() / doc.internal.pageSize.getWidth()) * 1.5; // Approximate aspect ratio
-                    // Use the image aspect ratio if possible, but 1.0 is safer if unknown. Let's assume square-ish for now or use original logic.
-                    // Actually, let's keep aspect ratio.
-
-                    const wmSize = 120;
-                    const wmX = (pageWidth - wmSize) / 2;
-                    const wmY = (pageHeight - wmSize) / 2;
-
-                    // 1. Draw Dove Icon (Watermark)
+                    // Draw Dove Icon (Watermark)
                     // Use logo.svg
                     const wmSize = 120; // 120mm
                     const wmX = (pageWidth - wmSize) / 2;
                     const wmY = (pageHeight - wmSize) / 2;
+
                     doc.addImage(logoData, 'PNG', wmX, wmY, wmSize, wmSize * 0.84); // SVG Aspect ratio approx 1.19
                     doc.restoreGraphicsState();
                 } catch (e) {
