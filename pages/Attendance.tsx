@@ -227,6 +227,7 @@ export const Attendance: React.FC = () => {
                     .select('*', { count: 'exact', head: true })
                     .eq('user_id', currentUser.id)
                     .eq('class_id', selectedSeriesId)
+                    .eq('section', selectedSection) // FIX: Filter by section too!
                     .eq('day_of_week', dayOfWeek);
 
                 if (!error) {
