@@ -631,9 +631,9 @@ export const Planning: React.FC = () => {
             };
 
             try {
-                logoData = await loadImage('/logo_icon.png');
-                // We also need the Full Logo for header if we want to reproduce the layout perfectly
-                fullLogoData = await loadImage('/logo_full.png');
+                logoData = await loadImage('/logo.svg');
+                // We construct the full logo programmatically using the Icon + Text
+                fullLogoData = null;
             } catch (e) {
                 console.warn("Logo load failed, falling back to text", e);
             }
@@ -659,16 +659,12 @@ export const Planning: React.FC = () => {
                     const wmX = (pageWidth - wmSize) / 2;
                     const wmY = (pageHeight - wmSize) / 2;
 
-                    const iconSize = 60;
-                    const startX = (pageWidth - 160) / 2;
-                    const startY = (pageHeight - 60) / 2;
-
-                    // 1. Draw Dove Icon
-                    doc.addImage(logoData, 'PNG', startX, startY, iconSize, iconSize * 0.8);
-
-                    // 2. Draw CENSC Text
-                    doc.setFont('helvetica', 'bold');
-                    doc.addImage(logoData, 'PNG', wmX, wmY, wmSize, wmSize * 0.8); // Assuming horizontal aspect ratio for dove
+                    // 1. Draw Dove Icon (Watermark)
+                    // Use logo.svg
+                    const wmSize = 120; // 120mm
+                    const wmX = (pageWidth - wmSize) / 2;
+                    const wmY = (pageHeight - wmSize) / 2;
+                    doc.addImage(logoData, 'PNG', wmX, wmY, wmSize, wmSize * 0.84); // SVG Aspect ratio approx 1.19
                     doc.restoreGraphicsState();
                 } catch (e) {
                     console.warn("Watermark failed", e);
