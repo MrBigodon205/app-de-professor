@@ -713,17 +713,27 @@ export const Planning: React.FC = () => {
             doc.text(currentPlan.coordinator_name || 'MOISÉS FERREIRA', margin + 25, margin + 33);
             doc.line(margin + 25, margin + 34, margin + 120, margin + 34);
 
-            // HEADER (Top Right)
-            // Draw Full Logo (CENSC)
-            if (fullLogoData) {
-                const logoW = 50; // Width in mm
+            // HEADER (Top Right) - Composite: Icon + Text
+            if (logoData) {
+                const logoW = 15;
+                const logoH = 12; // approx
+                // Layout: Icon CENSC
+                const logoX = pageWidth - margin - 50; // Start position
                 const logoY = margin - 2;
-                const img = new Image();
-                img.src = fullLogoData;
-                const ratio = img.height / img.width;
-                const logoH = logoW * ratio;
-                const logoX = pageWidth - margin - logoW;
-                doc.addImage(fullLogoData, 'PNG', logoX, logoY, logoW, logoH);
+
+                // Draw Icon
+                doc.addImage(logoData, 'PNG', logoX, logoY, logoW, logoH);
+
+                // Draw Text "CENSC" next to it
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(30);
+                doc.setTextColor(14, 165, 233); // Blue
+                doc.text('CENSC', logoX + 16, logoY + 9);
+
+                // Draw Subtext below
+                doc.setFontSize(8);
+                doc.setTextColor(6, 182, 212); // Cyan
+                doc.text('Centro Educacional Nossa Srª do Cenáculo', logoX, logoY + 14);
             }
 
             // Text: PLANO DE AULA 2026
@@ -817,7 +827,7 @@ export const Planning: React.FC = () => {
         // Load watermark for Word
         let watermarkBase64 = '';
         try {
-            const response = await fetch('/logo_icon.png'); // Use Icon for watermark
+            const response = await fetch('/logo.svg'); // Use Vector Icon
             const blob = await response.blob();
             watermarkBase64 = await new Promise((resolve) => {
                 const reader = new FileReader();
@@ -1454,9 +1464,9 @@ export const Planning: React.FC = () => {
                     <div className="flex-1 overflow-y-auto relative animate-in fade-in h-[100dvh] md:h-full custom-scrollbar bg-slate-50 dark:bg-black/20">
                         {currentPlan ? (
                             <div className="flex flex-col min-h-full relative isolate">
-                                {/* SCREEN WATERMARK (Dove Icon) */}
+                                {/* SCREEN WATERMARK (Vector Dove) */}
                                 <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.10]">
-                                    <img src="/logo_icon.png" className="w-[600px] max-w-full" alt="" />
+                                    <img src="/logo.svg" className="w-[600px] max-w-full" alt="" />
                                 </div>
                                 {/* Premium Header */}
                                 <div className={`h-48 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden shrink-0`}>
