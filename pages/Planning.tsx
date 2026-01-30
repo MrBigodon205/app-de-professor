@@ -1882,12 +1882,12 @@ export const Planning: React.FC = () => {
                                                 <table className="w-full border-collapse table-fixed">
                                                     <thead>
                                                         <tr className="bg-[#d9d9d9]">
-                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[17%] text-center align-middle">HABILIDADE(s)<br />CONTEMPLADA(s)</th>
-                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">OBJETO DE<br />CONHECIMENTO</th>
-                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">RECURSOS<br />UTILIZADOS</th>
+                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[17%] text-center align-middle">HABILIDADES</th>
+                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">OBJETO CONH.</th>
+                                                            <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[16%] text-center align-middle">RECURSOS</th>
                                                             <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[31%] text-center align-middle">DESENVOLVIMENTO</th>
                                                             <th className="border-r border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">DURAÇÃO</th>
-                                                            <th className="border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">TIPO DE<br />ATIVIDADE</th>
+                                                            <th className="border-black p-2 text-[10px] font-bold uppercase w-[10%] text-center align-middle">TIPO</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
