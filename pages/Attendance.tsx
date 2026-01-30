@@ -777,8 +777,8 @@ export const Attendance: React.FC = () => {
                             <span className={`material-symbols-outlined text-${theme.primaryColor} group-hover/cal:scale-110 transition-transform text-xl sm:text-2xl`}>calendar_month</span>
                             <div className="flex flex-col items-start leading-none gap-0.5 sm:gap-1">
                                 <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest leading-none">Data</span>
-                                <span className="font-bold text-xs sm:text-sm text-text-primary">
-                                    {new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                                <span className="font-bold text-xs sm:text-sm text-text-primary capitalize">
+                                    {new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
                                 </span>
                             </div>
                             <span className={`material-symbols-outlined text-slate-400 transition-transform text-lg sm:text-xl ${showCalendar ? 'rotate-180' : ''}`}>expand_more</span>
