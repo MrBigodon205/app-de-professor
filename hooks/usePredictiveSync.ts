@@ -43,8 +43,17 @@ export const usePredictiveSync = () => {
                 }
 
                 if (data) {
+                    console.log("Predictive Sync: Found Slot Match!", data);
                     // Match found!
-                    const targetClass = classes.find(c => c.id === data.class_id);
+                    // FIX: Ensure ID comparison is string-safe (Supabase might return number)
+                    const targetClass = classes.find(c => c.id.toString() === data.class_id.toString());
+
+                    if (!targetClass) {
+                        console.warn("Predictive Sync: Slot found but Class ID not in local list.", {
+                            slotClassId: data.class_id,
+                            availableClasses: classes.map(c => ({ id: c.id, name: c.name }))
+                        });
+                    }
 
                     // Only switch if we are not already on it
                     // Construct a unique key for the target
