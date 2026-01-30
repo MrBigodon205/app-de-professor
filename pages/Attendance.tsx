@@ -172,10 +172,12 @@ export const Attendance: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+    // CACHE: Store attendance for all periods locally [Period -> [StudentId -> Status]]
+    const attendanceCache = useRef<Record<number, Record<string, string>>>({});
+
     const [loading, setLoading] = useState(true);
     const [showCalendar, setShowCalendar] = useState(false);
     const calendarRef = useRef<HTMLDivElement>(null);
-
 
     // Close calendar when clicking outside
     useEffect(() => {
@@ -188,16 +190,28 @@ export const Attendance: React.FC = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    // MAIN FETCH EFFECT (Triggers on Context Change, NOT Period Change)
     useEffect(() => {
         if (selectedSeriesId && selectedSection) {
+            // Reset cache on context switch
+            attendanceCache.current = {};
             fetchData();
         } else {
             setStudents([]);
             setAttendanceMap({});
             setLoading(false);
         }
-        setLoading(false);
-    }, [selectedDate, selectedSeriesId, selectedSection, activeSubject, selectedUnit, selectedPeriod]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedDate, selectedSeriesId, selectedSection, activeSubject, selectedUnit]);
+    // ^ Removed selectedPeriod from dependency to prevent re-fetch!
+
+    // PERIOD SWITCH EFFECT (Local Cache Only)
+    useEffect(() => {
+        if (!mountedRef.current) return;
+        // Load from cache instantly
+        const cachedMap = attendanceCache.current[selectedPeriod] || {};
+        setAttendanceMap(cachedMap);
+    }, [selectedPeriod]);
 
     // --- DYNAMIC PERIODS LOGIC ---
     useEffect(() => {
@@ -272,6 +286,7 @@ export const Attendance: React.FC = () => {
 
             // Fetch Attendance (Isolated to prevent crash)
             try {
+                // FETCH ALL PERIODS at once (removed .eq('period', selectedPeriod))
                 let query = supabase
                     .from('attendance')
                     .select('*')
@@ -281,20 +296,26 @@ export const Attendance: React.FC = () => {
                     .eq('user_id', currentUser.id)
                     .in('student_id', formattedStudents.map(s => s.id));
 
-                // Optional Period Support
-                query = query.eq('period', selectedPeriod);
-
                 const { data: todaysRecords, error: attendanceError } = await query;
                 if (attendanceError) throw attendanceError;
 
-                const newMap: any = {};
-                formattedStudents.forEach(s => {
-                    const record = todaysRecords.find(r => r.student_id.toString() === s.id);
-                    newMap[s.id] = record ? record.status : '';
+                // Process records into Cache
+                const newCache: Record<number, Record<string, string>> = {};
+
+                // Initialize cache buckets (optional, but good for safety)
+                for (let i = 1; i <= 5; i++) newCache[i] = {};
+
+                (todaysRecords || []).forEach(record => {
+                    const p = record.period ? parseInt(record.period) : 1; // Default to 1 if null
+                    const sid = record.student_id.toString();
+                    if (!newCache[p]) newCache[p] = {};
+                    newCache[p][sid] = record.status;
                 });
 
                 if (mountedRef.current) {
-                    setAttendanceMap(newMap);
+                    attendanceCache.current = newCache;
+                    // Set map for CURRENT period
+                    setAttendanceMap(newCache[selectedPeriod] || {});
                     fetchActiveDates(formattedStudents.map(s => s.id));
                 }
             } catch (attError) {
@@ -424,9 +445,16 @@ export const Attendance: React.FC = () => {
     const markAll = async (status: string) => {
         if (!currentUser || !selectedSeriesId || !selectedSection) return;
         setIsSaving(true);
+
+        // Update Local & Cache
         const newMap = { ...attendanceMap };
         students.forEach(s => newMap[s.id] = status);
         setAttendanceMap(newMap);
+
+        // Sync Cache
+        if (!attendanceCache.current[selectedPeriod]) attendanceCache.current[selectedPeriod] = {};
+        students.forEach(s => attendanceCache.current[selectedPeriod][s.id] = status);
+
         if (status !== '') setActiveDates(prev => new Set(prev).add(selectedDate));
 
         try {
@@ -469,7 +497,13 @@ export const Attendance: React.FC = () => {
         const currentStatus = attendanceMap[studentId];
         const newStatus = currentStatus === status ? '' : status;
 
+        // Update Map
         setAttendanceMap(prev => ({ ...prev, [studentId]: newStatus }));
+
+        // Update Cache Instantly
+        if (!attendanceCache.current[selectedPeriod]) attendanceCache.current[selectedPeriod] = {};
+        attendanceCache.current[selectedPeriod][studentId] = newStatus;
+
         await updateRecord(studentId, newStatus);
     };
 
