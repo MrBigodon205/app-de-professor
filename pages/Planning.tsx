@@ -969,7 +969,7 @@ export const Planning: React.FC = () => {
                                 <td style="width: 33%; vertical-align: top; border: none; text-align: right; padding: 0;">
                                     <div style="text-align: right;">
                                         ${fullLogoBase64
-                ? `<img src="${fullLogoBase64}" style="width: 180px; height: auto;" />`
+                ? `<img src="${fullLogoBase64}" style="width: 100px; height: auto;" />`
                 : `<div style="color: #0ea5e9; font-size: 36pt; font-weight: 900;">CENSC</div>`
             }
                                     </div>
@@ -987,40 +987,38 @@ export const Planning: React.FC = () => {
                         <!-- CONTENT TABLE MATCHING PDF -->
                         <div style="border: 1px solid #000;">
                             <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
-                                <thead>
-                                    <tr style="background-color: #d9d9d9;">
-                                        <th style="width: 17%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">HABILIDADES</th>
-                                        <th style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">OBJETO CONH.</th>
-                                        <th style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">RECURSOS</th>
-                                        <th style="width: 31%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">DESENVOLVIMENTO</th>
-                                        <th style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">DURAÇÃO</th>
-                                        <th style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">TIPO</th>
-                                    </tr>
-                                </thead>
                                 <tbody>
+                                    <tr style="background-color: #d9d9d9;">
+                                        <td style="width: 17%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">HABILIDADES</td>
+                                        <td style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">OBJETO CONH.</td>
+                                        <td style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">RECURSOS</td>
+                                        <td style="width: 31%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">DESENVOLVIMENTO</td>
+                                        <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">DURAÇÃO</td>
+                                        <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">TIPO</td>
+                                    </tr>
                                     <tr>
-                                        <td style="width: 17%; border: 1px solid #000; padding: 8px; font-size: 10pt; vertical-align: top;">
+                                        <td style="width: 17%; border: 1px solid #000; padding: 8px; font-size: 12pt; vertical-align: top; height: 80px;">
                                             <ul style="margin: 0; padding-left: 15px;">
                                                 ${(currentPlan.bncc_codes?.split('\n').filter(Boolean).map(c => `<li>${c}</li>`).join('') || '')}
                                                 ${currentPlan.objectives ? `<li>${currentPlan.objectives.replace(/<[^>]+>/g, ' ')}</li>` : ''}
                                             </ul>
                                         </td>
-                                        <td style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 10pt; vertical-align: top; font-weight: bold;">
+                                        <td style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 12pt; vertical-align: top; font-weight: bold; height: 80px;">
                                             <ul style="margin: 0; padding-left: 15px;"><li>${currentPlan.title}</li></ul>
                                         </td>
-                                        <td style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 10pt; vertical-align: top;">
+                                        <td style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 12pt; vertical-align: top; height: 80px;">
                                             <ul style="margin: 0; padding-left: 15px;"><li>${currentPlan.resources || ''}</li></ul>
                                         </td>
-                                        <td style="width: 31%; border: 1px solid #000; padding: 8px; font-size: 10pt; vertical-align: top;">
+                                        <td style="width: 31%; border: 1px solid #000; padding: 8px; font-size: 12pt; vertical-align: top; height: 80px;">
                                             <ul style="margin: 0; padding-left: 15px;">
                                                 ${currentPlan.methodology ? `<li>${currentPlan.methodology}</li>` : ''}
                                                 ${currentPlan.description ? `<li>${DOMPurify.sanitize(currentPlan.description).replace(/<[^>]+>/g, ' ')}</li>` : ''}
                                             </ul>
                                         </td>
-                                        <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 10pt; vertical-align: top; text-align: center;">
+                                        <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 12pt; vertical-align: top; text-align: center; height: 80px;">
                                             <ul style="margin: 0; padding-left: 15px;"><li>${currentPlan.duration || ''}</li></ul>
                                         </td>
-                                        <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 10pt; vertical-align: top; text-align: center;">
+                                        <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 12pt; vertical-align: top; text-align: center; height: 80px;">
                                             <ul style="margin: 0; padding-left: 15px;"><li>${currentPlan.activity_type || ''}</li></ul>
                                         </td>
                                     </tr>
@@ -1891,7 +1889,7 @@ export const Planning: React.FC = () => {
                                                         <tr>
 
                                                             <td className="border-r border-black p-2 text-[11px] align-top">
-                                                                <div style={{ minHeight: '600px' }}>
+                                                                <div className="min-h-[600px]">
                                                                     <ul className="list-disc pl-4 space-y-1">
                                                                         {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
                                                                             <li key={i}>{code}</li>
