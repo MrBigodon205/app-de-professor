@@ -1858,7 +1858,7 @@ export const Planning: React.FC = () => {
                                                     <tbody>
                                                         <tr>
 
-                                                            <td className="border-r border-black p-2 text-[11px] align-top min-h-[300px]">
+                                                            <td className="border-r border-black p-2 text-[11px] align-top min-h-[650px]">
                                                                 <ul className="list-disc pl-4 space-y-1">
                                                                     {currentPlan.bncc_codes?.split('\n').filter(Boolean).map((code, i) => (
                                                                         <li key={i}>{code}</li>
