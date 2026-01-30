@@ -1020,9 +1020,11 @@ export const Planning: React.FC = () => {
                         <div style="margin-top: 30px;">
                             <div style="font-size: 11pt; font-weight: bold; text-transform: uppercase; border: none; margin-bottom: 5px;">OBSERVAÇÕES:</div>
                             <div style="border: 1px solid black; padding: 0;">
-                                <div style="border-bottom: 1px solid black; height: 35px; width: 100%;"></div>
-                                <div style="border-bottom: 1px solid black; height: 35px; width: 100%;"></div>
-                                <div style="height: 35px; width: 100%;"></div>
+                                <table style="width: 100%; border-collapse: collapse; border: none;">
+                                    <tr><td style="border-bottom: 1px solid black; height: 35px; padding: 0;">&nbsp;</td></tr>
+                                    <tr><td style="border-bottom: 1px solid black; height: 35px; padding: 0;">&nbsp;</td></tr>
+                                    <tr><td style="height: 35px; padding: 0;">&nbsp;</td></tr>
+                                </table>
                             </div>
                         </div>
                     </div>
