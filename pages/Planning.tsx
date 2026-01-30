@@ -1452,10 +1452,7 @@ export const Planning: React.FC = () => {
                     <div className="flex-1 overflow-y-auto relative animate-in fade-in h-[100dvh] md:h-full custom-scrollbar bg-slate-50 dark:bg-black/20">
                         {currentPlan ? (
                             <div className="flex flex-col min-h-full relative isolate">
-                                {/* SCREEN WATERMARK (Clean Dove) */}
-                                <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.10]">
-                                    <img src="/logo_icon_clean.png" className="w-[600px] max-w-full" alt="" />
-                                </div>
+                                {/* Screen Watermark Removed per User Request */}
                                 {/* Premium Header */}
                                 <div className={`h-48 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden shrink-0`}>
                                     <div className="absolute inset-0 opacity-10 flex flex-wrap gap-8 justify-end p-8 rotate-12 scale-150 pointer-events-none">
