@@ -930,10 +930,7 @@ export const Planning: React.FC = () => {
                 </head>
                 <body>
                     <div class="Section1">
-                        <!-- WATERMARK (Absolute Center) -->
-                        <div style="position: absolute; width: 100%; height: 100%; z-index: -1; display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 0.10;">
-                            <img src="${watermarkBase64}" style="width: 500px; height: auto;" />
-                        </div>
+                        <!-- WATERMARK REMOVED FOR WORD COMPATIBILITY -->
 
                         <!-- HEADER MATCHING IMAGE -->
                         <table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 20px; position: relative; z-index: 1;">
