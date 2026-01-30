@@ -334,10 +334,9 @@ export const Attendance: React.FC = () => {
     useEffect(() => {
         if (!currentUser || !selectedSeriesId || !selectedSection) return;
 
-        // Polling Fallback (Every 10s)
-        const interval = setInterval(() => {
-            if (!isSaving) fetchData(true);
-        }, 10000);
+        // Polling Removed: Rely on Realtime to prevent overwriting local state during edits
+        // If connection drops, user can refresh manually.
+        // const interval = setInterval(() => { ... }, 10000);
 
         // Realtime setup
 
@@ -364,7 +363,7 @@ export const Attendance: React.FC = () => {
         return () => {
             // Realtime cleanup
             supabase.removeChannel(channel);
-            clearInterval(interval);
+            // clearInterval(interval);
         };
     }, [selectedDate, selectedSeriesId, selectedSection, currentUser, activeSubject, selectedUnit, selectedPeriod]);
     // -----------------------------
