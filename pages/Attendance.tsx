@@ -86,7 +86,7 @@ const MiniCalendar: React.FC<{
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-0"
+                className="absolute inset-0 bg-slate-900/40 z-0"
                 onClick={onClose}
             />
 
@@ -752,7 +752,7 @@ export const Attendance: React.FC = () => {
     }
 
     return (
-        <div className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6 lg:pb-12">
+        <div className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6 animate-in fade-in duration-500 pb-6 lg:pb-12">
             {/* Header Control */}
             <div className={`bg-surface-card p-4 sm:p-8 rounded-3xl shadow-card border border-border-default flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-8 relative z-30 group landscape:p-2`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700`}></div>
@@ -996,7 +996,7 @@ interface AttendanceRowProps {
 // Mobile Card Component
 const MobileAttendanceCard = React.memo(({ student: s, status, onStatusChange, theme }: AttendanceRowProps) => {
     return (
-        <div className="bg-surface-card border border-border-default rounded-xl p-3 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="bg-surface-card border border-border-default rounded-xl p-3 shadow-sm animate-in fade-in duration-500">
             <div className="flex items-center gap-3 mb-3">
                 <div className={`student-avatar size-8 text-xs bg-gradient-to-br ${s.color || `from-indigo-600 to-indigo-800`}`}>
                     {s.initials || s.name.substring(0, 2)}

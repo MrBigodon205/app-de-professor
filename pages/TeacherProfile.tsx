@@ -102,7 +102,7 @@ export const TeacherProfile: React.FC = () => {
     );
 
     return (
-        <div className="max-w-[1200px] mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="max-w-[1200px] mx-auto flex flex-col gap-8 animate-in fade-in duration-500">
             {/* Header / Breadcrumb */}
             <div className="flex flex-col gap-4">
                 <nav className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-muted">

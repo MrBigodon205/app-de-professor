@@ -35,8 +35,8 @@ export const AnimatedNavItem: React.FC<AnimatedNavItemProps> = ({
                     initial={false}
                     transition={{
                         type: "spring",
-                        stiffness: 400,
-                        damping: 30
+                        stiffness: 300,
+                        damping: 28
                     }}
                 />
             )}
@@ -71,7 +71,7 @@ export const AnimatedNavItem: React.FC<AnimatedNavItemProps> = ({
                 <motion.span
                     layoutId="activeNavDot"
                     className="absolute right-3 w-1.5 h-1.5 bg-primary rounded-full shadow-neon z-10"
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    transition={{ type: "spring", stiffness: 250, damping: 25 }}
                 />
             )}
         </Link>

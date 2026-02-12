@@ -11,6 +11,10 @@ export const InstitutionalDashboard: React.FC = () => {
         return <div className="p-10 flex justify-center"><div className="animate-spin h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full"></div></div>;
     }
 
+    if (!currentSchool) {
+        return null; // Handle null state gracefully (context handles redirect)
+    }
+
     const { currentUser } = useAuth(); // Import useAuth if needed, or get from SchoolContext if available? SchoolContext doesn't have currentUser.
     // Actually useUuid is in SchoolProvider but not exposed. 
     // Use useAuth hook.

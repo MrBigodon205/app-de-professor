@@ -42,16 +42,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const selectedSeriesIdRef = useRef(selectedSeriesId);
     useEffect(() => { selectedSeriesIdRef.current = selectedSeriesId; }, [selectedSeriesId]);
 
-    useEffect(() => {
-        if (currentUser && activeSubject) {
-            fetchClasses();
-        } else if (currentUser && !activeSubject) {
-            // Wait for activeSubject to be set
-        } else {
-            setClasses([]);
-            setLoading(false);
-        }
-    }, [currentUser, activeSubject]);
+
 
 
     const location = useLocation();
@@ -139,6 +130,17 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             setLoading(false);
         }
     }, [currentUser, activeInstitutionId]);
+
+    useEffect(() => {
+        if (currentUser && activeSubject) {
+            fetchClasses();
+        } else if (currentUser && !activeSubject) {
+            // Wait for activeSubject to be set
+        } else {
+            setClasses([]);
+            setLoading(false);
+        }
+    }, [currentUser, activeSubject, fetchClasses]);
 
     const selectSeries = useCallback((id: string) => {
         setSelectedSeriesId(id);

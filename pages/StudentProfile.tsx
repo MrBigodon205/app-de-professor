@@ -750,7 +750,7 @@ export const StudentProfile: React.FC = () => {
 
 
     return (
-        <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 h-auto lg:h-[calc(100vh-6rem)] overflow-visible lg:overflow-hidden pb-20 lg:pb-0">
+        <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-8 animate-in fade-in duration-500 h-auto lg:h-[calc(100vh-6rem)] overflow-visible lg:overflow-hidden pb-20 lg:pb-0">
 
             {/* LEFT SIDEBAR: Student List */}
             {/* Desktop: Always distinct. Mobile: Visible only when NO student selected */}

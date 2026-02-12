@@ -6,57 +6,54 @@ interface PageTransitionProps {
     type?: string;
 }
 
-// Premium page transitions — smooth, cinematic feel without blocking navigation
+// Premium page transitions — subtle, professional, no "cheap" slide-ups
 const pageVariants: Record<string, Variants> = {
     dashboard: {
-        initial: { opacity: 0, scale: 0.97, y: 12 },
+        initial: { opacity: 0, scale: 0.99 },
         enter: {
             opacity: 1,
             scale: 1,
-            y: 0,
-            transition: {
-                duration: 0.35,
-                ease: [0.22, 1, 0.36, 1],
-                staggerChildren: 0.06,
-            }
-        },
-        exit: {
-            opacity: 0,
-            scale: 0.98,
-            transition: { duration: 0.12, ease: "easeIn" }
-        }
-    },
-    slide: {
-        initial: { opacity: 0, x: 24 },
-        enter: {
-            opacity: 1,
-            x: 0,
-            transition: {
-                duration: 0.3,
-                ease: [0.22, 1, 0.36, 1],
-                staggerChildren: 0.05,
-            }
-        },
-        exit: {
-            opacity: 0,
-            x: -16,
-            transition: { duration: 0.1, ease: "easeIn" }
-        }
-    },
-    fade: {
-        initial: { opacity: 0, y: 8 },
-        enter: {
-            opacity: 1,
-            y: 0,
             transition: {
                 duration: 0.28,
-                ease: [0.25, 0.1, 0.25, 1],
+                ease: [0.25, 0.1, 0.25, 1], // Cubic bezier for premium feel
                 staggerChildren: 0.04,
             }
         },
         exit: {
             opacity: 0,
-            transition: { duration: 0.1, ease: "easeOut" }
+            scale: 0.99,
+            transition: { duration: 0.1 }
+        }
+    },
+    // Standard subtle fade for most pages
+    slide: {
+        initial: { opacity: 0 },
+        enter: {
+            opacity: 1,
+            transition: {
+                duration: 0.25,
+                ease: "easeOut",
+                staggerChildren: 0.03,
+            }
+        },
+        exit: {
+            opacity: 0,
+            transition: { duration: 0.08 }
+        }
+    },
+    fade: {
+        initial: { opacity: 0 },
+        enter: {
+            opacity: 1,
+            transition: {
+                duration: 0.22,
+                ease: "easeOut",
+                staggerChildren: 0.03,
+            }
+        },
+        exit: {
+            opacity: 0,
+            transition: { duration: 0.08 }
         }
     },
 };
@@ -64,11 +61,12 @@ const pageVariants: Record<string, Variants> = {
 // Map page types to animation styles
 const typeMap: Record<string, string> = {
     dashboard: 'dashboard',
-    attendance: 'slide',
+    attendance: 'slide', // Using 'slide' key but it's now a clean fade
     grades: 'slide',
     activities: 'slide',
     planning: 'slide',
     students: 'slide',
+    timetable: 'fade',
     default: 'fade',
 };
 
@@ -82,8 +80,7 @@ const PageTransition: React.FC<PageTransitionProps> = ({ children, type = 'defau
             initial="initial"
             animate="enter"
             exit="exit"
-            layout="position"
-            className="w-full h-full flex flex-col"
+            className="w-full h-full flex flex-col will-change-[opacity,transform]"
         >
             {children}
         </motion.div>

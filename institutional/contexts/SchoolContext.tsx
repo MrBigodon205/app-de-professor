@@ -70,7 +70,13 @@ export const SchoolProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             }
 
             // Explicit cast for joined data
-            const schoolData = data.institutions as unknown as { id: string; name: string };
+            const schoolData = data.institutions as unknown as { id: string; name: string } | null;
+
+            if (!schoolData) {
+                console.error("Institution data missing for teacher record:", data);
+                navigate('/');
+                return;
+            }
 
             setCurrentSchool({
                 id: schoolData.id,

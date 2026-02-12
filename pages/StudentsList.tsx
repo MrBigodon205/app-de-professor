@@ -389,7 +389,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
     }
 
     return (
-        <div className="max-w-[1200px] mx-auto flex flex-col gap-4 md:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 lg:pb-12">
+        <div className="max-w-[1200px] mx-auto flex flex-col gap-4 md:gap-8 animate-in fade-in duration-500 pb-20 lg:pb-12">
             {/* HEADER AREA */}
 
             {/* 1. MOBILE HEADER (Compact, Action-Focused) */}
@@ -441,7 +441,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                             </button>
                             <button
                                 onClick={() => setIsImporting(true)}
-                                className="flex items-center justify-center gap-1.5 h-12 rounded-xl bg-surface-card/60 backdrop-blur-md border border-border-default text-text-primary text-xs font-black shadow-sm hover:bg-surface-subtle active:scale-[0.97] transition-all"
+                                className="flex items-center justify-center gap-1.5 h-12 rounded-xl bg-surface-card/60 border border-border-default text-text-primary text-xs font-black shadow-sm hover:bg-surface-subtle active:scale-[0.97] transition-all"
                             >
                                 <span className="material-symbols-outlined text-lg text-text-muted">upload_file</span>
                                 <span>Importar</span>
@@ -714,7 +714,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
                 {mode === 'report' ? (
                     /* REPORT MODE: GRID LAYOUT */
-                    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                    <div className="flex flex-col gap-6 animate-in fade-in duration-700">
 
                         {/* Search Bar */}
                         <div className="relative w-full max-w-md mx-auto mb-2">
@@ -919,10 +919,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                             <th className="px-8 py-5 text-[10px] font-black uppercase text-text-muted tracking-widest text-right">Ações</th>
                                         </tr>
                                     </thead>
-                                    <motion.tbody
-                                        variants={containerVariants}
-                                        initial="hidden"
-                                        animate="visible"
+                                    <tbody
                                         className="divide-y divide-border-subtle"
                                     >
                                         {students.length === 0 ? (
@@ -939,11 +936,9 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                             </tr>
                                         ) : (
                                             students.map((student) => (
-                                                <motion.tr
-                                                    layoutId={`student-row-${student.id}`}
-                                                    variants={itemVariants}
+                                                <tr
                                                     key={student.id}
-                                                    className={`group transition-all border-b border-border-subtle ${selectedIds.includes(student.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card hover:bg-surface-subtle'}`}
+                                                    className={`group transition-all duration-150 border-b border-border-subtle ${selectedIds.includes(student.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card hover:bg-surface-subtle'}`}
                                                 >
                                                     <td className="px-4 py-4">
                                                         <div className="flex items-center justify-center">
@@ -1008,10 +1003,10 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                             </button>
                                                         </div>
                                                     </td>
-                                                </motion.tr>
+                                                </tr>
                                             ))
                                         )}
-                                    </motion.tbody>
+                                    </tbody>
                                 </table>
                             </div>
                         </div>

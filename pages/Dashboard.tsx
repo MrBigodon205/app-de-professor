@@ -697,8 +697,8 @@ export const Dashboard: React.FC = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.1
+        staggerChildren: 0.04,
+        delayChildren: 0
       }
     }
   };
@@ -706,32 +706,25 @@ export const Dashboard: React.FC = () => {
   const itemVariants: any = {
     hidden: {
       opacity: 0,
-      y: 30,
-      scale: 0.95,
+      // No Y offset (slide up) as requested
     },
     visible: {
       opacity: 1,
-      y: 0,
-      scale: 1,
       transition: {
-        type: 'spring',
-        stiffness: 120,
-        damping: 18,
-        mass: 0.8
+        duration: 0.25,
+        ease: "easeOut"
       }
     }
   };
 
   const heroVariants: any = {
-    hidden: { opacity: 0, scale: 1.05, y: -10 },
+    hidden: { opacity: 0 }, // No Y offset
     visible: {
       opacity: 1,
-      scale: 1,
-      y: 0,
       transition: {
-        duration: 0.5,
-        ease: [0.22, 1, 0.36, 1],
-        delay: 0.15
+        duration: 0.35,
+        ease: [0.25, 0.1, 0.25, 1], // Smooth cubic-bezier
+        delay: 0.05
       }
     }
   };

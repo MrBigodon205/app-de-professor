@@ -117,7 +117,7 @@ export const Modal: React.FC<ModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60"
             onClick={closeOnBackdropClick ? onClose : undefined}
             aria-hidden="true"
           />
@@ -125,10 +125,10 @@ export const Modal: React.FC<ModalProps> = ({
           {/* Modal Content */}
           <motion.div
             ref={modalRef}
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
             className={`relative z-10 w-full ${sizeClasses[size]} bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 max-h-[90vh] overflow-hidden flex flex-col`}
           >
             {/* Header */}
@@ -205,16 +205,14 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onCancel} size="sm" closeOnBackdropClick={false}>
       <div className="flex flex-col items-center text-center gap-4">
-        <div className={`size-16 rounded-full flex items-center justify-center ${
-          variant === 'danger' ? 'bg-red-100 dark:bg-red-900/20' :
+        <div className={`size-16 rounded-full flex items-center justify-center ${variant === 'danger' ? 'bg-red-100 dark:bg-red-900/20' :
           variant === 'warning' ? 'bg-amber-100 dark:bg-amber-900/20' :
-          'bg-indigo-100 dark:bg-indigo-900/20'
-        }`}>
-          <span className={`material-symbols-outlined text-3xl ${
-            variant === 'danger' ? 'text-red-600 dark:text-red-400' :
-            variant === 'warning' ? 'text-amber-600 dark:text-amber-400' :
-            'text-indigo-600 dark:text-indigo-400'
+            'bg-indigo-100 dark:bg-indigo-900/20'
           }`}>
+          <span className={`material-symbols-outlined text-3xl ${variant === 'danger' ? 'text-red-600 dark:text-red-400' :
+            variant === 'warning' ? 'text-amber-600 dark:text-amber-400' :
+              'text-indigo-600 dark:text-indigo-400'
+            }`}>
             {variantIcons[variant]}
           </span>
         </div>

@@ -325,10 +325,9 @@ export const Timetable: React.FC = () => {
                                             </div>
 
                                             {/* Card */}
-                                            <motion.button
-                                                whileTap={{ scale: 0.98 }}
+                                            <button
                                                 onClick={() => handleSlotClick(day.id, slot.start, slot.end)}
-                                                className={`flex-1 rounded-2xl border p-4 text-left transition-all relative overflow-hidden min-h-[80px] flex items-center
+                                                className={`flex-1 rounded-2xl border p-4 text-left transition-all duration-150 relative overflow-hidden min-h-[80px] flex items-center active:scale-[0.98]
                                                     ${item
                                                         ? `${styles?.bg} ${styles?.border}`
                                                         : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
@@ -358,7 +357,7 @@ export const Timetable: React.FC = () => {
 
                                                 {/* Decorative Dot/Line */}
                                                 {item && <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${styles?.dot}`}></div>}
-                                            </motion.button>
+                                            </button>
                                         </div>
                                     );
                                 })}
@@ -402,12 +401,10 @@ export const Timetable: React.FC = () => {
                                         const styles = item ? getSubjectTheme(item.subject) : null;
 
                                         return (
-                                            <motion.button
+                                            <button
                                                 key={`${day.id}-${slot.start}`}
-                                                whileHover={{ scale: 0.98 }}
-                                                whileTap={{ scale: 0.95 }}
                                                 onClick={() => handleSlotClick(day.id, slot.start, slot.end)}
-                                                className={`relative h-16 rounded-xl border transition-all flex flex-col items-center justify-center gap-0.5 p-1
+                                                className={`relative h-16 rounded-xl border transition-all duration-150 flex flex-col items-center justify-center gap-0.5 p-1 hover:scale-[0.98] active:scale-[0.95]
                                                     ${item
                                                         ? `${styles?.bg} ${styles?.border}`
                                                         : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:shadow-md'
@@ -427,7 +424,7 @@ export const Timetable: React.FC = () => {
                                                 ) : (
                                                     <span className="material-symbols-outlined text-slate-200 dark:text-slate-800 group-hover:text-slate-300 transition-colors">add</span>
                                                 )}
-                                            </motion.button>
+                                            </button>
                                         )
                                     })}
                                 </div>
@@ -441,11 +438,11 @@ export const Timetable: React.FC = () => {
             {/* Selection Modal */}
             <AnimatePresence>
                 {isModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
                             className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden"
                         >
                             <div className={`h-32 bg-gradient-to-br ${theme.bgGradient} p-8 relative flex items-center justify-between`}>
@@ -455,7 +452,7 @@ export const Timetable: React.FC = () => {
                                         {config.days.find(d => d.id === selectedSlot?.day)?.label}, {selectedSlot?.startTime} - {selectedSlot?.endTime}
                                     </p>
                                 </div>
-                                <button onClick={() => setIsModalOpen(false)} className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full backdrop-blur-md transition-colors">
+                                <button onClick={() => setIsModalOpen(false)} className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-colors">
                                     <span className="material-symbols-outlined">close</span>
                                 </button>
                             </div>
@@ -526,7 +523,7 @@ export const Timetable: React.FC = () => {
             {/* Config Modal */}
             <AnimatePresence>
                 {isConfigModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-slate-900/60 backdrop-blur-md overflow-y-auto py-10">
+                    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/60 overflow-y-auto py-10">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}

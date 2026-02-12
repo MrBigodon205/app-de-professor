@@ -476,7 +476,7 @@ export const Observations: React.FC = () => {
 
                         <div className="flex-1 h-auto lg:h-full lg:overflow-y-auto p-4 sm:p-8 custom-scrollbar">
                             {activeTab === 'history' ? (
-                                <div className="max-w-4xl mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="max-w-4xl mx-auto flex flex-col gap-8 animate-in fade-in duration-500">
                                     <div className="flex items-center justify-between px-2">
                                         <h3 className="font-black text-xl text-text-primary flex items-center gap-3">
                                             Histórico de Ocorrências
@@ -515,7 +515,7 @@ export const Observations: React.FC = () => {
                                                     <div
                                                         key={occ.id}
                                                         onClick={() => toggleOccurrenceSelection(occ.id)}
-                                                        className={`bg-surface-card p-6 rounded-3xl border shadow-sm hover:shadow-md transition-all flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300 cursor-pointer group/card delay-stagger-${idx % 11} ${selectedOccIds.has(occ.id) ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-border-default hover:border-border-hover'}`}
+                                                        className={`bg-surface-card p-6 rounded-3xl border shadow-sm hover:shadow-md transition-all flex flex-col gap-3 animate-in fade-in duration-300 cursor-pointer group/card delay-stagger-${idx % 11} ${selectedOccIds.has(occ.id) ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-border-default hover:border-border-hover'}`}
                                                     >
                                                         {/* LINTER REFRESH: Zero Inline Styles Verified */}
                                                         <div className="flex justify-between items-start gap-4">
@@ -560,7 +560,7 @@ export const Observations: React.FC = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="max-w-4xl mx-auto flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="max-w-4xl mx-auto flex flex-col gap-10 animate-in fade-in duration-500">
                                     {/* Premium Form */}
                                     {/* Premium Form - Only visible when NOT editing inside a card */}
                                     {!editingOccId && (

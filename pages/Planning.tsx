@@ -1246,7 +1246,7 @@ export const Planning: React.FC = () => {
     }, [plans, debouncedSearchTerm, filterSection]);
 
     return (
-        <main className="flex flex-col lg:flex-row gap-4 md:gap-6 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 md:pb-8 relative fluid-p-m fluid-gap-m px-4 md:px-0 w-full h-full overflow-hidden">
+        <main className="flex flex-col lg:flex-row gap-4 md:gap-6 max-w-[1600px] mx-auto animate-in fade-in duration-500 pb-24 md:pb-8 relative fluid-p-m fluid-gap-m px-4 md:px-0 w-full h-full overflow-hidden">
             {/* Landscape FAB for New Plan */}
             <div className="hidden landscape:flex fixed bottom-6 right-6 z-50 flex-col gap-3 lg:hidden">
                 {hasDraft && !showForm && (
@@ -2093,7 +2093,7 @@ export const Planning: React.FC = () => {
 
                                     {/* ATTACHMENTS VIEW (Screen Only) */}
                                     {currentPlan.files && currentPlan.files.length > 0 && (
-                                        <div className="animate-in fade-in slide-in-from-bottom-3 duration-500 delay-100 print:hidden">
+                                        <div className="animate-in fade-in duration-500 delay-100 print:hidden">
                                             <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                                                 <span className={`material-symbols-outlined text-${theme.primaryColor}`}>attachment</span>
                                                 Anexos
@@ -2304,7 +2304,7 @@ export const Planning: React.FC = () => {
 
             {/* TEMPLATE SELECTOR MODAL */}
             {showTemplateSelector && (
-                <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+                <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 animate-in fade-in duration-200">
                     <div className="bg-white dark:bg-surface-dark w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
                         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark rounded-t-2xl z-20">
                             <div>
