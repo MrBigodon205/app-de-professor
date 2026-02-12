@@ -14,11 +14,15 @@ import { jsPDF } from 'jspdf';
 import { DynamicSelect } from '../components/DynamicSelect';
 import FileViewerModal from '../components/FileViewerModal';
 import { FileImporterModal } from '../components/FileImporterModal';
+import { PlanningTemplateRenderer } from '../components/PlanningTemplateRenderer';
+import { PlanningTemplate, PlanningTemplateElement } from '../types';
+import { useToast } from '../components/Toast';
 
 export const Planning: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
     const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
+    const { success, error, warning } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // UI State
@@ -32,6 +36,12 @@ export const Planning: React.FC = () => {
     const [viewMode, setViewMode] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+    // Template State
+    const [templates, setTemplates] = useState<PlanningTemplate[]>([]);
+    const [selectedTemplate, setSelectedTemplate] = useState<PlanningTemplate | null>(null);
+    const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+    const [templateValues, setTemplateValues] = useState<Record<string, any>>({});
 
     // Form State
     const [formTitle, setFormTitle] = useState('');
@@ -200,10 +210,10 @@ export const Planning: React.FC = () => {
                 setSelectedPlanId(null);
                 setShowForm(false);
             }
-            alert(`${selectedIds.length} planejamentos excluídos.`);
-        } catch (error: any) {
-            console.error('Error deleting plans:', error);
-            alert('Erro ao excluir planos: ' + (error.message || 'Erro desconhecido'));
+            success(`${selectedIds.length} planejamentos excluídos.`);
+        } catch (err: any) {
+            console.error('Error deleting plans:', err);
+            error('Erro ao excluir planos: ' + (err.message || 'Erro desconhecido'));
         } finally {
             setLoading(false);
         }
@@ -315,6 +325,47 @@ export const Planning: React.FC = () => {
         }
     };
 
+    // --- TEMPLATE LOGIC ---
+    useEffect(() => {
+        if (!currentUser) return;
+        fetchTemplates();
+    }, [currentUser]);
+
+    const fetchTemplates = async () => {
+        try {
+            // Need to verify if table exists first? No, we assume Phase 12 done.
+            // Wait, task.md says "Phase 13: - [ ] Create table planning_templates".
+            // I haven't created the table yet?
+            // "InstitutionalPlanningTemplates" uses it. So it MUST exist or the previous phase was fake.
+            // The previous phase "Implemented Drag-and-Drop" was working on the frontend.
+            // Does the backend table exist?
+            // "InstitutionalPlanningTemplates" saves to it.
+            // If I haven't run migration, it won't work.
+            // But I am in "Teacher Usage" phase.
+            // Let's assume it exists or I will get an error.
+            // Actually, in `InstitutionalPlanningTemplates.tsx` I saw `fetchTemplates`.
+
+            const { data, error } = await supabase
+                .from('planning_templates')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                // Ignore 404/PGRST errors if table doesn't exist yet (soft fail)
+                console.warn("Could not fetch templates (table might not exist yet)", error);
+                return;
+            }
+
+            if (data) {
+                // Parse elements if they are string, or expect JSON
+                // Supabase returns JSONB columns as objects automatically
+                setTemplates(data as PlanningTemplate[]);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
     // --- REALTIME SUBSCRIPTION ---
     useEffect(() => {
         if (!currentUser || !selectedSeriesId) return;
@@ -355,7 +406,7 @@ export const Planning: React.FC = () => {
 
     const handleNewPlan = () => {
         if (!selectedSeriesId) {
-            alert("Por favor, selecione uma série no menu superior para criar um planejamento.");
+            warning("Por favor, selecione uma série no menu superior para criar um planejamento.");
             return;
         }
 
@@ -368,6 +419,45 @@ export const Planning: React.FC = () => {
     const handleEdit = (plan: Plan) => {
         setIsEditing(true);
         setSelectedPlanId(plan.id);
+
+        // Check for template data
+        // Check for template data
+        const tmpl = plan.template_id ? templates.find(t => t.id === plan.template_id) : null;
+        if (tmpl && tmpl.type === 'file') {
+            setSelectedTemplate(tmpl);
+            setShowForm(true);
+            setViewMode(false);
+            setFormTitle(plan.title);
+            setFormStartDate(plan.startDate);
+            setFormEndDate(plan.endDate);
+            setFormSection(plan.section || '');
+            setFormFiles(plan.files || []);
+            setFormDescription(plan.description || '');
+            setFormSeriesId(plan.seriesId);
+            setFormSubject(plan.subject || activeSubject || '');
+            return;
+        }
+
+        const dataMatch = plan.description?.match(/^<!-- DATA: ({.*}) -->/);
+        if (dataMatch && plan.template_id) {
+            try {
+                const storedValues = JSON.parse(dataMatch[1]);
+                setTemplateValues(storedValues);
+                // Find template (if not already found above)
+                const template = templates.find(t => t.id === plan.template_id);
+                if (template) {
+                    setSelectedTemplate(template);
+                    setShowForm(true);
+                    setViewMode(false);
+                    // Set basic fields just in case they are needed for list view
+                    setFormTitle(plan.title);
+                    setFormStartDate(plan.startDate);
+                    setFormEndDate(plan.endDate);
+                    return;
+                }
+            } catch (e) { console.error("Error parsing saved template data", e); }
+        }
+
         setShowForm(true);
         setViewMode(false);
 
@@ -491,6 +581,8 @@ export const Planning: React.FC = () => {
                 subject: formSubject
             };
 
+
+
             // 1. Determine ID and Action
             let finalId = selectedPlanId;
             let action: 'INSERT' | 'UPDATE' = 'INSERT';
@@ -510,7 +602,8 @@ export const Planning: React.FC = () => {
             // --- ONLINE MODE (WEB) ---
             const { data: savedData, error } = await supabase.from('plans').upsert({
                 ...planData,
-                ...(finalId ? { id: finalId } : {})
+                ...(finalId ? { id: finalId } : {}),
+                template_id: selectedTemplate?.id || null // Link template if active
             }).select();
 
             if (error) throw error;
@@ -526,7 +619,10 @@ export const Planning: React.FC = () => {
             await fetchPlans(true);
 
             // Return to list to avoid "Not Found" errors
+            // Return to list to avoid "Not Found" errors
             setSelectedPlanId(null);
+            setSelectedTemplate(null); // Clear template state
+            setTemplateValues({});
             setShowForm(false);
             setViewMode(false);
             setIsEditing(false);
@@ -535,6 +631,79 @@ export const Planning: React.FC = () => {
         } catch (e: any) {
             console.error(e);
             alert("Erro ao salvar: " + (e.message || "Erro desconhecido"));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSaveTemplatePlan = async () => {
+        if (!selectedTemplate) return;
+        setLoading(true);
+        try {
+            const planData: any = {
+                title: templateValues['title'] || templateValues['Título'] || `Aula com Modelo: ${selectedTemplate.name}`,
+                start_date: formStartDate || new Date().toISOString(),
+                end_date: formEndDate || new Date().toISOString(),
+                series_id: selectedSeriesId || '',
+                section: selectedSection || undefined,
+                user_id: currentUser?.id,
+                subject: activeSubject || '',
+                // Initialize text fields
+                description: '',
+                objectives: '',
+                methodology: '',
+                resources: '',
+                assessment: '',
+                bncc_codes: '',
+                activity_type: 'Aula Expositiva'
+            };
+
+            const descriptionParts: string[] = [];
+
+            selectedTemplate.elements.forEach(el => {
+                const val = templateValues[el.id];
+                if (!val) return;
+
+                const nameLower = el.name.toLowerCase();
+                // Heuristic Mapping
+                if (nameLower.includes('título') || nameLower.includes('titulo')) planData.title = val;
+                else if (nameLower.includes('objetivo')) planData.objectives = val;
+                else if (nameLower.includes('metodologia') || nameLower.includes('estratégia')) planData.methodology = val;
+                else if (nameLower.includes('recurso')) planData.resources = val;
+                else if (nameLower.includes('avaliação') || nameLower.includes('avaliacao')) planData.assessment = val;
+                else if (nameLower.includes('bncc') || nameLower.includes('código')) planData.bncc_codes = val;
+                else if (nameLower.includes('descrição') || nameLower.includes('roteiro')) planData.description = val;
+                else if (nameLower.includes('tipo')) planData.activity_type = val;
+                else if (nameLower.includes('duração') || nameLower.includes('duracao')) planData.duration = val;
+                else if (nameLower.includes('tema') || nameLower.includes('área')) planData.theme_area = val;
+                else if (nameLower.includes('coordenador')) planData.coordinator_name = val;
+                else {
+                    descriptionParts.push(`<strong>${el.name}:</strong> ${val}`);
+                }
+            });
+
+            // Embed RAW DATA for restoring state
+            const rawData = JSON.stringify(templateValues);
+            const hiddenData = `<!-- DATA: ${rawData} -->`;
+
+            if (descriptionParts.length > 0) {
+                planData.description = (planData.description ? planData.description + '<br/><br/>' : '') + descriptionParts.join('<br/>');
+            }
+            // Prepend hidden data
+            planData.description = hiddenData + (planData.description || '');
+            planData.template_id = selectedTemplate.id;
+
+            const { error } = await supabase.from('plans').insert(planData);
+            if (error) throw error;
+
+            alert("Planejamento criado com sucesso a partir do modelo!");
+            await fetchPlans(true);
+            setSelectedTemplate(null);
+            setShowForm(false);
+            setTemplateValues({});
+        } catch (e: any) {
+            console.error(e);
+            alert("Erro ao salvar: " + e.message);
         } finally {
             setLoading(false);
         }
@@ -1315,6 +1484,13 @@ export const Planning: React.FC = () => {
                                 Criar Nova Aula
                                 <div className="absolute inset-0 rounded-2xl ring-2 ring-white/20 group-hover:ring-white/40 transition-all"></div>
                             </button>
+                            <button
+                                onClick={() => setShowTemplateSelector(true)}
+                                className="group relative inline-flex items-center justify-center gap-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-lg font-bold py-4 px-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 transition-all hover:-translate-y-1 active:translate-y-0"
+                            >
+                                <span className="material-symbols-outlined text-2xl text-indigo-500">grid_view</span>
+                                Usar Modelo
+                            </button>
                             {hasDraft && (
                                 <button
                                     onClick={loadDraft}
@@ -1327,194 +1503,340 @@ export const Planning: React.FC = () => {
                         </div>
                     </div>
                 ) : showForm ? (
-                    <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-                        {/* EDITOR HEADER */}
-                        <div className="p-6 landscape:p-3 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark z-20 sticky top-0 shadow-sm">
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={() => { setSelectedPlanId(null); setIsEditing(false); setShowForm(false); }}
-                                    className="lg:hidden p-2 -ml-2 text-slate-400"
-                                >
-                                    <span className="material-symbols-outlined">arrow_back</span>
-                                </button>
-                                <h2 className="text-xl landscape:text-base font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                                    <div className={`size-8 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center landscape:hidden`}>
-                                        <span className="material-symbols-outlined text-lg">{selectedPlanId ? 'edit_document' : 'post_add'}</span>
-                                    </div>
-                                    {selectedPlanId ? 'Editar Aula' : 'Nova Aula'}
-                                </h2>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto p-8 landscape:p-4 custom-scrollbar pb-0">
-                            <div className="max-w-4xl mx-auto flex flex-col gap-8 landscape:gap-4">
-
-                                {/* 1. GERAL */}
-                                <div className="space-y-6">
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Título da Aula</label>
-                                        <input type="text" value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="Ex: Introdução à Célula" className={`w-full text-lg font-bold p-4 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <DynamicSelect
-                                                label="Turma"
-                                                value={formSection}
-                                                onChange={setFormSection}
-                                                options={[
-                                                    ...(activeSeries?.sections?.map(s => ({ value: s, label: s, icon: 'groups' })) || []),
-                                                    { value: 'Todas as Turmas', label: 'Todas as Turmas', icon: 'domain' }
-                                                ]}
-                                                placeholder="Selecione..."
-                                            />
-                                        </div>
-                                        <div>
-                                            <DynamicSelect
-                                                label="Tipo de Atividade"
-                                                value={formActivityType}
-                                                onChange={setFormActivityType}
-                                                options={[
-                                                    { value: 'Aula Expositiva', label: 'Aula Expositiva', icon: 'school', color: 'blue' },
-                                                    { value: 'Atividade Prática', label: 'Atividade Prática', icon: 'science', color: 'indigo' },
-                                                    { value: 'Trabalho em Grupo', label: 'Trabalho em Grupo', icon: 'groups', color: 'violet' },
-                                                    { value: 'Avaliação', label: 'Avaliação', icon: 'assignment_turned_in', color: 'rose' },
-                                                    { value: 'Outro', label: 'Outro', icon: 'category', color: 'slate' }
-                                                ]}
-                                                placeholder="Selecione..."
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <DatePicker label="Início" value={formStartDate} onChange={setFormStartDate} />
-                                            <DatePicker label="Fim" value={formEndDate} onChange={setFormEndDate} />
-                                        </div>
-                                        <div>
-                                            <label className="label">Duração Estimada</label>
-                                            <input type="text" value={formDuration} onChange={e => setFormDuration(e.target.value)} placeholder="Ex: 2 aulas de 50min" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="label">Coordenador Pedagógico</label>
-                                        <input type="text" value={formCoordinator} onChange={e => setFormCoordinator(e.target.value)} placeholder="Nome do Coordenador" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
-                                    </div>
+                    selectedTemplate ? (
+                        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+                            {/* TEMPLATE EDITOR HEADER */}
+                            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark z-20 sticky top-0 shadow-sm">
+                                <div className="flex items-center gap-4">
+                                    <button
+                                        onClick={() => { setSelectedTemplate(null); setShowForm(false); setIsEditing(false); }}
+                                        className="lg:hidden p-2 -ml-2 text-slate-400"
+                                    >
+                                        <span className="material-symbols-outlined">arrow_back</span>
+                                    </button>
+                                    <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                        <div className="px-2 py-1 bg-indigo-100 text-indigo-600 rounded-md text-xs uppercase tracking-wider font-black">Modelo</div>
+                                        {selectedTemplate.name}
+                                    </h2>
                                 </div>
-
-                                {/* 2. CONTEÚDO */}
-                                <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-indigo-500">menu_book</span>
-                                        Conteúdo
-                                    </h3>
-                                    <div>
-                                        <label className="label mb-2 flex items-center gap-2">Objetivos de Aprendizagem</label>
-                                        <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
-                                            <RichTextEditor value={formObjectives} onChange={setFormObjectives} placeholder="Quais os objetivos desta aula?" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="label mb-2 flex items-center gap-2">Descrição / Roteiro</label>
-                                        <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
-                                            <RichTextEditor value={formDescription} onChange={setFormDescription} placeholder="Detalhamento do roteiro da aula..." />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* 3. BNCC */}
-                                <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-emerald-500">verified</span>
-                                        BNCC & Metodologia
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="label mb-2">Códigos da BNCC</label>
-                                            <textarea value={formBncc} onChange={e => setFormBncc(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-32 font-mono text-sm`} placeholder="Ex: EF06CI01, EF06CI02..." />
-                                        </div>
-                                        <div>
-                                            <label className="label mb-2">Metodologia</label>
-                                            <textarea value={formMethodology} onChange={e => setFormMethodology(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-32`} placeholder="Estratégias utilizadas..." />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* 4. RECURSOS */}
-                                <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                                    <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-amber-500">build</span>
-                                        Recursos & Avaliação
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="label">Recursos</label>
-                                            <textarea value={formResources} onChange={e => setFormResources(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-24`} placeholder="Recursos necessários..." />
-                                        </div>
-                                        <div>
-                                            <label className="label">Avaliação</label>
-                                            <textarea value={formAssessment} onChange={e => setFormAssessment(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-24`} placeholder="Critérios avaliativos..." />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* 5. ANEXOS (FILES) */}
-                                <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="text-xs font-black uppercase text-slate-400 ml-1 tracking-widest">Materiais de Apoio</div>
-                                        <button
-                                            onClick={() => setIsImporterOpen(true)}
-                                            type="button"
-                                            className={`flex items-center gap-2 px-5 py-3 bg-${theme.primaryColor}/10 text-${theme.primaryColor} rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-${theme.primaryColor} hover:text-white transition-all active:scale-95 border border-${theme.primaryColor}/20 hover:border-transparent shadow-sm`}
-                                        >
-                                            <span className="material-symbols-outlined text-base">upload_file</span>
-                                            Adicionar Arquivo
-                                        </button>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {formFiles.map((file, index) => (
-                                            <div key={index} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 group shadow-sm">
-                                                <div className={`size-10 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0`}>
-                                                    <span className="material-symbols-outlined">description</span>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm font-bold truncate text-slate-700 dark:text-slate-200">{file.name}</div>
-                                                    <div className="text-xs text-slate-400">{file.size}</div>
-                                                </div>
-                                                <button
-                                                    onClick={() => setFormFiles(prev => prev.filter((_, i) => i !== index))}
-                                                    className="p-2 text-slate-300 hover:text-red-500 transition-colors"
-                                                    title="Remover arquivo"
-                                                >
-                                                    <span className="material-symbols-outlined">close</span>
-                                                </button>
-                                            </div>
-                                        ))}
-                                        {formFiles.length === 0 && (
-                                            <div className="col-span-full border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 flex flex-col items-center justify-center text-slate-400 gap-2">
-                                                <span className="material-symbols-outlined text-3xl">folder_open</span>
-                                                <span className="text-sm">Nenhum arquivo anexado</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* FOOTER ACTIONS */}
-                                <div className="max-w-4xl mx-auto mt-8 mb-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
-                                    <button onClick={() => { setIsEditing(false); setShowForm(false); }} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200 dark:border-slate-700 sm:border-transparent">Cancelar</button>
-                                    {selectedPlanId && (
-                                        <button onClick={handleDelete} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors bg-red-50 dark:bg-red-900/10 sm:bg-transparent sm:dark:bg-transparent">Excluir</button>
-                                    )}
-                                    <button onClick={handleSave} className="w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-xl text-white font-bold shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center theme-bg-primary theme-shadow-primary">
-                                        Salvar Aula
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => { setSelectedTemplate(null); setShowForm(false); }}
+                                        className="px-4 py-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg font-bold text-sm transition-colors"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={handleSaveTemplatePlan}
+                                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">save</span>
+                                        Salvar
                                     </button>
                                 </div>
                             </div>
+
+                            {/* TEMPLATE RENDERER */}
+                            <div className="flex-1 overflow-auto bg-slate-100 dark:bg-black/20 p-8 flex justify-center">
+                                {selectedTemplate.type === 'file' ? (
+                                    <div className="w-full max-w-3xl bg-white dark:bg-surface-dark rounded-2xl shadow-sm p-8 flex flex-col gap-8">
+                                        <div className="text-center pb-6 border-b border-slate-100 dark:border-slate-800">
+                                            <div className="size-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                                <span className="material-symbols-outlined text-3xl">download_for_offline</span>
+                                            </div>
+                                            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">Modelo de Arquivo</h3>
+                                            <p className="text-slate-500">Baixe o modelo, preencha em seu computador e envie o arquivo finalizado.</p>
+                                        </div>
+
+                                        {/* Metadata Form */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="col-span-1 md:col-span-2">
+                                                <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Título da Aula</label>
+                                                <input
+                                                    type="text"
+                                                    value={formTitle}
+                                                    onChange={e => setFormTitle(e.target.value)}
+                                                    placeholder="Ex: Planejamento Semana 3"
+                                                    className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`}
+                                                />
+                                            </div>
+                                            <DatePicker label="Início" value={formStartDate} onChange={setFormStartDate} />
+                                            <DatePicker label="Fim" value={formEndDate} onChange={setFormEndDate} />
+                                            <div>
+                                                <DynamicSelect
+                                                    label="Turma"
+                                                    value={formSection}
+                                                    onChange={setFormSection}
+                                                    options={[
+                                                        ...(activeSeries?.sections?.map(s => ({ value: s, label: s, icon: 'groups' })) || []),
+                                                        { value: 'Todas as Turmas', label: 'Todas as Turmas', icon: 'domain' }
+                                                    ]}
+                                                    placeholder="Selecione..."
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {/* Download */}
+                                            <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex flex-col items-center text-center gap-4">
+                                                <span className="material-symbols-outlined text-4xl text-slate-400">description</span>
+                                                <div>
+                                                    <h4 className="font-bold text-slate-700 dark:text-slate-300">Passo 1: Baixar Modelo</h4>
+                                                    <p className="text-xs text-slate-500 mt-1">Obtenha o arquivo base para preenchimento.</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => selectedTemplate.file_url && window.open(selectedTemplate.file_url, '_blank')}
+                                                    className="px-6 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-bold text-sm text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2"
+                                                >
+                                                    <span className="material-symbols-outlined">download</span>
+                                                    Baixar Arquivo
+                                                </button>
+                                            </div>
+
+                                            {/* Upload - Reusing File Logic */}
+                                            <div className="p-6 rounded-2xl border-2 border-dashed border-indigo-200 dark:border-indigo-900 bg-indigo-50/50 dark:bg-indigo-900/10 flex flex-col items-center text-center gap-4">
+                                                <span className="material-symbols-outlined text-4xl text-indigo-400">cloud_upload</span>
+                                                <div>
+                                                    <h4 className="font-bold text-indigo-900 dark:text-indigo-300">Passo 2: Enviar Planejamento</h4>
+                                                    <p className="text-xs text-indigo-600/70 dark:text-indigo-400 mt-1">Anexe o arquivo preenchido aqui.</p>
+                                                </div>
+
+                                                <div className="w-full">
+                                                    {formFiles.length > 0 ? (
+                                                        <div className="flex flex-col gap-2 w-full">
+                                                            {formFiles.map((file, idx) => (
+                                                                <div key={idx} className="flex items-center justify-between p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 text-sm md:text-xs">
+                                                                    <div className="flex items-center gap-2 truncate">
+                                                                        <span className="material-symbols-outlined text-slate-400">description</span>
+                                                                        <span className="truncate max-w-[120px]">{file.name}</span>
+                                                                    </div>
+                                                                    <button onClick={() => setFormFiles(formFiles.filter((_, i) => i !== idx))} className="text-red-500 p-1 hover:bg-red-50 rounded"><span className="material-symbols-outlined text-base">close</span></button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => fileInputRef.current?.click()}
+                                                            className="w-full px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+                                                        >
+                                                            <span className="material-symbols-outlined">add_circle</span>
+                                                            Selecionar Arquivo
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <button
+                                                onClick={handleSave}
+                                                disabled={formFiles.length === 0 || !formTitle}
+                                                className="px-8 py-3 bg-green-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-lg hover:bg-green-700 transition-all flex items-center gap-2"
+                                            >
+                                                <span className="material-symbols-outlined">check_circle</span>
+                                                Salvar Planejamento
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <PlanningTemplateRenderer
+                                        template={selectedTemplate}
+                                        initialValues={templateValues}
+                                        onChange={setTemplateValues}
+                                    />
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+                            {/* EDITOR HEADER */}
+                            <div className="p-6 landscape:p-3 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark z-20 sticky top-0 shadow-sm">
+                                <div className="flex items-center gap-4">
+                                    <button
+                                        onClick={() => { setSelectedPlanId(null); setIsEditing(false); setShowForm(false); }}
+                                        className="lg:hidden p-2 -ml-2 text-slate-400"
+                                    >
+                                        <span className="material-symbols-outlined">arrow_back</span>
+                                    </button>
+                                    <h2 className="text-xl landscape:text-base font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                                        <div className={`size-8 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center landscape:hidden`}>
+                                            <span className="material-symbols-outlined text-lg">{selectedPlanId ? 'edit_document' : 'post_add'}</span>
+                                        </div>
+                                        {selectedPlanId ? 'Editar Aula' : 'Nova Aula'}
+                                    </h2>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-8 landscape:p-4 custom-scrollbar pb-0">
+                                <div className="max-w-4xl mx-auto flex flex-col gap-8 landscape:gap-4">
+
+                                    {/* 1. GERAL */}
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Título da Aula</label>
+                                            <input type="text" value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="Ex: Introdução à Célula" className={`w-full text-lg font-bold p-4 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <DynamicSelect
+                                                    label="Turma"
+                                                    value={formSection}
+                                                    onChange={setFormSection}
+                                                    options={[
+                                                        ...(activeSeries?.sections?.map(s => ({ value: s, label: s, icon: 'groups' })) || []),
+                                                        { value: 'Todas as Turmas', label: 'Todas as Turmas', icon: 'domain' }
+                                                    ]}
+                                                    placeholder="Selecione..."
+                                                />
+                                            </div>
+                                            <div>
+                                                <DynamicSelect
+                                                    label="Tipo de Atividade"
+                                                    value={formActivityType}
+                                                    onChange={setFormActivityType}
+                                                    options={[
+                                                        { value: 'Aula Expositiva', label: 'Aula Expositiva', icon: 'school', color: 'blue' },
+                                                        { value: 'Atividade Prática', label: 'Atividade Prática', icon: 'science', color: 'indigo' },
+                                                        { value: 'Trabalho em Grupo', label: 'Trabalho em Grupo', icon: 'groups', color: 'violet' },
+                                                        { value: 'Avaliação', label: 'Avaliação', icon: 'assignment_turned_in', color: 'rose' },
+                                                        { value: 'Outro', label: 'Outro', icon: 'category', color: 'slate' }
+                                                    ]}
+                                                    placeholder="Selecione..."
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <DatePicker label="Início" value={formStartDate} onChange={setFormStartDate} />
+                                                <DatePicker label="Fim" value={formEndDate} onChange={setFormEndDate} />
+                                            </div>
+                                            <div>
+                                                <label className="label">Duração Estimada</label>
+                                                <input type="text" value={formDuration} onChange={e => setFormDuration(e.target.value)} placeholder="Ex: 2 aulas de 50min" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="label">Coordenador Pedagógico</label>
+                                            <input type="text" value={formCoordinator} onChange={e => setFormCoordinator(e.target.value)} placeholder="Nome do Coordenador" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
+                                        </div>
+                                    </div>
+
+                                    {/* 2. CONTEÚDO */}
+                                    <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                        <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-indigo-500">menu_book</span>
+                                            Conteúdo
+                                        </h3>
+                                        <div>
+                                            <label className="label mb-2 flex items-center gap-2">Objetivos de Aprendizagem</label>
+                                            <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                                                <RichTextEditor value={formObjectives} onChange={setFormObjectives} placeholder="Quais os objetivos desta aula?" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="label mb-2 flex items-center gap-2">Descrição / Roteiro</label>
+                                            <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                                                <RichTextEditor value={formDescription} onChange={setFormDescription} placeholder="Detalhamento do roteiro da aula..." />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 3. BNCC */}
+                                    <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                        <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-emerald-500">verified</span>
+                                            BNCC & Metodologia
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="label mb-2">Códigos da BNCC</label>
+                                                <textarea value={formBncc} onChange={e => setFormBncc(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-32 font-mono text-sm`} placeholder="Ex: EF06CI01, EF06CI02..." />
+                                            </div>
+                                            <div>
+                                                <label className="label mb-2">Metodologia</label>
+                                                <textarea value={formMethodology} onChange={e => setFormMethodology(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-32`} placeholder="Estratégias utilizadas..." />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 4. RECURSOS */}
+                                    <div className="space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                        <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-amber-500">build</span>
+                                            Recursos & Avaliação
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="label">Recursos</label>
+                                                <textarea value={formResources} onChange={e => setFormResources(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-24`} placeholder="Recursos necessários..." />
+                                            </div>
+                                            <div>
+                                                <label className="label">Avaliação</label>
+                                                <textarea value={formAssessment} onChange={e => setFormAssessment(e.target.value)} className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none resize-none h-24`} placeholder="Critérios avaliativos..." />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 5. ANEXOS (FILES) */}
+                                    <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="text-xs font-black uppercase text-slate-400 ml-1 tracking-widest">Materiais de Apoio</div>
+                                            <button
+                                                onClick={() => setIsImporterOpen(true)}
+                                                type="button"
+                                                className={`flex items-center gap-2 px-5 py-3 bg-${theme.primaryColor}/10 text-${theme.primaryColor} rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-${theme.primaryColor} hover:text-white transition-all active:scale-95 border border-${theme.primaryColor}/20 hover:border-transparent shadow-sm`}
+                                            >
+                                                <span className="material-symbols-outlined text-base">upload_file</span>
+                                                Adicionar Arquivo
+                                            </button>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {formFiles.map((file, index) => (
+                                                <div key={index} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 group shadow-sm">
+                                                    <div className={`size-10 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0`}>
+                                                        <span className="material-symbols-outlined">description</span>
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-sm font-bold truncate text-slate-700 dark:text-slate-200">{file.name}</div>
+                                                        <div className="text-xs text-slate-400">{file.size}</div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => setFormFiles(prev => prev.filter((_, i) => i !== index))}
+                                                        className="p-2 text-slate-300 hover:text-red-500 transition-colors"
+                                                        title="Remover arquivo"
+                                                    >
+                                                        <span className="material-symbols-outlined">close</span>
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            {formFiles.length === 0 && (
+                                                <div className="col-span-full border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 flex flex-col items-center justify-center text-slate-400 gap-2">
+                                                    <span className="material-symbols-outlined text-3xl">folder_open</span>
+                                                    <span className="text-sm">Nenhum arquivo anexado</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* FOOTER ACTIONS */}
+                                    <div className="max-w-4xl mx-auto mt-8 mb-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                                        <button onClick={() => { setIsEditing(false); setShowForm(false); }} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200 dark:border-slate-700 sm:border-transparent">Cancelar</button>
+                                        {selectedPlanId && (
+                                            <button onClick={handleDelete} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors bg-red-50 dark:bg-red-900/10 sm:bg-transparent sm:dark:bg-transparent">Excluir</button>
+                                        )}
+                                        <button onClick={handleSave} className="w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-xl text-white font-bold shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center theme-bg-primary theme-shadow-primary">
+                                            Salvar Aula
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
 
-                ) : (
+                    )) : (
                     <div className="flex-1 overflow-y-auto relative animate-in fade-in h-[100dvh] md:h-full custom-scrollbar bg-slate-50 dark:bg-black/20">
                         {currentPlan ? (
                             <div className="flex flex-col min-h-full relative isolate">
@@ -1979,6 +2301,64 @@ export const Planning: React.FC = () => {
                 multiple
             />
 
+
+            {/* TEMPLATE SELECTOR MODAL */}
+            {showTemplateSelector && (
+                <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-surface-dark w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark rounded-t-2xl z-20">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-800 dark:text-white">Escolher Modelo</h2>
+                                <p className="text-sm text-slate-500">Selecione um modelo para iniciar seu planejamento</p>
+                            </div>
+                            <button onClick={() => setShowTemplateSelector(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <div className="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-slate-50 dark:bg-black/20">
+                            {templates.map(template => (
+                                <button
+                                    key={template.id}
+                                    onClick={() => {
+                                        setSelectedTemplate(template);
+                                        setShowTemplateSelector(false);
+                                        setShowForm(true);
+                                        setIsEditing(false);
+                                        setTemplateValues({});
+                                        setSelectedPlanId(null);
+                                    }}
+                                    className="flex flex-col text-left bg-white dark:bg-surface-dark border-2 border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 rounded-xl p-4 transition-all hover:shadow-lg group relative overflow-hidden"
+                                >
+                                    <div className="aspect-[210/297] w-full bg-slate-100 mb-4 rounded-lg border border-slate-200 overflow-hidden relative">
+                                        {template.background_url ? (
+                                            <motion.div
+                                                className="w-full h-full bg-cover bg-center opacity-80 group-hover:opacity-100 transition-opacity"
+                                                animate={{ backgroundImage: `url(${template.background_url})` }}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                                <span className="material-symbols-outlined text-4xl">description</span>
+                                            </div>
+                                        )}
+                                        <div className="absolute top-2 right-2 px-2 py-1 bg-black/50 text-white text-[10px] rounded backdrop-blur-sm font-bold uppercase">
+                                            {template.orientation === 'landscape' ? 'Paisagem' : 'Retrato'}
+                                        </div>
+                                    </div>
+                                    <h3 className="font-bold text-slate-800 dark:text-white group-hover:text-indigo-600 transition-colors mb-1">{template.name}</h3>
+                                    <p className="text-xs text-slate-500">{template.elements?.length || 0} campos</p>
+                                </button>
+                            ))}
+                            {templates.length === 0 && (
+                                <div className="col-span-full py-12 flex flex-col items-center justify-center text-slate-400">
+                                    <span className="material-symbols-outlined text-4xl mb-2">grid_off</span>
+                                    <p>Nenhum modelo disponível.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </main>
     );

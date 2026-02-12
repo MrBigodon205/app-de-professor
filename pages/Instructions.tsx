@@ -20,7 +20,7 @@ const InstructionSection: React.FC<SectionProps> = ({ id, title, icon, isOpen, o
             id={id}
             initial={false}
             className={`group card overflow-hidden border transition-all duration-300 ${isOpen
-                ? `border-${theme.primaryColor}/30 bg-white dark:bg-slate-800 shadow-xl shadow-${theme.primaryColor}/5`
+                ? 'theme-border-primary bg-white dark:bg-slate-800 shadow-xl theme-shadow-primary'
                 : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600'
                 } rounded-3xl`}
         >
@@ -32,14 +32,14 @@ const InstructionSection: React.FC<SectionProps> = ({ id, title, icon, isOpen, o
                     <div className={`
              size-12 sm:size-14 rounded-2xl flex items-center justify-center transition-all duration-300
              ${isOpen
-                            ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white shadow-lg shadow-${theme.primaryColor}/20 scale-110`
-                            : `bg-${theme.primaryColor}/5 text-${theme.primaryColor} dark:bg-slate-700 dark:text-slate-300 group-hover:bg-${theme.primaryColor}/10`
+                            ? 'theme-gradient-to-br text-white shadow-lg theme-shadow-primary scale-110'
+                            : 'theme-bg-soft theme-text-primary dark:bg-slate-700 dark:text-slate-300'
                         }
            `}>
                         <span className="material-symbols-outlined text-2xl sm:text-3xl font-bold">{icon}</span>
                     </div>
                     <div className="flex flex-col gap-1">
-                        <h3 className={`text-lg sm:text-xl font-bold tracking-tight transition-colors ${isOpen ? `text-${theme.primaryColor}` : 'text-slate-700 dark:text-slate-200'}`}>
+                        <h3 className={`text-lg sm:text-xl font-bold tracking-tight transition-colors ${isOpen ? 'theme-text-primary' : 'text-slate-700 dark:text-slate-200'}`}>
                             {title}
                         </h3>
                         {!isOpen && (
@@ -52,7 +52,7 @@ const InstructionSection: React.FC<SectionProps> = ({ id, title, icon, isOpen, o
                 <div className={`
             size-10 rounded-full flex items-center justify-center border transition-all duration-300
             ${isOpen
-                        ? `bg-${theme.primaryColor}/10 border-${theme.primaryColor}/20 text-${theme.primaryColor} rotate-180`
+                        ? 'theme-bg-soft theme-border-soft theme-text-primary rotate-180'
                         : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-400'
                     }
           `}>
@@ -95,7 +95,7 @@ export const Instructions: React.FC = () => {
 
     const Step = ({ number, title, text, icon }: { number: number, title: string, text: React.ReactNode, icon?: string }) => (
         <div className="flex gap-4 group/step relative">
-            <div className={`mt-1 size-8 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} text-sm font-black flex items-center justify-center shrink-0 border border-${theme.primaryColor}/20 shadow-sm group-hover/step:scale-110 transition-transform z-10 bg-white dark:bg-slate-800`}>
+            <div className="mt-1 size-8 rounded-2xl theme-bg-soft theme-text-primary text-sm font-black flex items-center justify-center shrink-0 theme-border-soft shadow-sm group-hover/step:scale-110 transition-transform z-10 bg-white dark:bg-slate-800">
                 {icon ? <span className="material-symbols-outlined text-lg">{icon}</span> : number}
             </div>
             {/* Connecting Line */}
@@ -116,7 +116,7 @@ export const Instructions: React.FC = () => {
         const colors = {
             info: { bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-blue-100 dark:border-blue-800/30', text: 'text-blue-700 dark:text-blue-300', icon: 'info' },
             warning: { bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-100 dark:border-amber-800/30', text: 'text-amber-700 dark:text-amber-300', icon: 'lightbulb' },
-            pro: { bg: `bg-${theme.primaryColor}/5`, border: `border-${theme.primaryColor}/20`, text: `text-${theme.primaryColor}`, icon: 'verified' }
+            pro: { bg: 'theme-bg-soft', border: 'theme-border-soft', text: 'theme-text-primary', icon: 'verified' }
         };
         const c = colors[type];
 
@@ -133,7 +133,7 @@ export const Instructions: React.FC = () => {
             onClick={() => toggleSection(target)}
             className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all active:scale-95 group"
         >
-            <div className={`size-12 rounded-xl bg-${theme.primaryColor}/5 text-${theme.primaryColor} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+            <div className="size-12 rounded-xl theme-bg-soft theme-text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
                 <span className="material-symbols-outlined text-2xl">{icon}</span>
             </div>
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
@@ -151,8 +151,8 @@ export const Instructions: React.FC = () => {
     return (
         <div className="min-h-full w-full pb-6 bg-slate-50/50 dark:bg-transparent">
             {/* Hero Section */}
-            <div className={`relative overflow-hidden bg-gradient-to-br from-white to-slate-100 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700`}>
-                <div className={`absolute top-0 right-0 w-[500px] h-[500px] bg-${theme.primaryColor}/5 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2 pointer-events-none`}></div>
+            <div className="relative overflow-hidden bg-gradient-to-br from-white to-slate-100 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] theme-radial-primary rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
 
                 <div className="max-w-5xl mx-auto px-6 py-12 sm:py-16 relative z-10">
                     <motion.div
@@ -160,7 +160,7 @@ export const Instructions: React.FC = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="flex flex-col items-center text-center max-w-2xl mx-auto gap-6 bg-white/50 dark:bg-slate-900/50 p-8 rounded-[2.5rem] backdrop-blur-sm border border-white/50 dark:border-white/5 shadow-xl"
                     >
-                        <div className={`p-4 rounded-3xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white shadow-xl shadow-${theme.primaryColor}/20 mb-2 rotate-3`}>
+                        <div className="p-4 rounded-3xl theme-gradient-to-br text-white shadow-xl theme-shadow-primary mb-2 rotate-3">
                             <span className="material-symbols-outlined text-5xl">auto_stories</span>
                         </div>
 

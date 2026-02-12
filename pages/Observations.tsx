@@ -7,6 +7,7 @@ import { Student, Occurrence } from '../types';
 import { supabase } from '../lib/supabase';
 import { DatePicker } from '../components/DatePicker';
 import { CategorySelect } from '../components/CategorySelect';
+import { useToast } from '../components/Toast';
 
 const getOccurrenceIcon = (type: string) => {
     switch (type) {
@@ -27,6 +28,7 @@ export const Observations: React.FC = () => {
     const theme = useTheme();
     const location = useLocation();
     const navigate = useNavigate();
+    const { success, error: showError } = useToast();
 
     // Mount Ref for preventing state updates on unmounted component
     const mountedRef = React.useRef(true);
@@ -219,7 +221,7 @@ export const Observations: React.FC = () => {
 
         } catch (e: any) {
             console.error("Save Error", e);
-            alert("Erro ao salvar: " + e.message);
+            showError("Erro ao salvar: " + e.message);
         } finally {
             setSaving(false);
         }
@@ -301,13 +303,13 @@ export const Observations: React.FC = () => {
 
         } catch (e: any) {
             console.error("Delete Error", e);
-            alert("Erro ao excluir registro.");
+            showError("Erro ao excluir registro.");
         }
     };
 
     const handleBulkDelete = async () => {
         if (selectedOccIds.size === 0) return;
-        if (!window.confirm(`Deseja realmente excluir ${selectedOccIds.size} registros selecionados?`)) return;
+        if (!window.confirm(`Deseja realmente excluir ${selectedOccIds.size} registros selecionados?`)) return; // TODO: Replace with ConfirmDialog
 
         setSaving(true);
         try {
@@ -320,7 +322,7 @@ export const Observations: React.FC = () => {
 
         } catch (e: any) {
             console.error("Bulk Delete Error", e);
-            alert("Erro ao excluir registros.");
+            showError("Erro ao excluir registros.");
         } finally {
             setSaving(false);
         }

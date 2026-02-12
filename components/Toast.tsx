@@ -16,6 +16,10 @@ interface Toast {
 interface ToastContextValue {
   showToast: (message: string, type?: ToastType, duration?: number) => void;
   showConfirm: (message: string, onConfirm: () => void, onCancel?: () => void) => void;
+  success: (message: string, duration?: number) => void;
+  error: (message: string, duration?: number) => void;
+  warning: (message: string, duration?: number) => void;
+  info: (message: string, duration?: number) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
@@ -42,8 +46,14 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const hideToast = (id: string) => setToasts(prev => prev.filter(t => t.id !== id));
 
+  // Helper methods
+  const success = useCallback((message: string, duration?: number) => showToast(message, 'success', duration), [showToast]);
+  const error = useCallback((message: string, duration?: number) => showToast(message, 'error', duration), [showToast]);
+  const warning = useCallback((message: string, duration?: number) => showToast(message, 'warning', duration), [showToast]);
+  const info = useCallback((message: string, duration?: number) => showToast(message, 'info', duration), [showToast]);
+
   return (
-    <ToastContext.Provider value={{ showToast, showConfirm }}>
+    <ToastContext.Provider value={{ showToast, showConfirm, success, error, warning, info }}>
       {children}
       {createPortal(
         <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-3 max-w-md" aria-live="polite">
