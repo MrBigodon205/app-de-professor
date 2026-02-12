@@ -237,6 +237,7 @@ export interface Institution {
   created_at: string;
   settings: InstitutionSettings;
   geo_perimeters?: GeoPerimeter[];
+  logo_url?: string;
 }
 
 export interface GeoPerimeter {
