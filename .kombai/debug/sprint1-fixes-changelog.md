@@ -74,19 +74,34 @@ Após implementação, verificar:
 - [x] Branch de backup criado (`audit-fixes-sprint1-backup`)
 - [x] Changelog criado
 - [x] CSS variables já existiam (nenhuma mudança necessária - sistema já usa CSS vars)
-- [x] Toast component criado (`components/Toast.tsx`)
+- [x] Toast component criado (`components/Toast.tsx`) v2 com helpers
+- [x] Modal component criado (`components/Modal.tsx`) com a11y completo
+- [x] ConfirmDialog variant criado
 - [x] ToastProvider integrado no App.tsx
-- [x] alert() substituídos (7 ocorrências em 2 arquivos)
+- [x] alert() substituídos (17 ocorrências em 5 arquivos principais)
   - InstitutionalAttendance.tsx: 1 alert → showToast
-  - InstitutionalPlanningTemplates.tsx: 4 alerts + 1 confirm → showToast/showConfirm
-- [ ] Testes realizados
+  - InstitutionalPlanningTemplates.tsx: 5 alerts + 1 confirm → useToast
+  - Planning.tsx: 3 alerts → success/error/warning
+  - Observations.tsx: 4 alerts → showError/success
+  - InstitutionalStudents.tsx: 3 alerts + 1 confirm → showToast/showConfirm
+- [x] Dynamic Tailwind classes corrigidas (Instructions.tsx - 30+ interpolações)
+- [ ] Testes realizados (PENDENTE - aguardando engenheiro)
 - [ ] Merge para main (se aprovado)
 
 ## 🎯 Arquivos Modificados
 
-1. `components/Toast.tsx` - CRIADO
+### Commit 1 (e5335c9)
+1. `components/Toast.tsx` - CRIADO (v1)
 2. `App.tsx` - ToastProvider adicionado
 3. `institutional/attendance/InstitutionalAttendance.tsx` - alert → showToast
 4. `institutional/planning/InstitutionalPlanningTemplates.tsx` - 5 alerts/confirms → useToast
 
-Total: 4 arquivos modificados, 1 arquivo criado
+### Commit 2 (ec3cfb3)
+5. `components/Modal.tsx` - CRIADO (Modal + ConfirmDialog)
+6. `components/Toast.tsx` - ATUALIZADO (v2 com helpers)
+7. `pages/Planning.tsx` - 3 alerts → toast helpers
+8. `pages/Observations.tsx` - 4 alerts → toast
+9. `institutional/students/InstitutionalStudents.tsx` - 4 alerts/confirms → toast/dialog
+10. `pages/Instructions.tsx` - 30+ dynamic classes → static theme classes
+
+**Total:** 2 commits, 10 arquivos modificados, 2 arquivos criados, ~1600 linhas adicionadas
