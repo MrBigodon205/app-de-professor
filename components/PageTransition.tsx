@@ -14,31 +14,39 @@ const pageVariants: Record<string, Variants> = {
             opacity: 1,
             scale: 1,
             transition: {
-                duration: 0.28,
-                ease: [0.25, 0.1, 0.25, 1], // Cubic bezier for premium feel
-                staggerChildren: 0.04,
+                duration: 0.35,
+                ease: [0.25, 0.1, 0.25, 1],
+                staggerChildren: 0.05,
             }
         },
         exit: {
             opacity: 0,
-            scale: 0.99,
-            transition: { duration: 0.1 }
+            scale: 0.99, // Maintain slight scale down for depth
+            transition: {
+                duration: 0.25,
+                ease: "easeInOut"
+            }
         }
     },
     // Standard subtle fade for most pages
     slide: {
-        initial: { opacity: 0 },
+        initial: { opacity: 0, y: 10 }, // Subtle entry from bottom
         enter: {
             opacity: 1,
+            y: 0,
             transition: {
-                duration: 0.25,
+                duration: 0.3,
                 ease: "easeOut",
-                staggerChildren: 0.03,
+                staggerChildren: 0.05,
             }
         },
         exit: {
             opacity: 0,
-            transition: { duration: 0.08 }
+            y: -5, // Subtle float up on exit, not abrupt
+            transition: {
+                duration: 0.2,
+                ease: "easeIn"
+            }
         }
     },
     fade: {
@@ -46,14 +54,17 @@ const pageVariants: Record<string, Variants> = {
         enter: {
             opacity: 1,
             transition: {
-                duration: 0.22,
+                duration: 0.3,
                 ease: "easeOut",
-                staggerChildren: 0.03,
+                staggerChildren: 0.05,
             }
         },
         exit: {
             opacity: 0,
-            transition: { duration: 0.08 }
+            transition: {
+                duration: 0.2,
+                ease: "easeInOut"
+            }
         }
     },
 };

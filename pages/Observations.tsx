@@ -390,10 +390,17 @@ export const Observations: React.FC = () => {
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1" data-tour="obs-student-list">
                     {filteredStudents.map(student => (
-                        <button
+                        <div
+                            role="button"
+                            tabIndex={0}
                             key={student.id}
                             onClick={() => setSelectedStudentId(student.id)}
-                            className={`w-full flex items-center gap-4 p-4 landscape:p-2 rounded-2xl transition-all duration-300 relative group/item ${selectedStudentId === student.id
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    setSelectedStudentId(student.id);
+                                }
+                            }}
+                            className={`w-full flex items-center gap-4 p-4 landscape:p-2 rounded-2xl transition-all duration-300 relative group/item cursor-pointer ${selectedStudentId === student.id
                                 ? 'theme-bg-surface-subtle theme-border-soft'
                                 : 'hover:bg-surface-subtle border border-transparent'
                                 }`}
@@ -407,7 +414,7 @@ export const Observations: React.FC = () => {
                                 <span className={`text-sm font-black truncate w-full text-left transition-colors ${selectedStudentId === student.id ? 'theme-text-primary' : 'text-text-secondary group-hover/item:text-text-primary'}`}>{student.name}</span>
                                 <span className="text-[10px] font-black text-text-muted uppercase tracking-widest landscape:hidden">Nº {student.number.padStart(2, '0')}</span>
                             </div>
-                        </button>
+                        </div>
                     ))}
                 </div>
             </div>
