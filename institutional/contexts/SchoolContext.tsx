@@ -7,6 +7,7 @@ interface Institution {
     id: string;
     name: string;
     role: 'admin' | 'coordinator' | 'teacher';
+    logo_url?: string;
 }
 
 interface SchoolContextType {
@@ -55,7 +56,7 @@ export const SchoolProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             // Fetch school details + user role
             const { data, error } = await supabase
                 .from('institution_teachers')
-                .select('role, institutions(id, name)')
+                .select('role, institutions(id, name, logo_url)')
                 .eq('institution_id', id)
                 .eq('user_id', currentUser.id)
                 .single();
@@ -70,7 +71,7 @@ export const SchoolProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             }
 
             // Explicit cast for joined data
-            const schoolData = data.institutions as unknown as { id: string; name: string } | null;
+            const schoolData = data.institutions as unknown as { id: string; name: string; logo_url?: string } | null;
 
             if (!schoolData) {
                 console.error("Institution data missing for teacher record:", data);
@@ -81,7 +82,8 @@ export const SchoolProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setCurrentSchool({
                 id: schoolData.id,
                 name: schoolData.name,
-                role: data.role as any
+                role: data.role as any,
+                logo_url: schoolData.logo_url
             });
 
         } catch (err) {
