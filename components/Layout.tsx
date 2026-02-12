@@ -212,6 +212,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {/* Dynamic Background Pattern - Fixed and isolated */}
       <BackgroundPattern
         theme={theme}
+        activeSubject={isInstitutionalRoute ? undefined : (activeSubject || undefined)}
       />
 
 
@@ -260,11 +261,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   className="w-full flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-surface-subtle transition-all group border border-transparent hover:border-border-default"
                   title="Alternar contexto"
                 >
-                  <div className={`size-10 rounded-lg flex items-center justify-center shadow-sm shrink-0 ${isInstitutionalRoute ? 'bg-white border border-border-default' : 'bg-gradient-to-br from-primary to-secondary text-white'}`}>
+                  <div className={`size-10 rounded-lg flex items-center justify-center shadow-sm shrink-0 overflow-hidden ${isInstitutionalRoute ? 'bg-white border border-border-default' : 'bg-transparent'}`}>
                     {isInstitutionalRoute ? (
-                      <span className="material-symbols-outlined text-primary text-xl">school</span>
+                      currentSchool?.logo_url ? (
+                        <img src={currentSchool.logo_url} alt={currentSchool.name} className="size-full object-cover" />
+                      ) : (
+                        <span className="material-symbols-outlined text-primary text-xl">school</span>
+                      )
                     ) : (
-                      <img src={logoSrc} alt="Acerta+" className="size-6 object-contain brightness-0 invert" />
+                      <img src={logoSrc} alt="Acerta+" className="size-full object-contain" />
                     )}
                   </div>
                   <div className="flex flex-col items-start min-w-0 flex-1">
@@ -278,7 +283,13 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   <span className="material-symbols-outlined text-text-muted text-lg opacity-0 group-hover:opacity-100 transition-opacity">swap_horiz</span>
                 </div>
               ) : (
-                <img src={logoSrc} alt="Acerta+" className="size-10 object-contain drop-shadow-md shrink-0" />
+                <div className="size-10 rounded-lg flex items-center justify-center overflow-hidden">
+                  {isInstitutionalRoute && currentSchool?.logo_url ? (
+                    <img src={currentSchool.logo_url} alt={currentSchool.name} className="size-full object-cover" />
+                  ) : (
+                    <img src={logoSrc} alt="Acerta+" className="size-10 object-contain drop-shadow-md shrink-0" />
+                  )}
+                </div>
               )}
             </div>
 
@@ -311,7 +322,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
                     {!isCoordinator && (
                       <span className="text-[10px] text-text-muted uppercase tracking-wider font-bold">
-                        Painel Institucional
+                        Painel {currentSchool?.name ? `da ${currentSchool.name}` : 'Institucional'}
                       </span>
                     )}
                   </div>
@@ -400,10 +411,20 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         !isProfileModalOpen && !isPasswordSetupOpen && !isClassSelectorOpen && (
           <button
             onClick={toggleSidebar}
-            className={`hidden lg:flex fixed z-[70] top-8 size-12 bg-surface-card/95 border border-border-default rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'}`}
-            title={isSidebarCollapsed ? "Expandir" : "Recolher"}
+            className={`hidden lg:flex fixed z-[70] top-8 size-12 items-center justify-center rounded-full transition-all duration-300 ease-out will-change-transform hover:scale-110 active:scale-95 group left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'} bg-surface-card/60 backdrop-blur-md shadow-[0_4px_20px_-5px_rgba(var(--theme-primary-500),0.3),0_0_0_1px_rgba(var(--theme-primary-500),0.1)] border border-[rgba(var(--theme-primary-500),0.3)] [--theme-primary-500:var(--${theme.primaryColor}-500)]`}
+            title={isSidebarCollapsed ? "Expandir Menu" : "Recolher Menu"}
           >
-            <span className={`material-symbols-outlined text-3xl font-bold transition-transform duration-150 ease-out ${isSidebarCollapsed ? '' : 'rotate-180'}`}>chevron_right</span>
+            {/* Inner Glow Ring */}
+            <div
+              className={`absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 shadow-[inset_0_0_15px_rgba(var(--theme-color),0.4),0_0_15px_rgba(var(--theme-color),0.4)]`}
+            />
+
+            {/* Icon */}
+            <span
+              className={`material-symbols-outlined text-3xl font-bold transition-all duration-300 ease-out relative z-10 ${isSidebarCollapsed ? 'translate-x-0.5' : 'rotate-180 -translate-x-0.5'} text-[var(--${theme.primaryColor}-500)]`}
+            >
+              chevron_right
+            </span>
           </button>
         )
       }

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useSchool } from '../contexts/SchoolContext';
 import { supabase } from '../../lib/supabase';
 import { InviteManager } from '../auth/InviteManager';
-import { Users, MoreVertical, Shield, UserX, UserCheck } from 'lucide-react';
+import { Users, MoreVertical, Shield, UserX, UserCheck, BookOpen } from 'lucide-react';
+import { AssignmentModal } from './AssignmentModal';
 
 interface TeacherMember {
     id: string; // member id
@@ -21,12 +22,14 @@ export const TeachersList: React.FC = () => {
     const { currentSchool, isCoordinator } = useSchool();
     const [teachers, setTeachers] = useState<TeacherMember[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedTeacherForAssignment, setSelectedTeacherForAssignment] = useState<TeacherMember | null>(null);
+    const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
 
     const fetchTeachers = async () => {
         if (!currentSchool) return;
 
         try {
-            // Join institution_teachers with profiles (via user_id)
+            // Join institution_teachers with profiles
             const { data, error } = await supabase
                 .from('institution_teachers')
                 .select(`
@@ -35,23 +38,26 @@ export const TeachersList: React.FC = () => {
                     status, 
                     joined_at, 
                     user_id,
-                    profiles:user_id (name, email, photo_url)
+                    profiles (name, email, photo_url)
                 `)
                 .eq('institution_id', currentSchool.id)
                 .order('joined_at', { ascending: false });
 
             if (error) throw error;
 
-            console.log("Raw teachers data:", data); // Debugging join
+            const formatted: TeacherMember[] = data.map((item: any) => {
+                // Supabase joins can return an object or an array of objects
+                const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
 
-            const formatted: TeacherMember[] = data.map((item: any) => ({
-                id: item.id,
-                role: item.role,
-                status: item.status,
-                joined_at: item.joined_at,
-                user_id: item.user_id,
-                profile: item.profiles || { name: 'Desconhecido', email: 'Sem email', photo_url: '' } // Fallback
-            }));
+                return {
+                    id: item.id,
+                    role: item.role,
+                    status: item.status,
+                    joined_at: item.joined_at,
+                    user_id: item.user_id,
+                    profile: profileData || { name: 'Desconhecido', email: 'Sem email', photo_url: '' }
+                };
+            });
 
             setTeachers(formatted);
 
@@ -167,14 +173,26 @@ export const TeachersList: React.FC = () => {
                                     </td>
                                     {isCoordinator && (
                                         <td className="p-4 text-right">
-                                            <button
-                                                onClick={() => toggleStatus(teacher.id, teacher.status)}
-                                                className={`p-2 rounded-md hover:bg-gray-100 dark:hover:bg-white/5 transition-colors ${teacher.status === 'active' ? 'text-red-600 hover:text-red-700 dark:text-red-400' : 'text-green-600 hover:text-green-700 dark:text-green-400'
-                                                    }`}
-                                                title={teacher.status === 'active' ? "Suspender Acesso" : "Reativar Acesso"}
-                                            >
-                                                {teacher.status === 'active' ? <UserX size={18} /> : <UserCheck size={18} />}
-                                            </button>
+                                            <div className="flex items-center justify-end gap-1">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedTeacherForAssignment(teacher);
+                                                        setIsAssignmentModalOpen(true);
+                                                    }}
+                                                    className="p-2 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 transition-colors"
+                                                    title="Gerenciar Atribuições"
+                                                >
+                                                    <BookOpen size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => toggleStatus(teacher.id, teacher.status)}
+                                                    className={`p-2 rounded-md hover:bg-gray-100 dark:hover:bg-white/5 transition-colors ${teacher.status === 'active' ? 'text-red-600 hover:text-red-700 dark:text-red-400' : 'text-green-600 hover:text-green-700 dark:text-green-400'
+                                                        }`}
+                                                    title={teacher.status === 'active' ? "Suspender Acesso" : "Reativar Acesso"}
+                                                >
+                                                    {teacher.status === 'active' ? <UserX size={18} /> : <UserCheck size={18} />}
+                                                </button>
+                                            </div>
                                         </td>
                                     )}
                                 </tr>
@@ -183,6 +201,14 @@ export const TeachersList: React.FC = () => {
                     </tbody>
                 </table>
             </div>
+
+            {/* Assignment Management Modal */}
+            <AssignmentModal
+                isOpen={isAssignmentModalOpen}
+                onClose={() => setIsAssignmentModalOpen(false)}
+                teacher={selectedTeacherForAssignment}
+                institutionId={currentSchool?.id || ''}
+            />
         </div>
     );
 };
