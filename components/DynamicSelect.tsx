@@ -73,9 +73,10 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
             />
 
             {/* Modal */}
+            {/* Modal */}
             <div
                 ref={dropdownRef}
-                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 z-[10000] w-[92%] max-w-[20rem] lg:max-w-[25rem] landscape:max-w-3xl landscape:w-[94%] animate-in fade-in zoom-in-95 duration-200 landscape:max-h-[85vh] landscape:overflow-y-auto custom-scrollbar"
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 lg:p-6 z-[10000] w-[92%] max-w-[20rem] lg:max-w-[25rem] landscape:max-w-3xl landscape:w-[94%] animate-in fade-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto custom-scrollbar"
             >
                 <div className="flex items-center justify-between mb-4 px-1">
                     <span className="font-black text-slate-800 dark:text-white uppercase tracking-widest text-[0.65rem] lg:text-[0.75rem]">

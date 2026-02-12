@@ -7,8 +7,8 @@ import { seedUserData } from '../utils/seeding';
 interface AuthContextType {
     currentUser: User | null;
     userId: string | null;
-    login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-    register: (name: string, email: string, password: string, subject: Subject, subjects?: Subject[]) => Promise<{ success: boolean; error?: string }>;
+    login: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: any }>;
+    register: (name: string, email: string, password: string, subject?: string, subjects?: string[], institutionName?: string) => Promise<{ success: boolean; error?: string; institutionId?: string; user?: any }>;
     logout: () => void;
     updateProfile: (data: Partial<User>) => Promise<boolean>;
     resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
@@ -20,6 +20,22 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// --- ERROR TRANSLATION HELPER ---
+const translateAuthError = (errorMsg: string): string => {
+    // Normalizing
+    const msg = errorMsg.toLowerCase();
+
+    if (msg.includes('email not confirmed')) return 'Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada.';
+    if (msg.includes('invalid login credentials')) return 'E-mail ou senha incorretos.';
+    if (msg.includes('user already registered')) return 'Este e-mail já está cadastrado.';
+    if (msg.includes('password should be at least 6 characters')) return 'A senha precisa ter no mínimo 6 caracteres.';
+    if (msg.includes('auth session missing')) return 'Sessão expirada. Faça login novamente.';
+    if (msg.includes('rate limit exceeded')) return 'Muitas tentativas. Aguarde um momento.';
+
+    // Default fallback (if it's a raw generic error, try to be helpful or keep original if specific)
+    return errorMsg;
+};
 
 // --- AUTH PROVIDER COMPONENT ---
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -42,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // 1. Fetch from Supabase
             const { data: profile, error } = await supabase
                 .from('profiles')
-                .select('id, name, email, photo_url, subject, subjects')
+                .select('id, name, email, photo_url, subject, subjects, account_type')
                 .eq('id', uid)
                 .single();
 
@@ -58,7 +74,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     photoUrl: profile.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=random`,
                     subject: profile.subject,
                     subjects: profile.subjects || [],
-                    isPasswordSet: !!hasPasswordConfirmed
+                    isPasswordSet: !!hasPasswordConfirmed,
+                    account_type: profile.account_type || 'personal'
                 };
 
                 setCurrentUser(finalUser);
@@ -132,37 +149,102 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = useCallback(async (email: string, password: string) => {
         try {
+            setLoading(true);
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
-            return { success: true };
+
+            if (data.user) {
+                // Critical: Wait for profile to be loaded before returning success
+                await fetchProfile(data.user.id, data.user);
+            }
+
+            return { success: true, user: data.user };
         } catch (e: any) {
             console.error("Login error:", e);
-            return { success: false, error: e.message || "Erro ao realizar login." };
+            const translated = translateAuthError(e.message || "Erro ao realizar login.");
+            return { success: false, error: translated };
+        } finally {
+            setLoading(false);
         }
-    }, []);
+    }, [fetchProfile]);
 
-    const register = useCallback(async (name: string, email: string, password: string, subject: Subject, subjects: Subject[] = []) => {
+    const register = useCallback(async (name: string, email: string, password: string, subject?: string, subjects?: string[], institutionName?: string) => {
         try {
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
-                    data: { name, subject, subjects, is_password_set: true }
+                    data: {
+                        name,
+                        subject,
+                        subjects,
+                        is_password_set: true,
+                        account_type: institutionName ? 'institutional' : 'personal'
+                    }
                 }
             });
 
-            if (error) return { success: false, error: error.message };
+            if (error) return { success: false, error: translateAuthError(error.message) };
 
             if (data.user) {
                 await seedUserData(data.user.id);
+
+                // Update profile
                 try {
-                    await supabase.from('profiles').update({ name, subject, subjects }).eq('id', data.user.id);
+                    await supabase.from('profiles').update({
+                        name,
+                        subject,
+                        subjects,
+                        account_type: institutionName ? 'institutional' : 'personal'
+                    }).eq('id', data.user.id);
                 } catch { }
-                return { success: true };
+
+                // Create Institution if requested
+                if (institutionName) {
+                    console.log('[AuthContext] Creating institution:', institutionName, 'for user:', data.user.id);
+                    try {
+                        // 1. Create Institution
+                        const { data: instData, error: instError } = await supabase
+                            .from('institutions')
+                            .insert({
+                                name: institutionName,
+                                owner_id: data.user.id
+                            })
+                            .select()
+                            .single();
+
+                        console.log('[AuthContext] Institution insert result:', { instData, instError });
+                        if (instError) throw instError;
+
+                        // 2. Add owner as Admin member
+                        if (instData) {
+                            console.log('[AuthContext] Adding user as admin to institution_teachers...');
+                            const { error: memberError } = await supabase
+                                .from('institution_teachers')
+                                .insert({
+                                    institution_id: instData.id,
+                                    user_id: data.user.id,
+                                    role: 'admin',
+                                    status: 'active'
+                                });
+
+                            console.log('[AuthContext] Teacher insert result:', { memberError });
+                            if (memberError) throw memberError;
+                        }
+
+                        console.log('[AuthContext] Institution created successfully:', instData.id);
+                        return { success: true, institutionId: instData.id, user: data.user };
+                    } catch (err) {
+                        console.error("[AuthContext] Error creating institution during signup:", err);
+                        // We continue even if school creation fails (edge case)
+                    }
+                }
+
+                return { success: true, user: data.user };
             }
             return { success: false, error: "Erro ao criar usuário." };
         } catch (e: any) {
-            return { success: false, error: e.message };
+            return { success: false, error: translateAuthError(e.message) };
         }
     }, []);
 

@@ -105,10 +105,7 @@ export const Observations: React.FC = () => {
             formattedStudents.sort((a, b) => a.name.localeCompare(b.name));
             setStudents(formattedStudents);
 
-            if (formattedStudents.length > 0) {
-                // Logic to select student handled by URL state usually
-                setSelectedStudentId('');
-            }
+            // Preserve current selection — do NOT reset selectedStudentId here
 
             const formattedOcc: Occurrence[] = occurrencesData
                 .map(o => ({
@@ -134,7 +131,7 @@ export const Observations: React.FC = () => {
         } finally {
             if (!silent && mountedRef.current) setLoading(false);
         }
-    }, [currentUser, selectedSeriesId, selectedSection, activeSubject, selectedStudentId]);
+    }, [currentUser, selectedSeriesId, selectedSection, activeSubject]);
 
     useEffect(() => {
         if (selectedSeriesId && selectedSection) {
@@ -154,10 +151,10 @@ export const Observations: React.FC = () => {
     useEffect(() => {
         if (!currentUser || !selectedSeriesId) return;
 
-        // Polling Fallback (Every 10s)
+        // Polling Fallback (Every 60s)
         const interval = setInterval(() => {
             fetchData(true);
-        }, 10000);
+        }, 60000);
 
         // Realtime setup
 

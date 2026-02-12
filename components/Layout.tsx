@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import logoSrc from '../assets/logo.svg';
 
-import { motion, useScroll, useMotionValue, useSpring } from 'framer-motion';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useClass } from '../contexts/ClassContext';
@@ -15,22 +14,25 @@ import { AnimatedNavItem } from './AnimatedNavItem';
 import { MobileClassSelector } from './MobileClassSelector';
 import { ClassManager } from './ClassManager';
 import { BackgroundPattern } from './BackgroundPattern';
+import { useSchool } from '../institutional/contexts/SchoolContext';
 import { DesktopTitleBar } from './DesktopTitleBar';
 
 import { usePredictiveSync } from '../hooks/usePredictiveSync';
 
+
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, logout, activeSubject, updateActiveSubject } = useAuth();
   const theme = useTheme();
+  const { isDarkMode, toggleTheme } = theme;
   const { classes, activeSeries, selectedSeriesId, selectedSection, selectSeries, selectSection, removeClass: deleteSeries, addClass: addSeries, removeSection, addSection } = useClass();
+  const { isCoordinator, currentSchool } = useSchool();
   const location = useLocation();
 
   // Active Predictive Sync
   usePredictiveSync();
 
-
-
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [profileDefaultTab, setProfileDefaultTab] = useState<'profile' | 'schools' | 'security'>('profile');
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [isSeriesDropdownOpen, setIsSeriesDropdownOpen] = useState(false);
   const [newSeriesName, setNewSeriesName] = useState('');
@@ -40,6 +42,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [isPasswordSetupOpen, setIsPasswordSetupOpen] = useState(false);
   const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebar_collapsed') === 'true');
+
+
 
 
   useEffect(() => {
@@ -56,6 +60,17 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     }
   }, [currentUser, isPasswordSetupOpen]);
 
+  // Bug Fix: Close mobile menu on resize to prevent "floating" sidebar on desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) { // lg breakpoint
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const toggleSidebar = useCallback(() => {
     setIsSidebarCollapsed(prev => {
       const newState = !prev;
@@ -66,18 +81,88 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navItems = [
-    { path: '/instructions', label: 'Manual de Uso', icon: 'menu_book' }, // MOVED TO TOP
-    { path: '/dashboard', label: 'Início', icon: 'dashboard' },
-    { path: '/timetable', label: 'Horário', icon: 'schedule' },
-    { path: '/planning', label: 'Planejamento', icon: 'calendar_month' },
-    { path: '/activities', label: 'Atividades', icon: 'assignment' },
-    { path: '/grades', label: 'Notas', icon: 'grade' },
-    { path: '/attendance', label: 'Frequência', icon: 'co_present' },
-    { path: '/students', label: 'Alunos', icon: 'groups' },
-    { path: '/observations', label: 'Ocorrências', icon: 'warning' },
-    { path: '/reports', label: 'Relatórios', icon: 'description' },
-  ];
+  const isInstitutionalRoute = location.pathname.startsWith('/institution/') && !location.pathname.startsWith('/institution/create') && !location.pathname.startsWith('/institution/join');
+  const currentInstitutionId = isInstitutionalRoute ? location.pathname.split('/')[2] : null;
+
+  // Check for "Unassigned Teacher" state
+  const hasSubjects = currentUser?.subjects && currentUser.subjects.length > 0;
+  const isRestrictedView = isInstitutionalRoute && !isCoordinator && !hasSubjects;
+
+  const navItems = useMemo(() => {
+    if (isRestrictedView) {
+      return [
+        { path: '/dashboard', label: 'Sair da Escola', icon: 'arrow_back', isSpecial: true },
+      ];
+    }
+
+    if (isInstitutionalRoute && currentInstitutionId) {
+      const items = [
+        { path: `/institution/${currentInstitutionId}/dashboard`, label: 'Visão Geral', icon: 'dashboard' },
+        // Coordinator Only
+        ...(isCoordinator ? [{ path: `/institution/${currentInstitutionId}/teachers`, label: 'Professores', icon: 'groups' }] : []),
+
+        { path: `/institution/${currentInstitutionId}/classes`, label: 'Turmas', icon: 'class' },
+        { path: `/institution/${currentInstitutionId}/students`, label: 'Alunos', icon: 'school' },
+        { path: `/institution/${currentInstitutionId}/schedule`, label: 'Horários', icon: 'schedule' },
+        { path: `/institution/${currentInstitutionId}/grades`, label: 'Notas', icon: 'grade' },
+        { path: `/institution/${currentInstitutionId}/student-attendance`, label: 'Frequência', icon: 'fact_check' },
+        { path: `/institution/${currentInstitutionId}/occurrences`, label: 'Ocorrências', icon: 'campaign' },
+        { path: `/institution/${currentInstitutionId}/plans`, label: 'Planejamentos', icon: 'edit_note' },
+        { path: `/institution/${currentInstitutionId}/reports`, label: 'Pareceres', icon: 'description' },
+
+        // Coordinator Only
+        ...(isCoordinator ? [
+          { path: `/institution/${currentInstitutionId}/checkins`, label: 'Registro GPS', icon: 'location_on' },
+          { path: `/institution/${currentInstitutionId}/ai-reports`, label: 'Inteligência', icon: 'psychology' },
+          { path: `/institution/${currentInstitutionId}/settings`, label: 'Configurações', icon: 'settings' }
+        ] : []),
+
+        { path: `/institution/${currentInstitutionId}/events`, label: 'Eventos', icon: 'event' },
+
+        // Add divider or distinct styling for 'exit'
+        { path: '/dashboard', label: 'Meu Painel', icon: 'arrow_back', isSpecial: true },
+      ];
+      return items;
+    }
+
+    // Regular teacher navigation with conditional institution access
+    const baseItems = [
+      { path: '/instructions', label: 'Manual de Uso', icon: 'menu_book' },
+      { path: '/dashboard', label: 'Início', icon: 'dashboard' },
+      { path: '/timetable', label: 'Horário', icon: 'schedule' },
+      { path: '/planning', label: 'Planejamento', icon: 'calendar_month' },
+      { path: '/activities', label: 'Atividades', icon: 'assignment' },
+      { path: '/grades', label: 'Notas', icon: 'grade' },
+      { path: '/attendance', label: 'Frequência', icon: 'co_present' },
+      { path: '/students', label: 'Alunos', icon: 'groups' },
+      { path: '/observations', label: 'Ocorrências', icon: 'warning' },
+      { path: '/reports', label: 'Relatórios', icon: 'description' },
+    ];
+
+    // Add institution link for users with a school
+    if (currentSchool?.id) {
+      baseItems.push({
+        path: `/institution/${currentSchool.id}/dashboard`,
+        label: 'Minha Escola',
+        icon: 'corporate_fare'
+      });
+    }
+
+    return baseItems;
+  }, [location.pathname, currentInstitutionId, currentSchool?.id, isCoordinator]);
+
+  // Calculate available subjects based on context
+  const availableSubjects = useMemo(() => {
+    if (isInstitutionalRoute) {
+      // In Institution: Only show subjects derived from ASSIGNED CLASSES
+      // classes is already filtered by institutionId in ClassContext
+      const subjectsFromClasses = new Set(classes.map(c => c.subject).filter(Boolean));
+      return Array.from(subjectsFromClasses) as string[];
+    } else {
+      // In Personal: Show global subjects
+      return Array.from(new Set([currentUser?.subject, ...(currentUser?.subjects || [])])).filter(Boolean) as string[];
+    }
+  }, [isInstitutionalRoute, classes, currentUser]);
 
   const handleSelectSeries = (id: string) => {
     selectSeries(id);
@@ -120,79 +205,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     await addSection(activeSeries.id, next);
   };
 
-  const { scrollY } = useScroll();
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const orientX = useMotionValue(0);
-  const orientY = useMotionValue(0);
-
-  const springConfig = { damping: 20, stiffness: 100 };
-  const springX = useSpring(mouseX, springConfig);
-  const springY = useSpring(mouseY, springConfig);
-  const springOrientX = useSpring(orientX, springConfig);
-  const springOrientY = useSpring(orientY, springConfig);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const { clientX, clientY } = e;
-      const x = (clientX / window.innerWidth - 0.5) * 40;
-      const y = (clientY / window.innerHeight - 0.5) * 40;
-      mouseX.set(x);
-      mouseY.set(y);
-    };
-
-    const handleOrientation = (e: DeviceOrientationEvent) => {
-      if (e.beta && e.gamma) {
-        const x = (e.gamma / 45) * 30;
-        const y = ((e.beta - 45) / 45) * 30;
-        orientX.set(x);
-        orientY.set(y);
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('deviceorientation', handleOrientation);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('deviceorientation', handleOrientation);
-    };
-  }, [mouseX, mouseY, orientX, orientY]);
-
-  // Enhanced Orientation & Resize Handler
-  useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-
-    const handleResizeAndOrientation = () => {
-      // Clear existing timeout
-      if (timeoutId) clearTimeout(timeoutId);
-
-      // Debounce execution
-      timeoutId = setTimeout(() => {
-        const isLandscape = window.innerWidth > window.innerHeight;
-        const isLargeScreen = window.innerWidth >= 1024; // lg breakpoint
-
-        // If on a small screen (regardless of orientation), close sidebar
-        if (!isLargeScreen) {
-          setIsSidebarCollapsed(true);
-          setIsMobileMenuOpen(false);
-        }
-      }, 150); // 150ms debounce
-    };
-
-    window.addEventListener('resize', handleResizeAndOrientation);
-    window.addEventListener('orientationchange', handleResizeAndOrientation);
-
-    // Initial check
-    handleResizeAndOrientation();
-
-    return () => {
-      window.removeEventListener('resize', handleResizeAndOrientation);
-      window.removeEventListener('orientationchange', handleResizeAndOrientation);
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, []);
-
-  const backgroundOrientation = useMemo(() => ({ x: springOrientX, y: springOrientY }), [springOrientX, springOrientY]);
 
   return (
     <div className="fixed inset-0 w-full h-[100dvh] flex bg-surface-page overflow-hidden selection:bg-primary/10 selection:text-primary">
@@ -200,23 +212,17 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {/* Dynamic Background Pattern - Fixed and isolated */}
       <BackgroundPattern
         theme={theme}
-        mouseX={springX}
-        mouseY={springY}
-        orientation={backgroundOrientation}
       />
 
-      {/* PREMIUM ANIMATED BLOBS (Mesh Gradient) */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-primary/20 blur-[120px] animate-blob mix-blend-multiply filter opacity-70"></div>
-        <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-secondary/20 blur-[120px] animate-blob animation-delay-2000 mix-blend-multiply filter opacity-70"></div>
-        <div className="absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] rounded-full bg-pink-500/10 blur-[150px] animate-blob animation-delay-4000 mix-blend-multiply filter opacity-70"></div>
-      </div>
+
+      {/* Background handled by BackgroundPattern — no duplicate blobs */}
 
 
 
       <ProfileModal
         isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
+        onClose={() => { setIsProfileModalOpen(false); setProfileDefaultTab('profile'); }}
+        defaultTab={profileDefaultTab}
       />
 
       <PasswordSetupModal
@@ -232,10 +238,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         onClose={() => setIsClassSelectorOpen(false)}
       />
 
-      <motion.aside
-        layout
-        transition={{ type: "spring", stiffness: 280, damping: 30, mass: 0.6 }}
-        className={`fixed ${window.electronAPI?.isElectron ? 'top-10' : 'top-4'} bottom-4 left-4 z-[60] glass-card-premium transform flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden transition-all duration-300
+      <aside
+        className={`fixed ${window.electronAPI?.isElectron ? 'top-10' : 'top-4'} bottom-4 left-4 z-[60] glass-card-premium flex flex-col shadow-2xl lg:shadow-neon shrink-0 group/sidebar overflow-hidden transition-all duration-300 ease-out
           ${isMobileMenuOpen ? 'translate-x-0 w-72 border-r-0' : ''} 
           ${!isMobileMenuOpen && isSidebarCollapsed ? 'lg:-translate-x-full w-0 border-0 p-0 opacity-0 pointer-events-none' : 'lg:translate-x-0 w-72 border-r-0'}
           ${!isMobileMenuOpen && !isSidebarCollapsed ? '-translate-x-[120%]' : ''}
@@ -249,13 +253,32 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-4 landscape:p-2 flex flex-col gap-4 landscape:gap-2">
-            <div className={`flex gap-3 items-center px-2 py-4 landscape:py-2 border-b border-border-default mb-2 shrink-0 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-              <img src={logoSrc} alt="Acerta+" className="size-12 object-contain drop-shadow-md shrink-0" />
-              {!isSidebarCollapsed && (
-                <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500 min-w-0">
-                  <h1 className="text-text-primary text-2xl font-black leading-none tracking-tight truncate filter drop-shadow-sm">Prof. Acerta<span className="text-primary">+</span></h1>
-                  <p className="text-primary-hover text-[10px] font-mono font-bold uppercase tracking-[0.2em] mt-1 truncate ml-0.5">Gestão 3.1</p>
+            <div className={`relative px-2 py-4 landscape:py-2 border-b border-border-default mb-2 shrink-0 ${isSidebarCollapsed ? 'flex justify-center' : ''}`}>
+              {!isSidebarCollapsed ? (
+                <div
+                  onClick={() => { setProfileDefaultTab('schools'); setIsProfileModalOpen(true); }}
+                  className="w-full flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-surface-subtle transition-all group border border-transparent hover:border-border-default"
+                  title="Alternar contexto"
+                >
+                  <div className={`size-10 rounded-lg flex items-center justify-center shadow-sm shrink-0 ${isInstitutionalRoute ? 'bg-white border border-border-default' : 'bg-gradient-to-br from-primary to-secondary text-white'}`}>
+                    {isInstitutionalRoute ? (
+                      <span className="material-symbols-outlined text-primary text-xl">school</span>
+                    ) : (
+                      <img src={logoSrc} alt="Acerta+" className="size-6 object-contain brightness-0 invert" />
+                    )}
+                  </div>
+                  <div className="flex flex-col items-start min-w-0 flex-1">
+                    <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider truncate w-full text-left">
+                      {isInstitutionalRoute ? 'Gestão Escolar' : 'Minha Sala'}
+                    </span>
+                    <span className="text-sm font-black text-text-primary truncate w-full text-left leading-tight">
+                      {isInstitutionalRoute ? (currentSchool?.name || 'Escola') : 'Prof. Acerta+'}
+                    </span>
+                  </div>
+                  <span className="material-symbols-outlined text-text-muted text-lg opacity-0 group-hover:opacity-100 transition-opacity">swap_horiz</span>
                 </div>
+              ) : (
+                <img src={logoSrc} alt="Acerta+" className="size-10 object-contain drop-shadow-md shrink-0" />
               )}
             </div>
 
@@ -270,10 +293,34 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold text-text-primary shadow-black/5 dark:shadow-black/50 drop-shadow-sm">{currentUser?.name?.split(' ')[0]}</span>
-                  <span className="text-[9px] uppercase tracking-widest text-primary font-mono">Meu Perfil</span>
-                </div>
+                {isInstitutionalRoute ? (
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold truncate text-text-primary group-hover:text-primary transition-colors">
+                      {currentSchool?.name || 'Carregando...'}
+                    </span>
+
+                    {/* Coordinator Badge */}
+                    {isCoordinator && (
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="material-symbols-outlined text-[14px] text-amber-500 fill-current">local_police</span>
+                        <span className="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-wider">
+                          Coordenador
+                        </span>
+                      </div>
+                    )}
+
+                    {!isCoordinator && (
+                      <span className="text-[10px] text-text-muted uppercase tracking-wider font-bold">
+                        Painel Institucional
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-text-primary shadow-black/5 dark:shadow-black/50 drop-shadow-sm">{currentUser?.name?.split(' ')[0]}</span>
+                    <span className="text-[9px] uppercase tracking-widest text-primary font-mono">Meu Perfil</span>
+                  </div>
+                )}
                 <span className="material-symbols-outlined text-text-muted ml-auto bg-surface-subtle rounded-full p-1 text-[16px]">settings</span>
               </div>
             </div>
@@ -292,20 +339,26 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 {/* Mobile Subject List Accordion */}
                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isSubjectDropdownOpen ? 'max-h-60 border-t border-border-subtle' : 'max-h-0'}`}>
                   <div className="bg-surface-subtle/30 p-1">
-                    {Array.from(new Set([currentUser?.subject, ...(currentUser?.subjects || [])])).filter(Boolean).map(subj => (
-                      <button
-                        key={subj}
-                        onClick={() => {
-                          updateActiveSubject(subj as string);
-                          setIsSubjectDropdownOpen(false);
-                          setIsMobileMenuOpen(false); // Optional: close menu on selection
-                        }}
-                        className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-2 ${activeSubject === subj ? `bg-primary/10 text-primary` : 'text-text-secondary hover:bg-surface-subtle'}`}
-                      >
-                        <span className={`size-1.5 rounded-full ${activeSubject === subj ? 'bg-primary' : 'bg-transparent border border-text-muted'}`}></span>
-                        {subj}
-                      </button>
-                    ))}
+                    {availableSubjects.length > 0 ? (
+                      availableSubjects.map((subj: string) => (
+                        <button
+                          key={subj}
+                          onClick={() => {
+                            updateActiveSubject(subj);
+                            setIsSubjectDropdownOpen(false);
+                            setIsMobileMenuOpen(false); // Optional: close menu on selection
+                          }}
+                          className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-2 ${activeSubject === subj ? `bg-primary/10 text-primary` : 'text-text-secondary hover:bg-surface-subtle'}`}
+                        >
+                          <span className={`size-1.5 rounded-full ${activeSubject === subj ? 'bg-primary' : 'bg-transparent border border-text-muted'}`}></span>
+                          {subj}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-3 text-center text-xs text-text-muted">
+                        Nenhuma disciplina atribuída.
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -321,6 +374,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   isActive={isActive(item.path)}
                   isCollapsed={isSidebarCollapsed && !isMobileMenuOpen}
                   onClick={() => setIsMobileMenuOpen(false)}
+                  // @ts-ignore - Adding prop dynamically
+                  isSpecial={item.isSpecial}
                 />
               ))}
             </nav>
@@ -336,39 +391,40 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <span className={`text-sm font-medium animate-in fade-in duration-300 ${isSidebarCollapsed ? 'lg:hidden' : ''}`}>Sair</span>
             </button>
           </div>
-        </div>
-      </motion.aside>
+        </div >
+      </aside >
 
-      {/* Sidebar Toggle Button - Hidden when modals are open */}
-      {!isProfileModalOpen && !isPasswordSetupOpen && !isClassSelectorOpen && (
-        <button
-          onClick={toggleSidebar}
-          className={`hidden lg:flex fixed z-[70] top-8 size-12 bg-surface-card/95 border border-border-default rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'}`}
-          title={isSidebarCollapsed ? "Expandir" : "Recolher"}
-        >
-          <span className={`material-symbols-outlined text-3xl font-bold transition-transform duration-150 ease-out ${isSidebarCollapsed ? '' : 'rotate-180'}`}>chevron_right</span>
-        </button>
-      )}
+      {/* Sidebar Toggle Button - Hidden when modals are open OR Restricted View */}
+      {/* Sidebar Toggle Button - Hidden when modals are open OR Restricted View */}
+      {
+        !isProfileModalOpen && !isPasswordSetupOpen && !isClassSelectorOpen && (
+          <button
+            onClick={toggleSidebar}
+            className={`hidden lg:flex fixed z-[70] top-8 size-12 bg-surface-card/95 border border-border-default rounded-full items-center justify-center shadow-xl shadow-${theme.primaryColor}/20 text-${theme.primaryColor} transition-transform duration-150 ease-out will-change-transform hover:scale-105 active:scale-95 group ring-0 hover:ring-4 ring-${theme.primaryColor}/10 left-6 ${isSidebarCollapsed ? 'translate-x-0' : 'translate-x-[17rem]'}`}
+            title={isSidebarCollapsed ? "Expandir" : "Recolher"}
+          >
+            <span className={`material-symbols-outlined text-3xl font-bold transition-transform duration-150 ease-out ${isSidebarCollapsed ? '' : 'rotate-180'}`}>chevron_right</span>
+          </button>
+        )
+      }
 
       {/* Main Content Area */}
-      <motion.div
-        layout
-        transition={{ type: "spring", stiffness: 280, damping: 30, mass: 0.6 }}
-        className={`flex-1 flex flex-col min-w-0 h-full relative z-10 
+      <div
+        className={`flex-1 flex flex-col min-w-0 h-full relative z-10 transition-[margin] duration-300 ease-out
           ${isSidebarCollapsed ? 'lg:ml-0' : 'lg:ml-72'}
         `}
       >
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 bg-black/60 z-[55] lg:hidden backdrop-blur-sm transition-all" onClick={() => setIsMobileMenuOpen(false)}></div>
+          <div className="fixed inset-0 bg-black/60 z-[55] lg:hidden transition-opacity" onClick={() => setIsMobileMenuOpen(false)}></div>
         )}
 
-        <motion.header
-          layout
-          className={`flex flex-col md:flex-row items-center justify-between mx-2 md:mx-4 mt-2 md:mt-4 mb-2 rounded-2xl glass-card-soft backdrop-blur-none px-2 py-1.5 md:px-3 md:py-3 z-[40] shrink-0 gap-3 sticky top-2 shadow-lg shadow-black/5 bg-white/80 dark:bg-slate-900/80 min-h-[48px] md:min-h-[60px]`}
+        <header
+          className={`flex flex-col md:flex-row items-center justify-between mx-2 md:mx-4 mt-2 md:mt-4 mb-2 rounded-2xl glass-card-soft px-2 py-1.5 md:px-3 md:py-3 z-[40] shrink-0 gap-3 sticky top-2 shadow-lg shadow-black/5 bg-white/80 dark:bg-slate-900/80 min-h-[48px] md:min-h-[60px]`}
         >
           {/* Main Flex Container - Single Row on Mobile */}
           <div className="flex w-full items-center justify-between gap-x-2 gap-y-0">
 
+            {/* 1. LEFT: Menu (Visible on Mobile, Hidden on Desktop) */}
             {/* 1. LEFT: Menu (Visible on Mobile, Hidden on Desktop) */}
             <div className="flex items-center shrink-0 lg:w-auto">
               <button className="lg:hidden text-text-primary p-1.5 hover:bg-surface-subtle rounded-lg transition-colors shrink-0" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
@@ -376,80 +432,98 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </button>
             </div>
 
-            {/* 2. CENTER: Series + Classes (Hidden on Mobile, Desktop Center) */}
-            <div className="hidden lg:flex flex-wrap items-center justify-center gap-2 flex-1 order-3 md:order-2 w-full md:w-auto mt-2 md:mt-0 min-w-[200px]">
+            {/* 2. CENTER: Series + Classes (Hidden on Mobile, Desktop Center) - HIDDEN for Coordinator */}
+            {!isCoordinator && (
+              <div className="hidden lg:flex flex-wrap items-center justify-center gap-2 flex-1 order-3 md:order-2 w-full md:w-auto mt-2 md:mt-0 min-w-[200px]">
 
-              {/* Series Selector - HIDDEN on Mobile */}
-              <button onClick={() => setIsClassSelectorOpen(true)} className="hidden md:flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl bg-surface-card/50 hover:bg-surface-card/80 transition-all duration-300 border border-border-default hover:border-primary/30 shadow-sm active:scale-95 backdrop-blur-sm shrink-0" title="Gerenciar Turmas">
-                <div className={`size-8 rounded-lg bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-md shadow-primary/20`}>
-                  <span className="material-symbols-outlined text-base font-black">{theme.icon}</span>
-                </div>
-                <div className="flex flex-col items-start gap-0.5">
-                  <span className="text-[9px] font-black text-text-muted uppercase tracking-widest leading-none font-mono">Série</span>
-                  <div className="flex items-center gap-0.5">
-                    <span className="font-black text-sm text-text-primary tracking-tight leading-none">{activeSeries?.name || 'Selecione...'}</span>
-                    <span className="material-symbols-outlined text-text-muted text-[10px]">expand_more</span>
+                {/* Series Selector - HIDDEN on Mobile */}
+                <button onClick={() => setIsClassSelectorOpen(true)} className="hidden md:flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl bg-surface-card/50 hover:bg-surface-card/80 transition-all duration-300 border border-border-default hover:border-primary/30 shadow-sm active:scale-95 backdrop-blur-sm shrink-0" title="Gerenciar Turmas">
+                  <div className={`size-8 rounded-lg bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-md shadow-primary/20`}>
+                    <span className="material-symbols-outlined text-base font-black">{theme.icon}</span>
                   </div>
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className="text-[9px] font-black text-text-muted uppercase tracking-widest leading-none font-mono">Série</span>
+                    <div className="flex items-center gap-0.5">
+                      <span className="font-black text-sm text-text-primary tracking-tight leading-none">{activeSeries?.name || 'Selecione...'}</span>
+                      <span className="material-symbols-outlined text-text-muted text-[10px]">expand_more</span>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Divider */}
+                <div className="h-6 w-px bg-border-default mx-1 hidden sm:block shrink-0"></div>
+
+                {/* Classes List */}
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                  {activeSeries?.sections.map(sec => (
+                    <button key={sec} onClick={() => handleSwitchSection(sec)} className={`min-w-[2.5rem] h-8 px-3 rounded-lg font-bold text-xs transition-colors shrink-0 ${selectedSection === sec ? `bg-primary text-white shadow-neon` : 'bg-surface-card/50 border border-border-default text-text-secondary hover:bg-surface-subtle'}`}>
+                      {sec}
+                    </button>
+                  ))}
+                  {activeSeries && (
+                    <button onClick={handleAddSectionOneClick} className={`size-8 rounded-lg flex items-center justify-center border border-dashed border-text-muted/50 text-text-muted hover:border-primary hover:text-white hover:bg-primary transition-colors shrink-0`} title="Nova Turma">
+                      <span className="material-symbols-outlined text-sm font-black">add</span>
+                    </button>
+                  )}
                 </div>
-              </button>
-
-              {/* Divider */}
-              <div className="h-6 w-px bg-border-default mx-1 hidden sm:block shrink-0"></div>
-
-              {/* Classes List */}
-              <div className="flex items-center gap-2 flex-wrap justify-center">
-                {activeSeries?.sections.map(sec => (
-                  <button key={sec} onClick={() => handleSwitchSection(sec)} className={`min-w-[2.5rem] h-8 px-3 rounded-lg font-bold text-xs transition-colors shrink-0 ${selectedSection === sec ? `bg-primary text-white shadow-neon` : 'bg-surface-card/50 border border-border-default text-text-secondary hover:bg-surface-subtle'}`}>
-                    {sec}
-                  </button>
-                ))}
-                {activeSeries && (
-                  <button onClick={handleAddSectionOneClick} className={`size-8 rounded-lg flex items-center justify-center border border-dashed border-text-muted/50 text-text-muted hover:border-primary hover:text-white hover:bg-primary transition-colors shrink-0`} title="Nova Turma">
-                    <span className="material-symbols-outlined text-sm font-black">add</span>
-                  </button>
-                )}
               </div>
-            </div>
+            )}
 
             {/* 3. RIGHT: Subject + Profile (Aligned Right, Compact on Mobile) */}
             <div className="flex items-center justify-end gap-1.5 shrink-0 ml-auto bg-transparent md:bg-surface-subtle/30 p-0 md:p-1 rounded-xl order-2 md:order-3">
 
-              {/* MOBILE ONLY: Series Selector (Next to Profile) */}
-              <button
-                onClick={() => setIsClassSelectorOpen(true)}
-                className="lg:hidden flex items-center gap-1.5 bg-surface-card px-2 py-1 rounded-lg border border-border-default active:scale-95 transition-all shadow-sm h-8"
-              >
-                <div className="flex flex-col items-end leading-none">
-                  {/* <span className="text-[6px] font-black text-text-muted uppercase tracking-wider font-mono hidden sm:inline">Turma</span> */}
-                  <span className="text-[10px] sm:text-xs font-black text-text-primary capitalize flex items-center gap-1">
-                    {activeSeries?.name || '?'} <span className="bg-primary text-white px-1 sm:px-1.5 rounded text-[9px] sm:text-[10px]">{selectedSection}</span>
-                  </span>
-                </div>
-                <span className="material-symbols-outlined text-[10px] text-text-muted bg-surface-subtle rounded-full p-0.5">expand_more</span>
-              </button>
+              {/* MOBILE ONLY: Series Selector (Next to Profile) - HIDDEN for Coordinator */}
+              {!isCoordinator && (
+                <button
+                  onClick={() => setIsClassSelectorOpen(true)}
+                  className="lg:hidden flex items-center gap-1.5 bg-surface-card px-2 py-1 rounded-lg border border-border-default active:scale-95 transition-all shadow-sm h-8"
+                >
+                  <div className="flex flex-col items-end leading-none">
+                    {/* <span className="text-[6px] font-black text-text-muted uppercase tracking-wider font-mono hidden sm:inline">Turma</span> */}
+                    <span className="text-[10px] sm:text-xs font-black text-text-primary capitalize flex items-center gap-1">
+                      {activeSeries?.name || '?'} <span className="bg-primary text-white px-1 sm:px-1.5 rounded text-[9px] sm:text-[10px]">{selectedSection}</span>
+                    </span>
+                  </div>
+                  <span className="material-symbols-outlined text-[10px] text-text-muted bg-surface-subtle rounded-full p-0.5">expand_more</span>
+                </button>
+              )}
 
 
-              {/* Subject Selector - HIDDEN on Mobile */}
+              {/* Subject Selector / Role Display - HIDDEN on Mobile */}
               {currentUser && (
                 <div className="relative shrink-0 hidden md:block">
-                  <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold text-text-secondary hover:bg-surface-subtle hover:text-primary transition-colors border border-border-subtle bg-surface-card/30">
-                    <span className={`size-2 rounded-full bg-primary shadow-neon`}></span>
-                    <span className="inline-block max-w-[150px] truncate">{activeSubject}</span>
-                    <span className="material-symbols-outlined text-xs">expand_more</span>
-                  </button>
-                  {/* Dropdown Logic Kept Same - Rendered via Portal or Absolute usually, reusing state */}
-                  {isSubjectDropdownOpen && (
+                  {isCoordinator ? (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 select-none cursor-default">
+                      <span className="material-symbols-outlined text-[16px]">local_police</span>
+                      <span>Coordenador Pedagógico</span>
+                    </div>
+                  ) : (
                     <>
-                      <div className="fixed inset-0 z-[60]" onClick={() => setIsSubjectDropdownOpen(false)}></div>
-                      <div className="absolute top-full right-0 mt-2 w-48 bg-surface-elevated rounded-xl shadow-xl border border-border-subtle overflow-hidden z-[61] animate-in fade-in zoom-in-95 duration-200 glass-card-premium">
-                        <div className="p-2 space-y-1">
-                          {Array.from(new Set([currentUser.subject, ...(currentUser.subjects || [])])).map(subj => (
-                            <button key={subj} onClick={() => { updateActiveSubject(subj); setIsSubjectDropdownOpen(false); }} className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeSubject === subj ? `bg-primary/10 text-primary` : 'text-text-secondary hover:bg-surface-subtle'}`}>
-                              {subj}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                      {/* Only Show Subject Selector if there are subjects available in this context */}
+                      {availableSubjects.length > 0 && (
+                        <>
+                          <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold text-text-secondary hover:bg-surface-subtle hover:text-primary transition-colors border border-border-subtle bg-surface-card/30">
+                            <span className={`size-2 rounded-full bg-primary shadow-neon`}></span>
+                            <span className="inline-block max-w-[150px] truncate">{activeSubject || 'Selecione...'}</span>
+                            <span className="material-symbols-outlined text-xs">expand_more</span>
+                          </button>
+                          {/* Dropdown Logic Kept Same - Rendered via Portal or Absolute usually, reusing state */}
+                          {isSubjectDropdownOpen && (
+                            <>
+                              <div className="fixed inset-0 z-[60]" onClick={() => setIsSubjectDropdownOpen(false)}></div>
+                              <div className="absolute top-full right-0 mt-2 w-48 bg-surface-elevated rounded-xl shadow-xl border border-border-subtle overflow-hidden z-[61] animate-in fade-in zoom-in-95 duration-200 glass-card-premium">
+                                <div className="p-2 space-y-1">
+                                  {availableSubjects.map(subj => (
+                                    <button key={subj} onClick={() => { updateActiveSubject(subj); setIsSubjectDropdownOpen(false); }} className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeSubject === subj ? `bg-primary/10 text-primary` : 'text-text-secondary hover:bg-surface-subtle'}`}>
+                                      {subj}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </>
+                      )}
                     </>
                   )}
                 </div>
@@ -484,7 +558,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </div>
 
           </div>
-        </motion.header>
+        </header>
 
 
 
@@ -496,8 +570,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         <div>
           {/* Mobile Bottom Nav Removed */}
         </div>
-      </motion.div>
+      </div>
 
-    </div>
+    </div >
   );
 };

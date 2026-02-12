@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion'; // Import motion
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
@@ -45,6 +45,41 @@ export const Dashboard: React.FC = () => {
   const [loadingOccurrences, setLoadingOccurrences] = useState(true);
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [loadingActivities, setLoadingActivities] = useState(true);
+
+  // --- REDIRECT GUARD FOR COORDINATORS ---
+  const navigate = useNavigate();
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  useEffect(() => {
+    if (!currentUser || isRedirecting) return;
+
+    const checkRedirect = async () => {
+      // If user is purely institutional (no personal classes), they shouldn't see Personal Dashboard
+      const isInstitutionalOnly = currentUser.account_type === 'institutional' && classes.length === 0;
+
+      if (isInstitutionalOnly) {
+        setIsRedirecting(true);
+        try {
+          const { data: schools } = await supabase
+            .from('institution_teachers')
+            .select('institution_id')
+            .eq('user_id', currentUser.id)
+            .limit(1);
+
+          if (schools && schools.length > 0) {
+            navigate(`/institution/${schools[0].institution_id}/dashboard`, { replace: true });
+          }
+        } catch (err) {
+          console.error("Redirect check failed", err);
+          setIsRedirecting(false);
+        }
+      }
+    };
+
+    // Slight delay to ensure Contexts are ready
+    const timer = setTimeout(checkRedirect, 500);
+    return () => clearTimeout(timer);
+  }, [currentUser, classes.length, isRedirecting, navigate]);
 
   // Separate states for clarity
   const [globalCount, setGlobalCount] = useState(0);
@@ -662,8 +697,8 @@ export const Dashboard: React.FC = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.05
+        staggerChildren: 0.08,
+        delayChildren: 0.1
       }
     }
   };
@@ -671,34 +706,32 @@ export const Dashboard: React.FC = () => {
   const itemVariants: any = {
     hidden: {
       opacity: 0,
-      y: 40,
-      scale: 0.9,
-      filter: "blur(10px)"
+      y: 30,
+      scale: 0.95,
     },
     visible: {
       opacity: 1,
       y: 0,
       scale: 1,
-      filter: "blur(0px)",
       transition: {
         type: 'spring',
-        stiffness: 80,
-        damping: 15,
-        mass: 1.2
+        stiffness: 120,
+        damping: 18,
+        mass: 0.8
       }
     }
   };
 
   const heroVariants: any = {
-    hidden: { opacity: 0, scale: 1.1, filter: "blur(20px)" },
+    hidden: { opacity: 0, scale: 1.05, y: -10 },
     visible: {
       opacity: 1,
       scale: 1,
-      filter: "blur(0px)",
+      y: 0,
       transition: {
-        duration: 0.8,
-        ease: [0.25, 0.4, 0.25, 1],
-        delay: 0.2
+        duration: 0.5,
+        ease: [0.22, 1, 0.36, 1],
+        delay: 0.15
       }
     }
   };

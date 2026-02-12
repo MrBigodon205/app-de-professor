@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframe Reimaginado — Planejamento</title>
+<style>
+  :root {
+    --primary: #06b6d4;
+    --primary-dark: #0891b2;
+    --secondary: #8b5cf6;
+    --surface: #ffffff;
+    --surface-subtle: #f8fafc;
+    --surface-dark: #0f172a;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-subtle: #f1f5f9;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Outfit', 'Inter', system-ui, sans-serif; background: var(--surface-subtle); color: var(--text-primary); }
+  
+  .page { display: flex; height: 100vh; overflow: hidden; }
+  
+  /* SIDEBAR */
+  .sidebar { width: 340px; border-right: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border-subtle); }
+  .sidebar-tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface-subtle); border-radius: var(--radius-sm); margin-bottom: 16px; }
+  .sidebar-tab { flex: 1; padding: 8px 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; background: transparent; color: var(--text-muted); }
+  .sidebar-tab.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
+  .sidebar-actions { display: flex; gap: 8px; }
+  .btn-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; }
+  .btn-draft { background: #fef3c7; color: #d97706; }
+  .btn-new { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(6,182,212,0.3); }
+  
+  .search-box { position: relative; }
+  .search-box input { width: 100%; padding: 10px 12px 10px 40px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 14px; background: var(--surface-subtle); outline: none; }
+  .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(6,182,212,0.1); }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 18px; }
+  
+  .filter-pills { display: flex; gap: 8px; padding: 12px 20px; flex-wrap: wrap; }
+  .pill { padding: 6px 16px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s; color: var(--text-muted); }
+  .pill.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-color: transparent; }
+  
+  .plan-list { flex: 1; overflow-y: auto; padding: 8px 12px; }
+  .plan-card { padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 8px; cursor: pointer; transition: all 0.2s; position: relative; }
+  .plan-card:hover { border-color: var(--border); background: var(--surface-subtle); }
+  .plan-card.active { border-color: var(--primary); background: rgba(6,182,212,0.03); box-shadow: inset 3px 0 0 var(--primary); }
+  .plan-card-title { font-weight: 800; font-size: 15px; margin-bottom: 6px; }
+  .plan-card-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+  .meta-tag { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; background: var(--surface-subtle); color: var(--text-muted); }
+  .meta-tag.section { background: rgba(99,102,241,0.08); color: #6366f1; }
+  
+  /* MAIN CONTENT */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--surface-subtle); }
+  
+  /* VIEW MODE */
+  .view-header { height: 180px; background: linear-gradient(135deg, #06b6d4, #8b5cf6); position: relative; padding: 24px 32px; display: flex; flex-direction: column; justify-content: flex-end; flex-shrink: 0; }
+  .view-header-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.5), transparent); }
+  .view-header-content { position: relative; z-index: 1; }
+  .view-badges { display: flex; gap: 8px; margin-bottom: 8px; }
+  .view-badge { padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,0.2); color: white; font-size: 11px; font-weight: 700; backdrop-filter: blur(4px); }
+  .view-title { font-size: 28px; font-weight: 900; color: white; }
+  .view-actions { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; z-index: 2; }
+  .view-action-btn { width: 40px; height: 40px; border-radius: var(--radius-md); background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 18px; }
+  .view-action-btn:hover { background: rgba(255,255,255,0.25); }
+  .view-action-btn.danger { background: rgba(239,68,68,0.2); }
+  
+  .view-body { flex: 1; overflow-y: auto; padding: 32px; }
+  
+  /* METADATA GRID */
+  .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  .meta-item { background: var(--surface); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 12px; }
+  .meta-icon { width: 44px; height: 44px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .meta-icon.date { background: #fff7ed; color: #ea580c; }
+  .meta-icon.subject { background: #eff6ff; color: #2563eb; }
+  .meta-icon.duration { background: #eef2ff; color: #4f46e5; }
+  .meta-icon.theme { background: #ecfdf5; color: #059669; }
+  .meta-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+  .meta-value { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  
+  /* CONTENT CARDS */
+  .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .content-card { background: var(--surface); padding: 24px; border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); }
+  .content-card.full { grid-column: 1 / -1; }
+  .content-card h3 { font-size: 16px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--border-subtle); }
+  .content-card h3 .icon { font-size: 20px; }
+  .content-card p { font-size: 14px; line-height: 1.7; color: var(--text-secondary); }
+  .bncc-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .bncc-tag { padding: 4px 10px; background: #ecfdf5; color: #047857; border: 1px solid #d1fae5; border-radius: 6px; font-size: 12px; font-weight: 700; font-family: monospace; }
+  
+  /* TOAST (improved from modal alerts) */
+  .toast { position: fixed; bottom: 24px; right: 24px; padding: 16px 24px; border-radius: var(--radius-md); background: var(--surface-dark); color: white; font-weight: 700; font-size: 14px; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 12px; z-index: 100; animation: slideUp 0.3s ease; }
+  .toast.success { background: #059669; }
+  .toast .icon { font-size: 20px; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  
+  /* EMPTY STATE */
+  .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px; text-align: center; }
+  .empty-icon { width: 120px; height: 120px; border-radius: 50%; background: var(--surface-subtle); display: flex; align-items: center; justify-content: center; margin-bottom: 24px; font-size: 48px; color: var(--text-muted); }
+  .empty-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+  .empty-desc { color: var(--text-muted); max-width: 400px; margin-bottom: 32px; }
+  .btn-primary { padding: 14px 28px; border-radius: var(--radius-md); background: var(--primary); color: white; font-weight: 800; font-size: 16px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(6,182,212,0.3); transition: all 0.2s; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(6,182,212,0.4); }
+  .btn-secondary { padding: 14px 28px; border-radius: var(--radius-md); background: var(--surface); color: var(--text-primary); font-weight: 800; font-size: 16px; border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+  
+  /* IMPROVEMENTS ANNOTATION */
+  .improvement { position: relative; }
+  .improvement::after { content: attr(data-note); position: absolute; top: -8px; right: -8px; background: #10b981; color: white; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; z-index: 5; }
+  
+  /* MOBILE */
+  @media (max-width: 768px) {
+    .page { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; max-height: 50vh; border-right: none; border-bottom: 1px solid var(--border); }
+    .sidebar.hidden-mobile { display: none; }
+    .meta-grid { grid-template-columns: repeat(2, 1fr); }
+    .content-grid { grid-template-columns: 1fr; }
+    .view-header { height: 140px; }
+    .view-title { font-size: 22px; }
+    .view-actions { top: 8px; right: 8px; }
+    .view-action-btn { width: 36px; height: 36px; }
+  }
+
+  .section-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 16px; padding-left: 4px; }
+  .file-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .file-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); }
+  .file-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(6,182,212,0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; }
+  .file-name { font-size: 13px; font-weight: 700; }
+  .file-size { font-size: 11px; color: var(--text-muted); }
+  .file-actions { margin-left: auto; display: flex; gap: 4px; }
+  .file-action { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.2s; font-size: 16px; }
+  .file-action:hover { background: var(--surface-subtle); color: var(--primary); }
+</style>
+</head>
+<body>
+<div class="page">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div class="sidebar-tabs">
+          <button class="sidebar-tab active">Aulas</button>
+          <button class="sidebar-tab">Ativ.</button>
+        </div>
+        <div class="sidebar-actions">
+          <button class="btn-icon btn-draft improvement" data-note="Draft recovery" title="Continuar Rascunho">📝</button>
+          <button class="btn-icon btn-new" title="Nova Aula">+</button>
+        </div>
+      </div>
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Buscar planejamento..." />
+      </div>
+    </div>
+    
+    <div class="filter-pills">
+      <button class="pill active">Todas</button>
+      <button class="pill">Turma A</button>
+      <button class="pill">Turma B</button>
+    </div>
+    
+    <div class="plan-list">
+      <div class="plan-card active">
+        <div class="plan-card-title">Introdução à Célula</div>
+        <div class="plan-card-meta">
+          <span class="meta-tag section">Turma A</span>
+          <span class="meta-tag">Aula Expositiva</span>
+          <span class="meta-tag">10/02/2026</span>
+        </div>
+      </div>
+      <div class="plan-card">
+        <div class="plan-card-title">Fotossíntese e Respiração</div>
+        <div class="plan-card-meta">
+          <span class="meta-tag section">Turma B</span>
+          <span class="meta-tag">Atividade Prática</span>
+          <span class="meta-tag">08/02/2026</span>
+        </div>
+      </div>
+      <div class="plan-card">
+        <div class="plan-card-title">Avaliação Bimestral</div>
+        <div class="plan-card-meta">
+          <span class="meta-tag section">Todas</span>
+          <span class="meta-tag">Avaliação</span>
+          <span class="meta-tag">05/02/2026</span>
+        </div>
+      </div>
+      <div class="plan-card">
+        <div class="plan-card-title">Sistemas Digestório</div>
+        <div class="plan-card-meta">
+          <span class="meta-tag section">Turma A</span>
+          <span class="meta-tag">03/02/2026</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- MAIN CONTENT: VIEW MODE -->
+  <div class="main">
+    <!-- View Header -->
+    <div class="view-header">
+      <div class="view-header-overlay"></div>
+      <div class="view-actions">
+        <button class="view-action-btn" title="Baixar PDF">📄</button>
+        <button class="view-action-btn" title="Baixar Word">📝</button>
+        <button class="view-action-btn" title="Clonar" style="background:rgba(16,185,129,0.2)">📋</button>
+        <button class="view-action-btn" title="Editar">✏️</button>
+        <button class="view-action-btn danger" title="Excluir">🗑️</button>
+      </div>
+      <div class="view-header-content">
+        <div class="view-badges">
+          <span class="view-badge">6º Ano</span>
+          <span class="view-badge">Turma A</span>
+        </div>
+        <div class="view-title">📘 Introdução à Célula</div>
+      </div>
+    </div>
+    
+    <!-- View Body -->
+    <div class="view-body">
+      <!-- Metadata -->
+      <div class="meta-grid">
+        <div class="meta-item">
+          <div class="meta-icon date">📅</div>
+          <div><div class="meta-label">Data</div><div class="meta-value">10/02/2026</div></div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-icon subject">📚</div>
+          <div><div class="meta-label">Disciplina</div><div class="meta-value">Ciências</div></div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-icon duration">⏱️</div>
+          <div><div class="meta-label">Duração</div><div class="meta-value">2 aulas de 50min</div></div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-icon theme">📂</div>
+          <div><div class="meta-label">Eixo / Tema</div><div class="meta-value">Vida e Evolução</div></div>
+        </div>
+      </div>
+      
+      <!-- Content Cards -->
+      <div class="content-grid">
+        <div class="content-card">
+          <h3><span class="icon">📘</span> Conteúdo & Objetivos</h3>
+          <p><strong>Objetivos:</strong> Identificar as principais organelas celulares e suas funções. Diferenciar células procariontes e eucariontes.</p>
+        </div>
+        <div class="content-card">
+          <h3><span class="icon">✅</span> BNCC & Habilidades</h3>
+          <div class="bncc-tags">
+            <span class="bncc-tag">EF06CI05</span>
+            <span class="bncc-tag">EF06CI06</span>
+          </div>
+        </div>
+        <div class="content-card full">
+          <h3><span class="icon">▶️</span> Desenvolvimento & Metodologia</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+            <div>
+              <div class="meta-label" style="margin-bottom:8px;">Metodologia</div>
+              <p>Aula expositiva dialogada com recursos audiovisuais. Uso de microscópio óptico para observação de lâminas preparadas.</p>
+            </div>
+            <div>
+              <div class="meta-label" style="margin-bottom:8px;">Roteiro da Aula</div>
+              <p>1. Revisão do conteúdo anterior (10min)<br>2. Apresentação de slides (20min)<br>3. Atividade prática com microscópio (30min)<br>4. Discussão e fechamento (10min)</p>
+            </div>
+          </div>
+        </div>
+        <div class="content-card">
+          <h3><span class="icon">🔧</span> Recursos</h3>
+          <p>Projetor multimídia, microscópio óptico (5 unidades), lâminas preparadas de células vegetais e animais, caderno de anotações.</p>
+        </div>
+        <div class="content-card">
+          <h3><span class="icon">📋</span> Avaliação</h3>
+          <p>Participação na discussão (2pts), relatório da atividade prática (3pts), exercícios do livro didático (5pts).</p>
+        </div>
+      </div>
+      
+      <!-- Attachments -->
+      <div style="margin-top:24px;">
+        <div class="section-label">📎 Anexos</div>
+        <div class="file-list">
+          <div class="file-item">
+            <div class="file-icon">📄</div>
+            <div style="flex:1; min-width:0;">
+              <div class="file-name" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">slides-celula.pptx</div>
+              <div class="file-size">2.4 MB</div>
+            </div>
+            <div class="file-actions">
+              <button class="file-action" title="Visualizar">👁️</button>
+              <button class="file-action" title="Baixar">⬇️</button>
+            </div>
+          </div>
+          <div class="file-item">
+            <div class="file-icon">📄</div>
+            <div style="flex:1; min-width:0;">
+              <div class="file-name" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">roteiro-pratica.pdf</div>
+              <div class="file-size">540 KB</div>
+            </div>
+            <div class="file-actions">
+              <button class="file-action" title="Visualizar">👁️</button>
+              <button class="file-action" title="Baixar">⬇️</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION (replaces alert()) -->
+<div class="toast success improvement" data-note="Replaces alert()">
+  <span class="icon">✅</span>
+  Planejamento salvo com sucesso!
+</div>
+</body>
+</html>

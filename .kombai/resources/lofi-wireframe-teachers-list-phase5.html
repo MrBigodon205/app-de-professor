@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframe — Corpo Docente (Reimaginado)</title>
+<style>
+  :root {
+    --primary: #6366F1;
+    --primary-bg: #EEF2FF;
+    --secondary: #8B5CF6;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --surface: #FFFFFF;
+    --surface-elevated: #F8FAFC;
+    --bg-page: #F1F5F9;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --border-subtle: #F1F5F9;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --font: 'Inter', -apple-system, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: var(--bg-page); color: var(--text-primary); }
+  .container { max-width: 1280px; margin: 0 auto; padding: 24px; }
+
+  .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+  .breadcrumb a { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+  .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+  .page-header h1 { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+  .page-header .subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+  .btn-primary { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: var(--radius-md); font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+  /* Filter Bar */
+  .filter-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
+  .search-input { flex: 1; min-width: 240px; padding: 10px 16px 10px 40px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 14px; background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") 14px center no-repeat; }
+  .filter-chip { padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 600; background: white; color: var(--text-secondary); cursor: pointer; }
+  .filter-chip.active { background: var(--primary-bg); border-color: var(--primary); color: var(--primary); }
+
+  /* Desktop Table */
+  .table-wrapper { background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { text-align: left; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 14px 16px; background: var(--surface-elevated); border-bottom: 1px solid var(--border); }
+  tbody td { padding: 14px 16px; font-size: 14px; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+  tbody tr:hover { background: var(--primary-bg); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  .avatar-cell { display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-bg); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .teacher-name { font-weight: 600; color: var(--text-primary); }
+  .teacher-email { font-size: 12px; color: var(--text-muted); }
+  .teacher-subjects { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .role-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .role-badge.coordinator { background: #F3E8FF; color: #6B21A8; }
+  .role-badge.teacher { background: var(--surface-elevated); color: var(--text-secondary); }
+
+  .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+  .status-badge.active { background: #D1FAE5; color: #065F46; }
+  .status-badge.active::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+  .status-badge.suspended { background: #FEE2E2; color: #991B1B; }
+  .status-badge.suspended::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--danger); }
+
+  .actions-cell { display: flex; gap: 8px; justify-content: flex-end; }
+  .action-btn { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; background: white; cursor: pointer; font-size: 14px; color: var(--text-muted); transition: all 0.2s; }
+  .action-btn:hover { background: var(--primary-bg); color: var(--primary); }
+  .action-btn.danger:hover { background: #FEE2E2; color: var(--danger); }
+  .action-btn.success:hover { background: #D1FAE5; color: var(--success); }
+
+  /* Mobile Cards (hidden on desktop) */
+  .mobile-cards { display: none; }
+  .teacher-card-mobile { background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; }
+  .teacher-card-mobile .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .teacher-card-mobile .card-details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .teacher-card-mobile .detail-item { }
+  .teacher-card-mobile .detail-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+  .teacher-card-mobile .detail-value { font-size: 13px; color: var(--text-primary); font-weight: 500; margin-top: 2px; }
+  .teacher-card-mobile .card-actions-mobile { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-subtle); }
+  .card-action-btn { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: white; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; min-height: 44px; }
+
+  /* Invite Section */
+  .invite-section { background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: var(--radius-lg); padding: 24px; color: white; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+  .invite-section h3 { font-size: 18px; font-weight: 700; }
+  .invite-section p { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+  .invite-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 12px 20px; border-radius: var(--radius-md); font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(10px); }
+
+  /* Confirmation Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 0; pointer-events: none; }
+  .modal-overlay.visible { opacity: 1; pointer-events: auto; }
+  .modal { background: white; border-radius: var(--radius-lg); padding: 32px; max-width: 400px; width: 90%; text-align: center; }
+  .modal .modal-icon { font-size: 48px; margin-bottom: 16px; }
+  .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .modal p { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5; }
+  .modal-actions { display: flex; gap: 12px; }
+  .modal-btn { flex: 1; padding: 12px; border-radius: var(--radius-md); font-weight: 700; font-size: 14px; cursor: pointer; border: none; }
+  .modal-btn.cancel { background: var(--surface-elevated); color: var(--text-secondary); }
+  .modal-btn.confirm { background: var(--danger); color: white; }
+
+  @media (max-width: 768px) {
+    .table-wrapper { display: none; }
+    .mobile-cards { display: block; }
+    .container { padding: 16px; }
+    .page-header { flex-direction: column; }
+    .invite-section { flex-direction: column; text-align: center; }
+    .invite-btn { width: 100%; justify-content: center; }
+    .filter-bar { flex-direction: column; }
+    .search-input { min-width: auto; width: 100%; }
+  }
+
+  .legend { position: fixed; bottom: 16px; right: 16px; background: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; font-size: 11px; max-width: 220px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); z-index: 100; }
+  .legend h4 { font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 8px; text-transform: uppercase; }
+  .legend-note { font-size: 10px; color: var(--text-muted); line-height: 1.5; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="breadcrumb">
+    <a href="#">🏠 Início</a> <span>›</span>
+    <a href="#">🏫 Institucional</a> <span>›</span>
+    <span>Corpo Docente</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1>👥 Corpo Docente</h1>
+      <div class="subtitle">Gerencie os professores e o acesso à plataforma.</div>
+    </div>
+  </div>
+
+  <!-- Invite Section -->
+  <div class="invite-section">
+    <div>
+      <h3>🔗 Convidar Professores</h3>
+      <p>Gere um código único válido por 24h para adicionar professores.</p>
+    </div>
+    <button class="invite-btn">➕ Gerar Código de Convite</button>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <input class="search-input" placeholder="Buscar por nome ou email..." />
+    <div class="filter-chip active">Todos</div>
+    <div class="filter-chip">Ativos</div>
+    <div class="filter-chip">Suspensos</div>
+    <div class="filter-chip">Coordenação</div>
+  </div>
+
+  <!-- Desktop Table -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Professor</th>
+          <th>Cargo</th>
+          <th>Disciplinas</th>
+          <th>Status</th>
+          <th>Entrou em</th>
+          <th style="text-align: right;">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="avatar-cell">
+              <div class="avatar">MC</div>
+              <div>
+                <div class="teacher-name">Maria Costa</div>
+                <div class="teacher-email">maria.costa@email.com</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="role-badge coordinator">🛡️ Coordenação</span></td>
+          <td><span style="font-size: 13px;">Português, Redação</span></td>
+          <td><span class="status-badge active">Ativo</span></td>
+          <td><span style="font-size: 13px;">15/01/2025</span></td>
+          <td>
+            <div class="actions-cell">
+              <button class="action-btn" title="Ver perfil">👤</button>
+              <button class="action-btn danger" title="Suspender">🚫</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class="avatar-cell">
+              <div class="avatar">JS</div>
+              <div>
+                <div class="teacher-name">João Silva</div>
+                <div class="teacher-email">joao.silva@email.com</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="role-badge teacher">Professor</span></td>
+          <td><span style="font-size: 13px;">Matemática</span></td>
+          <td><span class="status-badge active">Ativo</span></td>
+          <td><span style="font-size: 13px;">20/02/2025</span></td>
+          <td>
+            <div class="actions-cell">
+              <button class="action-btn" title="Ver perfil">👤</button>
+              <button class="action-btn danger" title="Suspender">🚫</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class="avatar-cell">
+              <div class="avatar" style="background: #FEE2E2; color: var(--danger);">AL</div>
+              <div>
+                <div class="teacher-name" style="opacity: 0.6;">Ana Lima</div>
+                <div class="teacher-email">ana.lima@email.com</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="role-badge teacher">Professor</span></td>
+          <td><span style="font-size: 13px;">Ciências</span></td>
+          <td><span class="status-badge suspended">Suspenso</span></td>
+          <td><span style="font-size: 13px;">05/03/2025</span></td>
+          <td>
+            <div class="actions-cell">
+              <button class="action-btn" title="Ver perfil">👤</button>
+              <button class="action-btn success" title="Reativar">✅</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile Cards (shown on small screens) -->
+  <div class="mobile-cards">
+    <div class="teacher-card-mobile">
+      <div class="card-header">
+        <div class="avatar-cell">
+          <div class="avatar">MC</div>
+          <div>
+            <div class="teacher-name">Maria Costa</div>
+            <div class="teacher-email">maria.costa@email.com</div>
+          </div>
+        </div>
+        <span class="status-badge active">Ativo</span>
+      </div>
+      <div class="card-details">
+        <div class="detail-item">
+          <div class="detail-label">Cargo</div>
+          <div class="detail-value">Coordenação</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Entrou em</div>
+          <div class="detail-value">15/01/2025</div>
+        </div>
+      </div>
+      <div class="card-actions-mobile">
+        <button class="card-action-btn">👤 Ver Perfil</button>
+        <button class="card-action-btn" style="color: var(--danger);">🚫 Suspender</button>
+      </div>
+    </div>
+
+    <div class="teacher-card-mobile">
+      <div class="card-header">
+        <div class="avatar-cell">
+          <div class="avatar">JS</div>
+          <div>
+            <div class="teacher-name">João Silva</div>
+            <div class="teacher-email">joao.silva@email.com</div>
+          </div>
+        </div>
+        <span class="status-badge active">Ativo</span>
+      </div>
+      <div class="card-details">
+        <div class="detail-item">
+          <div class="detail-label">Cargo</div>
+          <div class="detail-value">Professor</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Entrou em</div>
+          <div class="detail-value">20/02/2025</div>
+        </div>
+      </div>
+      <div class="card-actions-mobile">
+        <button class="card-action-btn">👤 Ver Perfil</button>
+        <button class="card-action-btn" style="color: var(--danger);">🚫 Suspender</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal Example -->
+<div class="modal-overlay visible" style="opacity: 0; pointer-events: none;">
+  <div class="modal">
+    <div class="modal-icon">⚠️</div>
+    <h3>Suspender Acesso?</h3>
+    <p>O professor <strong>João Silva</strong> perderá acesso à plataforma até ser reativado pela coordenação.</p>
+    <div class="modal-actions">
+      <button class="modal-btn cancel">Cancelar</button>
+      <button class="modal-btn confirm">Suspender</button>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <h4>Melhorias</h4>
+  <div class="legend-note">
+    ✅ Tabela → Cards no mobile<br>
+    ✅ Busca e filtro por status/cargo<br>
+    ✅ Modal de confirmação (não alert)<br>
+    ✅ Coluna de disciplinas atribuídas<br>
+    ✅ Touch targets ≥ 44px no mobile<br>
+    ✅ console.log removido
+  </div>
+</div>
+</body>
+</html>

@@ -1,25 +1,41 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { supabase } from '../lib/supabase';
 import { ImageCropperModal } from './ImageCropperModal';
+import { DynamicSelect } from './DynamicSelect';
 
 interface ProfileModalProps {
     isOpen: boolean;
     onClose: () => void;
+    defaultTab?: Tab;
 }
 
-type Tab = 'profile' | 'security';
+type Tab = 'profile' | 'security' | 'schools';
 
-export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
+export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, defaultTab = 'profile' }) => {
     const { currentUser, updateProfile, logout, updateActiveSubject } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const handleNavigate = (path: string) => {
+        navigate(path);
+        onClose();
+    };
+
     const theme = useTheme();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // UI State
-    const [activeTab, setActiveTab] = useState<Tab>('profile');
+    const [activeTab, setActiveTab] = useState<Tab>(defaultTab);
     const [uploading, setUploading] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    // Reset tab when modal opens with a specific defaultTab
+    useEffect(() => {
+        if (isOpen) setActiveTab(defaultTab);
+    }, [isOpen, defaultTab]);
 
     // Cropper State
     const [isCropperOpen, setIsCropperOpen] = useState(false);
@@ -33,6 +49,37 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     const [subject, setSubject] = useState('');
     const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
     const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
+
+    // Schools State
+    const [schools, setSchools] = useState<any[]>([]);
+
+    const fetchUserSchools = async () => {
+        if (!currentUser) return;
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('institution_teachers')
+                .select(`
+                    id,
+                    role,
+                    institution:institutions (id, name, owner_id)
+                `)
+                .eq('user_id', currentUser.id);
+
+            if (error) throw error;
+            setSchools(data || []);
+        } catch (err) {
+            console.error("Error fetching schools:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (isOpen && (activeTab === 'schools' || activeTab === 'profile') && currentUser) {
+            fetchUserSchools();
+        }
+    }, [isOpen, activeTab, currentUser]);
 
     useEffect(() => {
         if (isOpen) {
@@ -171,9 +218,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
         }
     };
 
+
+
     return (
         <>
             <div className={`fixed inset-0 z-[70] flex items-center justify-center p-0 md:p-4 animate-in fade-in duration-200 ${isOpen ? '' : 'pointer-events-none opacity-0'}`}>
+                {/* ... existing modal structure ... */}
                 <div
                     className="absolute inset-0 bg-black/60 backdrop-blur-md"
                     onClick={onClose}
@@ -181,265 +231,342 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
 
                 <div className="relative glass-card-premium w-full h-[100dvh] md:h-auto md:max-h-[85vh] md:max-w-4xl overflow-hidden flex flex-col md:flex-row shadow-2xl border-0 md:border border-white/20">
 
-                    {/* HERO HEADER (Mobile Only) - Reduced Height */}
-                    <div className="relative h-24 md:hidden shrink-0 overflow-hidden">
-                        <div className={`absolute inset-0 bg-gradient-to-r from-${theme.primaryColor} to-${theme.secondaryColor} opacity-90`}></div>
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay"></div>
-                        <button
-                            onClick={onClose}
-                            className="absolute top-4 right-4 size-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 text-white backdrop-blur-md transition-all z-20 shadow-lg"
-                        >
-                            <span className="material-symbols-outlined text-lg">close</span>
-                        </button>
-                    </div>
-
-                    {/* Sidebar / Mobile Header - Adaptive Layout */}
+                    {/* ... sidebar ... */}
                     <div className="relative w-full md:w-80 bg-surface-section/50 backdrop-blur-xl p-4 md:p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-white/10 shrink-0 landscape:w-64">
-                        {/* Decorative Gradient Blob (Desktop) */}
-                        <div className={`absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-${theme.primaryColor}/10 to-transparent pointer-events-none md:block hidden`}></div>
+                        {/* ... avatar ... */}
 
-                        {/* Avatar Upload - Compact on Mobile */}
-                        <div className="relative group mb-4 -mt-12 md:mt-4 z-10">
-                            <div className="relative p-1 rounded-full bg-gradient-to-br from-white/50 to-white/10 backdrop-blur-md shadow-2xl shadow-black/20">
-                                <div className="size-20 md:size-32 rounded-full overflow-hidden relative border-4 border-surface-card bg-surface-subtle">
-                                    {currentUser.photoUrl ? (
-                                        <img
-                                            src={currentUser.photoUrl}
-                                            alt={currentUser.name}
-                                            className="size-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className={`size-full flex items-center justify-center text-3xl md:text-4xl font-bold bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white`}>
-                                            {currentUser.name.substring(0, 2).toUpperCase()}
-                                        </div>
-                                    )}
+                        {/* ... tabs ... */}
+                        <nav className="w-full grid grid-cols-3 md:flex md:flex-col gap-2 md:gap-3">
+                            <button
+                                onClick={() => setActiveTab('profile')}
+                                className={`w-full flex items-center justify-center md:justify-start gap-2 md:gap-4 px-2 md:px-4 py-2.5 md:py-3.5 rounded-xl md:rounded-2xl font-bold transition-all duration-300 relative group overflow-hidden ${activeTab === 'profile'
+                                    ? `bg-surface-elevated shadow-lg text-${theme.primaryColor} border border-white/20`
+                                    : 'text-text-secondary hover:bg-surface-elevated/50 hover:text-text-primary'
+                                    }`}
+                            >
+                                <div className={`size-6 md:size-8 rounded-lg flex items-center justify-center transition-all ${activeTab === 'profile' ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-subtle text-text-muted group-hover:bg-white group-hover:shadow-md'}`}>
+                                    <span className="material-symbols-outlined text-base md:text-lg">person</span>
                                 </div>
-                            </div>
-                            <button
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={uploading}
-                                className={`absolute bottom-0 right-0 p-2 md:p-3 rounded-full shadow-neon text-white hover:scale-110 active:scale-95 transition-all outline-none btn-premium bg-gradient-to-r from-${theme.primaryColor} to-${theme.secondaryColor}`}
-                            >
-                                <span className="material-symbols-outlined text-base md:text-lg">
-                                    {uploading ? 'sync' : 'photo_camera'}
-                                </span>
+                                <span className="text-xs md:text-base hidden sm:inline">Dados</span>
+                                {activeTab === 'profile' && <div className={`absolute bottom-0 md:bottom-auto md:right-0 md:top-0 md:h-full left-0 right-0 h-0.5 md:w-1 bg-${theme.primaryColor} rounded-full`}></div>}
                             </button>
-                            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" title="Upload de foto de perfil" />
-                        </div>
 
-                        <div className="flex flex-col items-center z-10 w-full mb-4 md:mb-0">
-                            <h2 className="text-xl md:text-2xl font-black text-text-primary text-center leading-tight mb-1 tracking-tight">
-                                {currentUser.name}
-                            </h2>
-                            <p className="text-xs md:text-sm font-bold text-text-muted mb-4 md:mb-8 text-center bg-surface-subtle/50 px-3 py-1 rounded-full border border-white/5 truncate max-w-[200px]">
-                                {currentUser.email}
-                            </p>
-
-                            {/* Mobile Tabs / Desktop Nav */}
-                            <nav className="w-full grid grid-cols-2 md:flex md:flex-col gap-2 md:gap-3">
-                                <button
-                                    onClick={() => setActiveTab('profile')}
-                                    className={`w-full flex items-center justify-center md:justify-start gap-2 md:gap-4 px-3 md:px-4 py-2.5 md:py-3.5 rounded-xl md:rounded-2xl font-bold transition-all duration-300 relative group overflow-hidden ${activeTab === 'profile'
-                                        ? `bg-surface-elevated shadow-lg text-${theme.primaryColor} border border-white/20`
-                                        : 'text-text-secondary hover:bg-surface-elevated/50 hover:text-text-primary'
-                                        }`}
-                                >
-                                    <div className={`size-6 md:size-8 rounded-lg flex items-center justify-center transition-all ${activeTab === 'profile' ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-subtle text-text-muted group-hover:bg-white group-hover:shadow-md'}`}>
-                                        <span className="material-symbols-outlined text-base md:text-lg">person</span>
-                                    </div>
-                                    <span className="text-sm md:text-base">Dados</span>
-                                    {activeTab === 'profile' && <div className={`absolute bottom-0 md:bottom-auto md:right-0 md:top-0 md:h-full left-0 right-0 h-0.5 md:w-1 bg-${theme.primaryColor} rounded-full`}></div>}
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('security')}
-                                    className={`w-full flex items-center justify-center md:justify-start gap-2 md:gap-4 px-3 md:px-4 py-2.5 md:py-3.5 rounded-xl md:rounded-2xl font-bold transition-all duration-300 relative group overflow-hidden ${activeTab === 'security'
-                                        ? `bg-surface-elevated shadow-lg text-${theme.primaryColor} border border-white/20`
-                                        : 'text-text-secondary hover:bg-surface-elevated/50 hover:text-text-primary'
-                                        }`}
-                                >
-                                    <div className={`size-6 md:size-8 rounded-lg flex items-center justify-center transition-all ${activeTab === 'security' ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-subtle text-text-muted group-hover:bg-white group-hover:shadow-md'}`}>
-                                        <span className="material-symbols-outlined text-base md:text-lg">lock</span>
-                                    </div>
-                                    <span className="text-sm md:text-base">Segurança</span>
-                                    {activeTab === 'security' && <div className={`absolute bottom-0 md:bottom-auto md:right-0 md:top-0 md:h-full left-0 right-0 h-0.5 md:w-1 bg-${theme.primaryColor} rounded-full`}></div>}
-                                </button>
-                            </nav>
-                        </div>
-
-                        <div className="mt-auto pt-4 md:pt-6 w-full z-10 hidden md:block">
                             <button
-                                onClick={() => { logout(); onClose(); }}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-bold text-red-500 hover:text-white bg-red-50/50 hover:bg-red-500 dark:bg-red-900/10 dark:hover:bg-red-600 transition-all active:scale-95 group"
+                                onClick={() => setActiveTab('schools')}
+                                className={`w-full flex items-center justify-center md:justify-start gap-2 md:gap-4 px-2 md:px-4 py-2.5 md:py-3.5 rounded-xl md:rounded-2xl font-bold transition-all duration-300 relative group overflow-hidden ${activeTab === 'schools'
+                                    ? `bg-surface-elevated shadow-lg text-${theme.primaryColor} border border-white/20`
+                                    : 'text-text-secondary hover:bg-surface-elevated/50 hover:text-text-primary'
+                                    }`}
                             >
-                                <span className="material-symbols-outlined group-hover:-translate-x-1 transition-transform">logout</span>
-                                Sair da Conta
+                                <div className={`size-6 md:size-8 rounded-lg flex items-center justify-center transition-all ${activeTab === 'schools' ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-subtle text-text-muted group-hover:bg-white group-hover:shadow-md'}`}>
+                                    <span className="material-symbols-outlined text-base md:text-lg">school</span>
+                                </div>
+                                <span className="text-xs md:text-base hidden sm:inline">Escolas</span>
+                                {activeTab === 'schools' && <div className={`absolute bottom-0 md:bottom-auto md:right-0 md:top-0 md:h-full left-0 right-0 h-0.5 md:w-1 bg-${theme.primaryColor} rounded-full`}></div>}
                             </button>
-                        </div>
+
+                            <button
+                                onClick={() => setActiveTab('security')}
+                                className={`w-full flex items-center justify-center md:justify-start gap-2 md:gap-4 px-2 md:px-4 py-2.5 md:py-3.5 rounded-xl md:rounded-2xl font-bold transition-all duration-300 relative group overflow-hidden ${activeTab === 'security'
+                                    ? `bg-surface-elevated shadow-lg text-${theme.primaryColor} border border-white/20`
+                                    : 'text-text-secondary hover:bg-surface-elevated/50 hover:text-text-primary'
+                                    }`}
+                            >
+                                <div className={`size-6 md:size-8 rounded-lg flex items-center justify-center transition-all ${activeTab === 'security' ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-subtle text-text-muted group-hover:bg-white group-hover:shadow-md'}`}>
+                                    <span className="material-symbols-outlined text-base md:text-lg">lock</span>
+                                </div>
+                                <span className="text-xs md:text-base hidden sm:inline">Segurança</span>
+                                {activeTab === 'security' && <div className={`absolute bottom-0 md:bottom-auto md:right-0 md:top-0 md:h-full left-0 right-0 h-0.5 md:w-1 bg-${theme.primaryColor} rounded-full`}></div>}
+                            </button>
+                        </nav>
                     </div>
 
-                    {/* Main Content (Right) - Scrollable Area */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar bg-surface-card/30 p-0 relative h-full">
-                        {/* Desktop Close Button */}
-                        <button
-                            onClick={onClose}
-                            className="hidden md:flex absolute top-6 right-6 size-10 items-center justify-center rounded-full bg-surface-subtle hover:bg-red-50 text-text-muted hover:text-red-500 transition-all z-20 shadow-sm border border-border-subtle group"
-                        >
+                    {/* Main Content */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar bg-surface-card/30 p-0 relative min-h-0">
+                        <button onClick={onClose} className="flex absolute top-4 right-4 md:top-6 md:right-6 size-10 items-center justify-center rounded-full bg-surface-subtle hover:bg-red-50 text-text-muted hover:text-red-500 transition-all z-20 shadow-sm border border-border-subtle group">
                             <span className="material-symbols-outlined text-xl group-hover:rotate-90 transition-transform duration-300">close</span>
                         </button>
 
                         <div className="p-4 md:p-10 max-w-2xl mx-auto md:min-h-full flex flex-col pb-20 md:pb-10">
                             <div className="mb-6 md:mb-8 mt-2 md:mt-0">
                                 <h1 className="text-2xl md:text-3xl font-black text-text-primary mb-1 md:mb-2 tracking-tight">
-                                    {activeTab === 'profile' ? 'Editar Perfil' : 'Segurança'}
+                                    {activeTab === 'profile' ? 'Editar Perfil' : activeTab === 'schools' ? 'Minhas Escolas' : 'Segurança'}
                                 </h1>
                                 <p className="text-text-muted font-medium text-sm md:text-lg">
-                                    {activeTab === 'profile' ? 'Suas informações.' : 'Proteção da conta.'}
+                                    {activeTab === 'profile' ? 'Suas informações.' : activeTab === 'schools' ? 'Gerencie suas instituições.' : 'Proteção da conta.'}
                                 </p>
                             </div>
 
                             {activeTab === 'profile' && (
+                                /* ... existing profile content ... */
                                 <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1">
+                                    <div className="flex flex-col items-center mb-6 md:mb-8">
+                                        <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                                            <div className={`size-24 md:size-32 rounded-full overflow-hidden border-4 border-surface-card shadow-2xl relative z-10 transition-transform duration-300 group-hover:scale-105`}>
+                                                {uploading ? (
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-20">
+                                                        <span className="material-symbols-outlined animate-spin text-white/50 text-3xl">refresh</span>
+                                                    </div>
+                                                ) : (
+                                                    <img
+                                                        src={currentUser?.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || '')}&background=random`}
+                                                        alt="Profile"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                )}
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10">
+                                                    <span className="material-symbols-outlined text-white text-3xl drop-shadow-lg scale-90 group-hover:scale-100 transition-transform">photo_camera</span>
+                                                </div>
+                                            </div>
+                                            <div className={`absolute -bottom-2 -right-2 size-8 md:size-10 bg-${theme.primaryColor} rounded-full flex items-center justify-center text-white shadow-lg border-2 border-surface-base z-20 group-hover:scale-110 transition-transform`}>
+                                                <span className="material-symbols-outlined text-sm md:text-base">edit</span>
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={handleFileChange}
+                                            title="Carregar foto de perfil"
+                                        />
+                                        <p className="mt-3 text-xs md:text-sm text-text-muted font-medium bg-surface-subtle px-3 py-1 rounded-full border border-border-default">
+                                            Toque para alterar a foto
+                                        </p>
+                                    </div>
+
                                     <div className="grid grid-cols-1 gap-5 md:gap-6">
                                         <div className="group">
-                                            <label className="block text-xs font-black uppercase tracking-widest text-text-muted mb-2 ml-1 text-shadow-sm">Nome Completo</label>
-                                            <input
-                                                value={name}
-                                                onChange={e => setName(e.target.value)}
-                                                placeholder="Seu nome completo"
-                                                title="Nome Completo"
-                                                className="input-premium"
-                                            />
-                                        </div>
-                                        <div className="group">
-                                            <label className="block text-xs font-black uppercase tracking-widest text-text-muted mb-2 ml-1">Email</label>
-                                            <input
-                                                value={email}
-                                                onChange={e => setEmail(e.target.value)}
-                                                placeholder="seu@email.com"
-                                                title="Email"
-                                                className="input-premium opacity-70"
-                                                readOnly
-                                            />
-                                        </div>
-                                        <div className="group">
-                                            <label className="block text-xs font-black uppercase tracking-widest text-text-muted mb-2 ml-1">Disciplina Principal</label>
+                                            <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5 md:mb-2 ml-1 group-focus-within:text-primary transition-colors">Nome Completo</label>
                                             <div className="relative">
-                                                <select
-                                                    value={subject}
-                                                    onChange={(e) => setSubject(e.target.value)}
-                                                    title="Disciplina Principal"
-                                                    className="input-premium appearance-none cursor-pointer"
-                                                >
-                                                    {availableSubjects.map(subj => (
-                                                        <option key={subj} value={subj}>{subj}</option>
-                                                    ))}
-                                                </select>
-                                                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">expand_more</span>
+                                                <input
+                                                    type="text"
+                                                    value={name}
+                                                    onChange={(e) => setName(e.target.value)}
+                                                    className="input-premium pl-10 md:pl-12"
+                                                    placeholder="Seu nome"
+                                                    title="Nome Completo"
+                                                />
+                                                <span className="material-symbols-outlined absolute left-3.5 md:left-4 top-1/2 -translate-y-1/2 text-text-muted text-lg md:text-xl group-focus-within:text-primary transition-colors">badge</span>
                                             </div>
                                         </div>
 
-                                        <div>
-                                            <label className="block text-xs font-black uppercase tracking-widest text-text-muted mb-3 ml-1">Minhas Disciplinas</label>
-                                            <div className="grid grid-cols-2 gap-2 md:gap-3 p-3 md:p-4 rounded-3xl bg-surface-subtle/30 border border-white/5">
-                                                {availableSubjects.map(subj => {
-                                                    const isSelected = selectedSubjects.includes(subj) || subject === subj;
-                                                    const isMain = subject === subj;
-                                                    return (
-                                                        <button
-                                                            key={subj}
-                                                            onClick={() => toggleSubject(subj)}
-                                                            className={`
-                                                                relative px-3 md:px-4 py-2.5 md:py-3 rounded-xl text-xs font-bold transition-all duration-300 flex items-center justify-between group overflow-hidden
-                                                                ${isSelected
-                                                                    ? `bg-white dark:bg-white/10 text-${theme.primaryColor} shadow-lg ring-2 ring-${theme.primaryColor}/20`
-                                                                    : 'bg-surface-card hover:bg-white dark:hover:bg-white/5 text-text-secondary hover:shadow-md'
-                                                                }
-                                                            `}
-                                                        >
-                                                            <span className="z-10 truncate mr-1">{subj}</span>
-                                                            {isSelected && <span className="material-symbols-outlined text-xs md:text-sm z-10 shrink-0">check</span>}
-                                                            {isMain && <div className={`absolute inset-0 bg-${theme.primaryColor}/5 z-0`}></div>}
-                                                        </button>
-                                                    );
-                                                })}
+                                        <div className="group">
+                                            <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5 md:mb-2 ml-1">Email (Não editável)</label>
+                                            <div className="relative opacity-70">
+                                                <input
+                                                    type="email"
+                                                    value={email}
+                                                    disabled
+                                                    className="input-premium pl-10 md:pl-12 bg-surface-subtle cursor-not-allowed border-dashed"
+                                                    title="Email"
+                                                />
+                                                <span className="material-symbols-outlined absolute left-3.5 md:left-4 top-1/2 -translate-y-1/2 text-text-muted text-lg md:text-xl">mail</span>
                                             </div>
                                         </div>
+
+                                        {currentUser?.account_type === 'institutional' ? (
+                                            <div className="group animate-in fade-in zoom-in-95 duration-300">
+                                                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex flex-col items-center text-center gap-2">
+                                                    <div className="size-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-500 mb-1">
+                                                        <span className="material-symbols-outlined text-2xl">local_police</span>
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-black text-amber-700 dark:text-amber-500 uppercase tracking-widest text-xs mb-1">Função</h3>
+                                                        <p className="text-lg font-bold text-text-primary">Coordenador da Instituição</p>
+                                                        {schools.length > 0 && (
+                                                            <p className="text-sm font-medium text-text-muted mt-1">{schools[0].institution?.name}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="group relative z-50">
+                                                    <DynamicSelect
+                                                        label="Disciplina Principal"
+                                                        value={subject}
+                                                        onChange={(val: string) => setSubject(val)}
+                                                        options={availableSubjects.map(s => ({ value: s, label: s, icon: 'menu_book' }))}
+                                                        placeholder="Selecione sua disciplina"
+                                                        className="w-full"
+                                                    />
+                                                </div>
+
+                                                <div className="group">
+                                                    <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5 md:mb-2 ml-1">Disciplinas Adicionais</label>
+                                                    <div className="flex flex-wrap gap-2 p-3 bg-surface-subtle/30 rounded-2xl border border-border-subtle hover:border-border-default transition-colors">
+                                                        {availableSubjects.map((subj) => (
+                                                            <button
+                                                                key={subj}
+                                                                type="button"
+                                                                onClick={() => toggleSubject(subj)}
+                                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${selectedSubjects.includes(subj)
+                                                                    ? `bg-${theme.primaryColor}/10 border-${theme.primaryColor} text-${theme.primaryColor} shadow-sm scale-105`
+                                                                    : 'bg-surface-card border-border-default text-text-muted hover:border-text-muted/50 hover:bg-surface-elevated'
+                                                                    }`}
+                                                            >
+                                                                {subj}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <p className="text-[10px] text-text-muted mt-2 ml-1">Selecione todas as matérias que você leciona para personalizar o conteúdo.</p>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
-
                                     <div className="pt-4 md:pt-6 mt-6 md:mt-auto border-t border-border-default flex justify-end">
-                                        <button
-                                            onClick={handleSaveProfile}
-                                            disabled={loading}
-                                            className={`btn-premium w-full md:w-auto px-8 py-3.5 md:py-4 flex items-center justify-center gap-3 text-sm shadow-neon hover:shadow-neon-lg`}
-                                        >
-                                            {loading ? (
-                                                <span className="material-symbols-outlined animate-spin text-lg">refresh</span>
-                                            ) : (
-                                                <span className="material-symbols-outlined text-lg">save</span>
-                                            )}
+                                        <button onClick={handleSaveProfile} disabled={loading} className={`btn-premium w-full md:w-auto px-8 py-3.5 md:py-4 flex items-center justify-center gap-3 text-sm shadow-neon hover:shadow-neon-lg`}>
+                                            {loading ? <span className="material-symbols-outlined animate-spin text-lg">refresh</span> : <span className="material-symbols-outlined text-lg">save</span>}
                                             Salvar
-                                        </button>
-                                    </div>
-
-                                    <div className="md:hidden pt-4 border-t border-border-default">
-                                        <button
-                                            onClick={() => { logout(); onClose(); }}
-                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-bold text-red-500 bg-red-50/50 dark:bg-red-900/10 active:scale-95"
-                                        >
-                                            <span className="material-symbols-outlined">logout</span>
-                                            Sair da Conta
                                         </button>
                                     </div>
                                 </div>
                             )}
 
+                            {activeTab === 'schools' && (
+                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1">
+                                    {/* Active Context Section */}
+                                    <div className="space-y-3">
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-text-muted ml-1">Espaço Ativo</h3>
+
+                                        {/* Personal Workspace Card */}
+                                        <div
+                                            onClick={() => handleNavigate('/dashboard')}
+                                            className={`relative flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer group overflow-hidden ${!location.pathname.startsWith('/institution/')
+                                                ? `border-primary bg-primary/5 shadow-lg shadow-primary/10`
+                                                : 'border-border-default bg-surface-card hover:border-primary/30 hover:bg-surface-elevated'
+                                                }`}
+                                        >
+                                            <div className={`size-12 rounded-xl flex items-center justify-center shrink-0 transition-all ${!location.pathname.startsWith('/institution/')
+                                                ? 'bg-gradient-to-br from-primary to-secondary text-white shadow-md shadow-primary/30 scale-105'
+                                                : 'bg-surface-subtle text-text-muted group-hover:bg-primary/10 group-hover:text-primary'
+                                                }`}>
+                                                <span className="material-symbols-outlined text-xl">home</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <span className="font-black text-text-primary block truncate">Minha Sala de Aula</span>
+                                                <span className="text-xs text-text-muted font-medium">Espaço pessoal do professor</span>
+                                            </div>
+                                            {!location.pathname.startsWith('/institution/') && (
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary shrink-0">
+                                                    <span className="size-2 rounded-full bg-primary animate-pulse"></span>
+                                                    <span className="text-[10px] font-black uppercase tracking-wider">Ativo</span>
+                                                </div>
+                                            )}
+                                            {location.pathname.startsWith('/institution/') && (
+                                                <span className="material-symbols-outlined text-text-muted group-hover:text-primary transition-colors">arrow_forward</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Schools List */}
+                                    <div className="space-y-3">
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-text-muted ml-1">Minhas Escolas</h3>
+                                        {loading ? (
+                                            <div className="text-center p-6"><span className="material-symbols-outlined animate-spin text-2xl text-text-muted">refresh</span></div>
+                                        ) : schools.length === 0 ? (
+                                            <div className="text-center p-8 bg-surface-subtle/30 rounded-2xl border border-dashed border-text-muted/20">
+                                                <span className="material-symbols-outlined text-4xl text-text-muted/30 mb-2 block">corporate_fare</span>
+                                                <p className="text-text-muted text-sm font-medium">Nenhuma instituição vinculada.</p>
+                                                <p className="text-text-muted/60 text-xs mt-1">Crie ou participe de uma escola abaixo.</p>
+                                            </div>
+                                        ) : (
+                                            schools.map((school) => {
+                                                const schoolId = school.institution?.id;
+                                                const isActive = location.pathname.startsWith(`/institution/${schoolId}`);
+                                                return (
+                                                    <div
+                                                        key={school.id}
+                                                        onClick={() => handleNavigate(`/institution/${schoolId}/dashboard`)}
+                                                        className={`relative flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer group overflow-hidden ${isActive
+                                                            ? `border-primary bg-primary/5 shadow-lg shadow-primary/10`
+                                                            : 'border-border-default bg-surface-card hover:border-primary/30 hover:bg-surface-elevated'
+                                                            }`}
+                                                    >
+                                                        <div className={`size-12 rounded-xl flex items-center justify-center shrink-0 transition-all ${isActive
+                                                            ? 'bg-white dark:bg-slate-800 text-primary shadow-md border border-primary/20 scale-105'
+                                                            : 'bg-surface-subtle text-text-muted group-hover:bg-primary/10 group-hover:text-primary'
+                                                            }`}>
+                                                            <span className="material-symbols-outlined text-xl">school</span>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <span className="font-black text-text-primary block truncate">{school.institution?.name}</span>
+                                                            <span className="text-xs text-text-muted font-medium capitalize">
+                                                                {school.role === 'admin' ? '👑 Diretor' : school.role === 'coordinator' ? '🛡️ Coordenação' : '📚 Professor'}
+                                                            </span>
+                                                        </div>
+                                                        {isActive ? (
+                                                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary shrink-0">
+                                                                <span className="size-2 rounded-full bg-primary animate-pulse"></span>
+                                                                <span className="text-[10px] font-black uppercase tracking-wider">Ativo</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="material-symbols-outlined text-text-muted group-hover:text-primary transition-colors">arrow_forward</span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="pt-2">
+                                        <div onClick={() => handleNavigate('/institution/join')} className="flex flex-col items-center justify-center p-5 rounded-2xl bg-surface-card border border-dashed border-border-default hover:border-secondary/50 hover:bg-secondary/5 transition-all group cursor-pointer">
+                                            <span className="material-symbols-outlined text-2xl mb-1.5 text-secondary group-hover:scale-110 transition-transform">group_add</span>
+                                            <span className="font-bold text-sm text-text-primary">Participar de uma Escola</span>
+                                            <span className="text-[10px] text-text-muted mt-0.5">Entrar com código de convite</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {activeTab === 'security' && (
+                                /* ... existing security content ... */
                                 <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1">
-                                    <div className="p-4 md:p-6 rounded-3xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 flex items-start gap-3 md:gap-4">
-                                        <span className="material-symbols-outlined text-amber-500 text-2xl md:text-3xl shrink-0">lock_reset</span>
+                                    <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl flex items-start gap-4 mb-6 md:mb-8">
+                                        <span className="material-symbols-outlined text-yellow-500 text-2xl shrink-0">lock_reset</span>
                                         <div>
-                                            <h3 className="font-bold text-amber-700 dark:text-amber-400 mb-1 text-sm md:text-base">Alterar Senha</h3>
-                                            <p className="text-xs text-amber-600/80 dark:text-amber-500 leading-relaxed">
-                                                Use 6 caracteres ou mais.
+                                            <h3 className="font-bold text-yellow-500 text-sm mb-1">Alterar Senha de Acesso</h3>
+                                            <p className="text-xs text-yellow-500/80 leading-relaxed">
+                                                Escolha uma senha forte. Após a alteração, você poderá precisar fazer login novamente.
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-5 md:space-y-6">
-                                        <div>
-                                            <label className="block text-xs font-black uppercase tracking-widest text-text-muted mb-2 ml-1">Nova Senha</label>
+                                    <div className="grid grid-cols-1 gap-5 md:gap-6">
+                                        <div className="group">
+                                            <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5 md:mb-2 ml-1 group-focus-within:text-primary transition-colors">Nova Senha</label>
                                             <div className="relative">
                                                 <input
                                                     type="password"
                                                     value={password}
-                                                    onChange={e => setPassword(e.target.value)}
-                                                    placeholder="••••••••"
+                                                    onChange={(e) => setPassword(e.target.value)}
                                                     className="input-premium pl-10 md:pl-12"
+                                                    placeholder="Digite a nova senha"
+                                                    title="Nova Senha"
                                                 />
-                                                <span className="material-symbols-outlined absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-text-muted">key</span>
+                                                <span className="material-symbols-outlined absolute left-3.5 md:left-4 top-1/2 -translate-y-1/2 text-text-muted text-lg md:text-xl group-focus-within:text-primary transition-colors">key</span>
                                             </div>
                                         </div>
-                                        <div>
-                                            <label className="block text-xs font-black uppercase tracking-widest text-text-muted mb-2 ml-1">Confirmar</label>
+
+                                        <div className="group">
+                                            <label className="block text-xs font-black text-text-muted uppercase tracking-widest mb-1.5 md:mb-2 ml-1 group-focus-within:text-primary transition-colors">Confirmar Senha</label>
                                             <div className="relative">
                                                 <input
                                                     type="password"
                                                     value={confirmPassword}
-                                                    onChange={e => setConfirmPassword(e.target.value)}
-                                                    placeholder="••••••••"
+                                                    onChange={(e) => setConfirmPassword(e.target.value)}
                                                     className="input-premium pl-10 md:pl-12"
+                                                    placeholder="Repita a nova senha"
+                                                    title="Confirmar Senha"
                                                 />
-                                                <span className="material-symbols-outlined absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-text-muted">lock</span>
+                                                <span className="material-symbols-outlined absolute left-3.5 md:left-4 top-1/2 -translate-y-1/2 text-text-muted text-lg md:text-xl group-focus-within:text-primary transition-colors">check_circle</span>
                                             </div>
                                         </div>
                                     </div>
-
                                     <div className="pt-4 md:pt-6 mt-auto border-t border-border-default flex justify-end">
-                                        <button
-                                            onClick={handleUpdatePassword}
-                                            disabled={loading || !password}
-                                            className={`btn-premium w-full md:w-auto px-8 py-3.5 md:py-4 flex items-center justify-center gap-3 text-sm disabled:opacity-50 disabled:grayscale`}
-                                        >
+                                        <button onClick={handleUpdatePassword} disabled={loading || !password} className={`btn-premium w-full md:w-auto px-8 py-3.5 md:py-4 flex items-center justify-center gap-3 text-sm disabled:opacity-50 disabled:grayscale`}>
                                             <span className="material-symbols-outlined">security_update_good</span>
                                             Atualizar Senha
                                         </button>
@@ -450,14 +577,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                     </div>
                 </div>
             </div>
-
             {/* CROPPER MODAL */}
-            <ImageCropperModal
-                isOpen={isCropperOpen}
-                imageSrc={cropImageSrc}
-                onClose={() => { setIsCropperOpen(false); setCropImageSrc(null); }}
-                onCropComplete={handleUploadCroppedImage}
-            />
+            {isCropperOpen && cropImageSrc && (
+                <ImageCropperModal
+                    isOpen={isCropperOpen}
+                    imageSrc={cropImageSrc}
+                    onCropComplete={handleUploadCroppedImage}
+                    onClose={() => setIsCropperOpen(false)}
+                />
+            )}
         </>
     );
 };

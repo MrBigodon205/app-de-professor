@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframe — Perfil do Aluno (Reimaginado)</title>
+<style>
+  :root {
+    --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0; --text: #1e293b;
+    --muted: #94a3b8; --primary: #6366f1; --primary-light: #eef2ff;
+    --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+    --radius: 16px; --radius-lg: 24px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+  .layout { display: grid; grid-template-columns: 280px 1fr 320px; gap: 24px; min-height: calc(100vh - 48px); }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-header h3 { font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .sidebar-search {
+    width: 100%; height: 40px; border: 1px solid var(--border); border-radius: 10px;
+    padding: 0 12px 0 36px; font-size: 13px; font-weight: 600; outline: none; margin-top: 12px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2394a3b8' viewBox='0 0 24 24'%3E%3Cpath d='M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E") no-repeat 10px center / 16px;
+  }
+  .student-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .student-item {
+    display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px;
+    cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
+  }
+  .student-item:hover { background: #f8fafc; }
+  .student-item.active { background: var(--primary-light); border-color: rgba(99,102,241,0.2); }
+  .mini-avatar {
+    width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; font-weight: 900; font-size: 12px; color: white; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--primary), #818cf8);
+  }
+  .student-item .name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .student-item .number { font-size: 10px; font-weight: 700; color: var(--muted); font-family: monospace; }
+  .student-item.active .name { color: var(--primary); }
+
+  /* Main Content */
+  .main { display: flex; flex-direction: column; gap: 24px; overflow-y: auto; max-height: calc(100vh - 48px); padding-right: 8px; }
+
+  /* Profile Header */
+  .profile-header {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 32px; text-align: center; position: relative; overflow: hidden;
+  }
+  .profile-header::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 100px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
+  }
+  .profile-avatar {
+    width: 80px; height: 80px; border-radius: 24px; display: flex; align-items: center;
+    justify-content: center; font-weight: 900; font-size: 28px; color: white; margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--primary), #818cf8); position: relative;
+    border: 4px solid white; box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+  }
+  .profile-header h1 { font-size: 24px; font-weight: 900; position: relative; }
+  .profile-meta { color: var(--muted); font-weight: 600; font-size: 13px; position: relative; margin-top: 4px; }
+  .filter-row {
+    display: flex; align-items: center; gap: 12px; margin-top: 20px; position: relative;
+    justify-content: center; flex-wrap: wrap;
+  }
+  .filter-chip {
+    padding: 10px 20px; border-radius: 12px; font-weight: 800; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; border: 2px solid var(--border);
+    background: var(--card); transition: all 0.2s;
+  }
+  .filter-chip.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+  .btn-export {
+    padding: 12px 24px; border-radius: 12px; background: var(--primary); color: white;
+    font-weight: 800; font-size: 12px; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; text-transform: uppercase;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+  }
+
+  /* Chart Card */
+  .chart-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 28px; position: relative; overflow: hidden;
+  }
+  .chart-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+    background: linear-gradient(to bottom, var(--primary), #818cf8);
+  }
+  .chart-title { font-size: 16px; font-weight: 900; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .chart-placeholder {
+    height: 200px; background: linear-gradient(to right, transparent, rgba(99,102,241,0.05));
+    border-radius: var(--radius); display: flex; align-items: flex-end; gap: 24px;
+    padding: 0 32px 16px; position: relative;
+  }
+  .chart-bar {
+    flex: 1; border-radius: 8px 8px 0 0; position: relative;
+    background: linear-gradient(to top, var(--primary), rgba(99,102,241,0.4));
+  }
+  .chart-bar span { position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap; }
+  .chart-bar .val { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 900; color: var(--primary); }
+
+  /* Unit Card */
+  .unit-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 28px; transition: all 0.2s;
+  }
+  .unit-card:hover { border-color: rgba(99,102,241,0.2); }
+  .unit-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .unit-header h4 { font-size: 16px; font-weight: 900; }
+  .unit-avg { padding: 8px 16px; background: #f8fafc; border-radius: 12px; border: 1px solid var(--border); }
+  .unit-avg .label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: var(--muted); letter-spacing: 0.1em; }
+  .unit-avg .value { font-size: 20px; font-weight: 900; }
+  .grades-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .grade-chip {
+    padding: 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9;
+  }
+  .grade-chip .label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: var(--muted); letter-spacing: 0.1em; }
+  .grade-chip .value { font-size: 18px; font-weight: 900; margin-top: 4px; }
+  
+  .obs-textarea {
+    width: 100%; height: 80px; border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 12px 12px 36px; font-size: 13px; font-weight: 500; resize: none; outline: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2394a3b8' viewBox='0 0 24 24'%3E%3Cpath d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z'/%3E%3C/svg%3E") no-repeat 12px 14px / 14px;
+  }
+
+  /* Right Stats */
+  .right-col { display: flex; flex-direction: column; gap: 16px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 24px; position: relative; overflow: hidden;
+  }
+  .stat-card h5 { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: var(--muted); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .big-number { font-size: 48px; font-weight: 900; line-height: 1; }
+  .progress-bar { height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; margin-top: 12px; }
+  .progress-fill { height: 100%; border-radius: 4px; }
+
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;
+    border-radius: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .status-approved { background: #ecfdf5; color: var(--success); }
+  .status-final { background: #fffbeb; color: var(--warning); }
+  .status-recovery { background: #fef2f2; color: var(--danger); }
+
+  .mini-stat {
+    display: flex; align-items: center; gap: 12px; padding: 12px; background: #fafbfe;
+    border-radius: 12px; border: 1px solid #f1f5f9;
+  }
+  .mini-stat-icon {
+    width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; font-size: 16px;
+  }
+  .mini-stat .label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .mini-stat .value { font-size: 16px; font-weight: 900; }
+
+  /* Timeline */
+  .timeline { display: flex; flex-direction: column; gap: 0; padding-left: 16px; border-left: 2px solid var(--border); }
+  .timeline-item { position: relative; padding: 0 0 16px 20px; }
+  .timeline-item::before {
+    content: ''; position: absolute; left: -9px; top: 4px; width: 14px; height: 14px;
+    border-radius: 50%; border: 3px solid var(--card);
+  }
+  .timeline-item.positive::before { background: var(--success); box-shadow: 0 0 8px rgba(16,185,129,0.4); }
+  .timeline-item.negative::before { background: var(--danger); box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+  .timeline-date { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .timeline-type { font-size: 11px; font-weight: 800; text-transform: uppercase; margin-top: 2px; }
+  .timeline-desc { font-size: 12px; font-weight: 500; color: #64748b; margin-top: 4px; line-height: 1.5; }
+
+  .annotation {
+    position: relative; margin: 16px 0; padding: 14px 18px; background: #fffbeb;
+    border-left: 4px solid var(--warning); border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: 12px; font-weight: 600; color: #92400e;
+  }
+  .annotation strong { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
+  .improvement-tag {
+    display: inline-flex; padding: 2px 8px; border-radius: 6px; font-size: 9px;
+    font-weight: 800; text-transform: uppercase; background: #dbeafe; color: #1e40af; margin-bottom: 6px;
+  }
+
+  @media (max-width: 1024px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { max-height: 300px; }
+    .right-col { order: -1; display: grid; grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    body { padding: 12px; }
+    .grades-grid { grid-template-columns: repeat(2, 1fr); }
+    .right-col { grid-template-columns: 1fr; }
+    .filter-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h3>👥 Turma 5º Ano A</h3>
+      <input class="sidebar-search" type="search" placeholder="Buscar aluno..." />
+    </div>
+    <div class="student-list">
+      <div class="student-item">
+        <div class="mini-avatar" style="background: linear-gradient(135deg, #059669, #34d399);">AS</div>
+        <div>
+          <div class="name">Alice Santos</div>
+          <div class="number">#12045</div>
+        </div>
+      </div>
+      <div class="student-item active">
+        <div class="mini-avatar">BF</div>
+        <div>
+          <div class="name">Bruno Ferreira</div>
+          <div class="number">#12046</div>
+        </div>
+      </div>
+      <div class="student-item">
+        <div class="mini-avatar" style="background: linear-gradient(135deg, #e11d48, #fb7185);">CM</div>
+        <div>
+          <div class="name">Carla Mendes</div>
+          <div class="number">#12047</div>
+        </div>
+      </div>
+      <div class="student-item">
+        <div class="mini-avatar" style="background: linear-gradient(135deg, #d97706, #fbbf24);">DL</div>
+        <div>
+          <div class="name">Daniel Lima</div>
+          <div class="number">#12048</div>
+        </div>
+      </div>
+      <div class="student-item">
+        <div class="mini-avatar" style="background: linear-gradient(135deg, #7c3aed, #a78bfa);">EO</div>
+        <div>
+          <div class="name">Eduardo Oliveira</div>
+          <div class="number">#12049</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-avatar">BF</div>
+      <h1>Bruno Ferreira</h1>
+      <div class="profile-meta">5º Ano • Turma A • Matrícula #12046</div>
+      <div class="filter-row">
+        <div class="filter-chip active">Ciclo Completo</div>
+        <div class="filter-chip">1ª Unidade</div>
+        <div class="filter-chip">2ª Unidade</div>
+        <div class="filter-chip">3ª Unidade</div>
+        <button class="btn-export">📄 Exportar PDF</button>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-card">
+      <div class="chart-title">
+        <span style="width: 32px; height: 32px; border-radius: 10px; background: var(--primary-light); display: flex; align-items: center; justify-content: center;">📈</span>
+        Evolução Acadêmica
+      </div>
+      <div class="chart-placeholder">
+        <div class="chart-bar" style="height: 55%;">
+          <span>1ª Unid</span>
+          <span class="val">5.5</span>
+        </div>
+        <div class="chart-bar" style="height: 72%;">
+          <span>2ª Unid</span>
+          <span class="val">7.2</span>
+        </div>
+        <div class="chart-bar" style="height: 85%;">
+          <span>3ª Unid</span>
+          <span class="val">8.5</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="annotation">
+      <div class="improvement-tag">✨ Melhoria</div>
+      <strong>Sidebar search funcional (Corrigido)</strong>
+      O search na sidebar do original não tinha onChange — era puramente visual. Agora filtra os alunos efetivamente.
+    </div>
+
+    <!-- Unit Cards -->
+    <div class="unit-card">
+      <div class="unit-header">
+        <h4>📗 1ª Unidade</h4>
+        <div class="unit-avg">
+          <div class="label">Média Final</div>
+          <div class="value">5.5</div>
+        </div>
+      </div>
+      <div class="grades-grid">
+        <div class="grade-chip">
+          <div class="label">Participação</div>
+          <div class="value">6.0</div>
+        </div>
+        <div class="grade-chip">
+          <div class="label">Trabalho</div>
+          <div class="value">5.0</div>
+        </div>
+        <div class="grade-chip">
+          <div class="label">Prova</div>
+          <div class="value">4.5</div>
+        </div>
+        <div class="grade-chip">
+          <div class="label">Qualitativa</div>
+          <div class="value">7.0</div>
+        </div>
+      </div>
+      <textarea class="obs-textarea" placeholder="Observação pedagógica desta unidade...">Aluno demonstrou melhora significativa na participação em aula.</textarea>
+    </div>
+
+    <div class="unit-card">
+      <div class="unit-header">
+        <h4>📘 2ª Unidade</h4>
+        <div class="unit-avg">
+          <div class="label">Média Final</div>
+          <div class="value" style="color: var(--success);">7.2</div>
+        </div>
+      </div>
+      <div class="grades-grid">
+        <div class="grade-chip"><div class="label">Participação</div><div class="value">7.5</div></div>
+        <div class="grade-chip"><div class="label">Trabalho</div><div class="value">7.0</div></div>
+        <div class="grade-chip"><div class="label">Prova</div><div class="value">6.8</div></div>
+        <div class="grade-chip"><div class="label">Qualitativa</div><div class="value">8.0</div></div>
+      </div>
+      <textarea class="obs-textarea" placeholder="Observação pedagógica desta unidade..."></textarea>
+    </div>
+
+    <div class="annotation">
+      <div class="improvement-tag">✨ Melhoria</div>
+      <strong>Progress bar usa inline style (Corrigido)</strong>
+      O original usava classes dinâmicas `w-p-${Math.round(...)}` que não existem no Tailwind. Agora usa `style={{ width }}`.
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: Stats -->
+  <div class="right-col">
+    <!-- Annual Summary -->
+    <div class="stat-card">
+      <h5>📊 Resumo Anual</h5>
+      <div class="big-number" style="color: var(--primary);">7.1</div>
+      <div style="font-size: 11px; font-weight: 700; color: var(--muted); margin-top: 4px;">Média Final</div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 71%; background: linear-gradient(90deg, var(--primary), #818cf8);"></div>
+      </div>
+      <div style="margin-top: 12px;">
+        <span class="status-badge status-approved">✓ Aprovado</span>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stat-card" style="display: flex; flex-direction: column; gap: 12px;">
+      <h5>📌 Indicadores Rápidos</h5>
+      <div class="mini-stat">
+        <div class="mini-stat-icon" style="background: #dbeafe; color: #2563eb;">📅</div>
+        <div>
+          <div class="label">Presença</div>
+          <div class="value">87%</div>
+        </div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-icon" style="background: #fef3c7; color: #d97706;">⚠️</div>
+        <div>
+          <div class="label">Ocorrências</div>
+          <div class="value">3</div>
+        </div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-icon" style="background: #ecfdf5; color: #059669;">✅</div>
+        <div>
+          <div class="label">Atividades</div>
+          <div class="value">8 de 10</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Occurrences Timeline -->
+    <div class="stat-card">
+      <h5>🕐 Histórico Recente</h5>
+      <div class="timeline">
+        <div class="timeline-item positive">
+          <div class="timeline-date">05/02/2026</div>
+          <div class="timeline-type" style="color: var(--success);">Elogio</div>
+          <div class="timeline-desc">Participação excelente na atividade de grupo sobre meio ambiente.</div>
+        </div>
+        <div class="timeline-item negative">
+          <div class="timeline-date">28/01/2026</div>
+          <div class="timeline-type" style="color: var(--danger);">Uso de Celular</div>
+          <div class="timeline-desc">Uso de celular durante explicação do professor.</div>
+        </div>
+        <div class="timeline-item negative">
+          <div class="timeline-date">15/01/2026</div>
+          <div class="timeline-type" style="color: var(--danger);">Atraso</div>
+          <div class="timeline-desc">Chegou 20 minutos atrasado à aula.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Management Actions -->
+    <div class="stat-card">
+      <h5>⚙️ Gestão</h5>
+      <button style="width: 100%; padding: 14px; border-radius: 14px; background: #1e293b; color: white; font-weight: 800; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        🔄 Mudar Turma do Aluno
+      </button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

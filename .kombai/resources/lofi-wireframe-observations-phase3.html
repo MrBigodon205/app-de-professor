@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframe Reimaginado — Observações</title>
+<style>
+  :root {
+    --primary: #06b6d4;
+    --primary-dark: #0891b2;
+    --secondary: #8b5cf6;
+    --surface: #ffffff;
+    --surface-subtle: #f8fafc;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-subtle: #f1f5f9;
+    --success: #10b981;
+    --error: #ef4444;
+    --warning: #f59e0b;
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Outfit', 'Inter', system-ui, sans-serif; background: var(--surface-subtle); color: var(--text-primary); }
+  
+  .page { display: flex; height: 100vh; overflow: hidden; gap: 16px; padding: 16px; }
+  
+  /* STUDENT SIDEBAR */
+  .student-sidebar { width: 380px; background: var(--surface); border-radius: 32px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-md); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+  
+  .sidebar-header { padding: 24px; border-bottom: 1px solid var(--border-subtle); background: linear-gradient(to bottom right, var(--surface-subtle), var(--surface)); }
+  .class-label { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .class-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(6,182,212,0.08); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .class-name { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-primary); }
+  
+  .search-input { width: 100%; padding: 10px 12px 10px 40px; border-radius: 16px; border: 2px solid var(--border); background: var(--surface); font-size: 14px; font-weight: 600; outline: none; transition: all 0.2s; position: relative; }
+  .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(6,182,212,0.08); }
+  .search-wrap { position: relative; }
+  .search-wrap::before { content: "🔍"; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; }
+  
+  .student-list { flex: 1; overflow-y: auto; padding: 8px; }
+  .student-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 16px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; position: relative; }
+  .student-item:hover { background: var(--surface-subtle); }
+  .student-item.active { background: rgba(6,182,212,0.04); border-color: rgba(6,182,212,0.15); }
+  .student-item.active::before { content: ''; position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 4px; height: 24px; border-radius: 4px; background: var(--primary); }
+  
+  .avatar { width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+  .avatar.indigo { background: linear-gradient(135deg, #4f46e5, #312e81); }
+  .avatar.emerald { background: linear-gradient(135deg, #059669, #064e3b); }
+  .avatar.rose { background: linear-gradient(135deg, #e11d48, #881337); }
+  .avatar.amber { background: linear-gradient(135deg, #d97706, #78350f); }
+  .avatar.sky { background: linear-gradient(135deg, #0284c7, #0c4a6e); }
+  
+  .student-name { font-size: 14px; font-weight: 800; }
+  .student-number { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); }
+  
+  /* MAIN CONTENT */
+  .main-content { flex: 1; background: var(--surface); border-radius: 32px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-md); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+  
+  /* STUDENT HEADER */
+  .main-header { padding: 20px 32px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; background: var(--surface); z-index: 2; flex-shrink: 0; }
+  .header-student { display: flex; align-items: center; gap: 16px; }
+  .header-avatar { width: 48px; height: 48px; border-radius: var(--radius-md); font-size: 18px; }
+  .header-name { font-size: 24px; font-weight: 900; letter-spacing: -0.02em; }
+  .header-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted); }
+  .header-tag { background: var(--surface-subtle); padding: 4px 10px; border-radius: 8px; font-family: monospace; color: var(--text-secondary); }
+  
+  .tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface-subtle); border-radius: 16px; }
+  .tab { padding: 10px 24px; border-radius: 14px; border: none; cursor: pointer; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.2s; background: transparent; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .tab.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
+  
+  /* SCROLLABLE BODY */
+  .main-body { flex: 1; overflow-y: auto; padding: 32px; }
+  
+  /* OCCURRENCE FORM */
+  .form-card { background: var(--surface-subtle); border-radius: 32px; border: 2px dashed var(--border); padding: 32px; position: relative; margin-bottom: 40px; }
+  .form-accent { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 4px 0 0 4px; background: var(--primary); opacity: 0.2; }
+  .form-title { font-size: 16px; font-weight: 900; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+  .form-title-icon { width: 40px; height: 40px; border-radius: 14px; background: rgba(6,182,212,0.08); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 8px; padding-left: 4px; }
+  
+  .category-select { display: flex; gap: 6px; flex-wrap: wrap; }
+  .category-chip { padding: 8px 14px; border-radius: 12px; border: 2px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .category-chip.active { border-color: var(--error); background: rgba(239,68,68,0.05); color: var(--error); }
+  .category-chip.praise { border-color: var(--success); background: rgba(16,185,129,0.05); color: var(--success); }
+  
+  .date-input { padding: 10px 14px; border-radius: 12px; border: 2px solid var(--border); background: var(--surface); font-size: 14px; font-weight: 700; width: 100%; outline: none; }
+  .date-input:focus { border-color: var(--primary); }
+  
+  .unit-buttons { display: flex; gap: 8px; }
+  .unit-btn { flex: 1; height: 44px; border-radius: 14px; border: 2px solid var(--border); background: var(--surface); font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.2s; }
+  .unit-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(6,182,212,0.3); }
+  
+  .textarea { width: 100%; height: 96px; padding: 16px; border-radius: 20px; border: 2px solid var(--border); background: var(--surface); font-size: 14px; resize: none; outline: none; font-family: inherit; }
+  .textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(6,182,212,0.08); }
+  
+  .btn-submit { width: 100%; height: 56px; border-radius: 16px; background: var(--primary); color: white; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.15em; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(6,182,212,0.25); transition: all 0.2s; margin-top: 16px; }
+  .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(6,182,212,0.35); }
+  .btn-submit:disabled { background: var(--surface-subtle); color: var(--text-muted); cursor: not-allowed; box-shadow: none; transform: none; }
+  
+  /* OCCURRENCE LIST */
+  .section-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-muted); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+  .section-line { flex: 1; height: 2px; background: var(--border-subtle); border-radius: 1px; }
+  
+  .occ-card { background: var(--surface); padding: 20px; border-radius: 24px; border: 1px solid var(--border-subtle); box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 12px; transition: all 0.2s; }
+  .occ-card:hover { box-shadow: var(--shadow-md); transform: translateX(4px); }
+  .occ-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .occ-type { font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 4px 12px; border-radius: 10px; border: 2px solid; }
+  .occ-type.praise { background: rgba(16,185,129,0.05); color: #059669; border-color: rgba(16,185,129,0.15); }
+  .occ-type.warning { background: rgba(239,68,68,0.05); color: #dc2626; border-color: rgba(239,68,68,0.15); }
+  .occ-date { font-size: 10px; font-weight: 800; color: var(--text-muted); font-family: monospace; display: flex; align-items: center; gap: 6px; }
+  .occ-actions { display: flex; gap: 4px; opacity: 0; transition: all 0.2s; }
+  .occ-card:hover .occ-actions { opacity: 1; }
+  .occ-action { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.2s; }
+  .occ-action:hover { background: var(--surface-subtle); }
+  .occ-action.edit:hover { color: #d97706; background: rgba(217,119,6,0.08); }
+  .occ-action.delete:hover { color: #dc2626; background: rgba(220,38,38,0.08); }
+  .occ-desc { font-size: 14px; color: var(--text-secondary); font-style: italic; line-height: 1.6; }
+  
+  /* INLINE VALIDATION */
+  .validation-hint { font-size: 11px; color: var(--error); font-weight: 600; margin-top: 4px; padding-left: 4px; display: none; }
+  .form-group.error .validation-hint { display: block; }
+  .form-group.error .textarea { border-color: var(--error); }
+  
+  /* IMPROVEMENT ANNOTATIONS */
+  .improvement { position: relative; }
+  .improvement::after { content: attr(data-note); position: absolute; top: -8px; right: -8px; background: #10b981; color: white; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; z-index: 5; }
+
+  @media (max-width: 768px) {
+    .page { flex-direction: column; height: auto; }
+    .student-sidebar { width: 100%; max-height: 40vh; }
+    .form-grid { grid-template-columns: 1fr; }
+    .main-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+    .tabs { width: 100%; }
+    .tab { flex: 1; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <!-- STUDENT SIDEBAR -->
+  <div class="student-sidebar">
+    <div class="sidebar-header">
+      <div class="class-label">
+        <div class="class-icon">🏷️</div>
+        <span class="class-name">6º Ano · Turma A</span>
+      </div>
+      <div class="search-wrap">
+        <input class="search-input" type="text" placeholder="Buscar aluno..." />
+      </div>
+    </div>
+    <div class="student-list">
+      <div class="student-item active">
+        <div class="avatar indigo">AC</div>
+        <div>
+          <div class="student-name">Ana Carolina Silva</div>
+          <div class="student-number">Nº 01</div>
+        </div>
+      </div>
+      <div class="student-item">
+        <div class="avatar emerald">BR</div>
+        <div>
+          <div class="student-name">Bruno Rodrigues</div>
+          <div class="student-number">Nº 02</div>
+        </div>
+      </div>
+      <div class="student-item">
+        <div class="avatar rose">CM</div>
+        <div>
+          <div class="student-name">Camila Mendes</div>
+          <div class="student-number">Nº 03</div>
+        </div>
+      </div>
+      <div class="student-item">
+        <div class="avatar amber">DO</div>
+        <div>
+          <div class="student-name">Daniel Oliveira</div>
+          <div class="student-number">Nº 04</div>
+        </div>
+      </div>
+      <div class="student-item">
+        <div class="avatar sky">EF</div>
+        <div>
+          <div class="student-name">Eduardo Fernandes</div>
+          <div class="student-number">Nº 05</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <!-- Header -->
+    <div class="main-header">
+      <div class="header-student">
+        <div class="avatar header-avatar indigo">AC</div>
+        <div>
+          <div class="header-name">Ana Carolina Silva</div>
+          <div class="header-meta">
+            <span class="header-tag">#01</span>
+            <span>•</span>
+            <span style="color:var(--primary);">6º Ano · Turma A</span>
+          </div>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab active">📝 Ocorrências</button>
+        <button class="tab">📋 Histórico</button>
+      </div>
+    </div>
+    
+    <!-- Body -->
+    <div class="main-body">
+      <!-- Form -->
+      <div class="form-card improvement" data-note="Inline validation">
+        <div class="form-accent"></div>
+        <div class="form-title">
+          <div class="form-title-icon">🛡️</div>
+          Registrar Novo Ponto de Atenção
+        </div>
+        
+        <div class="form-grid">
+          <div class="form-group">
+            <div class="form-label">Categoria</div>
+            <div class="category-select">
+              <span class="category-chip active">⚠️ Alerta</span>
+              <span class="category-chip">⏰ Atraso</span>
+              <span class="category-chip praise">⭐ Elogio</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Data</div>
+            <input class="date-input" type="date" value="2026-02-11" />
+          </div>
+          <div class="form-group">
+            <div class="form-label">Unidade</div>
+            <div class="unit-buttons">
+              <button class="unit-btn active">1U</button>
+              <button class="unit-btn">2U</button>
+              <button class="unit-btn">3U</button>
+            </div>
+          </div>
+          <div class="form-group full">
+            <div class="form-label">Relato Detalhado</div>
+            <textarea class="textarea" placeholder="Descreva o ocorrido com detalhes pedagógicos..."></textarea>
+            <div class="validation-hint">Campo obrigatório — descreva a ocorrência para registrar.</div>
+          </div>
+        </div>
+        
+        <button class="btn-submit">
+          ➕ Confirmar Registro
+        </button>
+      </div>
+      
+      <!-- Recent Occurrences -->
+      <div class="section-label">
+        <span class="section-line"></span>
+        Registros Recentes da Disciplina
+        <span class="section-line"></span>
+      </div>
+      
+      <div class="occ-card">
+        <div class="occ-header">
+          <span class="occ-type warning">⚠️ Indisciplina</span>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="occ-date">📅 10/02/2026</span>
+            <div class="occ-actions">
+              <button class="occ-action edit" title="Editar">✏️</button>
+              <button class="occ-action delete" title="Excluir">🗑️</button>
+            </div>
+          </div>
+        </div>
+        <p class="occ-desc">"Aluna conversando durante explicação da atividade prática. Avisada verbalmente pela segunda vez na semana."</p>
+      </div>
+      
+      <div class="occ-card">
+        <div class="occ-header">
+          <span class="occ-type praise">⭐ Elogio</span>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="occ-date">📅 07/02/2026</span>
+            <div class="occ-actions">
+              <button class="occ-action edit" title="Editar">✏️</button>
+              <button class="occ-action delete" title="Excluir">🗑️</button>
+            </div>
+          </div>
+        </div>
+        <p class="occ-desc">"Excelente participação na aula de hoje. Ajudou os colegas na atividade em grupo e demonstrou domínio do conteúdo."</p>
+      </div>
+      
+      <div class="occ-card">
+        <div class="occ-header">
+          <span class="occ-type warning">📱 Uso de Celular</span>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="occ-date">📅 04/02/2026</span>
+            <div class="occ-actions">
+              <button class="occ-action edit" title="Editar">✏️</button>
+              <button class="occ-action delete" title="Excluir">🗑️</button>
+            </div>
+          </div>
+        </div>
+        <p class="occ-desc">"Flagrada usando celular durante prova. Aparelho recolhido conforme regulamento escolar."</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

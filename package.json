@@ -14,7 +14,8 @@
     "build-pc": "npm run build && electron-builder --win",
     "mobile:build": "npm run build && npx cap sync",
     "mobile:sync": "npx cap sync",
-    "mobile:open": "npx cap open android"
+    "mobile:open": "npx cap open android",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "build": {
     "appId": "com.profacerta.web",
@@ -43,7 +44,7 @@
     }
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.89.0",
+    "@supabase/supabase-js": "^2.94.1",
     "@types/canvas-confetti": "^1.9.0",
     "@types/dompurify": "^3.0.5",
     "@types/react-joyride": "^2.0.2",
@@ -51,7 +52,10 @@
     "canvas-confetti": "^1.9.4",
     "dexie": "^4.2.1",
     "dexie-react-hooks": "^4.2.0",
+    "docx": "^9.5.1",
+    "docx-preview": "^0.3.7",
     "dompurify": "^3.3.1",
+    "file-saver": "^2.0.5",
     "framer-motion": "^12.26.1",
     "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.2",
@@ -62,8 +66,11 @@
     "react-image-crop": "^11.0.10",
     "react-is": "^19.2.3",
     "react-joyride": "^2.9.3",
+    "react-pdf": "^10.3.0",
     "react-quill-new": "^3.7.0",
+    "react-rnd": "^10.5.2",
     "react-router-dom": "^7.11.0",
+    "react-webcam": "^7.2.0",
     "react-zoom-pan-pinch": "^3.7.0",
     "recharts": "^3.6.0",
     "tesseract.js": "^7.0.0"
@@ -72,6 +79,7 @@
     "@capacitor/android": "^8.0.1",
     "@capacitor/cli": "^8.0.1",
     "@capacitor/core": "^8.0.1",
+    "@types/file-saver": "^2.0.7",
     "@types/node": "^22.14.0",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.0",

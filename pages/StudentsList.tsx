@@ -40,17 +40,17 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.05,
-                delayChildren: 0.1
+                staggerChildren: 0.04,
+                delayChildren: 0.08
             }
         }
     };
 
     const itemVariants: any = {
-        hidden: { opacity: 0, y: 20, filter: "blur(5px)" },
+        hidden: { opacity: 0, y: 16, scale: 0.97 },
         visible: {
-            opacity: 1, y: 0, filter: "blur(0px)",
-            transition: { type: 'spring', stiffness: 100, damping: 12 }
+            opacity: 1, y: 0, scale: 1,
+            transition: { type: 'spring', stiffness: 150, damping: 20 }
         }
     };
 

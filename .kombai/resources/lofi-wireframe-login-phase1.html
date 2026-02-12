@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wireframe — Login Reimaginado</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Comic Sans MS', 'Segoe UI', sans-serif; background: #fff; color: #333; padding: 24px; }
+    h1 { font-size: 20px; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 4px; }
+    .subtitle { font-size: 12px; color: #666; margin-bottom: 24px; }
+    
+    .badge-reuse { position: absolute; top: 4px; right: 4px; background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-family: Arial, sans-serif; font-weight: bold; z-index: 10; }
+    .badge-new { position: absolute; top: 4px; right: 4px; background: #FF9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-family: Arial, sans-serif; font-weight: bold; z-index: 10; }
+    
+    .container { max-width: 1000px; margin: 0 auto; }
+    
+    /* Login Layout */
+    .login-wrapper { display: grid; grid-template-columns: 45% 55%; min-height: 650px; border: 2px solid #ddd; border-radius: 20px; overflow: hidden; background: #fff; margin-top: 16px; }
+    
+    /* Brand Side */
+    .brand-side { background: #f5f5f5; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; border-right: 1px solid #ddd; position: relative; }
+    .brand-logo { width: 100px; height: 100px; background: #ccc; border-radius: 20px; border: 2px solid #999; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; }
+    .brand-title { font-size: 28px; font-weight: bold; text-align: center; margin-bottom: 4px; }
+    .brand-subtitle { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #999; margin-bottom: 12px; }
+    .brand-desc { font-size: 12px; color: #888; text-align: center; max-width: 240px; line-height: 1.5; }
+    .brand-footer { position: absolute; bottom: 16px; font-size: 9px; color: #ccc; text-transform: uppercase; letter-spacing: 2px; }
+    
+    /* Trust Badges - NEW */
+    .trust-badges { display: flex; gap: 12px; margin-top: 20px; }
+    .trust-badge { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #888; }
+    .trust-badge-icon { width: 20px; height: 20px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+    
+    /* Form Side */
+    .form-side { display: flex; flex-direction: column; padding: 40px; position: relative; }
+    
+    /* Tabs */
+    .tabs { display: inline-flex; border: 1px solid #ddd; border-radius: 10px; padding: 3px; margin-bottom: 28px; background: #f5f5f5; align-self: flex-start; }
+    .tab { padding: 8px 24px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; background: transparent; color: #888; }
+    .tab.active { background: #fff; color: #333; border: 1px solid #ddd; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .tab.active-fill { background: #333; color: #fff; }
+    
+    /* Form Elements */
+    .form-group { margin-bottom: 18px; }
+    .form-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; color: #666; margin-bottom: 6px; display: block; }
+    .form-input { width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 12px; font-size: 13px; background: #fafafa; outline: none; font-family: inherit; }
+    .form-input:focus { border-color: #999; background: #fff; box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
+    .form-input-wrapper { position: relative; }
+    .form-input-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #ccc; cursor: pointer; }
+    .form-hint { font-size: 9px; text-align: right; margin-top: 4px; color: #999; text-decoration: underline; cursor: pointer; }
+    
+    /* Error/Success inline */
+    .inline-error { font-size: 10px; color: #c62828; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+    
+    /* Checkbox */
+    .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .checkbox { width: 16px; height: 16px; border: 1px solid #ccc; border-radius: 4px; }
+    .checkbox-label { font-size: 11px; color: #666; }
+    
+    /* Submit Button */
+    .submit-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: #333; color: #fff; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .submit-btn:hover { background: #222; }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    /* Social Login */
+    .social-btn { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; background: #fff; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .social-btn:hover { background: #f5f5f5; }
+    
+    .divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
+    .divider-line { flex: 1; height: 1px; background: #ddd; }
+    .divider-text { font-size: 10px; color: #999; text-transform: uppercase; }
+    
+    /* Theme Toggle */
+    .theme-toggle { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; background: #f5f5f5; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; }
+    
+    /* Subjects Grid (Register) */
+    .subjects-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px; border: 1px solid #ddd; border-radius: 10px; background: #fafafa; max-height: 100px; overflow-y: auto; margin-bottom: 12px; }
+    .subject-chip { padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: bold; text-transform: uppercase; border: 1px solid #ddd; background: #fff; cursor: pointer; text-align: center; }
+    .subject-chip.selected { background: #333; color: #fff; border-color: #333; }
+    
+    /* Accessibility Improvements noted */
+    .a11y-note { background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 8px 12px; font-size: 10px; color: #1565c0; margin-top: 12px; }
+    
+    @media (max-width: 768px) {
+      .login-wrapper { grid-template-columns: 1fr; }
+      .brand-side { padding: 24px; min-height: auto; }
+      .brand-logo { width: 72px; height: 72px; }
+      .brand-title { font-size: 22px; }
+      .trust-badges { display: none; }
+      .brand-footer { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖼️ Wireframe — Login Reimaginado</h1>
+    <p class="subtitle">Abordagem focada em acessibilidade, contraste e clareza visual com indicadores de confiança</p>
+  </div>
+
+  <div class="container">
+    <div class="login-wrapper">
+      <!-- BRAND SIDE -->
+      <div class="brand-side" style="position: relative;">
+        <span class="badge-reuse" title="assets/logo.svg">[REUSE] Logo</span>
+        
+        <div class="brand-logo">A+</div>
+        <div class="brand-title">Prof. Acerta<span style="color:#666;">+</span></div>
+        <div class="brand-subtitle">— v3.2 Intelligence —</div>
+        <div class="brand-desc">Transforme dados em conquistas pedagógicas com inteligência artificial.</div>
+        
+        <!-- NEW: Trust Badges -->
+        <div class="trust-badges" style="position: relative;">
+          <span class="badge-new" title="To be created" style="top:-12px;font-size:7px;">[NEW] TrustBadges</span>
+          <div class="trust-badge"><div class="trust-badge-icon">🔒</div> Dados Seguros</div>
+          <div class="trust-badge"><div class="trust-badge-icon">👥</div> 5.000+ Professores</div>
+          <div class="trust-badge"><div class="trust-badge-icon">⚡</div> Rápido</div>
+        </div>
+        
+        <div class="brand-footer">© 2026 PROF. ACERTA+ CORE</div>
+      </div>
+
+      <!-- FORM SIDE -->
+      <div class="form-side">
+        <!-- Theme Toggle -->
+        <div class="theme-toggle" style="position: relative;">
+          <span class="badge-reuse" title="contexts/ThemeContext.tsx" style="top:-8px;right:-8px;font-size:7px;">[REUSE] Theme</span>
+          🌙
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab active">Entrar</button>
+          <button class="tab">Cadastrar</button>
+        </div>
+
+        <!-- Form Title -->
+        <div style="margin-bottom: 24px;">
+          <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 4px;">Bem-vindo de volta</h2>
+          <p style="font-size: 12px; color: #888;">Entre com suas credenciais para acessar o painel.</p>
+        </div>
+
+        <!-- FORM -->
+        <form style="position: relative;">
+          <span class="badge-reuse" title="pages/Login.tsx" style="font-size:8px;">[REUSE] Login Form</span>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label class="form-label" for="email">E-mail Corporativo</label>
+            <div class="form-input-wrapper">
+              <input class="form-input" id="email" type="email" placeholder="professor@escola.com" aria-label="E-mail corporativo" />
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label class="form-label" for="password">Senha</label>
+            <div class="form-input-wrapper">
+              <input class="form-input" id="password" type="password" placeholder="••••••••" aria-label="Senha" />
+              <span class="form-input-icon">👁</span>
+            </div>
+            <div class="form-hint">Esqueceu a senha?</div>
+          </div>
+
+          <!-- Remember -->
+          <div class="checkbox-row">
+            <div class="checkbox"></div>
+            <span class="checkbox-label">Lembrar meu e-mail</span>
+          </div>
+
+          <!-- Inline Error (instead of modal) -->
+          <div class="inline-error" style="display:none;">
+            ⚠️ E-mail ou senha incorretos.
+          </div>
+
+          <!-- Submit -->
+          <div class="form-group" style="position: relative;">
+            <span class="badge-new" title="Improved: inline error instead of modal overlay">[NEW] InlineError</span>
+            <button type="submit" class="submit-btn">
+              ENTRAR NO SISTEMA →
+            </button>
+          </div>
+
+          <!-- Divider -->
+          <div class="divider">
+            <div class="divider-line"></div>
+            <span class="divider-text">ou continue com</span>
+            <div class="divider-line"></div>
+          </div>
+
+          <!-- Social Login -->
+          <button type="button" class="social-btn">
+            <span style="font-size:16px;">G</span> Google
+          </button>
+        </form>
+        
+        <!-- ACCESSIBILITY IMPROVEMENTS -->
+        <div class="a11y-note">
+          ♿ <strong>Melhorias de Acessibilidade:</strong> Labels com contraste ≥ 4.5:1, landmarks semânticos (&lt;main&gt;, &lt;form&gt;), aria-labels, foco visível, erros inline (não modal).
+        </div>
+      </div>
+    </div>
+
+    <!-- CHANGES SUMMARY -->
+    <div style="margin-top:24px;padding:16px;background:#f9f9f9;border:1px solid #eee;border-radius:12px;">
+      <h3 style="font-size:13px;font-weight:bold;margin-bottom:8px;">📋 Componentes Reutilizados</h3>
+      <table style="width:100%;font-size:11px;border-collapse:collapse;">
+        <tr style="background:#e8f5e9;"><td style="padding:4px 8px;border:1px solid #ddd;">Logo</td><td style="padding:4px 8px;border:1px solid #ddd;">assets/logo.svg</td><td style="padding:4px 8px;border:1px solid #ddd;">✅ Reutilizar</td></tr>
+        <tr><td style="padding:4px 8px;border:1px solid #ddd;">ThemeContext (Toggle)</td><td style="padding:4px 8px;border:1px solid #ddd;">contexts/ThemeContext.tsx</td><td style="padding:4px 8px;border:1px solid #ddd;">✅ Reutilizar</td></tr>
+        <tr style="background:#e8f5e9;"><td style="padding:4px 8px;border:1px solid #ddd;">ForgotPasswordModal</td><td style="padding:4px 8px;border:1px solid #ddd;">components/ForgotPasswordModal.tsx</td><td style="padding:4px 8px;border:1px solid #ddd;">✅ Reutilizar</td></tr>
+        <tr><td style="padding:4px 8px;border:1px solid #ddd;">BackgroundPattern</td><td style="padding:4px 8px;border:1px solid #ddd;">components/BackgroundPattern.tsx</td><td style="padding:4px 8px;border:1px solid #ddd;">✅ Reutilizar</td></tr>
+      </table>
+      
+      <h3 style="font-size:13px;font-weight:bold;margin:12px 0 8px;">💡 Principais Mudanças vs. Implementação Atual</h3>
+      <ul style="font-size:11px;padding-left:20px;line-height:1.8;">
+        <li><strong>Labels com contraste adequado</strong> — trocar text-slate-400/text-text-muted por cores com ≥ 4.5:1 ratio</li>
+        <li><strong>Erros inline</strong> — substituir modal fullscreen por mensagem inline sob o campo</li>
+        <li><strong>"Senha" em vez de "Chave de Acesso"</strong> — terminologia mais clara para o usuário</li>
+        <li><strong>Indicadores de confiança</strong> — badges de segurança e quantidade de usuários no painel lateral</li>
+        <li><strong>Landmarks semânticos</strong> — &lt;main&gt;, &lt;form&gt;, aria-labels nos inputs</li>
+        <li><strong>Divider "ou continue com"</strong> — separação visual clara entre login nativo e social</li>
+        <li><strong>Checkbox "Lembrar e-mail"</strong> — funcionalidade já existe, mas precisa de visual mais explícito</li>
+        <li><strong>Remover link WhatsApp</strong> — "Esqueci meu e-mail" deveria ter solução in-app</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

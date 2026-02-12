@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wireframe — Dashboard Institucional (Reimaginado)</title>
+  <style>
+    :root {
+      --primary: #6366F1;
+      --primary-light: #818CF8;
+      --primary-bg: #EEF2FF;
+      --secondary: #8B5CF6;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --surface: #FFFFFF;
+      --surface-elevated: #F8FAFC;
+      --surface-card: #FFFFFF;
+      --bg-page: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+      --border-subtle: #F1F5F9;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-page);
+      color: var(--text-primary);
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* Header */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .page-header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .page-header .subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .page-header .actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn-primary {
+      padding: 10px 20px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-outline {
+      padding: 10px 20px;
+      background: white;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .breadcrumb a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .breadcrumb span {
+      color: var(--text-muted);
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .kpi-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card .kpi-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+    .kpi-card .kpi-icon.indigo {
+      background: var(--primary-bg);
+      color: var(--primary);
+    }
+
+    .kpi-card .kpi-icon.purple {
+      background: #F3E8FF;
+      color: var(--secondary);
+    }
+
+    .kpi-card .kpi-icon.blue {
+      background: #DBEAFE;
+      color: #3B82F6;
+    }
+
+    .kpi-card .kpi-icon.amber {
+      background: #FEF3C7;
+      color: var(--warning);
+    }
+
+    .kpi-card .kpi-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .kpi-card .kpi-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: 4px 0;
+    }
+
+    .kpi-card .kpi-change {
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .kpi-card .kpi-change.positive {
+      color: var(--success);
+    }
+
+    .kpi-card .kpi-change.neutral {
+      color: var(--text-muted);
+    }
+
+    .kpi-card .kpi-change.warning {
+      color: var(--warning);
+    }
+
+    .kpi-card .kpi-sparkline {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 100px;
+      height: 40px;
+      opacity: 0.15;
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    /* Chart Area */
+    .chart-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+    }
+
+    .chart-card .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .chart-card .card-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .chart-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface-elevated);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+    }
+
+    .chart-tab {
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .chart-tab.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .chart-placeholder {
+      height: 260px;
+      background: linear-gradient(to top, var(--primary-bg) 0%, transparent 100%);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      padding: 0 20px 20px;
+    }
+
+    .chart-bar {
+      width: 32px;
+      border-radius: 6px 6px 0 0;
+      background: var(--primary);
+      opacity: 0.7;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Invite Card */
+    .invite-card {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      color: white;
+    }
+
+    .invite-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .invite-card p {
+      font-size: 13px;
+      opacity: 0.85;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .invite-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+    }
+
+    /* Quick Access */
+    .quick-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+    }
+
+    .quick-card h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .quick-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .quick-item:hover {
+      background: var(--primary-bg);
+      color: var(--primary);
+    }
+
+    .quick-item .qi-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    /* Activity Feed */
+    .feed-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+    }
+
+    .feed-card h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+
+    .feed-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .feed-item:last-child {
+      border-bottom: none;
+    }
+
+    .feed-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    .feed-dot.green {
+      background: var(--success);
+    }
+
+    .feed-dot.amber {
+      background: var(--warning);
+    }
+
+    .feed-dot.blue {
+      background: #3B82F6;
+    }
+
+    .feed-content {
+      flex: 1;
+    }
+
+    .feed-content .feed-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .feed-content .feed-text strong {
+      color: var(--text-primary);
+    }
+
+    .feed-content .feed-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Bottom Grid */
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    /* Teacher Activity Table */
+    .table-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+    }
+
+    .table-card .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .table-card .card-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .mini-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .mini-table td {
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .mini-table .avatar-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mini-table .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--primary-bg);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .mini-table .name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .status-badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .status-badge.active {
+      background: #D1FAE5;
+      color: #065F46;
+    }
+
+    .status-badge.inactive {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+
+    .progress-mini {
+      width: 60px;
+      height: 6px;
+      background: var(--border-subtle);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-mini .fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .fill-success {
+      width: 95%;
+      background: var(--success);
+    }
+
+    .fill-primary {
+      width: 78%;
+      background: var(--primary);
+    }
+
+    .fill-danger {
+      width: 0%;
+      background: var(--danger);
+    }
+
+    /* Annotations */
+    .annotation {
+      position: absolute;
+      background: #FEF3C7;
+      border: 1px solid #F59E0B;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #92400E;
+      z-index: 10;
+      white-space: nowrap;
+    }
+
+    .annotation::before {
+      content: '⚡';
+      margin-right: 4px;
+    }
+
+    .annotation-wrapper {
+      position: relative;
+    }
+
+    .annotation-positioned {
+      top: -8px;
+      right: -8px;
+      position: absolute;
+    }
+
+    /* KPI Grid Wrapper */
+    .kpi-grid-wrapper {
+      position: relative;
+    }
+
+    /* Chart Bars */
+    .chart-bar-60 {
+      height: 60%;
+    }
+
+    .chart-bar-80 {
+      height: 80%;
+    }
+
+    .chart-bar-45 {
+      height: 45%;
+    }
+
+    .chart-bar-90 {
+      height: 90%;
+    }
+
+    .chart-bar-70 {
+      height: 70%;
+    }
+
+    .chart-bar-55 {
+      height: 55%;
+    }
+
+    .chart-bar-85 {
+      height: 85%;
+    }
+
+    /* Chart Labels */
+    .chart-labels {
+      display: flex;
+      justify-content: space-around;
+      padding-top: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Links */
+    .link-see-all {
+      font-size: 12px;
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    /* Legend Swatches */
+    .legend-swatch-primary {
+      background: var(--primary);
+    }
+
+    .legend-swatch-secondary {
+      background: var(--secondary);
+    }
+
+    .legend-swatch-success {
+      background: var(--success);
+    }
+
+    .legend-swatch-warning {
+      background: var(--warning);
+    }
+
+    .legend-swatch-bg {
+      background: var(--bg-page);
+    }
+
+    /* Legend Footer */
+    .legend-footer {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .bottom-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .container {
+        padding: 16px;
+      }
+
+      .page-header {
+        flex-direction: column;
+      }
+
+      .page-header .actions {
+        width: 100%;
+      }
+
+      .page-header .actions .btn-primary,
+      .page-header .actions .btn-outline {
+        flex: 1;
+        justify-content: center;
+      }
+    }
+
+    /* Design Token Legend */
+    .legend {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      font-size: 11px;
+      max-width: 220px;
+      box-shadow: var(--shadow-lg);
+      z-index: 100;
+    }
+
+    .legend h4 {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      color: var(--text-secondary);
+    }
+
+    .legend-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a href="#">🏠 Início</a>
+      <span>›</span>
+      <span>Dashboard Institucional</span>
+    </div>
+
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h1>🏫 Escola Municipal São Paulo</h1>
+        <div class="subtitle">
+          📍 Painel Institucional • Coordenação • Ano Letivo 2025
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn-outline">⚙️ Configurações</button>
+        <button class="btn-primary">📊 Gerar Relatório</button>
+      </div>
+    </div>
+
+    <!-- KPI Grid — REAL DATA -->
+    <div class="kpi-grid kpi-grid-wrapper">
+      <div class="kpi-card">
+        <div class="kpi-icon indigo">👥</div>
+        <div class="kpi-label">Professores</div>
+        <div class="kpi-value">12</div>
+        <div class="kpi-change positive">● 10 ativos hoje</div>
+        <div class="annotation-wrapper">
+          <div class="annotation annotation-positioned">Dados reais via Supabase</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon purple">🎓</div>
+        <div class="kpi-label">Alunos Matriculados</div>
+        <div class="kpi-value">450</div>
+        <div class="kpi-change neutral">Total geral</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon blue">📋</div>
+        <div class="kpi-label">Presença Hoje</div>
+        <div class="kpi-value">92%</div>
+        <div class="kpi-change positive">▲ +1.2% vs ontem</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon amber">⚠️</div>
+        <div class="kpi-label">Ocorrências</div>
+        <div class="kpi-value">3</div>
+        <div class="kpi-change warning">Requerem atenção</div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-grid">
+      <!-- Chart Area -->
+      <div class="chart-card">
+        <div class="card-header">
+          <span class="card-title">📈 Desempenho da Escola</span>
+          <div class="chart-tabs">
+            <button class="chart-tab active">Semanal</button>
+            <button class="chart-tab">Mensal</button>
+            <button class="chart-tab">Bimestral</button>
+          </div>
+        </div>
+        <div class="chart-placeholder">
+          <div class="chart-bar chart-bar-60"></div>
+          <div class="chart-bar chart-bar-80"></div>
+          <div class="chart-bar chart-bar-45"></div>
+          <div class="chart-bar chart-bar-90"></div>
+          <div class="chart-bar chart-bar-70"></div>
+          <div class="chart-bar chart-bar-55"></div>
+          <div class="chart-bar chart-bar-85"></div>
+        </div>
+        <div class="chart-labels">
+          <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <!-- Invite Card -->
+        <div class="invite-card">
+          <h3>🔗 Convidar Professores</h3>
+          <p>Gere um código único válido por 24h para adicionar professores à equipe.</p>
+          <button class="invite-btn">➕ Gerar Código de Convite</button>
+        </div>
+
+        <!-- Quick Access -->
+        <div class="quick-card">
+          <h3>Acesso Rápido</h3>
+          <div class="quick-item">
+            <div class="qi-icon">📅</div>
+            <span>Grade Horária</span>
+          </div>
+          <div class="quick-item">
+            <div class="qi-icon">👥</div>
+            <span>Gerenciar Turmas</span>
+          </div>
+          <div class="quick-item">
+            <div class="qi-icon">📋</div>
+            <span>Relatórios</span>
+          </div>
+          <div class="quick-item">
+            <div class="qi-icon">⚙️</div>
+            <span>Config. de Notas</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Section -->
+    <div class="bottom-grid">
+      <!-- Teacher Activity -->
+      <div class="table-card">
+        <div class="card-header">
+          <span class="card-title">👥 Atividade dos Professores</span>
+          <a href="#" class="link-see-all">Ver todos →</a>
+        </div>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Professor</th>
+              <th>Status</th>
+              <th>Frequência</th>
+              <th>Lançamentos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="avatar-cell">
+                  <div class="avatar">MC</div>
+                  <div class="name">Maria Costa</div>
+                </div>
+              </td>
+              <td><span class="status-badge active">Ativo</span></td>
+              <td>
+                <div class="progress-mini">
+                  <div class="fill fill-success"></div>
+                </div>
+              </td>
+              <td>24 hoje</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="avatar-cell">
+                  <div class="avatar">JS</div>
+                  <div class="name">João Silva</div>
+                </div>
+              </td>
+              <td><span class="status-badge active">Ativo</span></td>
+              <td>
+                <div class="progress-mini">
+                  <div class="fill fill-primary"></div>
+                </div>
+              </td>
+              <td>18 hoje</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="avatar-cell">
+                  <div class="avatar">AL</div>
+                  <div class="name">Ana Lima</div>
+                </div>
+              </td>
+              <td><span class="status-badge inactive">Suspenso</span></td>
+              <td>
+                <div class="progress-mini">
+                  <div class="fill fill-danger"></div>
+                </div>
+              </td>
+              <td>— </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Activity Feed -->
+      <div class="feed-card">
+        <h3>🔔 Atividade Recente</h3>
+        <div class="feed-item">
+          <div class="feed-dot green"></div>
+          <div class="feed-content">
+            <div class="feed-text"><strong>Maria Costa</strong> lançou frequência para 6º Ano A</div>
+            <div class="feed-time">Há 5 min</div>
+          </div>
+        </div>
+        <div class="feed-item">
+          <div class="feed-dot blue"></div>
+          <div class="feed-content">
+            <div class="feed-text"><strong>João Silva</strong> publicou planejamento de Matemática</div>
+            <div class="feed-time">Há 15 min</div>
+          </div>
+        </div>
+        <div class="feed-item">
+          <div class="feed-dot amber"></div>
+          <div class="feed-content">
+            <div class="feed-text"><strong>Sistema</strong> detectou 3 ocorrências pendentes</div>
+            <div class="feed-time">Há 30 min</div>
+          </div>
+        </div>
+        <div class="feed-item">
+          <div class="feed-dot green"></div>
+          <div class="feed-content">
+            <div class="feed-text"><strong>Ana Lima</strong> completou notas do 7º Ano B</div>
+            <div class="feed-time">Há 1h</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <h4>Design Tokens</h4>
+    <div class="legend-item">
+      <div class="legend-swatch legend-swatch-primary"></div> Indigo 500 (#6366F1)
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch legend-swatch-secondary"></div> Purple 500 (#8B5CF6)
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch legend-swatch-success"></div> Emerald 500 (#10B981)
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch legend-swatch-warning"></div> Amber 500 (#F59E0B)
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch legend-swatch-bg"></div> Slate 100 (bg)
+    </div>
+    <div class="legend-footer">
+      ✅ Dados reais via Supabase<br>
+      ✅ Gráficos com Recharts<br>
+      ✅ Feed de atividade real-time<br>
+      ✅ Responsivo mobile-first
+    </div>
+  </div>
+</body>
+
+</html>

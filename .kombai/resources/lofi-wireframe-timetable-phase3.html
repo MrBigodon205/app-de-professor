@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframe Reimaginado — Grade Horária</title>
+<style>
+  :root {
+    --primary: #06b6d4;
+    --primary-dark: #0891b2;
+    --secondary: #8b5cf6;
+    --surface: #ffffff;
+    --surface-subtle: #f8fafc;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-subtle: #f1f5f9;
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Outfit', 'Inter', system-ui, sans-serif; background: var(--surface-subtle); color: var(--text-primary); padding: 24px; }
+  
+  .container { max-width: 1400px; margin: 0 auto; }
+  
+  /* HEADER */
+  .page-header { margin-bottom: 32px; }
+  .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 12px; }
+  .breadcrumb .active { color: var(--primary); }
+  .header-row { display: flex; align-items: center; justify-content: space-between; }
+  .page-title { font-size: 32px; font-weight: 900; letter-spacing: -0.02em; }
+  .page-desc { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+  .btn-config { display: flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border); font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; color: var(--text-secondary); }
+  .btn-config:hover { border-color: var(--primary); color: var(--primary); background: rgba(6,182,212,0.05); }
+  
+  /* TIMETABLE GRID — DESKTOP */
+  .timetable-desktop { display: none; }
+  @media (min-width: 769px) { .timetable-desktop { display: block; } .timetable-mobile { display: none; } }
+  
+  .grid-container { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-md); padding: 20px; overflow-x: auto; }
+  
+  .timetable-grid { display: grid; grid-template-columns: 80px repeat(5, 1fr); gap: 12px; }
+  
+  .grid-header { padding: 12px; text-align: center; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--primary); background: var(--surface-subtle); border-radius: var(--radius-sm); }
+  .grid-header.time { color: var(--text-muted); font-size: 10px; }
+  
+  .time-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; border-radius: var(--radius-sm); background: var(--surface-subtle); border: 1px solid var(--border-subtle); }
+  .time-start { font-size: 14px; font-weight: 700; color: var(--text-primary); font-family: monospace; }
+  .time-end { font-size: 10px; color: var(--text-muted); }
+  
+  .slot { height: 64px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; position: relative; gap: 2px; }
+  .slot:hover { transform: scale(0.98); box-shadow: var(--shadow-sm); }
+  .slot.empty { background: var(--surface); }
+  .slot.empty:hover { border-color: var(--border); }
+  .slot.empty .add-icon { font-size: 20px; color: #e2e8f0; }
+  
+  .slot.filled { border-color: transparent; }
+  .slot .slot-name { font-size: 13px; font-weight: 800; text-align: center; line-height: 1.2; }
+  .slot .slot-info { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+  .slot .slot-dot { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; }
+  
+  /* Subject Colors — STATIC CLASSES (not dynamic) */
+  .slot.math { background: rgba(239,68,68,0.08); }
+  .slot.math .slot-name { color: #dc2626; }
+  .slot.math .slot-info { color: #94a3b8; }
+  .slot.math .slot-dot { background: #ef4444; }
+  
+  .slot.science { background: rgba(34,197,94,0.08); }
+  .slot.science .slot-name { color: #16a34a; }
+  .slot.science .slot-info { color: #94a3b8; }
+  .slot.science .slot-dot { background: #22c55e; }
+  
+  .slot.portuguese { background: rgba(59,130,246,0.08); }
+  .slot.portuguese .slot-name { color: #2563eb; }
+  .slot.portuguese .slot-info { color: #94a3b8; }
+  .slot.portuguese .slot-dot { background: #3b82f6; }
+  
+  .slot.history { background: rgba(249,115,22,0.08); }
+  .slot.history .slot-name { color: #ea580c; }
+  .slot.history .slot-info { color: #94a3b8; }
+  .slot.history .slot-dot { background: #f97316; }
+  
+  .slot.geography { background: rgba(139,92,246,0.08); }
+  .slot.geography .slot-name { color: #7c3aed; }
+  .slot.geography .slot-info { color: #94a3b8; }
+  .slot.geography .slot-dot { background: #8b5cf6; }
+  
+  /* MOBILE LIST VIEW */
+  .timetable-mobile { display: block; }
+  @media (min-width: 769px) { .timetable-mobile { display: none; } }
+  
+  .mobile-day { margin-bottom: 24px; }
+  .mobile-day-title { font-size: 18px; font-weight: 900; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; position: sticky; top: 0; background: var(--surface-subtle); padding: 8px 0; z-index: 5; }
+  .mobile-day-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+  
+  .mobile-slot { display: flex; gap: 12px; margin-bottom: 12px; }
+  .mobile-time { width: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; padding-top: 8px; }
+  .mobile-time-start { font-size: 14px; font-weight: 800; }
+  .mobile-time-end { font-size: 10px; color: var(--text-muted); font-weight: 700; }
+  
+  .mobile-card { flex: 1; padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-height: 72px; display: flex; align-items: center; position: relative; overflow: hidden; }
+  .mobile-card.empty { background: var(--surface); }
+  .mobile-card.filled { border-color: transparent; }
+  .mobile-card .left-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; }
+  .mobile-card-content { display: flex; flex-direction: column; gap: 2px; padding-left: 8px; }
+  .mobile-card-name { font-size: 16px; font-weight: 800; }
+  .mobile-card-section { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+  .mobile-card-subject { font-size: 11px; color: var(--text-muted); font-weight: 700; }
+  
+  /* IMPROVEMENT ANNOTATIONS */
+  .improvement { position: relative; }
+  .improvement::after { content: attr(data-note); position: absolute; top: -8px; right: -8px; background: #10b981; color: white; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; z-index: 5; }
+  
+  /* LEGEND */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 24px; padding: 16px; background: var(--surface); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="breadcrumb">
+      <span>Acerta+</span>
+      <span>›</span>
+      <span class="active">Meu Horário</span>
+    </div>
+    <div class="header-row">
+      <div>
+        <h1 class="page-title">Grade Horária</h1>
+        <p class="page-desc">Configure sua rotina para ativar a Sincronização Preditiva.</p>
+      </div>
+      <button class="btn-config">⚙️ <span>Configurar</span></button>
+    </div>
+  </div>
+  
+  <!-- DESKTOP GRID -->
+  <div class="timetable-desktop">
+    <div class="grid-container improvement" data-note="Static CSS classes">
+      <div class="timetable-grid">
+        <!-- Headers -->
+        <div class="grid-header time">Horário</div>
+        <div class="grid-header">Segunda</div>
+        <div class="grid-header">Terça</div>
+        <div class="grid-header">Quarta</div>
+        <div class="grid-header">Quinta</div>
+        <div class="grid-header">Sexta</div>
+        
+        <!-- Row 1: 07:00 -->
+        <div class="time-cell"><span class="time-start">07:00</span><span class="time-end">07:50</span></div>
+        <div class="slot filled math"><span class="slot-name">6º Ano</span><span class="slot-info">A · Mat</span><span class="slot-dot"></span></div>
+        <div class="slot filled science"><span class="slot-name">7º Ano</span><span class="slot-info">B · Ciê</span><span class="slot-dot"></span></div>
+        <div class="slot empty"><span class="add-icon">+</span></div>
+        <div class="slot filled portuguese"><span class="slot-name">8º Ano</span><span class="slot-info">A · Por</span><span class="slot-dot"></span></div>
+        <div class="slot filled history"><span class="slot-name">6º Ano</span><span class="slot-info">B · His</span><span class="slot-dot"></span></div>
+        
+        <!-- Row 2: 07:50 -->
+        <div class="time-cell"><span class="time-start">07:50</span><span class="time-end">08:40</span></div>
+        <div class="slot filled math"><span class="slot-name">6º Ano</span><span class="slot-info">A · Mat</span><span class="slot-dot"></span></div>
+        <div class="slot filled science"><span class="slot-name">7º Ano</span><span class="slot-info">B · Ciê</span><span class="slot-dot"></span></div>
+        <div class="slot filled geography"><span class="slot-name">9º Ano</span><span class="slot-info">A · Geo</span><span class="slot-dot"></span></div>
+        <div class="slot empty"><span class="add-icon">+</span></div>
+        <div class="slot empty"><span class="add-icon">+</span></div>
+        
+        <!-- Row 3: 08:40 -->
+        <div class="time-cell"><span class="time-start">08:40</span><span class="time-end">09:30</span></div>
+        <div class="slot empty"><span class="add-icon">+</span></div>
+        <div class="slot filled history"><span class="slot-name">8º Ano</span><span class="slot-info">B · His</span><span class="slot-dot"></span></div>
+        <div class="slot filled math"><span class="slot-name">6º Ano</span><span class="slot-info">A · Mat</span><span class="slot-dot"></span></div>
+        <div class="slot filled portuguese"><span class="slot-name">7º Ano</span><span class="slot-info">A · Por</span><span class="slot-dot"></span></div>
+        <div class="slot filled geography"><span class="slot-name">9º Ano</span><span class="slot-info">B · Geo</span><span class="slot-dot"></span></div>
+        
+        <!-- Row 4: 09:50 (after break) -->
+        <div class="time-cell"><span class="time-start">09:50</span><span class="time-end">10:40</span></div>
+        <div class="slot filled science"><span class="slot-name">6º Ano</span><span class="slot-info">B · Ciê</span><span class="slot-dot"></span></div>
+        <div class="slot empty"><span class="add-icon">+</span></div>
+        <div class="slot filled portuguese"><span class="slot-name">8º Ano</span><span class="slot-info">A · Por</span><span class="slot-dot"></span></div>
+        <div class="slot filled science"><span class="slot-name">7º Ano</span><span class="slot-info">A · Ciê</span><span class="slot-dot"></span></div>
+        <div class="slot filled math"><span class="slot-name">9º Ano</span><span class="slot-info">A · Mat</span><span class="slot-dot"></span></div>
+      </div>
+    </div>
+    
+    <!-- Legend -->
+    <div class="legend improvement" data-note="Color legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div> Matemática</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#22c55e;"></div> Ciências</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div> Português</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f97316;"></div> História</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6;"></div> Geografia</div>
+    </div>
+  </div>
+  
+  <!-- MOBILE LIST VIEW -->
+  <div class="timetable-mobile">
+    <div class="mobile-day">
+      <h3 class="mobile-day-title"><span class="mobile-day-dot"></span> Segunda</h3>
+      <div class="mobile-slot">
+        <div class="mobile-time"><span class="mobile-time-start">07:00</span><span class="mobile-time-end">07:50</span></div>
+        <div class="mobile-card filled math">
+          <div class="left-bar" style="background:#ef4444;"></div>
+          <div class="mobile-card-content">
+            <span class="mobile-card-name" style="color:#dc2626;">6º Ano</span>
+            <span class="mobile-card-section" style="color:#dc2626;">Turma A</span>
+            <span class="mobile-card-subject">Matemática</span>
+          </div>
+        </div>
+      </div>
+      <div class="mobile-slot">
+        <div class="mobile-time"><span class="mobile-time-start">07:50</span><span class="mobile-time-end">08:40</span></div>
+        <div class="mobile-card filled math">
+          <div class="left-bar" style="background:#ef4444;"></div>
+          <div class="mobile-card-content">
+            <span class="mobile-card-name" style="color:#dc2626;">6º Ano</span>
+            <span class="mobile-card-section" style="color:#dc2626;">Turma A</span>
+            <span class="mobile-card-subject">Matemática</span>
+          </div>
+        </div>
+      </div>
+      <div class="mobile-slot">
+        <div class="mobile-time"><span class="mobile-time-start">08:40</span><span class="mobile-time-end">09:30</span></div>
+        <div class="mobile-card empty">
+          <div style="display:flex; align-items:center; gap:8px; color:#cbd5e1; font-weight:700; font-size:14px;">+ Livre</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="mobile-day">
+      <h3 class="mobile-day-title"><span class="mobile-day-dot"></span> Terça</h3>
+      <div class="mobile-slot">
+        <div class="mobile-time"><span class="mobile-time-start">07:00</span><span class="mobile-time-end">07:50</span></div>
+        <div class="mobile-card filled science">
+          <div class="left-bar" style="background:#22c55e;"></div>
+          <div class="mobile-card-content">
+            <span class="mobile-card-name" style="color:#16a34a;">7º Ano</span>
+            <span class="mobile-card-section" style="color:#16a34a;">Turma B</span>
+            <span class="mobile-card-subject">Ciências</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

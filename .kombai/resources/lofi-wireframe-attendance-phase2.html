@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wireframe — Frequência Reimaginada</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Comic Sans MS', 'Segoe UI', sans-serif; background: #fff; color: #333; padding: 24px; }
+    h1 { font-size: 20px; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 4px; }
+    .subtitle { font-size: 12px; color: #666; margin-bottom: 24px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .badge-reuse { position: absolute; top: 4px; right: 4px; background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-family: Arial, sans-serif; font-weight: bold; z-index: 10; }
+    .badge-new { position: absolute; top: 4px; right: 4px; background: #FF9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-family: Arial, sans-serif; font-weight: bold; z-index: 10; }
+    .badge-fix { position: absolute; top: 4px; right: 4px; background: #F44336; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-family: Arial, sans-serif; font-weight: bold; z-index: 10; }
+    
+    /* Layout */
+    .page-wrapper { border: 2px solid #ddd; border-radius: 16px; overflow: hidden; background: #fafafa; }
+    
+    /* Header Bar */
+    .header-bar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: #fff; border-bottom: 1px solid #eee; flex-wrap: wrap; gap: 12px; }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .header-icon { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, #ddd, #ccc); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .header-title { font-size: 22px; font-weight: bold; }
+    .header-subtitle { font-size: 11px; color: #999; }
+    .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    
+    /* Pill Buttons */
+    .pill-group { display: flex; background: #f5f5f5; border-radius: 10px; padding: 3px; border: 1px solid #eee; }
+    .pill { padding: 6px 14px; border-radius: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; border: none; background: transparent; color: #999; }
+    .pill.active { background: #fff; color: #333; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    
+    /* Date Picker Trigger */
+    .date-trigger { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 12px; border: 1px solid #ddd; background: #fafafa; cursor: pointer; }
+    .date-trigger-day { font-size: 11px; font-weight: bold; text-transform: capitalize; }
+    .date-trigger-icon { font-size: 16px; color: #999; }
+    
+    /* Stats Row */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 16px 24px; position: relative; }
+    .stat-card { padding: 12px 16px; border-radius: 12px; border: 1px solid #eee; background: #fff; text-align: center; }
+    .stat-value { font-size: 24px; font-weight: bold; }
+    .stat-value.green { color: #22c55e; }
+    .stat-value.red { color: #ef4444; }
+    .stat-value.amber { color: #f59e0b; }
+    .stat-value.gray { color: #94a3b8; }
+    .stat-label { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; color: #999; margin-top: 4px; }
+    
+    /* Quick Actions */
+    .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 0 24px 16px; }
+    .quick-btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 12px; border: 1px solid #eee; font-size: 11px; font-weight: bold; cursor: pointer; background: #fff; }
+    .quick-btn.green { background: #22c55e; color: white; border-color: #22c55e; }
+    .quick-btn.red { border-color: #fecaca; color: #ef4444; }
+    
+    /* Student List */
+    .student-list { padding: 0 24px 24px; }
+    .student-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 14px; border: 1px solid #f0f0f0; margin-bottom: 8px; background: #fff; transition: background 0.2s; }
+    .student-row:hover { background: #fafafa; }
+    .student-info { display: flex; align-items: center; gap: 12px; }
+    .student-avatar { width: 36px; height: 36px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
+    .student-name { font-size: 13px; font-weight: bold; }
+    .student-number { font-size: 10px; color: #999; font-family: monospace; }
+    .status-buttons { display: flex; gap: 6px; }
+    .status-btn { width: 38px; height: 38px; border-radius: 10px; border: 1px solid #eee; background: #fafafa; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; }
+    .status-btn.active-p { background: #22c55e; color: white; border-color: #22c55e; box-shadow: 0 2px 8px rgba(34,197,94,0.3); }
+    .status-btn.active-f { background: #ef4444; color: white; border-color: #ef4444; }
+    .status-btn.active-j { background: #f59e0b; color: white; border-color: #f59e0b; }
+    
+    /* Undo Toast */
+    .undo-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 12px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.2); z-index: 100; }
+    .undo-btn { padding: 4px 12px; border-radius: 6px; background: rgba(255,255,255,0.15); border: none; color: white; font-weight: bold; font-size: 11px; cursor: pointer; }
+    
+    /* Mobile */
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .quick-actions { grid-template-columns: repeat(2, 1fr); }
+      .header-left { flex: 1; }
+      .header-controls { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖼️ Wireframe — Frequência Reimaginada</h1>
+    <p class="subtitle">Foco: Feedback visual imediato, estatísticas em tempo real, ação de desfazer</p>
+  </div>
+
+  <div class="container">
+    <div class="page-wrapper">
+      <!-- HEADER -->
+      <div class="header-bar" style="position: relative;">
+        <span class="badge-reuse" style="font-size:8px;">[REUSE] Header Controls</span>
+        <div class="header-left">
+          <div class="header-icon">✓</div>
+          <div>
+            <div class="header-title">Presenças</div>
+            <div class="header-subtitle">6º Ano Fundamental • Turma A</div>
+          </div>
+        </div>
+        <div class="header-controls">
+          <div class="date-trigger">
+            <span class="date-trigger-icon">📅</span>
+            <div>
+              <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#999;">Data</div>
+              <div class="date-trigger-day">terça, 11 de fevereiro</div>
+            </div>
+            <span class="date-trigger-icon">▼</span>
+          </div>
+          
+          <div class="pill-group">
+            <button class="pill active">1ª Unid</button>
+            <button class="pill">2ª Unid</button>
+            <button class="pill">3ª Unid</button>
+          </div>
+          
+          <button style="width:40px;height:40px;border-radius:12px;border:1px solid #ddd;background:#fff;cursor:pointer;font-size:14px;" title="PDF">📄</button>
+        </div>
+      </div>
+
+      <!-- REAL-TIME STATS (NEW) -->
+      <div class="stats-row" style="position: relative;">
+        <span class="badge-new">[NEW] LiveStats</span>
+        <div class="stat-card">
+          <div class="stat-value green">28</div>
+          <div class="stat-label">Presentes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value red">3</div>
+          <div class="stat-label">Faltando</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value amber">1</div>
+          <div class="stat-label">Justificados</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value gray">87%</div>
+          <div class="stat-label">Frequência</div>
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS -->
+      <div class="quick-actions" style="position: relative;">
+        <span class="badge-fix" style="top:-8px;right:28px;font-size:7px;">[FIX] Confirm Dialog</span>
+        <button class="quick-btn green">✓✓ Todos Presentes</button>
+        <button class="quick-btn red">✕ Todas Faltas</button>
+        <button class="quick-btn">— Sem Aula</button>
+        <button class="quick-btn">↺ Reiniciar</button>
+      </div>
+
+      <!-- STUDENT LIST -->
+      <div class="student-list">
+        <div class="student-row" style="position: relative;">
+          <span class="badge-fix" style="font-size:7px;">[FIX] aria-labels</span>
+          <div class="student-info">
+            <div class="student-avatar">AB</div>
+            <div>
+              <div class="student-name">Ana Beatriz Silva</div>
+              <div class="student-number">Nº 01 • ID: abc123</div>
+            </div>
+          </div>
+          <div class="status-buttons">
+            <button class="status-btn active-p" title="Presente" aria-label="Marcar Ana Beatriz como Presente">P</button>
+            <button class="status-btn" title="Falta" aria-label="Marcar Ana Beatriz como Falta">F</button>
+            <button class="status-btn" title="Justificada" aria-label="Marcar Ana Beatriz como Justificada">J</button>
+            <button class="status-btn" title="Sem Aula" aria-label="Marcar Ana Beatriz como Sem Aula">S</button>
+          </div>
+        </div>
+
+        <div class="student-row">
+          <div class="student-info">
+            <div class="student-avatar">CM</div>
+            <div>
+              <div class="student-name">Carlos Mendes</div>
+              <div class="student-number">Nº 02 • ID: def456</div>
+            </div>
+          </div>
+          <div class="status-buttons">
+            <button class="status-btn" title="Presente">P</button>
+            <button class="status-btn active-f" title="Falta">F</button>
+            <button class="status-btn" title="Justificada">J</button>
+            <button class="status-btn" title="Sem Aula">S</button>
+          </div>
+        </div>
+
+        <div class="student-row">
+          <div class="student-info">
+            <div class="student-avatar">DF</div>
+            <div>
+              <div class="student-name">Diana Ferreira</div>
+              <div class="student-number">Nº 03 • ID: ghi789</div>
+            </div>
+          </div>
+          <div class="status-buttons">
+            <button class="status-btn active-p">P</button>
+            <button class="status-btn">F</button>
+            <button class="status-btn">J</button>
+            <button class="status-btn">S</button>
+          </div>
+        </div>
+
+        <div class="student-row" style="opacity: 0.5; border-style: dashed;">
+          <div class="student-info">
+            <div class="student-avatar">...</div>
+            <div>
+              <div class="student-name" style="color:#ccc;">+ 29 alunos restantes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UNDO TOAST (NEW) -->
+    <div class="undo-toast" style="position: relative; margin-top: 16px;">
+      <span class="badge-new" style="top:-8px;font-size:7px;">[NEW] Undo</span>
+      ✓ Todos marcados como Presentes
+      <button class="undo-btn">DESFAZER</button>
+      <span style="font-size:10px;color:#94a3b8;">5s</span>
+    </div>
+
+    <!-- CHANGES -->
+    <div style="margin-top:24px;padding:16px;background:#f9f9f9;border:1px solid #eee;border-radius:12px;">
+      <h3 style="font-size:13px;font-weight:bold;margin-bottom:8px;">📋 Mudanças Principais</h3>
+      <ul style="font-size:11px;padding-left:20px;line-height:1.8;">
+        <li><strong>Estatísticas em tempo real</strong> — Contagem de presentes/faltas atualiza ao marcar</li>
+        <li><strong>Toast de Desfazer</strong> — Ao usar "Todos Presentes", toast com opção de desfazer (5s)</li>
+        <li><strong>Confirmação para ações em massa</strong> — Dialog de confirmação antes de marcar todos</li>
+        <li><strong>aria-labels nos botões</strong> — "Marcar [nome] como Presente" para leitores de tela</li>
+        <li><strong>Eliminar classes dinâmicas</strong> — Usar safelist do Tailwind ou CSS variables em vez de <code>bg-${theme.primaryColor}</code></li>
+        <li><strong>Extrair getThemeRGB</strong> — Utilitário duplicado em 3 páginas → mover para utils/</li>
+        <li><strong>Tratamento de erros visível</strong> — Toast de erro em vez de apenas console.error</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

@@ -123,17 +123,17 @@ export const Activities: React.FC = () => {
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.08,
-                delayChildren: 0.1
+                staggerChildren: 0.06,
+                delayChildren: 0.08
             }
         }
     };
 
     const itemVariants: any = {
-        hidden: { opacity: 0, x: -20, filter: "blur(5px)" },
+        hidden: { opacity: 0, x: -16, scale: 0.97 },
         visible: {
-            opacity: 1, x: 0, filter: "blur(0px)",
-            transition: { type: 'spring', stiffness: 100, damping: 12 }
+            opacity: 1, x: 0, scale: 1,
+            transition: { type: 'spring', stiffness: 150, damping: 20 }
         }
     };
 

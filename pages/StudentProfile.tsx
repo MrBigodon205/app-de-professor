@@ -103,7 +103,7 @@ export const StudentProfile: React.FC = () => {
                     units: unitsMap
                 };
             });
-            formattedStudents.sort((a, b) => parseInt(a.number) - parseInt(b.number));
+            formattedStudents.sort((a, b) => a.name.localeCompare(b.name));
 
             const formattedOcc: Occurrence[] = (occRes.data || []).map(o => ({
                 id: o.id.toString(),

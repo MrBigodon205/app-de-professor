@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframe — Perfil do Professor (Reimaginado)</title>
+<style>
+  :root {
+    --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0; --text: #1e293b;
+    --muted: #94a3b8; --primary: #6366f1; --primary-light: #eef2ff;
+    --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+    --radius: 16px; --radius-lg: 24px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+  .layout { display: grid; grid-template-columns: 380px 1fr; gap: 32px; align-items: start; }
+
+  /* ID Card */
+  .id-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    overflow: hidden; position: sticky; top: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  }
+  .id-card-header {
+    height: 140px; background: linear-gradient(135deg, var(--primary), #818cf8);
+    position: relative; overflow: hidden;
+  }
+  .id-card-header::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
+  .id-card-body { padding: 0 28px 28px; text-align: center; position: relative; }
+  
+  .avatar-wrapper {
+    width: 120px; height: 120px; border-radius: 50%; border: 6px solid var(--card);
+    margin: -60px auto 16px; overflow: hidden; background: var(--primary-light);
+    box-shadow: 0 4px 20px rgba(99,102,241,0.3); position: relative;
+  }
+  .avatar-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-placeholder {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 36px; color: var(--primary); background: var(--primary-light);
+  }
+  .camera-btn {
+    position: absolute; bottom: 4px; right: 4px; width: 32px; height: 32px;
+    border-radius: 10px; background: var(--primary); color: white; border: 3px solid var(--card);
+    display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer;
+  }
+  
+  .id-card-body h2 { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+  .id-card-body .role { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: var(--muted); padding: 4px 12px; background: #f8fafc; border-radius: 8px; display: inline-block; margin-bottom: 20px; }
+  
+  .info-row {
+    display: flex; flex-direction: column; gap: 12px; text-align: left;
+  }
+  .info-item {
+    padding: 14px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9;
+  }
+  .info-item .label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: var(--muted); margin-bottom: 4px; }
+  .info-item .value { font-weight: 700; font-size: 14px; }
+  .info-item .value.primary { color: var(--primary); font-weight: 800; }
+
+  /* Photo URL Editor */
+  .photo-editor {
+    margin-top: 16px; padding: 16px; background: #fafbfe; border-radius: 12px;
+    border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px;
+  }
+  .photo-editor .label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--muted); }
+  .photo-editor input {
+    height: 40px; border: 1px solid var(--border); border-radius: 8px; padding: 0 12px;
+    font-size: 12px; font-weight: 600; outline: none;
+  }
+  .photo-editor input:focus { border-color: var(--primary); }
+
+  /* Right Column */
+  .right-col { display: flex; flex-direction: column; gap: 28px; }
+
+  /* Section Card */
+  .section-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  }
+  .section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+  .section-icon {
+    width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center;
+    justify-content: center; font-size: 20px; background: var(--primary-light); color: var(--primary);
+  }
+  .section-header h3 { font-size: 20px; font-weight: 900; }
+  .section-header p { color: var(--muted); font-weight: 500; font-size: 13px; margin-top: 2px; }
+
+  /* Form */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .form-input {
+    height: 48px; border: 1px solid var(--border); border-radius: 12px; padding: 0 16px 0 42px;
+    font-size: 14px; font-weight: 700; outline: none; background: #fafbfe; transition: all 0.2s;
+  }
+  .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99,102,241,0.1); background: var(--card); }
+  .form-input-wrapper { position: relative; }
+  .form-input-wrapper .icon { position: absolute; left: 14px; top: 14px; font-size: 18px; color: var(--muted); }
+
+  /* Validation */
+  .validation-msg {
+    display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;
+    margin-top: 4px; padding: 4px 0;
+  }
+  .validation-msg.error { color: var(--danger); }
+  .validation-msg.hint { color: var(--muted); }
+
+  /* Disciplines Grid */
+  .disciplines-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .discipline-card {
+    padding: 14px; border-radius: 14px; border: 2px solid transparent; cursor: pointer;
+    transition: all 0.2s; background: #f8fafc; text-align: left; position: relative;
+  }
+  .discipline-card:hover { border-color: var(--border); }
+  .discipline-card.selected { border-color: var(--primary); background: var(--primary-light); }
+  .discipline-card.main { border-color: var(--primary); background: var(--primary-light); }
+  .discipline-card .check { font-size: 16px; margin-bottom: 6px; }
+  .discipline-card .name { font-size: 12px; font-weight: 800; }
+  .discipline-card .main-badge {
+    position: absolute; top: 6px; right: 6px; font-size: 8px; font-weight: 900;
+    background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .discipline-card .star-btn {
+    position: absolute; top: 6px; right: 6px; font-size: 14px; cursor: pointer;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .discipline-card:hover .star-btn { opacity: 1; }
+
+  /* Theme Preview */
+  .theme-preview {
+    display: flex; align-items: center; gap: 16px; padding: 20px; background: #f8fafc;
+    border-radius: 16px; border: 1px solid #f1f5f9;
+  }
+  .theme-swatch {
+    width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center;
+    justify-content: center; font-size: 24px; color: white; box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+    background: linear-gradient(135deg, var(--primary), #818cf8);
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 14px 24px;
+    border-radius: 14px; font-weight: 800; font-size: 12px; border: none; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+  .btn-outline { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+  .btn-block { width: 100%; justify-content: center; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; padding: 16px 24px;
+    background: #1e293b; color: white; border-radius: var(--radius);
+    display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 13px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3); z-index: 100;
+  }
+
+  .annotation {
+    margin: 16px 0; padding: 14px 18px; background: #fffbeb;
+    border-left: 4px solid var(--warning); border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: 12px; font-weight: 600; color: #92400e;
+  }
+  .annotation strong { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
+  .improvement-tag {
+    display: inline-flex; padding: 2px 8px; border-radius: 6px; font-size: 9px;
+    font-weight: 800; text-transform: uppercase; background: #dbeafe; color: #1e40af; margin-bottom: 6px;
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .id-card { position: static; }
+    .form-grid { grid-template-columns: 1fr; }
+    .disciplines-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Breadcrumb -->
+<nav style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 24px;">
+  <span>Acerta+</span> <span>›</span> <span>Configurações</span> <span>›</span> <span style="color: var(--primary);">Meu Perfil</span>
+</nav>
+
+<h1 style="font-size: 32px; font-weight: 900; margin-bottom: 8px;">Meu Perfil</h1>
+<p style="color: var(--muted); font-weight: 500; margin-bottom: 32px;">Gerencie suas informações e preferências de ensino.</p>
+
+<div class="layout">
+  <!-- LEFT: ID CARD -->
+  <div class="id-card">
+    <div class="id-card-header"></div>
+    <div class="id-card-body">
+      <div class="avatar-wrapper" style="position: relative;">
+        <div class="avatar-placeholder">MF</div>
+        <div class="camera-btn">📷</div>
+      </div>
+      <h2>Moisés Ferreira</h2>
+      <div class="role">Professor Titular</div>
+
+      <div class="info-row">
+        <div class="info-item">
+          <div class="label">Email</div>
+          <div class="value">moises.ferreira@escola.edu.br</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Especialidade</div>
+          <div class="value primary">📐 Matemática</div>
+        </div>
+      </div>
+
+      <div class="annotation" style="margin-top: 16px;">
+        <div class="improvement-tag">✨ Melhoria</div>
+        <strong>Upload de foto via arquivo (Novo)</strong>
+        Em vez de apenas URL, permitir upload direto de arquivo via Supabase Storage para melhor UX.
+      </div>
+
+      <div class="photo-editor">
+        <div class="label">Alterar Foto de Perfil</div>
+        <input type="text" placeholder="https://sua-foto.com/perfil.jpg" value="" />
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline" style="flex: 1; padding: 8px; font-size: 10px;">Cancelar</button>
+          <button class="btn btn-primary" style="flex: 1; padding: 8px; font-size: 10px;">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: FORMS -->
+  <div class="right-col">
+    
+    <!-- General Settings -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon">🪪</div>
+        <div>
+          <h3>Configurações Gerais</h3>
+          <p>Atualize seu nome e senha de acesso.</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nome Completo</label>
+          <div class="form-input-wrapper">
+            <span class="icon">👤</span>
+            <input class="form-input" type="text" value="Moisés Ferreira" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Nova Senha (Opcional)</label>
+          <div class="form-input-wrapper">
+            <span class="icon">🔒</span>
+            <input class="form-input" type="password" placeholder="Min. 6 caracteres" />
+          </div>
+          <div class="annotation" style="margin: 4px 0 0 0; padding: 8px 12px;">
+            <div class="improvement-tag">✨ Melhoria</div>
+            <strong>Validação inline de senha (Novo)</strong>
+            Mostrar requisitos em tempo real: mínimo 6 caracteres, etc.
+          </div>
+          <div class="validation-msg hint">ℹ️ Mínimo de 6 caracteres, incluindo 1 número</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
+        <button class="btn btn-primary">💾 Salvar Mudanças</button>
+      </div>
+    </div>
+
+    <!-- Disciplines -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon">📚</div>
+        <div>
+          <h3>Gestão de Disciplinas</h3>
+          <p>A disciplina principal define o tema visual do app.</p>
+        </div>
+      </div>
+
+      <div class="disciplines-grid">
+        <div class="discipline-card main">
+          <div class="check">✅</div>
+          <div class="name">Matemática</div>
+          <div class="main-badge">Tema</div>
+        </div>
+        <div class="discipline-card selected">
+          <div class="check">✅</div>
+          <div class="name">Ciências</div>
+          <div class="star-btn">⭐</div>
+        </div>
+        <div class="discipline-card selected">
+          <div class="check">✅</div>
+          <div class="name">Física</div>
+          <div class="star-btn">⭐</div>
+        </div>
+        <div class="discipline-card">
+          <div class="check">⬜</div>
+          <div class="name">Português</div>
+        </div>
+        <div class="discipline-card">
+          <div class="check">⬜</div>
+          <div class="name">História</div>
+        </div>
+        <div class="discipline-card">
+          <div class="check">⬜</div>
+          <div class="name">Geografia</div>
+        </div>
+        <div class="discipline-card">
+          <div class="check">⬜</div>
+          <div class="name">Inglês</div>
+        </div>
+        <div class="discipline-card">
+          <div class="check">⬜</div>
+          <div class="name">Artes</div>
+        </div>
+        <div class="discipline-card">
+          <div class="check">⬜</div>
+          <div class="name">Ed. Física</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
+        <button class="btn btn-primary">💾 Salvar Disciplinas</button>
+      </div>
+    </div>
+
+    <!-- Theme Preview -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon">🎨</div>
+        <div>
+          <h3>Identidade Visual</h3>
+          <p>O sistema adapta cores e ícones à sua disciplina.</p>
+        </div>
+      </div>
+
+      <div class="theme-preview">
+        <div class="theme-swatch">📐</div>
+        <div>
+          <div style="font-weight: 900; font-size: 16px;">Matemática</div>
+          <div style="font-size: 12px; color: var(--muted); font-weight: 600;">Primária: indigo-600 • Secundária: violet-600</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 16px; display: flex; gap: 8px;">
+        <div style="width: 32px; height: 32px; border-radius: 10px; background: #4f46e5;"></div>
+        <div style="width: 32px; height: 32px; border-radius: 10px; background: #7c3aed;"></div>
+        <div style="width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, #4f46e5, #7c3aed);"></div>
+      </div>
+
+      <div class="annotation" style="margin-top: 16px;">
+        <div class="improvement-tag">✨ Melhoria</div>
+        <strong>Salvar tudo de uma vez (Corrigido)</strong>
+        O original salvava disciplinas individualmente a cada clique. Agora agrupa mudanças e salva com um botão explícito, reduzindo chamadas à API.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast">
+  ✅ Perfil atualizado com sucesso!
+</div>
+
+</body>
+</html>

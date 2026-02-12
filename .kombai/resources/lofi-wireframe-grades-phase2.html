@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wireframe — Notas Reimaginada</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Comic Sans MS', 'Segoe UI', sans-serif; background: #fff; color: #333; padding: 24px; }
+    h1 { font-size: 20px; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 4px; }
+    .subtitle { font-size: 12px; color: #666; margin-bottom: 24px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .badge-reuse { position: absolute; top: 4px; right: 4px; background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-family: Arial, sans-serif; font-weight: bold; z-index: 10; }
+    .badge-new { position: absolute; top: 4px; right: 4px; background: #FF9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-family: Arial, sans-serif; font-weight: bold; z-index: 10; }
+    .badge-fix { position: absolute; top: 4px; right: 4px; background: #F44336; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-family: Arial, sans-serif; font-weight: bold; z-index: 10; }
+    
+    .page-wrapper { border: 2px solid #ddd; border-radius: 16px; overflow: hidden; background: #fafafa; }
+    
+    /* Header */
+    .header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: #fff; border-bottom: 1px solid #eee; flex-wrap: wrap; gap: 12px; }
+    
+    /* Tabs */
+    .unit-tabs { display: flex; gap: 4px; background: #f5f5f5; border-radius: 10px; padding: 3px; overflow-x: auto; }
+    .unit-tab { padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; border: none; background: transparent; color: #999; white-space: nowrap; }
+    .unit-tab.active { background: #fff; color: #333; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    
+    /* Actions */
+    .actions { display: flex; align-items: center; gap: 8px; }
+    .save-indicator { display: flex; align-items: center; gap: 4px; font-size: 10px; padding: 6px 12px; border-radius: 8px; }
+    .save-indicator.saved { background: #ecfdf5; color: #10b981; border: 1px solid #d1fae5; }
+    .export-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 10px; background: #333; color: white; border: none; font-size: 11px; font-weight: bold; cursor: pointer; }
+    
+    /* Table */
+    .table-wrapper { overflow-x: auto; padding: 0 24px 24px; }
+    table { width: 100%; border-collapse: collapse; min-width: 700px; }
+    thead th { padding: 12px 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; border-bottom: 2px solid #f0f0f0; text-align: center; background: #fafafa; }
+    thead th:first-child, thead th:nth-child(2) { text-align: left; position: sticky; left: 0; z-index: 5; background: #fafafa; }
+    thead th:first-child { width: 50px; }
+    thead th:nth-child(2) { min-width: 180px; }
+    tbody td { padding: 8px; border-bottom: 1px solid #f5f5f5; text-align: center; }
+    tbody td:first-child, tbody td:nth-child(2) { text-align: left; position: sticky; left: 0; z-index: 3; background: #fff; }
+    tbody tr:hover td { background: #fafafa; }
+    
+    /* Grade Input */
+    .grade-input { width: 60px; padding: 6px 4px; border: 1px solid #eee; border-radius: 8px; text-align: center; font-size: 12px; font-family: monospace; font-weight: bold; background: #fafafa; }
+    .grade-input:focus { border-color: #666; background: #fff; outline: none; box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
+    .grade-input.below { border-color: #fecaca; background: #fff5f5; color: #ef4444; }
+    
+    /* Total Badge */
+    .total-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+    .total-badge.pass { background: #ecfdf5; color: #10b981; }
+    .total-badge.fail { background: #fef2f2; color: #ef4444; }
+    
+    /* Mobile Card (NEW) */
+    .mobile-card { display: none; padding: 16px; border: 1px solid #eee; border-radius: 14px; background: #fff; margin-bottom: 12px; }
+    .mobile-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .mobile-card-avatar { width: 36px; height: 36px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
+    .mobile-card-grades { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .mobile-grade-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .mobile-grade-label { font-size: 8px; font-weight: bold; text-transform: uppercase; color: #999; }
+    
+    @media (max-width: 768px) {
+      .table-wrapper { display: none; }
+      .mobile-card { display: block; }
+      .unit-tabs { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖼️ Wireframe — Notas Reimaginada</h1>
+    <p class="subtitle">Foco: Visualização mobile com cards, validação visual inline, acessibilidade de inputs</p>
+  </div>
+
+  <div class="container">
+    <div class="page-wrapper">
+      <!-- HEADER -->
+      <div class="header" style="position: relative;">
+        <div class="unit-tabs" style="position: relative;">
+          <span class="badge-reuse" style="font-size:7px;top:-8px;">[REUSE] UnitTabs</span>
+          <button class="unit-tab active">1ª Unidade</button>
+          <button class="unit-tab">2ª Unidade</button>
+          <button class="unit-tab">3ª Unidade</button>
+          <button class="unit-tab">Final</button>
+          <button class="unit-tab">Recuperação</button>
+          <button class="unit-tab">Resultado</button>
+        </div>
+        <div class="actions">
+          <div class="save-indicator saved">✓ Salvo</div>
+          <button class="export-btn" style="position: relative;">
+            <span class="badge-fix" style="font-size:7px;top:-8px;">[FIX] Theme Color</span>
+            ↓ Exportar PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- TABLE (Desktop) -->
+      <div class="table-wrapper" style="position: relative;">
+        <span class="badge-fix" style="font-size:7px;">[FIX] a11y: aria-labels nos inputs</span>
+        <table>
+          <thead>
+            <tr>
+              <th>Nº</th>
+              <th>Nome</th>
+              <th>
+                <div>AV1</div>
+                <div style="font-size:8px;opacity:0.6;font-weight:normal;">(Max: 3.0)</div>
+              </th>
+              <th>
+                <div>AV2</div>
+                <div style="font-size:8px;opacity:0.6;font-weight:normal;">(Max: 3.0)</div>
+              </th>
+              <th>
+                <div>Prova</div>
+                <div style="font-size:8px;opacity:0.6;font-weight:normal;">(Max: 4.0)</div>
+              </th>
+              <th style="background:#f0f8ff;">Média</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-family:monospace;font-size:11px;color:#94a3b8;">01</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:28px;height:28px;border-radius:50%;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;">AB</div>
+                  <span style="font-size:12px;font-weight:bold;">Ana Beatriz Silva</span>
+                </div>
+              </td>
+              <td><input class="grade-input" value="2.5" aria-label="AV1 de Ana Beatriz Silva" /></td>
+              <td><input class="grade-input" value="2.0" aria-label="AV2 de Ana Beatriz Silva" /></td>
+              <td><input class="grade-input" value="3.5" aria-label="Prova de Ana Beatriz Silva" /></td>
+              <td><span class="total-badge pass">8.0</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:monospace;font-size:11px;color:#94a3b8;">02</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:28px;height:28px;border-radius:50%;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;">CM</div>
+                  <span style="font-size:12px;font-weight:bold;">Carlos Mendes</span>
+                </div>
+              </td>
+              <td><input class="grade-input below" value="1.0" aria-label="AV1 de Carlos Mendes" /></td>
+              <td><input class="grade-input below" value="1.5" aria-label="AV2 de Carlos Mendes" /></td>
+              <td><input class="grade-input below" value="2.0" aria-label="Prova de Carlos Mendes" /></td>
+              <td><span class="total-badge fail">4.5</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- MOBILE CARDS (NEW) -->
+      <div style="padding: 0 24px 24px; position: relative;">
+        <span class="badge-new" style="font-size:7px;">[NEW] MobileGradeCards</span>
+        
+        <div class="mobile-card">
+          <div class="mobile-card-header">
+            <div class="mobile-card-avatar">AB</div>
+            <div>
+              <div style="font-size:13px;font-weight:bold;">Ana Beatriz Silva</div>
+              <div style="font-size:10px;color:#999;">Nº 01</div>
+            </div>
+            <div style="margin-left:auto;">
+              <span class="total-badge pass">8.0</span>
+            </div>
+          </div>
+          <div class="mobile-card-grades">
+            <div class="mobile-grade-item">
+              <span class="mobile-grade-label">AV1 (3.0)</span>
+              <input class="grade-input" value="2.5" style="width:100%;" />
+            </div>
+            <div class="mobile-grade-item">
+              <span class="mobile-grade-label">AV2 (3.0)</span>
+              <input class="grade-input" value="2.0" style="width:100%;" />
+            </div>
+            <div class="mobile-grade-item">
+              <span class="mobile-grade-label">Prova (4.0)</span>
+              <input class="grade-input" value="3.5" style="width:100%;" />
+            </div>
+          </div>
+        </div>
+
+        <div class="mobile-card">
+          <div class="mobile-card-header">
+            <div class="mobile-card-avatar">CM</div>
+            <div>
+              <div style="font-size:13px;font-weight:bold;">Carlos Mendes</div>
+              <div style="font-size:10px;color:#999;">Nº 02</div>
+            </div>
+            <div style="margin-left:auto;">
+              <span class="total-badge fail">4.5</span>
+            </div>
+          </div>
+          <div class="mobile-card-grades">
+            <div class="mobile-grade-item">
+              <span class="mobile-grade-label">AV1 (3.0)</span>
+              <input class="grade-input below" value="1.0" style="width:100%;" />
+            </div>
+            <div class="mobile-grade-item">
+              <span class="mobile-grade-label">AV2 (3.0)</span>
+              <input class="grade-input below" value="1.5" style="width:100%;" />
+            </div>
+            <div class="mobile-grade-item">
+              <span class="mobile-grade-label">Prova (4.0)</span>
+              <input class="grade-input below" value="2.0" style="width:100%;" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHANGES -->
+    <div style="margin-top:24px;padding:16px;background:#f9f9f9;border:1px solid #eee;border-radius:12px;">
+      <h3 style="font-size:13px;font-weight:bold;margin-bottom:8px;">📋 Mudanças Principais</h3>
+      <ul style="font-size:11px;padding-left:20px;line-height:1.8;">
+        <li><strong>Mobile Grade Cards</strong> — Em telas &lt;768px, substituir tabela horizontal por cards empilháveis com inputs em grid</li>
+        <li><strong>Validação visual inline</strong> — Inputs ficam vermelhos (borda + fundo) quando nota está abaixo da média</li>
+        <li><strong>aria-labels nos inputs</strong> — "AV1 de [Nome do Aluno]" para cada campo</li>
+        <li><strong>Exportar PDF com cor do tema</strong> — Usar tema dinâmico em vez de indigo-600 hardcoded</li>
+        <li><strong>Remover saveToDB vazio</strong> — Função declarada mas nunca implementada (dead code)</li>
+        <li><strong>PDF: Substituir "CENSC"</strong> — Usar nome da escola do currentUser em vez de hardcoded</li>
+        <li><strong>Indicador de salvamento mobile</strong> — Mostrar badge "Salvando/Salvo" também em mobile (atualmente hidden sm:flex)</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

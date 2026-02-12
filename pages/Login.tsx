@@ -3,15 +3,15 @@ import logoSrc from '../assets/logo.svg';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { Subject } from '../types';
 import { BackgroundPattern } from '../components/BackgroundPattern';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, UserPlus, LogIn, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Subject } from '../types';
 import { useTheme } from '../hooks/useTheme';
 import { ForgotPasswordModal } from '../components/ForgotPasswordModal';
 
 export const Login: React.FC = () => {
-  const { login, register, completeRegistration } = useAuth();
+  const { login, register, completeRegistration, currentUser } = useAuth();
   const navigate = useNavigate();
   const { toggleTheme, isDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -21,11 +21,26 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [isSchoolRegistration, setIsSchoolRegistration] = useState(false);
+  const [institutionName, setInstitutionName] = useState('');
 
   // UI States
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // CRITICAL: Use sessionStorage to persist error across component remounts
+  const [error, setErrorState] = useState<string | null>(() => {
+    const stored = sessionStorage.getItem('login_error');
+    if (stored) {
+      sessionStorage.removeItem('login_error'); // Clear after reading
+      return stored;
+    }
+    return null;
+  });
+  const setError = (msg: string | null) => {
+    if (msg) sessionStorage.setItem('login_error', msg);
+    else sessionStorage.removeItem('login_error');
+    setErrorState(msg);
+  };
   const [success, setSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberEmail, setRememberEmail] = useState(false);
@@ -43,8 +58,25 @@ export const Login: React.FC = () => {
     }
   }, []);
 
+  // If already logged in, redirect away from login page
+  useEffect(() => {
+    if (currentUser && !isSubmitting) {
+      // Check for stored redirect target (for institutional users)
+      const storedRedirect = sessionStorage.getItem('login_redirect');
+      if (storedRedirect) {
+        sessionStorage.removeItem('login_redirect');
+        navigate(storedRedirect);
+      } else {
+        navigate('/');
+      }
+    }
+  }, [currentUser, isSubmitting, navigate]);
+
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return; // Prevent double-submission
     setIsSubmitting(true);
     setError(null);
     setSuccess(null);
@@ -53,11 +85,47 @@ export const Login: React.FC = () => {
       if (activeTab === 'login') {
         const result = await login(email, password);
         if (result.success) {
+          // Check if user data is available (unverified accounts may return success but no user)
+          if (!result.user) {
+            setError('Por favor, verifique seu e-mail antes de fazer login. Verifique sua caixa de entrada.');
+            setIsSubmitting(false);
+            return;
+          }
+
           if (rememberEmail) localStorage.setItem('remembered_email', email);
           else localStorage.removeItem('remembered_email');
-          navigate('/');
+
+          // --- SMART REDIRECT LOGIC for LOGIN ---
+          try {
+            // Fetch account_type from profiles table (NOT user_metadata)
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('account_type')
+              .eq('id', result.user.id)
+              .single();
+
+            const { data: schools } = await supabase
+              .from('institution_teachers')
+              .select('institution_id')
+              .eq('user_id', result.user.id);
+
+            const hasSchools = schools && schools.length > 0;
+            const isInstitutionalOnly = profileData?.account_type === 'institutional';
+
+            // The useEffect watching currentUser will handle navigation
+            // We just need to finish successfully here
+            if (isInstitutionalOnly && hasSchools) {
+              // Store the institutional redirect target
+              sessionStorage.setItem('login_redirect', `/institution/${schools[0].institution_id}/dashboard`);
+            }
+            // Navigation is handled by useEffect when currentUser becomes available
+          } catch (err) {
+            console.error("Smart Redirect Error:", err);
+            // Fall through - useEffect will redirect to '/'
+          }
         } else {
-          setError(result.error || 'Check your credentials.');
+          setIsSubmitting(false);
+          setError(result.error || 'Verifique suas credenciais.');
         }
       } else {
         // Registration Logic
@@ -81,16 +149,41 @@ export const Login: React.FC = () => {
           setIsSubmitting(false);
           return;
         }
-        if (selectedSubjects.length === 0) {
+        if (!isSchoolRegistration && selectedSubjects.length === 0) {
           setError('Selecione pelo menos uma disciplina.');
           setIsSubmitting(false);
           return;
         }
 
-        const result = await register(name, email, password, selectedSubjects[0], selectedSubjects);
+        const subjectToRegister: Subject = isSchoolRegistration ? 'Geral' : selectedSubjects[0];
+        const subjectsToRegister: Subject[] = isSchoolRegistration ? ['Geral'] : selectedSubjects;
+
+        const result = await register(name, email, password, subjectToRegister, subjectsToRegister, isSchoolRegistration ? institutionName : undefined);
         if (result.success) {
           setSuccess('Conta criada com sucesso! Redirecionando...');
-          setTimeout(() => navigate('/'), 1500);
+
+          // 5. Smart Redirect
+          // Fetch schools to decide where to go
+          const { data: schools } = await supabase
+            .from('institution_teachers')
+            .select('institution_id')
+            .eq('user_id', result.user.id); // Use result.user.id
+
+          const hasSchools = schools && schools.length > 0;
+          const isInstitutionalOnly = result.user.user_metadata.account_type === 'institutional'; // Use result.user.user_metadata.account_type
+
+          // If Institutional Only OR (Has Schools AND No Personal Classes logic handled by UI dominance)
+          // Actually, strict rule:
+          // If Institutional accounttype -> Redirect to first school
+          // If Personal accounttype -> Redirect to dashboard (default)
+
+          if (isSchoolRegistration && result.institutionId) { // Use result.institutionId
+            setTimeout(() => navigate(`/institution/${result.institutionId}/dashboard`), 1500);
+          } else if (isInstitutionalOnly && hasSchools) {
+            setTimeout(() => navigate(`/institution/${schools[0].institution_id}/dashboard`), 1500);
+          } else {
+            setTimeout(() => navigate('/'), 1500);
+          }
         } else {
           setError(result.error || 'Erro ao criar conta.');
         }
@@ -268,6 +361,54 @@ export const Login: React.FC = () => {
                   )}
 
                   {activeTab === 'register' && (
+                    <div className="space-y-4">
+                      {/* School Registration Toggle */}
+                      <div className="flex items-center gap-3 p-3 bg-surface-subtle rounded-xl border border-border-default cursor-pointer hover:bg-surface-elevated transition-colors" onClick={() => setIsSchoolRegistration(!isSchoolRegistration)}>
+                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${isSchoolRegistration ? 'bg-primary border-primary' : 'border-text-muted bg-white dark:bg-black/20'}`}>
+                          {isSchoolRegistration && <span className="material-symbols-outlined text-[16px] text-white font-bold">check</span>}
+                        </div>
+                        <span className="text-sm font-bold text-text-secondary select-none">Quero cadastrar minha escola</span>
+                      </div>
+
+                      {/* School Name Input */}
+                      <AnimatePresence>
+                        {isSchoolRegistration && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <label className="text-xs font-bold text-text-muted uppercase tracking-widest ml-1 mb-2 block">Nome da Instituição</label>
+                            <div className="relative group">
+                              <input
+                                className="w-full bg-surface-card border border-border-default rounded-2xl py-4 px-5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
+                                placeholder="Ex: Colégio Futuro"
+                                value={institutionName}
+                                onChange={e => setInstitutionName(e.target.value)}
+                              />
+                              <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-text-muted">school</span>
+                            </div>
+
+                            {/* Coordinator Badge */}
+                            <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3">
+                              <div className="p-1.5 bg-amber-500/20 rounded-lg text-amber-600 dark:text-amber-500 animate-pulse">
+                                <span className="material-symbols-outlined text-lg">local_police</span>
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-wide mb-0.5">Acesso Administrativo</h4>
+                                <p className="text-[11px] text-amber-600/80 dark:text-amber-500/80 leading-tight">
+                                  Você será cadastrado como o <strong>Coordenador Responsável</strong> por esta instituição.
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+
+                  {activeTab === 'register' && !isSchoolRegistration && (
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Disciplinas</label>
                       <div className="grid grid-cols-2 gap-2 max-h-[140px] overflow-y-auto custom-scrollbar p-2 bg-white dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-white/5 shadow-inner">
@@ -358,13 +499,21 @@ export const Login: React.FC = () => {
                 </motion.div>
               </AnimatePresence>
 
+              {/* Success Message */}
+              {success && (
+                <div className="p-4 bg-emerald-500/10 border-2 border-emerald-500 rounded-2xl flex items-start gap-3">
+                  <span className="material-symbols-outlined text-emerald-500 shrink-0">check_circle</span>
+                  <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">{success}</p>
+                </div>
+              )}
+
               <div className="pt-4">
                 <motion.button
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  disabled={isSubmitting || (activeTab === 'register' && (selectedSubjects.length === 0 || !password || !confirmPassword || !name || !email)) || (activeTab === 'login' && (!email || !password))}
-                  className={`w-full relative group overflow-hidden rounded-2xl shadow-lg shadow-primary/20 ${(isSubmitting || (activeTab === 'register' && (selectedSubjects.length === 0 || !password || !confirmPassword || !name || !email)) || (activeTab === 'login' && (!email || !password)))
+                  disabled={isSubmitting || (activeTab === 'register' && ((!isSchoolRegistration && selectedSubjects.length === 0) || !password || !confirmPassword || !name || !email)) || (activeTab === 'login' && (!email || !password))}
+                  className={`w-full relative group overflow-hidden rounded-2xl shadow-lg shadow-primary/20 ${(isSubmitting || (activeTab === 'register' && ((!isSchoolRegistration && selectedSubjects.length === 0) || !password || !confirmPassword || !name || !email)) || (activeTab === 'login' && (!email || !password)))
                     ? 'opacity-50 cursor-not-allowed grayscale'
                     : ''
                     }`}
@@ -378,7 +527,7 @@ export const Login: React.FC = () => {
                       </span>
                     ) : (
                       <>
-                        {activeTab === 'login' ? 'Entrar no Sistema' : 'Finalizar Cadastro'}
+                        {activeTab === 'login' ? 'Entrar no Sistema' : isSchoolRegistration ? 'Finalizar como Coordenador' : 'Finalizar Cadastro'}
                         <span className="material-symbols-outlined font-normal">arrow_forward</span>
                       </>
                     )}

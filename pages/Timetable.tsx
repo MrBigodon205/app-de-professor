@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -51,28 +51,49 @@ export const Timetable: React.FC = () => {
         };
     }, [isConfigModalOpen, isModalOpen]);
 
-    // Configuration State
+    // Configuration State — lazy init from localStorage to prevent default flash
     const [config, setConfig] = useState<{
         days: typeof DEFAULT_DAYS,
         slots: typeof DEFAULT_TIME_SLOTS
-    }>({
-        days: DEFAULT_DAYS,
-        slots: DEFAULT_TIME_SLOTS
-    });
-
-    // Load Config
-    useEffect(() => {
+    }>(() => {
+        // Try to load from localStorage synchronously on first render
         if (currentUser) {
             const savedConfig = localStorage.getItem(`timetable_config_${currentUser.id}`);
             if (savedConfig) {
                 try {
-                    setConfig(JSON.parse(savedConfig));
+                    return JSON.parse(savedConfig);
                 } catch (e) {
-                    console.error("Failed to parse timetable config", e);
+                    console.error("Failed to parse timetable config on init", e);
                 }
             }
-            fetchSchedule();
         }
+        return { days: DEFAULT_DAYS, slots: DEFAULT_TIME_SLOTS };
+    });
+
+    // Track which userId we loaded config for, to reload only on actual user change
+    const loadedForUserRef = useRef<string | null>(null);
+
+    // Load Config only when userId actually changes (not on every re-render)
+    useEffect(() => {
+        if (!currentUser) return;
+
+        // Skip if we already loaded for this user
+        if (loadedForUserRef.current === currentUser.id) {
+            fetchSchedule();
+            return;
+        }
+
+        loadedForUserRef.current = currentUser.id;
+
+        const savedConfig = localStorage.getItem(`timetable_config_${currentUser.id}`);
+        if (savedConfig) {
+            try {
+                setConfig(JSON.parse(savedConfig));
+            } catch (e) {
+                console.error("Failed to parse timetable config", e);
+            }
+        }
+        fetchSchedule();
     }, [currentUser]);
 
     // Save Config

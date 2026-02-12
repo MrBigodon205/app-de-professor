@@ -1045,10 +1045,10 @@ const AttendanceRow = React.memo(({ student: s, status, onStatusChange, theme }:
     return (
         <motion.tr
             variants={{
-                hidden: { opacity: 0, y: 10, filter: "blur(5px)" },
+                hidden: { opacity: 0, y: 8 },
                 visible: {
-                    opacity: 1, y: 0, filter: "blur(0px)",
-                    transition: { type: 'spring', stiffness: 120, damping: 14 }
+                    opacity: 1, y: 0,
+                    transition: { type: 'spring', stiffness: 160, damping: 22 }
                 }
             }}
             layoutId={`row-${s.id}`}

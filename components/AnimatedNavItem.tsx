@@ -23,7 +23,7 @@ export const AnimatedNavItem: React.FC<AnimatedNavItemProps> = ({
         <Link
             to={path}
             onClick={onClick}
-            className={`relative flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group z-10 ${isCollapsed ? 'justify-center px-2' : ''
+            className={`relative flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group z-10 ${isCollapsed ? 'justify-center px-2' : ''
                 }`}
             title={isCollapsed ? label : ''}
         >
@@ -46,35 +46,24 @@ export const AnimatedNavItem: React.FC<AnimatedNavItemProps> = ({
                 <div className="absolute inset-0 bg-surface-subtle opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-200" />
             )}
 
-            {/* Icon with Micro-interaction */}
-            <motion.span
-                className={`material-symbols-outlined text-2xl relative z-10 transition-colors duration-300 ${isActive ? 'icon-filled text-primary dark:text-white' : 'text-text-secondary group-hover:text-primary'
+            {/* Icon */}
+            <span
+                className={`material-symbols-outlined text-2xl relative z-10 transition-all duration-200 ${isActive
+                    ? 'icon-filled text-primary dark:text-white scale-110'
+                    : 'text-text-secondary group-hover:text-primary group-hover:scale-110'
                     }`}
-                animate={{
-                    scale: isActive ? 1.1 : 1,
-                    rotate: isActive ? 0 : 0
-                }}
-                whileHover={{
-                    scale: 1.2,
-                    rotate: [0, -10, 10, 0], // Wiggle effect
-                    transition: { duration: 0.4 }
-                }}
             >
                 {icon}
-            </motion.span>
+            </span>
 
             {/* Label */}
             {!isCollapsed && (
-                <div className="relative z-10 overflow-hidden">
-                    <motion.span
-                        initial={{ x: -10, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        className={`text-sm tracking-wide block truncate ${isActive ? 'font-bold text-primary dark:text-white' : 'font-medium text-text-secondary group-hover:text-primary'
-                            }`}
-                    >
-                        {label}
-                    </motion.span>
-                </div>
+                <span
+                    className={`text-sm tracking-wide block truncate relative z-10 ${isActive ? 'font-bold text-primary dark:text-white' : 'font-medium text-text-secondary group-hover:text-primary'
+                        }`}
+                >
+                    {label}
+                </span>
             )}
 
             {/* Active Indicator Dot (Floating) */}

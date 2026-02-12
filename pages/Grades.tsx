@@ -61,10 +61,10 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
         return (
             <motion.tr
                 variants={{
-                    hidden: { opacity: 0, y: 10, filter: "blur(5px)" },
+                    hidden: { opacity: 0, y: 8 },
                     visible: {
-                        opacity: 1, y: 0, filter: "blur(0px)",
-                        transition: { type: 'spring', stiffness: 120, damping: 14 }
+                        opacity: 1, y: 0,
+                        transition: { type: 'spring', stiffness: 160, damping: 22 }
                     }
                 }}
                 layoutId={`grade-row-res-${student.id}`}
@@ -98,9 +98,9 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
     return (
         <motion.tr
             variants={{
-                hidden: { opacity: 0, y: 10, filter: "blur(5px)" },
+                hidden: { opacity: 0, y: 10 },
                 visible: {
-                    opacity: 1, y: 0, filter: "blur(0px)",
+                    opacity: 1, y: 0,
                     transition: { type: 'spring', stiffness: 120, damping: 14 }
                 }
             }}

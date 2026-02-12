@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframe — Lista de Turmas (Reimaginado)</title>
+<style>
+  :root {
+    --primary: #6366F1;
+    --primary-light: #818CF8;
+    --primary-bg: #EEF2FF;
+    --secondary: #8B5CF6;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --surface: #FFFFFF;
+    --surface-elevated: #F8FAFC;
+    --bg-page: #F1F5F9;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --border-subtle: #F1F5F9;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07);
+    --font: 'Inter', -apple-system, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: var(--bg-page); color: var(--text-primary); }
+  .container { max-width: 1280px; margin: 0 auto; padding: 24px; }
+
+  .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+  .breadcrumb a { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+  .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+  .page-header h1 { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+  .page-header .subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+  .btn-primary { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: var(--radius-md); font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+  /* Filter Bar */
+  .filter-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
+  .search-input { flex: 1; min-width: 240px; padding: 10px 16px 10px 40px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 14px; background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") 14px center no-repeat; }
+  .filter-chip { padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 600; background: white; color: var(--text-secondary); cursor: pointer; }
+  .filter-chip.active { background: var(--primary-bg); border-color: var(--primary); color: var(--primary); }
+
+  /* Summary Bar */
+  .summary-bar { display: flex; gap: 24px; padding: 16px 20px; background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 24px; }
+  .summary-item { display: flex; align-items: center; gap: 8px; }
+  .summary-number { font-size: 20px; font-weight: 800; color: var(--primary); }
+  .summary-label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+
+  /* Card Grid */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .class-card { background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 0; overflow: hidden; transition: box-shadow 0.2s, transform 0.2s; }
+  .class-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .class-card .card-top { padding: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .class-card .class-info h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .class-card .class-meta { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+  .class-card .card-actions { display: flex; gap: 4px; }
+  .icon-btn { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; background: white; cursor: pointer; font-size: 14px; color: var(--text-muted); transition: all 0.2s; }
+  .icon-btn:hover { background: var(--primary-bg); color: var(--primary); border-color: var(--primary); }
+  .icon-btn.danger:hover { background: #FEE2E2; color: var(--danger); border-color: var(--danger); }
+
+  /* Card Stats */
+  .card-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--border-subtle); }
+  .card-stat { padding: 14px 16px; text-align: center; border-right: 1px solid var(--border-subtle); }
+  .card-stat:last-child { border-right: none; }
+  .card-stat .stat-value { font-size: 18px; font-weight: 800; color: var(--text-primary); }
+  .card-stat .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+
+  /* Shift Badge */
+  .shift-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .shift-badge.morning { background: #FEF3C7; color: #92400E; }
+  .shift-badge.afternoon { background: #DBEAFE; color: #1E40AF; }
+  .shift-badge.evening { background: #E0E7FF; color: #3730A3; }
+
+  /* Empty State */
+  .empty-state { text-align: center; padding: 60px 20px; background: white; border: 2px dashed var(--border); border-radius: var(--radius-lg); }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+  .empty-state h3 { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+  .empty-state p { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
+
+  /* Annotation */
+  .annotation { display: inline-block; background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: 600; color: #92400E; margin-top: 8px; }
+  .annotation::before { content: '⚡'; margin-right: 4px; }
+
+  @media (max-width: 640px) {
+    .container { padding: 16px; }
+    .page-header { flex-direction: column; }
+    .page-header .btn-primary { width: 100%; justify-content: center; }
+    .summary-bar { flex-direction: column; gap: 12px; }
+    .card-grid { grid-template-columns: 1fr; }
+    .filter-bar { flex-direction: column; }
+    .search-input { min-width: auto; width: 100%; }
+    .card-stats { grid-template-columns: 1fr; }
+    .card-stat { border-right: none; border-bottom: 1px solid var(--border-subtle); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .card-stat:last-child { border-bottom: none; }
+    .class-card .card-actions { gap: 8px; }
+    .icon-btn { width: 40px; height: 40px; }
+  }
+
+  .legend { position: fixed; bottom: 16px; right: 16px; background: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; font-size: 11px; max-width: 220px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); z-index: 100; }
+  .legend h4 { font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 8px; text-transform: uppercase; }
+  .legend-note { font-size: 10px; color: var(--text-muted); line-height: 1.5; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="breadcrumb">
+    <a href="#">🏠 Início</a> <span>›</span>
+    <a href="#">🏫 Institucional</a> <span>›</span>
+    <span>Turmas</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1>📚 Turmas</h1>
+      <div class="subtitle">Gerencie as turmas, séries e disciplinas da escola.</div>
+    </div>
+    <button class="btn-primary">➕ Nova Turma</button>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <input class="search-input" placeholder="Buscar turma por nome ou série..." />
+    <div class="filter-chip active">Todos</div>
+    <div class="filter-chip">Manhã</div>
+    <div class="filter-chip">Tarde</div>
+    <div class="filter-chip">Noite</div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-bar">
+    <div class="summary-item">
+      <span class="summary-number">8</span>
+      <span class="summary-label">Turmas<br>Cadastradas</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-number">24</span>
+      <span class="summary-label">Disciplinas<br>Atribuídas</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-number">450</span>
+      <span class="summary-label">Alunos<br>Matriculados</span>
+    </div>
+  </div>
+
+  <!-- Cards -->
+  <div class="card-grid">
+    <div class="class-card">
+      <div class="card-top">
+        <div class="class-info">
+          <h3>6º Ano A</h3>
+          <div class="class-meta">
+            <span class="shift-badge morning">☀️ Manhã</span>
+            <span>• Ensino Fundamental II</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="icon-btn" title="Gerenciar Disciplinas">📖</button>
+          <button class="icon-btn" title="Editar">✏️</button>
+          <button class="icon-btn danger" title="Excluir">🗑️</button>
+        </div>
+      </div>
+      <div class="card-stats">
+        <div class="card-stat">
+          <div class="stat-value">6</div>
+          <div class="stat-label">Disciplinas</div>
+        </div>
+        <div class="card-stat">
+          <div class="stat-value">32</div>
+          <div class="stat-label">Alunos</div>
+        </div>
+        <div class="card-stat">
+          <div class="stat-value">94%</div>
+          <div class="stat-label">Presença</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="class-card">
+      <div class="card-top">
+        <div class="class-info">
+          <h3>7º Ano B</h3>
+          <div class="class-meta">
+            <span class="shift-badge afternoon">🌤️ Tarde</span>
+            <span>• Ensino Fundamental II</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="icon-btn" title="Gerenciar Disciplinas">📖</button>
+          <button class="icon-btn" title="Editar">✏️</button>
+          <button class="icon-btn danger" title="Excluir">🗑️</button>
+        </div>
+      </div>
+      <div class="card-stats">
+        <div class="card-stat">
+          <div class="stat-value">5</div>
+          <div class="stat-label">Disciplinas</div>
+        </div>
+        <div class="card-stat">
+          <div class="stat-value">28</div>
+          <div class="stat-label">Alunos</div>
+        </div>
+        <div class="card-stat">
+          <div class="stat-value">88%</div>
+          <div class="stat-label">Presença</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="class-card">
+      <div class="card-top">
+        <div class="class-info">
+          <h3>8º Ano A</h3>
+          <div class="class-meta">
+            <span class="shift-badge morning">☀️ Manhã</span>
+            <span>• Ensino Fundamental II</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="icon-btn" title="Gerenciar Disciplinas">📖</button>
+          <button class="icon-btn" title="Editar">✏️</button>
+          <button class="icon-btn danger" title="Excluir">🗑️</button>
+        </div>
+      </div>
+      <div class="card-stats">
+        <div class="card-stat">
+          <div class="stat-value">7</div>
+          <div class="stat-label">Disciplinas</div>
+        </div>
+        <div class="card-stat">
+          <div class="stat-value">35</div>
+          <div class="stat-label">Alunos</div>
+        </div>
+        <div class="card-stat">
+          <div class="stat-value">91%</div>
+          <div class="stat-label">Presença</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="class-card">
+      <div class="card-top">
+        <div class="class-info">
+          <h3>9º Ano A</h3>
+          <div class="class-meta">
+            <span class="shift-badge evening">🌙 Noite</span>
+            <span>• Ensino Fundamental II</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="icon-btn" title="Gerenciar Disciplinas">📖</button>
+          <button class="icon-btn" title="Editar">✏️</button>
+          <button class="icon-btn danger" title="Excluir">🗑️</button>
+        </div>
+      </div>
+      <div class="card-stats">
+        <div class="card-stat">
+          <div class="stat-value">6</div>
+          <div class="stat-label">Disciplinas</div>
+        </div>
+        <div class="card-stat">
+          <div class="stat-value">30</div>
+          <div class="stat-label">Alunos</div>
+        </div>
+        <div class="card-stat">
+          <div class="stat-value">85%</div>
+          <div class="stat-label">Presença</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <h4>Melhorias</h4>
+  <div class="legend-note">
+    ✅ Busca e filtro por turno<br>
+    ✅ Cards com dados reais (disciplinas, alunos, presença)<br>
+    ✅ Ações sempre visíveis (não hover-only)<br>
+    ✅ Modal de confirmação para exclusão<br>
+    ✅ Layout responsivo mobile-first
+  </div>
+</div>
+</body>
+</html>

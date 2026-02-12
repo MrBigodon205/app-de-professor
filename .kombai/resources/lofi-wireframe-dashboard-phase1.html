@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wireframe — Dashboard Reimaginado</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Comic Sans MS', 'Segoe UI', sans-serif; background: #fff; color: #333; padding: 24px; }
+    h1 { font-size: 20px; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 4px; }
+    .subtitle { font-size: 12px; color: #666; margin-bottom: 24px; }
+    
+    .badge-reuse { position: absolute; top: 4px; right: 4px; background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-family: Arial, sans-serif; font-weight: bold; z-index: 10; }
+    .badge-new { position: absolute; top: 4px; right: 4px; background: #FF9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-family: Arial, sans-serif; font-weight: bold; z-index: 10; }
+
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    /* Layout */
+    .page-wrapper { display: flex; gap: 0; min-height: 100vh; }
+    .sidebar { width: 60px; background: #f5f5f5; border-right: 1px solid #ccc; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 16px; flex-shrink: 0; }
+    .sidebar-icon { width: 36px; height: 36px; border-radius: 8px; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; border: 1px solid #ccc; }
+    .sidebar-icon.active { background: #333; color: #fff; border-color: #333; }
+    .sidebar-logo { width: 36px; height: 36px; border-radius: 10px; background: #333; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; margin-bottom: 8px; }
+
+    .main-content { flex: 1; padding: 20px 28px; overflow-y: auto; background: #fafafa; }
+    
+    /* Top Bar */
+    .top-bar { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 10px 16px; margin-bottom: 20px; position: relative; }
+    .top-bar-left { display: flex; align-items: center; gap: 12px; }
+    .top-bar-right { display: flex; align-items: center; gap: 8px; }
+    .class-pill { background: #e8e8e8; border: 1px solid #ccc; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .class-pill.active { background: #333; color: #fff; border-color: #333; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: #ccc; border: 1px solid #999; }
+    .subject-badge { font-size: 10px; background: #f0f0f0; border: 1px solid #ddd; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+    
+    /* Greeting */
+    .greeting { margin-bottom: 20px; }
+    .greeting h2 { font-size: 22px; font-weight: bold; }
+    .greeting p { font-size: 12px; color: #888; margin-top: 2px; }
+
+    /* Bento Grid */
+    .bento-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: minmax(120px, auto); gap: 14px; margin-bottom: 20px; }
+    .bento-card { background: #fff; border: 2px solid #ddd; border-radius: 14px; padding: 16px; position: relative; display: flex; flex-direction: column; }
+    .bento-card.wide { grid-column: span 2; }
+    .bento-card.tall { grid-row: span 2; }
+    .bento-card.full { grid-column: span 4; }
+    .bento-card h3 { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #999; margin-bottom: 6px; }
+    .bento-card .value { font-size: 36px; font-weight: bold; line-height: 1; }
+    .bento-card .small-value { font-size: 11px; color: #888; margin-top: 4px; }
+    
+    /* Plan Card */
+    .plan-card { background: #333; color: #fff; border-color: #333; }
+    .plan-card h3 { color: rgba(255,255,255,0.6); }
+    .plan-card .plan-title { font-size: 18px; font-weight: bold; margin: 8px 0; }
+    .plan-card .plan-desc { font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.4; }
+    .plan-card .plan-btn { display: inline-block; background: #fff; color: #333; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: bold; margin-top: 10px; text-decoration: none; border: none; cursor: pointer; }
+    .plan-nav { display: flex; gap: 4px; position: absolute; top: 12px; right: 12px; }
+    .plan-nav button { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.2); border: none; color: #fff; cursor: pointer; font-size: 12px; }
+
+    /* Heatmap */
+    .heatmap-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 8px; }
+    .heatmap-cell { width: 100%; aspect-ratio: 1; border-radius: 3px; background: #eee; border: 1px solid #ddd; }
+    .heatmap-cell.l1 { background: #d0d0d0; }
+    .heatmap-cell.l2 { background: #aaa; }
+    .heatmap-cell.l3 { background: #777; }
+    .heatmap-cell.l4 { background: #444; }
+
+    /* Activity List */
+    .activity-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 6px; background: #fafafa; }
+    .activity-icon { width: 32px; height: 32px; border-radius: 8px; background: #e8e8e8; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; border: 1px solid #ddd; }
+    .activity-text { flex: 1; }
+    .activity-text .title { font-size: 12px; font-weight: bold; }
+    .activity-text .meta { font-size: 10px; color: #999; }
+    .activity-date { font-size: 10px; color: #999; background: #f0f0f0; padding: 3px 8px; border-radius: 4px; border: 1px solid #e0e0e0; white-space: nowrap; }
+
+    /* Occurrence Badge */
+    .occ-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+    .occ-badge.positive { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+    .occ-badge.negative { background: #fce4ec; color: #c62828; border: 1px solid #f8bbd0; }
+
+    /* Empty State */
+    .empty-state { text-align: center; padding: 24px; color: #bbb; font-size: 12px; border: 1px dashed #ddd; border-radius: 10px; }
+    .empty-state .icon { font-size: 28px; margin-bottom: 6px; }
+
+    /* Section Header */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .section-header h3 { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .section-header a { font-size: 10px; color: #666; text-decoration: underline; }
+
+    /* Quick Actions */
+    .quick-actions { display: flex; gap: 8px; margin-bottom: 20px; }
+    .quick-action-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; border: 1px dashed #ccc; background: #fff; font-size: 11px; font-weight: bold; cursor: pointer; color: #666; }
+    .quick-action-btn:hover { border-color: #999; background: #f5f5f5; }
+
+    @media (max-width: 768px) {
+      .page-wrapper { flex-direction: column; }
+      .sidebar { width: 100%; flex-direction: row; border-right: none; border-bottom: 1px solid #ccc; padding: 8px; overflow-x: auto; }
+      .bento-grid { grid-template-columns: 1fr; }
+      .bento-card.wide, .bento-card.full { grid-column: span 1; }
+      .quick-actions { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖼️ Wireframe — Dashboard Reimaginado</h1>
+    <p class="subtitle">Abordagem Equilibrada: Layout Bento com sidebar compacta, ações rápidas, e hierarquia visual clara</p>
+  </div>
+
+  <div class="page-wrapper">
+    <!-- SIDEBAR (Collapsed by default) -->
+    <!-- REUSABLE: Layout from components/Layout.tsx -->
+    <div class="sidebar" style="position: relative;">
+      <span class="badge-reuse" title="components/Layout.tsx" style="top:-2px;right:-2px;font-size:7px;">[REUSE] Layout</span>
+      <div class="sidebar-logo">A+</div>
+      <div class="sidebar-icon active" title="Dashboard">🏠</div>
+      <div class="sidebar-icon" title="Horário">🕐</div>
+      <div class="sidebar-icon" title="Planejamento">📅</div>
+      <div class="sidebar-icon" title="Atividades">📝</div>
+      <div class="sidebar-icon" title="Notas">📊</div>
+      <div class="sidebar-icon" title="Frequência">✓</div>
+      <div class="sidebar-icon" title="Alunos">👥</div>
+      <div class="sidebar-icon" title="Ocorrências">⚠️</div>
+      <div class="sidebar-icon" title="Relatórios">📄</div>
+      <div style="flex:1;"></div>
+      <div class="sidebar-icon" title="Tema">🌙</div>
+      <div class="sidebar-icon" title="Sair" style="color:red;">↩</div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+      <!-- TOP BAR -->
+      <!-- REUSABLE: Header bar from components/Layout.tsx -->
+      <div class="top-bar" style="position: relative;">
+        <span class="badge-reuse" title="components/Layout.tsx" style="font-size:8px;">[REUSE] Layout Header</span>
+        <div class="top-bar-left">
+          <span style="font-size:18px;cursor:pointer;">☰</span>
+          <div class="class-pill active">6° Ano</div>
+          <div class="class-pill">7° Ano</div>
+          <div class="class-pill">8° Ano</div>
+          <div style="height:20px;width:1px;background:#ddd;"></div>
+          <div class="class-pill active">A</div>
+          <div class="class-pill">B</div>
+          <div class="class-pill">C</div>
+          <div class="class-pill" style="border-style:dashed;">+</div>
+        </div>
+        <div class="top-bar-right">
+          <div class="subject-badge">📐 Matemática ▾</div>
+          <span style="font-size:16px;cursor:pointer;">🔔</span>
+          <span style="font-size:16px;cursor:pointer;">❓</span>
+          <div class="avatar"></div>
+        </div>
+      </div>
+
+      <!-- GREETING -->
+      <!-- NEW COMPONENT: DashboardGreeting -->
+      <div class="greeting" style="position: relative;">
+        <span class="badge-new" title="To be created: components/DashboardGreeting.tsx">[NEW] DashboardGreeting</span>
+        <h2>Bom dia, Professor! ☀️</h2>
+        <p>Terça-feira, 11 de Fevereiro de 2026 · 6° Ano A · Matemática</p>
+      </div>
+
+      <!-- QUICK ACTIONS BAR -->
+      <!-- NEW COMPONENT: QuickActions -->
+      <div class="quick-actions" style="position: relative;">
+        <span class="badge-new" title="To be created: components/QuickActions.tsx" style="top:-8px;right:auto;left:4px;">[NEW] QuickActions</span>
+        <div class="quick-action-btn">📋 Chamada Rápida</div>
+        <div class="quick-action-btn">📝 Nova Atividade</div>
+        <div class="quick-action-btn">⚠️ Registrar Ocorrência</div>
+        <div class="quick-action-btn">📊 Lançar Notas</div>
+      </div>
+
+      <!-- BENTO GRID -->
+      <div class="bento-grid">
+
+        <!-- PLAN OF THE DAY (Full width) -->
+        <!-- REUSABLE: DashboardBanner-like component -->
+        <div class="bento-card full plan-card" style="position: relative; min-height: 160px;">
+          <span class="badge-reuse" title="components/DashboardBanner.tsx" style="background:#4CAF50;">[REUSE] DashboardBanner</span>
+          <div class="plan-nav">
+            <button>◀</button>
+            <span style="font-size:10px;opacity:0.7;">1/3</span>
+            <button>▶</button>
+          </div>
+          <h3>● AULA DE HOJE</h3>
+          <span style="font-size:10px;opacity:0.6;">6° Ano • Turma A</span>
+          <div class="plan-title">Frações e Números Decimais</div>
+          <div class="plan-desc">"Introdução aos conceitos de frações equivalentes e conversão para números decimais..."</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:auto;">
+            <button class="plan-btn">Acessar Planejamento →</button>
+            <span style="font-size:10px;opacity:0.5;">📅 Início: 10/02 · Fim: 14/02</span>
+          </div>
+        </div>
+
+        <!-- KPI: Total Students -->
+        <!-- REUSABLE: DashboardHeader -->
+        <div class="bento-card wide" style="position: relative;">
+          <span class="badge-reuse" title="components/DashboardHeader.tsx">[REUSE] DashboardHeader</span>
+          <h3>ALUNOS NA TURMA</h3>
+          <div class="value">32</div>
+          <div class="small-value">de 142 alunos no total</div>
+          <div style="margin-top: auto;">
+            <h3 style="margin-top:10px;">FLUXO DE ATIVIDADE</h3>
+            <!-- REUSABLE: ActivityHeatmap -->
+            <div style="position:relative;display:inline-block;width:100%;">
+              <span class="badge-reuse" title="components/ActivityHeatmap.tsx" style="top:-4px;font-size:7px;">[REUSE] Heatmap</span>
+              <div class="heatmap-grid">
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell l1"></div>
+                <div class="heatmap-cell l2"></div>
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell l3"></div>
+                <div class="heatmap-cell l1"></div>
+                <div class="heatmap-cell l4"></div>
+                <div class="heatmap-cell l1"></div>
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell l2"></div>
+                <div class="heatmap-cell l3"></div>
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell l1"></div>
+                <div class="heatmap-cell l4"></div>
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell l2"></div>
+                <div class="heatmap-cell l1"></div>
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell l3"></div>
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell l1"></div>
+                <div class="heatmap-cell l2"></div>
+                <div class="heatmap-cell l4"></div>
+                <div class="heatmap-cell l1"></div>
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell l3"></div>
+                <div class="heatmap-cell"></div>
+                <div class="heatmap-cell l1"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI: Grade Average -->
+        <div class="bento-card" style="position: relative;">
+          <span class="badge-new" title="To be created: components/KPICard.tsx">[NEW] KPICard</span>
+          <h3>MÉDIA GERAL</h3>
+          <div class="value">7.2</div>
+          <div class="small-value">/ 10</div>
+          <div style="margin-top:auto;font-size:10px;color:#999;">→ Ver Notas</div>
+        </div>
+
+        <!-- KPI: Attendance -->
+        <div class="bento-card" style="position: relative;">
+          <span class="badge-new" title="To be created: components/KPICard.tsx">[NEW] KPICard</span>
+          <h3>PRESENÇA HOJE</h3>
+          <div class="value">28</div>
+          <div class="small-value">/ 32 alunos</div>
+          <div style="margin-top:auto;font-size:10px;color:#999;">→ Ver Frequência</div>
+        </div>
+
+        <!-- Activities & Agenda -->
+        <div class="bento-card wide tall" style="position: relative;">
+          <span class="badge-new" title="To be created: components/DashboardActivitiesPanel.tsx">[NEW] ActivitiesPanel</span>
+          
+          <div class="section-header">
+            <h3>📋 Atividades & Agenda</h3>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#999;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px;">Atividades do Dia</div>
+            <div class="activity-item">
+              <div class="activity-icon">📝</div>
+              <div class="activity-text">
+                <div class="title">Exercícios de Fração</div>
+                <div class="meta">6° Ano</div>
+              </div>
+              <div class="activity-date">11/02</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon">📝</div>
+              <div class="activity-text">
+                <div class="title">Prova de Geometria</div>
+                <div class="meta">7° Ano</div>
+              </div>
+              <div class="activity-date">12/02 - 14/02</div>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#999;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px;">Planejamentos</div>
+            <div class="activity-item">
+              <div class="activity-icon">📅</div>
+              <div class="activity-text">
+                <div class="title">Frações e Decimais</div>
+                <div class="meta">6° Ano A</div>
+              </div>
+              <div class="activity-date">10/02</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon">📅</div>
+              <div class="activity-text">
+                <div class="title">Álgebra Básica</div>
+                <div class="meta">7° Ano B</div>
+              </div>
+              <div class="activity-date">12/02</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Occurrences -->
+        <div class="bento-card wide tall" style="position: relative;">
+          <span class="badge-new" title="To be created: components/DashboardOccurrencesPanel.tsx">[NEW] OccurrencesPanel</span>
+          
+          <div class="section-header">
+            <h3>⚠️ Ocorrências</h3>
+            <a href="#">Ver Todas →</a>
+          </div>
+
+          <div class="activity-item">
+            <div class="activity-icon" style="background:#e8f5e9;">⭐</div>
+            <div class="activity-text">
+              <div class="title">Maria Silva • Elogio</div>
+              <div class="meta">"Excelente participação na aula de hoje"</div>
+            </div>
+            <div><span class="occ-badge positive">Elogio</span></div>
+          </div>
+
+          <div class="activity-item">
+            <div class="activity-icon" style="background:#fce4ec;">⚖️</div>
+            <div class="activity-text">
+              <div class="title">João Santos • Indisciplina</div>
+              <div class="meta">"Conversa excessiva durante a explicação"</div>
+            </div>
+            <div><span class="occ-badge negative">Indisciplina</span></div>
+          </div>
+
+          <div class="activity-item">
+            <div class="activity-icon" style="background:#fff3e0;">⏰</div>
+            <div class="activity-text">
+              <div class="title">Ana Costa • Atraso</div>
+              <div class="meta">"Chegou 15 minutos atrasada"</div>
+            </div>
+            <div><span class="occ-badge negative">Atraso</span></div>
+          </div>
+
+          <div style="flex:1;"></div>
+          <div style="text-align:center;margin-top:8px;">
+            <span style="font-size:10px;color:#999;">+3 ocorrências hoje</span>
+          </div>
+        </div>
+
+        <!-- Help Banner (Simplified) -->
+        <div class="bento-card full" style="position: relative; display:flex; align-items:center; gap:16px; padding:12px 16px; min-height:auto;">
+          <span class="badge-new" title="To be created: components/HelpBanner.tsx">[NEW] HelpBanner</span>
+          <div style="width:40px;height:40px;border-radius:10px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🚀</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:bold;">Domine o Prof. Acerta+</div>
+            <div style="font-size:11px;color:#888;">Descubra como lançar notas, controlar frequência e gerar relatórios em segundos.</div>
+          </div>
+          <button style="padding:6px 14px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:11px;font-weight:bold;cursor:pointer;white-space:nowrap;">📖 Ver Manual</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="container" style="margin-top:24px;padding:16px;background:#f9f9f9;border:1px solid #eee;border-radius:12px;">
+    <h3 style="font-size:13px;font-weight:bold;margin-bottom:8px;">📋 Componentes Reutilizados</h3>
+    <table style="width:100%;font-size:11px;border-collapse:collapse;">
+      <tr style="background:#e8f5e9;"><td style="padding:4px 8px;border:1px solid #ddd;">Layout (Sidebar + Header)</td><td style="padding:4px 8px;border:1px solid #ddd;">components/Layout.tsx</td><td style="padding:4px 8px;border:1px solid #ddd;">✅ Reutilizar</td></tr>
+      <tr><td style="padding:4px 8px;border:1px solid #ddd;">DashboardBanner (Plano do Dia)</td><td style="padding:4px 8px;border:1px solid #ddd;">components/DashboardBanner.tsx</td><td style="padding:4px 8px;border:1px solid #ddd;">✅ Reutilizar</td></tr>
+      <tr style="background:#e8f5e9;"><td style="padding:4px 8px;border:1px solid #ddd;">DashboardHeader (KPIs)</td><td style="padding:4px 8px;border:1px solid #ddd;">components/DashboardHeader.tsx</td><td style="padding:4px 8px;border:1px solid #ddd;">✅ Reutilizar</td></tr>
+      <tr><td style="padding:4px 8px;border:1px solid #ddd;">ActivityHeatmap</td><td style="padding:4px 8px;border:1px solid #ddd;">components/ActivityHeatmap.tsx</td><td style="padding:4px 8px;border:1px solid #ddd;">✅ Reutilizar</td></tr>
+    </table>
+    <h3 style="font-size:13px;font-weight:bold;margin:12px 0 8px;">🆕 Novos Componentes</h3>
+    <table style="width:100%;font-size:11px;border-collapse:collapse;">
+      <tr style="background:#fff3e0;"><td style="padding:4px 8px;border:1px solid #ddd;">DashboardGreeting</td><td style="padding:4px 8px;border:1px solid #ddd;">Saudação contextual com data/turma</td></tr>
+      <tr><td style="padding:4px 8px;border:1px solid #ddd;">QuickActions</td><td style="padding:4px 8px;border:1px solid #ddd;">Barra de ações rápidas (Chamada, Atividade, Ocorrência, Notas)</td></tr>
+      <tr style="background:#fff3e0;"><td style="padding:4px 8px;border:1px solid #ddd;">KPICard</td><td style="padding:4px 8px;border:1px solid #ddd;">Card genérico de KPI com valor, label e link</td></tr>
+      <tr><td style="padding:4px 8px;border:1px solid #ddd;">DashboardActivitiesPanel</td><td style="padding:4px 8px;border:1px solid #ddd;">Painel de atividades e planejamentos</td></tr>
+      <tr style="background:#fff3e0;"><td style="padding:4px 8px;border:1px solid #ddd;">DashboardOccurrencesPanel</td><td style="padding:4px 8px;border:1px solid #ddd;">Painel de ocorrências recentes</td></tr>
+      <tr><td style="padding:4px 8px;border:1px solid #ddd;">HelpBanner</td><td style="padding:4px 8px;border:1px solid #ddd;">Banner simplificado de ajuda/onboarding</td></tr>
+    </table>
+    <h3 style="font-size:13px;font-weight:bold;margin:12px 0 8px;">💡 Principais Mudanças</h3>
+    <ul style="font-size:11px;padding-left:20px;line-height:1.8;">
+      <li><strong>Sidebar compacta (icon-only)</strong> — libera espaço horizontal para conteúdo</li>
+      <li><strong>Bento Grid</strong> — layout dinâmico com cards de tamanhos variados</li>
+      <li><strong>Ações Rápidas</strong> — acesso direto às tarefas mais frequentes do professor</li>
+      <li><strong>Saudação contextual</strong> — mostra turma e matéria ativa de forma clara</li>
+      <li><strong>Help Banner simplificado</strong> — menos intrusivo, mais funcional</li>
+      <li><strong>Hierarquia visual clara</strong> — plano do dia é destaque, KPIs secundários, listas terciárias</li>
+    </ul>
+  </div>
+</body>
+</html>

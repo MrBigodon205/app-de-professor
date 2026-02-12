@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframe — Configurações de Notas (Reimaginado)</title>
+<style>
+  :root {
+    --primary: #6366F1;
+    --primary-bg: #EEF2FF;
+    --secondary: #8B5CF6;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --surface: #FFFFFF;
+    --surface-elevated: #F8FAFC;
+    --bg-page: #F1F5F9;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --border-subtle: #F1F5F9;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --font: 'Inter', -apple-system, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: var(--bg-page); color: var(--text-primary); }
+  .container { max-width: 1024px; margin: 0 auto; padding: 24px; }
+
+  .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+  .breadcrumb a { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+  .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+  .page-header h1 { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+  .page-header .subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+  .header-actions { display: flex; gap: 12px; align-items: center; }
+  .btn-primary { padding: 12px 24px; background: var(--primary); color: white; border: none; border-radius: var(--radius-md); font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .btn-outline { padding: 10px 16px; background: white; color: var(--text-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+  /* Unsaved changes banner */
+  .unsaved-banner { background: #FEF3C7; border: 1px solid #F59E0B; border-radius: var(--radius-md); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .unsaved-banner .text { font-size: 13px; font-weight: 600; color: #92400E; display: flex; align-items: center; gap: 8px; }
+  .unsaved-banner .actions { display: flex; gap: 8px; }
+  .unsaved-banner .btn-sm { padding: 6px 14px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 700; cursor: pointer; border: none; }
+  .unsaved-banner .btn-sm.discard { background: white; color: var(--text-secondary); border: 1px solid var(--border); }
+  .unsaved-banner .btn-sm.save { background: var(--warning); color: white; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; padding: 4px; background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 24px; overflow-x: auto; }
+  .tab { padding: 10px 20px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; border: none; background: transparent; cursor: pointer; color: var(--text-muted); white-space: nowrap; display: flex; align-items: center; gap: 8px; min-height: 44px; }
+  .tab.active { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(99,102,241,0.3); }
+
+  /* Section Card */
+  .section-card { background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px; }
+  .section-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+  .section-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+
+  /* Calc Type Grid */
+  .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .calc-card { padding: 20px; border: 2px solid var(--border); border-radius: var(--radius-lg); cursor: pointer; transition: all 0.2s; position: relative; }
+  .calc-card:hover { border-color: var(--primary); background: var(--primary-bg); }
+  .calc-card.selected { border-color: var(--primary); background: var(--primary-bg); }
+  .calc-card.selected::after { content: '✓'; position: absolute; top: 12px; right: 12px; width: 24px; height: 24px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; }
+  .calc-icon { width: 44px; height: 44px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 12px; }
+  .calc-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .calc-card p { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .calc-formula { font-family: monospace; font-size: 12px; padding: 4px 10px; background: var(--surface-elevated); border-radius: 6px; display: inline-block; color: var(--text-secondary); }
+
+  /* Unit Tabs */
+  .unit-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; }
+  .unit-tab { padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; border: 1px solid var(--border); background: white; cursor: pointer; white-space: nowrap; }
+  .unit-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  /* Component Row */
+  .comp-row { display: flex; align-items: center; gap: 16px; padding: 14px 16px; background: var(--surface-elevated); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 8px; }
+  .comp-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0; }
+  .comp-icon.default { background: var(--primary-bg); color: var(--primary); }
+  .comp-icon.custom { background: #FEF3C7; color: #92400E; }
+  .comp-info { flex: 1; }
+  .comp-name { font-weight: 700; font-size: 14px; }
+  .comp-var { font-size: 11px; color: var(--text-muted); font-family: monospace; }
+  .comp-inputs { display: flex; gap: 12px; align-items: center; }
+  .input-group { display: flex; flex-direction: column; }
+  .input-group label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+  .input-group input { width: 64px; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); text-align: center; font-weight: 700; font-size: 14px; }
+  .delete-btn { width: 36px; height: 36px; border: none; background: transparent; color: var(--danger); cursor: pointer; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .delete-btn:hover { background: #FEE2E2; }
+
+  /* Total Row */
+  .total-row { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-top: 2px solid var(--border); margin-top: 8px; }
+  .total-label { font-weight: 700; color: var(--text-secondary); }
+  .total-value { font-size: 24px; font-weight: 800; color: var(--primary); }
+
+  /* Toggle */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: var(--surface-elevated); border-radius: var(--radius-md); margin-bottom: 12px; }
+  .toggle-info h4 { font-size: 14px; font-weight: 700; }
+  .toggle-info p { font-size: 12px; color: var(--text-muted); }
+  .toggle { width: 48px; height: 28px; border-radius: 14px; background: #CBD5E1; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+  .toggle.on { background: var(--primary); }
+  .toggle .knob { width: 22px; height: 22px; border-radius: 50%; background: white; position: absolute; top: 3px; left: 3px; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .toggle.on .knob { transform: translateX(20px); }
+
+  /* Approval Grid */
+  .approval-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* Input Field */
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .field input { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 16px; font-weight: 700; color: var(--primary); text-align: center; }
+  .field .hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Toast Preview */
+  .toast-preview { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #065F46; color: white; padding: 12px 24px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 50; }
+
+  @media (max-width: 768px) {
+    .container { padding: 16px; }
+    .page-header { flex-direction: column; }
+    .header-actions { width: 100%; }
+    .btn-primary { width: 100%; justify-content: center; }
+    .calc-grid { grid-template-columns: 1fr; }
+    .approval-grid { grid-template-columns: 1fr; }
+    .comp-row { flex-wrap: wrap; }
+    .comp-inputs { flex-wrap: wrap; width: 100%; }
+    .tabs { gap: 2px; }
+    .tab { padding: 10px 14px; font-size: 12px; }
+    .unsaved-banner { flex-direction: column; gap: 12px; text-align: center; }
+  }
+
+  .legend { position: fixed; top: 16px; right: 16px; background: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; font-size: 11px; max-width: 200px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); z-index: 100; }
+  .legend h4 { font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 8px; text-transform: uppercase; }
+  .legend-note { font-size: 10px; color: var(--text-muted); line-height: 1.5; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="breadcrumb">
+    <a href="#">🏠 Início</a> <span>›</span>
+    <a href="#">🏫 Institucional</a> <span>›</span>
+    <span>Configurações de Notas</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1>⚙️ Configurações de Notas</h1>
+      <div class="subtitle">Escola Municipal São Paulo — Configure o sistema de avaliação</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-outline">↩️ Restaurar Padrão</button>
+      <button class="btn-primary">💾 Salvar Configurações</button>
+    </div>
+  </div>
+
+  <!-- Unsaved Changes Banner -->
+  <div class="unsaved-banner">
+    <div class="text">⚠️ Você tem alterações não salvas</div>
+    <div class="actions">
+      <button class="btn-sm discard">Descartar</button>
+      <button class="btn-sm save">Salvar Agora</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" role="tablist">
+    <button class="tab active" role="tab">🧮 Tipo de Cálculo</button>
+    <button class="tab" role="tab">📋 Unidades e Componentes</button>
+    <button class="tab" role="tab">✅ Aprovação</button>
+  </div>
+
+  <!-- Tab 1: Calculation Type -->
+  <div class="section-card">
+    <div class="section-title">🧮 Tipo de Cálculo</div>
+    <div class="section-desc">Escolha como a média final será calculada.</div>
+
+    <div class="calc-grid">
+      <div class="calc-card selected">
+        <div class="calc-icon" style="background: var(--primary-bg); color: var(--primary);">📏</div>
+        <h4>Média Simples</h4>
+        <p>Média aritmética de todas as unidades</p>
+        <span class="calc-formula">(U1 + U2 + U3 + U4) / 4</span>
+      </div>
+      <div class="calc-card">
+        <div class="calc-icon" style="background: #F3E8FF; color: var(--secondary);">⚖️</div>
+        <h4>Média Ponderada</h4>
+        <p>Média com pesos diferentes por unidade</p>
+        <span class="calc-formula">(U1×P1 + U2×P2 + ...) / ΣP</span>
+      </div>
+      <div class="calc-card">
+        <div class="calc-icon" style="background: #D1FAE5; color: var(--success);">➕</div>
+        <h4>Soma Total</h4>
+        <p>Soma de todos os pontos das unidades</p>
+        <span class="calc-formula">U1 + U2 + U3 + U4</span>
+      </div>
+      <div class="calc-card">
+        <div class="calc-icon" style="background: #FEF3C7; color: var(--warning);">🔧</div>
+        <h4>Fórmula Personalizada</h4>
+        <p>Crie sua própria fórmula de cálculo</p>
+        <span class="calc-formula">Você define!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: Units (shown as example below) -->
+  <div class="section-card">
+    <div class="section-title">📋 Unidades e Componentes</div>
+    <div class="section-desc">Configure os componentes de avaliação para cada unidade.</div>
+
+    <div class="unit-tabs">
+      <div class="unit-tab active">1ª Unidade (10 pts)</div>
+      <div class="unit-tab">2ª Unidade (10 pts)</div>
+      <div class="unit-tab">3ª Unidade (10 pts)</div>
+      <div class="unit-tab">4ª Unidade (10 pts)</div>
+    </div>
+
+    <div class="comp-row">
+      <div class="comp-icon default">Q</div>
+      <div class="comp-info">
+        <div class="comp-name">Qualitativo</div>
+        <div class="comp-var">Var: Q1 • Padrão</div>
+      </div>
+      <div class="comp-inputs">
+        <div class="input-group">
+          <label>Valor</label>
+          <input type="number" value="2.0" />
+        </div>
+        <div class="input-group">
+          <label>Peso</label>
+          <input type="number" value="1" />
+        </div>
+        <button class="delete-btn" title="Remover" aria-label="Remover Qualitativo">🗑️</button>
+      </div>
+    </div>
+
+    <div class="comp-row">
+      <div class="comp-icon default">T</div>
+      <div class="comp-info">
+        <div class="comp-name">Teste</div>
+        <div class="comp-var">Var: T1 • Padrão</div>
+      </div>
+      <div class="comp-inputs">
+        <div class="input-group">
+          <label>Valor</label>
+          <input type="number" value="3.0" />
+        </div>
+        <div class="input-group">
+          <label>Peso</label>
+          <input type="number" value="1" />
+        </div>
+        <button class="delete-btn" title="Remover" aria-label="Remover Teste">🗑️</button>
+      </div>
+    </div>
+
+    <div class="comp-row">
+      <div class="comp-icon default">P</div>
+      <div class="comp-info">
+        <div class="comp-name">Prova</div>
+        <div class="comp-var">Var: P1 • Padrão</div>
+      </div>
+      <div class="comp-inputs">
+        <div class="input-group">
+          <label>Valor</label>
+          <input type="number" value="5.0" />
+        </div>
+        <div class="input-group">
+          <label>Peso</label>
+          <input type="number" value="2" />
+        </div>
+        <button class="delete-btn" title="Remover" aria-label="Remover Prova">🗑️</button>
+      </div>
+    </div>
+
+    <div style="margin-top: 12px;">
+      <button class="btn-outline" style="color: var(--success); border-color: var(--success);">➕ Adicionar Componente</button>
+    </div>
+
+    <div class="total-row">
+      <span class="total-label">Total da Unidade</span>
+      <span class="total-value">10 pts</span>
+    </div>
+  </div>
+
+  <!-- Tab 3: Approval -->
+  <div class="approval-grid">
+    <div class="section-card">
+      <div class="section-title">✅ Aprovação Direta</div>
+      <div class="section-desc">Configure a nota mínima para aprovação.</div>
+      <div class="field">
+        <label>Média Mínima para Aprovação</label>
+        <input type="number" value="6.0" />
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>Conselho de Classe</h4>
+          <p>Permite bonificação extra</p>
+        </div>
+        <div class="toggle on"><div class="knob"></div></div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">📝 Prova Final</div>
+      <div class="section-desc">Segunda chance para aprovação.</div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>Habilitar Prova Final</h4>
+          <p>Ativada quando aluno fica próximo da média</p>
+        </div>
+        <div class="toggle on"><div class="knob"></div></div>
+      </div>
+      <div class="field">
+        <label>Pontos Faltantes para Ativar</label>
+        <input type="number" value="2.0" />
+        <div class="hint">Se faltarem até 2.0 pts, o aluno faz final</div>
+      </div>
+      <div class="field">
+        <label>Nota Mínima na Final</label>
+        <input type="number" value="5.0" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Recovery (Full Width) -->
+  <div class="section-card" style="margin-top: 20px;">
+    <div class="section-title">🔄 Recuperação</div>
+    <div class="section-desc">Última chance para o aluno antes da reprovação.</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>Habilitar</h4>
+          <p>Última chance</p>
+        </div>
+        <div class="toggle on"><div class="knob"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>Zerar Notas</h4>
+          <p>Limpa anteriores</p>
+        </div>
+        <div class="toggle on"><div class="knob"></div></div>
+      </div>
+      <div class="field" style="margin-bottom: 0;">
+        <label>Nota Máxima</label>
+        <input type="number" value="6.0" />
+        <div class="hint">Teto: aluno fica com no máximo 6.0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-preview">
+  ✅ Configurações salvas com sucesso!
+</div>
+
+<div class="legend">
+  <h4>Melhorias</h4>
+  <div class="legend-note">
+    ✅ Toast de sucesso/erro<br>
+    ✅ Banner de alterações não salvas<br>
+    ✅ Botão "Restaurar Padrão"<br>
+    ✅ Validação de fórmula<br>
+    ✅ Tabs com min-height 44px<br>
+    ✅ Layout responsivo
+  </div>
+</div>
+</body>
+</html>

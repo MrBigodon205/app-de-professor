@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback, useMemo } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback, useMemo, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { ClassConfig } from '../types';
 import { supabase } from '../lib/supabase';
@@ -35,7 +36,11 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const { currentUser, activeSubject } = useAuth();
 
-    const activeSeries = classes.find(c => c.id === selectedSeriesId);
+    const activeSeries = useMemo(() => classes.find(c => c.id === selectedSeriesId), [classes, selectedSeriesId]);
+
+    // Ref to access selectedSeriesId inside fetchClasses without it being a dependency
+    const selectedSeriesIdRef = useRef(selectedSeriesId);
+    useEffect(() => { selectedSeriesIdRef.current = selectedSeriesId; }, [selectedSeriesId]);
 
     useEffect(() => {
         if (currentUser && activeSubject) {
@@ -48,14 +53,34 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     }, [currentUser, activeSubject]);
 
+
+    const location = useLocation();
+
+    // Helper to extract ID
+    const getInstitutionId = useCallback(() => {
+        const match = location.pathname.match(/\/institution\/([a-f0-9-]+)/i);
+        return match ? match[1] : null;
+    }, [location.pathname]);
+
+    const activeInstitutionId = getInstitutionId();
+
     const fetchClasses = useCallback(async () => {
         if (!currentUser) return;
 
         try {
             let query = supabase
                 .from('classes')
-                .select('id, name, sections, user_id, subject')
-                .eq('user_id', currentUser.id);
+                .select('id, name, sections, user_id, subject, institution_id');
+
+            // Filter by context
+            if (activeInstitutionId) {
+                // Institutional Dashboard: Filter by Institution ID
+                // RLS will handle the security (Coordinator sees all, Teacher sees own)
+                query = query.eq('institution_id', activeInstitutionId);
+            } else {
+                // Personal Dashboard: Only show personal classes (no institution) AND owned by user
+                query = query.is('institution_id', null).eq('user_id', currentUser.id);
+            }
 
             const { data, error } = await query.order('created_at', { ascending: true });
 
@@ -66,7 +91,8 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 name: c.name,
                 sections: c.sections,
                 userId: c.user_id,
-                subject: c.subject
+                subject: c.subject,
+                institutionId: c.institution_id
             }));
 
             // Update State (Deduplicated)
@@ -83,47 +109,59 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             setClasses(uniqueClasses);
 
             // Re-apply selection logic (incase new classes appeared)
-            // ... (Simple check to ensure current selection is still valid)
-            const storedSeriesId = localStorage.getItem(`selectedSeriesId_${currentUser.id}`);
-            if (!selectedSeriesId && uniqueClasses.length > 0) {
+            // Use ref to avoid circular dependency
+            const currentSelectedId = selectedSeriesIdRef.current;
+            const storedSeriesId = localStorage.getItem(`selectedSeriesId_${currentUser.id}_${activeInstitutionId || 'personal'}`);
+            if (!currentSelectedId && uniqueClasses.length > 0) {
                 if (storedSeriesId && uniqueClasses.find(c => c.id === storedSeriesId)) {
                     setSelectedSeriesId(storedSeriesId);
-                    const storedSection = localStorage.getItem(`selectedSection_${currentUser.id}`);
+                    const storedSection = localStorage.getItem(`selectedSection_${currentUser.id}_${activeInstitutionId || 'personal'}`);
                     const target = uniqueClasses.find(c => c.id === storedSeriesId);
                     setSelectedSection(storedSection || (target?.sections[0] || 'A'));
                 } else {
                     setSelectedSeriesId(uniqueClasses[0].id);
                     setSelectedSection(uniqueClasses[0].sections[0] || 'A');
                 }
+            } else if (currentSelectedId && !uniqueClasses.find(c => c.id === currentSelectedId)) {
+                // Selection is no longer valid in this context (e.g. switched from personal to school)
+                if (uniqueClasses.length > 0) {
+                    setSelectedSeriesId(uniqueClasses[0].id);
+                    setSelectedSection(uniqueClasses[0].sections[0] || 'A');
+                } else {
+                    setSelectedSeriesId('');
+                    setSelectedSection('');
+                }
             }
 
         } catch (e) {
             console.error("Network fetch classes failed", e);
-            // If we didn't have cache and network failed, we are in trouble
         } finally {
             setLoading(false);
         }
-    }, [currentUser, selectedSeriesId]);
+    }, [currentUser, activeInstitutionId]);
 
     const selectSeries = useCallback((id: string) => {
         setSelectedSeriesId(id);
         if (currentUser) localStorage.setItem(`selectedSeriesId_${currentUser.id}`, id);
 
-        const target = classes.find(c => c.id === id);
-        if (target) {
-            // Check if we have a stored section for this series? 
-            // Ideally we stick to the current logic but maybe check if valid.
-            if (selectedSection && target.sections.includes(selectedSection)) {
-                // keep
-            } else if (target.sections.length > 0) {
-                setSelectedSection(target.sections[0]);
-                if (currentUser) localStorage.setItem(`selectedSection_${currentUser.id}`, target.sections[0]);
-            } else {
-                setSelectedSection('');
-                if (currentUser) localStorage.setItem(`selectedSection_${currentUser.id}`, '');
+        // Access classes via functional state to avoid dependency on the array
+        setClasses(prevClasses => {
+            const target = prevClasses.find(c => c.id === id);
+            if (target) {
+                const currentSection = selectedSeriesIdRef.current ? selectedSection : '';
+                if (currentSection && target.sections.includes(currentSection)) {
+                    // keep current section
+                } else if (target.sections.length > 0) {
+                    setSelectedSection(target.sections[0]);
+                    if (currentUser) localStorage.setItem(`selectedSection_${currentUser.id}`, target.sections[0]);
+                } else {
+                    setSelectedSection('');
+                    if (currentUser) localStorage.setItem(`selectedSection_${currentUser.id}`, '');
+                }
             }
-        }
-    }, [classes, selectedSection, currentUser]);
+            return prevClasses; // Don't mutate classes
+        });
+    }, [currentUser, selectedSection]);
 
     const selectSection = useCallback((section: string) => {
         setSelectedSection(section);
@@ -147,7 +185,13 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             sections = ['A'];
         }
 
-        const newSeries = { name, sections, user_id: currentUser.id, subject: activeSubject };
+        const newSeries = {
+            name,
+            sections,
+            user_id: currentUser.id,
+            subject: activeSubject,
+            institution_id: activeInstitutionId
+        };
 
         const { data, error } = await supabase
             .from('classes')
@@ -165,7 +209,8 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             name: data.name,
             sections: data.sections,
             userId: data.user_id,
-            subject: data.subject
+            subject: data.subject,
+            institutionId: data.institution_id
         };
 
         setClasses(prev => [...prev, saved]);
@@ -174,6 +219,9 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }, [currentUser, activeSubject]);
 
     const removeClass = useCallback(async (id: string) => {
+        // Clean up related schedules first (safety net alongside CASCADE)
+        await supabase.from('schedules').delete().eq('class_id', id);
+
         const { error } = await supabase
             .from('classes')
             .delete()
@@ -181,7 +229,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         if (error) {
             console.error("Failed to remove class", error.message);
-            return;
+            throw new Error(error.message);
         }
 
         setClasses(prev => {

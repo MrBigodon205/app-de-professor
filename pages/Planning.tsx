@@ -1401,10 +1401,10 @@ export const Planning: React.FC = () => {
                             <motion.button
                                 key={plan.id}
                                 variants={{
-                                    hidden: { opacity: 0, x: -20, filter: "blur(5px)" },
+                                    hidden: { opacity: 0, x: -14, scale: 0.97 },
                                     visible: {
-                                        opacity: 1, x: 0, filter: "blur(0px)",
-                                        transition: { type: 'spring', stiffness: 100, damping: 12 }
+                                        opacity: 1, x: 0, scale: 1,
+                                        transition: { type: 'spring', stiffness: 150, damping: 20 }
                                     }
                                 }}
                                 layoutId={`plan-card-${plan.id}`}

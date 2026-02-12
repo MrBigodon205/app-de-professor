@@ -1,53 +1,80 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-
-type AnimationType = 'default' | 'dashboard' | 'planning' | 'activities' | 'grades' | 'attendance' | 'students';
+import { motion, Variants } from 'framer-motion';
 
 interface PageTransitionProps {
     children: React.ReactNode;
-    type?: AnimationType;
+    type?: string;
 }
 
-// PREMIUM "NATIVE-LIKE" ANIMATIONS
-// Focus: Delight, Physics, and Fluidity.
-// We relax the strict "performance only" constraints slightly to allow for blur and scale
-// because modern PCs (which the user specified) can handle it easily.
-
-const springConfig = { type: "spring", stiffness: 100, damping: 20, mass: 1 } as const;
-
-const variants = {
-    initial: {
-        opacity: 0,
-        y: 20,
-        scale: 0.98,
-        filter: "blur(8px)"
-    },
-    enter: {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        filter: "blur(0px)",
-        transition: {
-            ...springConfig,
-            staggerChildren: 0.1
+// Premium page transitions — smooth, cinematic feel without blocking navigation
+const pageVariants: Record<string, Variants> = {
+    dashboard: {
+        initial: { opacity: 0, scale: 0.97, y: 12 },
+        enter: {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            transition: {
+                duration: 0.35,
+                ease: [0.22, 1, 0.36, 1],
+                staggerChildren: 0.06,
+            }
+        },
+        exit: {
+            opacity: 0,
+            scale: 0.98,
+            transition: { duration: 0.12, ease: "easeIn" }
         }
     },
-    exit: {
-        opacity: 0,
-        y: -20,
-        scale: 0.96,
-        filter: "blur(8px)",
-        transition: {
-            duration: 0.2,
-            ease: "easeInOut"
-        } as const
-    }
+    slide: {
+        initial: { opacity: 0, x: 24 },
+        enter: {
+            opacity: 1,
+            x: 0,
+            transition: {
+                duration: 0.3,
+                ease: [0.22, 1, 0.36, 1],
+                staggerChildren: 0.05,
+            }
+        },
+        exit: {
+            opacity: 0,
+            x: -16,
+            transition: { duration: 0.1, ease: "easeIn" }
+        }
+    },
+    fade: {
+        initial: { opacity: 0, y: 8 },
+        enter: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.28,
+                ease: [0.25, 0.1, 0.25, 1],
+                staggerChildren: 0.04,
+            }
+        },
+        exit: {
+            opacity: 0,
+            transition: { duration: 0.1, ease: "easeOut" }
+        }
+    },
 };
 
-export const PageTransition: React.FC<PageTransitionProps> = ({ children, type = 'default' }) => {
-    // We strictly use the generic premium variant for consistency across "tabs"
-    // unless a specific override is desperately needed.
-    // The "type" prop is kept for compatibility but mapped to the same premium feel.
+// Map page types to animation styles
+const typeMap: Record<string, string> = {
+    dashboard: 'dashboard',
+    attendance: 'slide',
+    grades: 'slide',
+    activities: 'slide',
+    planning: 'slide',
+    students: 'slide',
+    default: 'fade',
+};
+
+const PageTransition: React.FC<PageTransitionProps> = ({ children, type = 'default' }) => {
+    const animKey = typeMap[type] || 'fade';
+    const variants = pageVariants[animKey];
 
     return (
         <motion.div
@@ -55,10 +82,13 @@ export const PageTransition: React.FC<PageTransitionProps> = ({ children, type =
             initial="initial"
             animate="enter"
             exit="exit"
+            layout="position"
             className="w-full h-full flex flex-col"
-            style={{ willChange: "transform, opacity, filter" }}
         >
             {children}
         </motion.div>
     );
 };
+
+export { PageTransition };
+export default React.memo(PageTransition);
