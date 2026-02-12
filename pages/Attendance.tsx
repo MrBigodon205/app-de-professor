@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
+import { containerVariants, itemVariants } from '../components/PageTransition';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -94,7 +95,7 @@ const MiniCalendar: React.FC<{
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white dark:bg-slate-950 w-full max-w-[340px] rounded-[32px] shadow-2xl overflow-hidden relative z-10 animate-in zoom-in-95 duration-300 border border-slate-200 dark:border-slate-800 p-6"
+                className="bg-white dark:bg-slate-950 w-full max-w-[340px] rounded-[32px] shadow-2xl overflow-hidden relative z-10 border border-slate-200 dark:border-slate-800 p-6"
             >
 
                 <div className="relative flex items-center justify-between mb-6">
@@ -741,18 +742,28 @@ export const Attendance: React.FC = () => {
 
     if (!selectedSeriesId) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in duration-500">
+            <motion.div
+                variants={containerVariants}
+                initial="initial"
+                animate="enter"
+                className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800"
+            >
                 <div className={`size-20 rounded-2xl bg-${theme.primaryColor}/10 flex items-center justify-center mb-6`}>
                     <span className={`material-symbols-outlined text-4xl text-${theme.primaryColor}`}>{theme.icon}</span>
                 </div>
                 <h3 className="text-2xl font-bold text-text-primary mb-2">Nenhuma Série Selecionada</h3>
                 <p className="text-text-muted text-center max-w-sm mb-8">Escolha uma série no menu superior para registrar as presenças de seus alunos.</p>
-            </div>
+            </motion.div>
         );
     }
 
     return (
-        <div className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6 animate-in fade-in duration-500 pb-6 lg:pb-12">
+        <motion.div
+            variants={containerVariants}
+            initial="initial"
+            animate="enter"
+            className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6 pb-6 lg:pb-12"
+        >
             {/* Header Control */}
             <div className={`bg-surface-card p-4 sm:p-8 rounded-3xl shadow-card border border-border-default flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-8 relative z-30 group landscape:p-2`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700`}></div>
@@ -944,7 +955,7 @@ export const Attendance: React.FC = () => {
                     </div>
                 )}
             </div>
-        </div>
+        </motion.div>
     );
 };
 
@@ -996,7 +1007,10 @@ interface AttendanceRowProps {
 // Mobile Card Component
 const MobileAttendanceCard = React.memo(({ student: s, status, onStatusChange, theme }: AttendanceRowProps) => {
     return (
-        <div className="bg-surface-card border border-border-default rounded-xl p-3 shadow-sm animate-in fade-in duration-500">
+        <motion.div
+            variants={itemVariants}
+            className="bg-surface-card border border-border-default rounded-xl p-3 shadow-sm"
+        >
             <div className="flex items-center gap-3 mb-3">
                 <div className={`student-avatar size-8 text-xs bg-gradient-to-br ${s.color || `from-indigo-600 to-indigo-800`}`}>
                     {s.initials || s.name.substring(0, 2)}
@@ -1037,7 +1051,7 @@ const MobileAttendanceCard = React.memo(({ student: s, status, onStatusChange, t
                     color="slate"
                 />
             </div>
-        </div>
+        </motion.div>
     );
 });
 

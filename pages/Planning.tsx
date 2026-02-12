@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { containerVariants, itemVariants } from '../components/PageTransition';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -1246,7 +1247,12 @@ export const Planning: React.FC = () => {
     }, [plans, debouncedSearchTerm, filterSection]);
 
     return (
-        <main className="flex flex-col lg:flex-row gap-4 md:gap-6 max-w-[1600px] mx-auto animate-in fade-in duration-500 pb-24 md:pb-8 relative fluid-p-m fluid-gap-m px-4 md:px-0 w-full h-full overflow-hidden">
+        <motion.main
+            variants={containerVariants}
+            initial="initial"
+            animate="enter"
+            className="flex flex-col lg:flex-row gap-4 md:gap-6 max-w-[1600px] mx-auto pb-24 md:pb-8 relative fluid-p-m fluid-gap-m px-4 md:px-0 w-full h-full overflow-hidden"
+        >
             {/* Landscape FAB for New Plan */}
             <div className="hidden landscape:flex fixed bottom-6 right-6 z-50 flex-col gap-3 lg:hidden">
                 {hasDraft && !showForm && (
@@ -1369,18 +1375,9 @@ export const Planning: React.FC = () => {
                 )}
 
                 <motion.div
-                    variants={{
-                        hidden: { opacity: 0 },
-                        visible: {
-                            opacity: 1,
-                            transition: {
-                                staggerChildren: 0.1,
-                                delayChildren: 0.1
-                            }
-                        }
-                    }}
-                    initial="hidden"
-                    animate="visible"
+                    variants={containerVariants}
+                    initial="initial"
+                    animate="enter"
                     className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-0"
                 >
 
@@ -1400,13 +1397,7 @@ export const Planning: React.FC = () => {
                         displayedPlans.map((plan, idx) => (
                             <motion.button
                                 key={plan.id}
-                                variants={{
-                                    hidden: { opacity: 0, x: -14, scale: 0.97 },
-                                    visible: {
-                                        opacity: 1, x: 0, scale: 1,
-                                        transition: { type: 'spring', stiffness: 150, damping: 20 }
-                                    }
-                                }}
+                                variants={itemVariants}
                                 layoutId={`plan-card-${plan.id}`}
                                 onClick={() => isSelectionMode ? toggleSelection(plan.id) : handleSelectPlan(plan)}
                                 className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm ${isSelectionMode
@@ -1467,7 +1458,12 @@ export const Planning: React.FC = () => {
             {/* Main Content */}
             <div className={`flex-1 flex flex-col card shadow-premium overflow-hidden relative transition-all ${showForm || viewMode ? 'flex' : 'hidden lg:flex'}`}>
                 {(!showForm && !viewMode) ? (
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-300">
+                    <motion.div
+                        variants={containerVariants}
+                        initial="initial"
+                        animate="enter"
+                        className="flex-1 flex flex-col items-center justify-center p-8 text-center"
+                    >
                         <div className={`size-32 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-8 shadow-sm border border-slate-100 dark:border-slate-700`}>
                             <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600">edit_calendar</span>
                         </div>
@@ -1501,7 +1497,7 @@ export const Planning: React.FC = () => {
                                 </button>
                             )}
                         </div>
-                    </div>
+                    </motion.div>
                 ) : showForm ? (
                     selectedTemplate ? (
                         <div className="flex-1 flex flex-col h-full overflow-hidden relative">
@@ -2360,7 +2356,7 @@ export const Planning: React.FC = () => {
                 </div>
             )}
 
-        </main>
+        </motion.main>
     );
 };
 // Build trigger: 2026-01-13 00:54

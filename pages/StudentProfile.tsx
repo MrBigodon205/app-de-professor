@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { motion } from 'framer-motion';
+import { containerVariants, itemVariants } from '../components/PageTransition';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -750,7 +752,12 @@ export const StudentProfile: React.FC = () => {
 
 
     return (
-        <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-8 animate-in fade-in duration-500 h-auto lg:h-[calc(100vh-6rem)] overflow-visible lg:overflow-hidden pb-20 lg:pb-0">
+        <motion.div
+            variants={containerVariants}
+            initial="initial"
+            animate="enter"
+            className="max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-8 h-auto lg:h-[calc(100vh-6rem)] overflow-visible lg:overflow-hidden pb-20 lg:pb-0"
+        >
 
             {/* LEFT SIDEBAR: Student List */}
             {/* Desktop: Always distinct. Mobile: Visible only when NO student selected */}
@@ -1179,6 +1186,6 @@ export const StudentProfile: React.FC = () => {
                     </>
                 )}
             </div>
-        </div>
+        </motion.div>
     );
 };

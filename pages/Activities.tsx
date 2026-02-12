@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { containerVariants, itemVariants } from '../components/PageTransition';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -820,7 +821,12 @@ export const Activities: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col lg:flex-row gap-4 md:gap-6 max-w-[1600px] mx-auto animate-in fade-in duration-500 pb-24 md:pb-8 relative fluid-p-m fluid-gap-m px-4 md:px-0 w-full h-full overflow-hidden">
+        <motion.div
+            variants={containerVariants}
+            initial="initial"
+            animate="enter"
+            className="flex flex-col lg:flex-row gap-4 md:gap-6 max-w-[1600px] mx-auto pb-24 md:pb-8 relative fluid-p-m fluid-gap-m px-4 md:px-0 w-full h-full overflow-hidden"
+        >
             {/* Landscape FAB for New Activity */}
             <div className="hidden landscape:flex fixed bottom-6 right-6 z-50 flex-col gap-3 lg:hidden">
                 {hasDraft && !isEditing && (
@@ -918,6 +924,9 @@ export const Activities: React.FC = () => {
                     <div className="relative flex-1 landscape:flex-1">
                         <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">search</span>
                         <input
+                            id="search-activities"
+                            name="search-activities"
+                            aria-label="Buscar atividades"
                             type="text"
                             placeholder="Buscar..."
                             value={searchTerm}
@@ -932,7 +941,7 @@ export const Activities: React.FC = () => {
 
                 {/* Section Switcher Tabs - Matching Planning.tsx */}
                 {activeSeries && activeSeries.sections?.length > 0 && (
-                    <div className="px-1">
+                    <motion.div variants={itemVariants} className="px-1">
                         <div className="flex items-center gap-2 flex-wrap py-1">
                             <button
                                 onClick={() => setFilterSection('')}
@@ -956,9 +965,8 @@ export const Activities: React.FC = () => {
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    </motion.div>
                 )}
-
                 {/* List Items */}
                 <motion.div
                     variants={containerVariants}
@@ -1033,7 +1041,12 @@ export const Activities: React.FC = () => {
             <div className={`flex-1 flex flex-col card shadow-premium overflow-hidden relative transition-all ${selectedActivityId || isEditing ? 'flex' : 'hidden lg:flex'}`}>
                 {(!selectedActivityId && !isEditing) ? (
                     // --- HERO EMPTY STATE ---
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-300">
+                    <motion.div
+                        variants={containerVariants}
+                        initial="initial"
+                        animate="enter"
+                        className="flex-1 flex flex-col items-center justify-center p-8 text-center"
+                    >
                         <div className={`size-32 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-8 shadow-sm border border-slate-100 dark:border-slate-700`}>
                             <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600">assignment_add</span>
                         </div>
@@ -1060,7 +1073,7 @@ export const Activities: React.FC = () => {
                                 </button>
                             )}
                         </div>
-                    </div>
+                    </motion.div>
                 ) : isEditing ? (
                     // --- EDIT / CREATE MODE ---
                     <div className="flex-1 flex flex-col h-[100dvh] md:h-full overflow-hidden relative">
@@ -1254,7 +1267,12 @@ export const Activities: React.FC = () => {
                 ) : (
                     // --- VIEW MODE ---
                     currentActivity && (
-                        <div className="flex-1 overflow-y-auto relative animate-in fade-in h-[100dvh] md:h-full">
+                        <motion.div
+                            variants={containerVariants}
+                            initial="initial"
+                            animate="enter"
+                            className="flex-1 overflow-y-auto relative h-[100dvh] md:h-full"
+                        >
                             {/* Header Image/Gradient */}
                             <div className={`h-48 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden`}>
                                 <div className="absolute inset-0 opacity-10 flex flex-wrap gap-8 justify-end p-8 rotate-12 scale-150 pointer-events-none">
@@ -1285,7 +1303,10 @@ export const Activities: React.FC = () => {
                                 </div>
 
                                 {/* Actions (Visible on Mobile & Desktop) */}
-                                <div className="absolute top-4 right-4 lg:top-6 lg:right-6 flex gap-2 lg:gap-3 z-10 animate-in fade-in slide-in-from-right-4 duration-500 delay-200">
+                                <motion.div
+                                    variants={itemVariants}
+                                    className="absolute top-4 right-4 lg:top-6 lg:right-6 flex gap-2 lg:gap-3 z-10"
+                                >
                                     <button
                                         onClick={handleExportPDF}
                                         className="p-2 size-10 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
@@ -1336,7 +1357,7 @@ export const Activities: React.FC = () => {
                                     >
                                         <span className="material-symbols-outlined text-lg group-hover:text-red-200 transaction-colors">delete</span>
                                     </button>
-                                </div>
+                                </motion.div>
                             </div>
 
 
@@ -1379,7 +1400,7 @@ export const Activities: React.FC = () => {
                                             <div className="grid grid-cols-2 gap-x-8 gap-y-2">
                                                 {students.map((s, idx) => (
                                                     <div key={s.id}
-                                                        className="flex items-center justify-between gap-3 border-b border-slate-100 py-1 animate-in fade-in duration-500 fill-mode-backwards theme-animate-delay"
+                                                        className="flex items-center justify-between gap-3 border-b border-slate-100 py-1"
                                                     >
                                                         <span className="text-xs truncate min-w-0 flex-1">{s.number}. {s.name}</span>
                                                         <div className="size-4 border border-slate-300 flex items-center justify-center shrink-0">
@@ -1440,14 +1461,18 @@ export const Activities: React.FC = () => {
 
                                 {/* ATTACHMENTS */}
                                 {currentActivity.files && currentActivity.files.length > 0 && (
-                                    <div className="animate-in fade-in duration-500 delay-100">
+                                    <motion.div variants={itemVariants}>
                                         <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                                             <span className={`material-symbols-outlined text-${theme.primaryColor}`}>attachment</span>
                                             Anexos
                                         </h3>
                                         <div className="flex flex-wrap gap-3">
                                             {currentActivity.files.map((file, index) => (
-                                                <div key={index} className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group shadow-sm max-w-full">
+                                                <motion.div
+                                                    key={index}
+                                                    variants={itemVariants}
+                                                    className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group shadow-sm max-w-full"
+                                                >
                                                     <div className="flex items-center gap-3 flex-1 min-w-0 pointer-events-none">
                                                         <span className="material-symbols-outlined text-slate-500 group-hover:text-indigo-500 transition-colors">description</span>
                                                         <div className="flex flex-col min-w-0">
@@ -1482,15 +1507,15 @@ export const Activities: React.FC = () => {
                                                             <span className="material-symbols-outlined">download</span>
                                                         </a>
                                                     </div>
-                                                </div>
+                                                </motion.div>
                                             ))}
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 )}
 
                                 {/* Delivery List / Completion Tracking */}
                                 {currentActivity.type !== 'Conteúdo' && (
-                                    <div className="animate-in fade-in duration-500">
+                                    <motion.div variants={itemVariants}>
                                         <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center justify-between">
                                             <div className="flex flex-col gap-2">
                                                 <div className="flex items-center gap-2">
@@ -1542,23 +1567,29 @@ export const Activities: React.FC = () => {
                                                             <span className={`text-sm font-bold truncate ${isDone ? `text-${theme.primaryColor}` : 'text-slate-600 dark:text-slate-300'}`}>{s.name}</span>
                                                         </div>
                                                         <div className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 shrink-0 ${isDone ? 'theme-bg-primary theme-border-primary text-white scale-110 theme-shadow-primary' : 'border-slate-200'}`}>
-                                                            {isDone && <span className="material-symbols-outlined text-[16px] font-bold animate-in zoom-in spin-in-180 duration-300">check</span>}
+                                                            {isDone && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="material-symbols-outlined text-[16px] font-bold">check</motion.span>}
                                                         </div>
                                                     </motion.div>
                                                 );
                                             })}
                                         </motion.div>
 
-                                    </div>
+                                    </motion.div>
                                 )}
                             </div>
-                        </div>
-                    ))}
-            </div>
+                        </motion.div>
+                    ))
+                }
+            </div >
             {/* Presentation Modal */}
             {
                 isPresentationOpen && currentActivity && (
-                    <div className="fixed inset-0 z-[100] bg-black animate-in fade-in duration-300">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] bg-black"
+                    >
                         <button
                             onClick={() => setIsPresentationOpen(false)}
                             className="absolute top-4 right-4 z-[101] size-12 rounded-full bg-slate-800 text-white flex items-center justify-center hover:bg-slate-700 transition-colors"
@@ -1578,7 +1609,7 @@ export const Activities: React.FC = () => {
                             }
                             return null;
                         })()}
-                    </div>
+                    </motion.div>
                 )
             }
 
@@ -1603,6 +1634,6 @@ export const Activities: React.FC = () => {
             />
 
 
-        </div >
+        </motion.div>
     );
 };

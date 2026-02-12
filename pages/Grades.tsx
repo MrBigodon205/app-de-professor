@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -10,8 +9,6 @@ import { Student, Grades as GradesType } from '../types';
 import { supabase } from '../lib/supabase';
 import DOMPurify from 'dompurify';
 import { UNIT_CONFIGS, calculateUnitTotal, calculateAnnualSummary, getStatusResult } from '../utils/gradeCalculations';
-
-// UNIT_CONFIGS removed (imported from utils)
 
 interface GradeData {
     [key: string]: number;
@@ -44,6 +41,95 @@ interface GradeRowProps {
     onGradeChange: (studentId: string, field: string, value: string) => void;
 }
 
+// MOBILE CARD COMPONENT
+const MobileGradeCard = React.memo(({ student, selectedUnit, theme, onGradeChange }: GradeRowProps) => {
+    const currentConfig = UNIT_CONFIGS[selectedUnit as keyof typeof UNIT_CONFIGS];
+    const total = calculateUnitTotal(student, selectedUnit);
+    const finalResult = getStatusResult(student, selectedUnit);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-surface-card rounded-xl p-3 shadow-sm border border-border-default space-y-3"
+        >
+            {/* Header: Student Info & Total */}
+            <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3 overflow-hidden">
+                    <div className={`student-avatar size-9 text-xs shrink-0 bg-gradient-to-br ${student.color || 'from-indigo-600 to-indigo-800'} text-white shadow-md flex items-center justify-center rounded-full font-bold`}>
+                        {student.initials}
+                    </div>
+                    <div className="min-w-0">
+                        <div className="text-sm font-bold text-text-primary leading-tight truncate">
+                            {student.number}. {student.name}
+                        </div>
+                    </div>
+                </div>
+
+                {selectedUnit !== 'results' && (
+                    <div className={`shrink-0 flex flex-col items-end px-2 py-1 rounded bg-surface-subtle border border-border-default min-w-[60px]`}>
+                        <span className="text-[9px] uppercase tracking-wider text-text-muted font-bold">Média</span>
+                        <span className={`text-base font-black leading-none ${total >= 6 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            {total.toFixed(1)}
+                        </span>
+                    </div>
+                )}
+
+                {selectedUnit === 'results' && (
+                    <span className={`shrink-0 inline-flex items-center px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide ${finalResult.bg} ${finalResult.color}`}>
+                        {finalResult.text}
+                    </span>
+                )}
+            </div>
+
+            {/* Content: Inputs or Results */}
+            <div className={`pt-2 border-t border-border-subtle ${selectedUnit !== 'results' ? 'bg-surface-subtle/30 -mx-3 px-3 pb-2 mb-[-12px] rounded-b-xl' : ''}`}>
+                {selectedUnit === 'results' ? (
+                    <div className="flex justify-between items-center py-1">
+                        <span className="text-xs text-text-muted font-bold uppercase">Total Anual</span>
+                        <span className="text-lg font-black text-text-primary">{calculateAnnualSummary(student).annualTotal.toFixed(1)} <span className="text-xs font-normal text-text-muted">pts</span></span>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                        {currentConfig?.columns.map((col: any) => {
+                            let currentMax = col.max;
+                            if (selectedUnit === '3' && col.key === 'exam') {
+                                const talentShowVal = Number(student.units?.['3']?.['talentShow']) || 0;
+                                if (talentShowVal > 0) currentMax = 8.0;
+                            }
+                            const val = student.units?.[selectedUnit]?.[col.key]?.toString() || '';
+
+                            const inputId = `mobile-grade-${student.id}-${selectedUnit}-${col.key}`;
+
+                            return (
+                                <div key={col.key} className="flex flex-col bg-surface-card rounded border border-border-default/50 overflow-hidden focus-within:ring-1 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all">
+                                    <div className="flex justify-between items-center bg-surface-subtle/50 px-2 py-1 border-b border-border-default/30">
+                                        <label htmlFor={inputId} className="text-[9px] font-bold text-text-secondary uppercase tracking-wider truncate cursor-pointer">
+                                            {col.label}
+                                        </label>
+                                        <span className="text-[8px] text-text-muted font-mono bg-border-default/20 px-1 rounded">Max {currentMax}</span>
+                                    </div>
+                                    <input
+                                        id={inputId}
+                                        name={inputId}
+                                        type="number"
+                                        inputMode="decimal"
+                                        className={`w-full bg-transparent px-2 py-1.5 text-sm font-mono text-center focus:outline-none`}
+                                        placeholder="-"
+                                        value={val}
+                                        onChange={(e) => onGradeChange(student.id, col.key, e.target.value)}
+                                    />
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
+            </div>
+        </motion.div>
+    );
+});
+
 const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: GradeRowProps) => {
     const currentConfig = UNIT_CONFIGS[selectedUnit as keyof typeof UNIT_CONFIGS];
 
@@ -75,7 +161,7 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                 </td>
                 <td className="sticky left-12 z-30 bg-surface-card px-4 py-4 whitespace-nowrap border-r border-transparent group-hover:bg-surface-subtle transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                     <div className="flex items-center gap-3">
-                        <div className={`student-avatar size-8 text-xs bg-gradient-to-br ${student.color || 'from-indigo-600 to-indigo-800'}`}>
+                        <div className={`student-avatar size-8 text-xs bg-gradient-to-br ${student.color || 'from-indigo-600 to-indigo-800'} flex items-center justify-center rounded-full text-white font-bold`}>
                             {student.initials}
                         </div>
                         <div className="text-xs font-bold text-text-primary">
@@ -112,7 +198,7 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
             </td>
             <td className="sticky left-12 z-30 bg-surface-card px-4 py-4 whitespace-nowrap border-r border-transparent group-hover:bg-surface-subtle transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                 <div className="flex items-center gap-3">
-                    <div className={`student-avatar size-8 text-xs bg-gradient-to-br ${student.color || 'from-indigo-600 to-indigo-800'}`}>
+                    <div className={`student-avatar size-8 text-xs bg-gradient-to-br ${student.color || 'from-indigo-600 to-indigo-800'} flex items-center justify-center rounded-full text-white font-bold`}>
                         {student.initials}
                     </div>
                     <div className="text-xs font-bold text-text-primary truncate max-w-[150px]">
@@ -126,10 +212,13 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                     const talentShowVal = Number(student.units?.['3']?.['talentShow']) || 0;
                     if (talentShowVal > 0) currentMax = 8.0;
                 }
+                const inputId = `desktop-grade-${student.id}-${selectedUnit}-${col.key}`;
 
                 return (
                     <td key={col.key} className="px-4 py-3 whitespace-nowrap">
                         <input
+                            id={inputId}
+                            name={inputId}
                             type="number"
                             inputMode="decimal"
                             min="0"
@@ -139,6 +228,7 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                             value={getGrade(col.key)}
                             onChange={(e) => onGradeChange(student.id, col.key, e.target.value)}
                             placeholder="-"
+                            aria-label={`${col.label} for ${student.name}`}
                         />
                     </td>
                 );
@@ -331,7 +421,7 @@ export const Grades: React.FC = () => {
                 // 1. Direct Online Save
                 await supabase
                     .from('grades')
-                    .upsert(payload);
+                    .upsert(payload, { onConflict: 'student_id, unit, subject' });
 
                 // if (error) throw error; // No error throwing here, we handle sync errors in queue
                 // Saved successfully locally.
@@ -624,80 +714,80 @@ export const Grades: React.FC = () => {
     });
 
     return (
-        <div className="space-y-4 md:space-y-6 pb-6 lg:pb-12">
+        <div className="space-y-4 md:space-y-6 pb-24 md:pb-12">
             {/* ANIMATIONS */}
-            <motion.div className="hidden" animate={{ opacity: 0 }} /> {/* Hack to ensure motion is used/defined if needed elsewhere */}
-            {/* Header Controls */}
-            <div className="glass-card-soft fluid-p-s flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
-                <div className="flex flex-wrap gap-2 bg-surface-subtle p-1 rounded-lg w-full md:w-auto" data-tour="grades-units">
-                    {['1', '2', '3', 'final', 'recovery', 'results'].map((unit) => (
-                        <button
-                            key={unit}
-                            onClick={() => setSelectedUnit(unit)}
-                            className={`flex-1 md:flex-none px-3 py-2 rounded-md text-sm font-bold transition-all duration-200 whitespace-nowrap ${selectedUnit === unit
-                                ? 'theme-active shadow-md transform scale-105'
-                                : 'text-text-muted hover:bg-surface-card'
-                                }`}
-                        >
-                            <span>
-                                {unit === 'final' ? 'Final' : unit === 'recovery' ? 'Recuperação' : unit === 'results' ? 'Resultado' : `${unit}ª Unidade`}
-                            </span>
-                        </button>
-                    ))}
+            <motion.div className="hidden" animate={{ opacity: 0 }} />
+
+            {/* Header Controls - Optmized for Mobile */}
+            <div className="glass-card-soft p-2 md:p-4 flex flex-col md:flex-row justify-between items-center gap-4 sticky top-0 md:static z-40 backdrop-blur-xl md:backdrop-blur-none bg-surface-page/80 md:bg-transparent -mx-4 px-4 md:mx-0 shadow-sm md:shadow-none border-b border-border-default/50 md:border-none">
+
+                {/* Horizontal Scroll Unit Selector */}
+                <div className="w-full md:w-auto overflow-x-auto custom-scrollbar pb-1 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0">
+                    <div className="flex gap-2 min-w-max">
+                        {['1', '2', '3', 'final', 'recovery', 'results'].map((unit) => (
+                            <button
+                                key={unit}
+                                onClick={() => setSelectedUnit(unit)}
+                                className={`px-4 py-2 rounded-full text-xs md:text-sm font-bold transition-all duration-200 whitespace-nowrap shadow-sm border ${selectedUnit === unit
+                                    ? `bg-${theme.baseColor}-100 text-${theme.baseColor}-700 border-${theme.baseColor}-200 dark:bg-${theme.baseColor}-900/40 dark:text-${theme.baseColor}-300 dark:border-${theme.baseColor}-700 ring-2 ring-${theme.baseColor}-500/20`
+                                    : 'bg-surface-card text-text-secondary border-border-default hover:bg-surface-subtle'
+                                    }`}
+                            >
+                                {unit === 'final' ? 'Prova Final' : unit === 'recovery' ? 'Recuperação' : unit === 'results' ? 'Resultado Final' : `${unit}ª Unidade`}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-
+                <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
                     {/* Saving Indicator */}
                     {isSaving ? (
-                        <span className="hidden sm:flex items-center text-amber-500 text-sm font-bold bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800 transition-all">
+                        <span className="flex items-center text-amber-500 text-xs font-bold bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800 transition-all">
                             <span className="material-symbols-outlined text-sm mr-2 animate-pulse">cloud_upload</span>
-                            Salvando...
+                            Salvando
                         </span>
                     ) : (
-                        <span className="hidden sm:flex items-center text-emerald-600 dark:text-emerald-400 text-sm font-bold bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 transition-all">
+                        <span className="flex items-center text-emerald-600 dark:text-emerald-400 text-xs font-bold bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-800 transition-all">
                             <span className="material-symbols-outlined text-sm mr-2">check_circle</span>
-                            <span>Salvo</span>
+                            Salvo
                         </span>
                     )}
 
                     <button
                         onClick={() => setShowExportModal(true)}
-                        className={`flex items-center space-x-2 px-4 py-2 bg-${theme.baseColor}-500 hover:bg-${theme.baseColor}-600 text-white rounded-lg transition-colors shadow-md shadow-${theme.baseColor}-500/20`}
-                        data-tour="grades-export"
+                        className={`flex items-center space-x-2 px-4 py-2 bg-${theme.baseColor}-600 text-white rounded-lg shadow-lg shadow-${theme.baseColor}-500/30 active:scale-95 transition-all text-xs font-bold uppercase tracking-wide`}
                     >
                         <span className="material-symbols-outlined text-lg">download</span>
-                        <span>Exportar PDF</span>
+                        <span className="hidden sm:inline">Exportar PDF</span>
                     </button>
                 </div>
             </div>
 
-            {/* Export Modal */}
+            {/* Export Modal (Logic remains same, just rendering access) */}
             <AnimatePresence>
                 {showExportModal && (
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
                     >
+                        {/* ... Modal Content Reuse ... */}
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-surface-card rounded-xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] flex flex-col"
+                            className="bg-surface-card rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] flex flex-col border border-border-subtle"
                         >
-                            <h3 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2 shrink-0">
-                                <span className="material-symbols-outlined text-indigo-600">settings</span>
-                                Configurar Relatório PDF
+                            <h3 className="text-lg font-black text-text-primary mb-4 flex items-center gap-2 shrink-0">
+                                <span className={`material-symbols-outlined text-${theme.baseColor}-600`}>picture_as_pdf</span>
+                                Relatório PDF
                             </h3>
 
                             <div className="space-y-4 mb-6 overflow-y-auto custom-scrollbar flex-1 pr-2">
                                 <div>
-                                    <label className="block text-sm font-medium text-text-secondary mb-2">Unidades para Incluir:</label>
+                                    <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-3">Selecione as Etapas</label>
                                     <div className="grid grid-cols-2 gap-2">
                                         {(['1', '2', '3', 'final', 'recovery', 'results'] as const).map(key => (
-                                            <label key={key} className="flex items-center space-x-2 p-2 rounded hover:bg-surface-subtle cursor-pointer">
+                                            <label key={key} className={`flex items-center space-x-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${exportConfig.units[key] ? `border-${theme.baseColor}-500 bg-${theme.baseColor}-50 dark:bg-${theme.baseColor}-900/10` : 'border-border-default hover:border-border-strong'}`}>
                                                 <input
                                                     type="checkbox"
                                                     checked={exportConfig.units[key]}
@@ -705,49 +795,44 @@ export const Grades: React.FC = () => {
                                                         ...prev,
                                                         units: { ...prev.units, [key]: e.target.checked }
                                                     }))}
-                                                    className="rounded text-indigo-600 focus:ring-indigo-500"
+                                                    className={`rounded text-${theme.baseColor}-600 focus:ring-${theme.baseColor}-500 size-4`}
                                                 />
-                                                <span className="text-sm text-text-secondary font-bold">
+                                                <span className={`text-xs font-bold ${exportConfig.units[key] ? 'text-text-primary' : 'text-text-secondary'}`}>
                                                     {{
-                                                        '1': '1ª Unidade',
-                                                        '2': '2ª Unidade',
-                                                        '3': '3ª Unidade',
-                                                        'final': 'Prova Final',
-                                                        'recovery': 'Recuperação',
-                                                        'results': 'Resultado Final'
+                                                        '1': '1ª Unidade', '2': '2ª Unidade', '3': '3ª Unidade',
+                                                        'final': 'Prova Final', 'recovery': 'Recuperação', 'results': 'Resultado'
                                                     }[key]}
                                                 </span>
                                             </label>
                                         ))}
                                     </div>
                                 </div>
-
                                 <div className="pt-4 border-t border-border-default">
                                     <label className="flex items-center space-x-2 cursor-pointer">
                                         <input
                                             type="checkbox"
                                             checked={exportConfig.detailed}
                                             onChange={e => setExportConfig(prev => ({ ...prev, detailed: e.target.checked }))}
-                                            className="rounded text-indigo-600 focus:ring-indigo-500"
+                                            className={`rounded text-${theme.baseColor}-600 focus:ring-${theme.baseColor}-500`}
                                         />
-                                        <span className="text-sm font-medium text-text-primary">Detalhar colunas de notas</span>
+                                        <span className="text-sm font-medium text-text-primary">Incluir detalhes das notas</span>
                                     </label>
                                 </div>
                             </div>
 
-                            <div className="flex justify-end gap-2 shrink-0 pt-4 border-t border-border-default">
+                            <div className="flex justify-end gap-3 shrink-0 pt-4 border-t border-border-default">
                                 <button
                                     onClick={() => setShowExportModal(false)}
-                                    className="px-4 py-2 text-text-muted hover:bg-surface-subtle rounded-lg transition-colors"
+                                    className="px-4 py-2.5 text-text-secondary font-bold hover:bg-surface-subtle rounded-lg transition-colors text-sm"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={exportPDF}
-                                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-md transition-all flex items-center gap-2"
+                                    className={`px-6 py-2.5 bg-${theme.baseColor}-600 hover:bg-${theme.baseColor}-700 text-white rounded-lg shadow-lg shadow-${theme.baseColor}-500/30 transition-all flex items-center gap-2 font-bold text-sm`}
                                 >
-                                    <span className="material-symbols-outlined text-sm">download</span>
-                                    Gerar PDF
+                                    <span className="material-symbols-outlined text-lg">download</span>
+                                    Baixar PDF
                                 </button>
                             </div>
                         </motion.div>
@@ -755,15 +840,25 @@ export const Grades: React.FC = () => {
                 )}
             </AnimatePresence>
 
-            <div className="card overflow-hidden shadow-premium border-none">
+            {/* ERROR STATE */}
+            {visibleStudents.length === 0 && !loading && (
+                <div className="text-center py-12 px-4 rounded-xl border border-dashed border-border-default bg-surface-subtle/30">
+                    <span className="material-symbols-outlined text-4xl text-text-muted mb-3 opacity-50 block">sentiment_dissatisfied</span>
+                    <p className="text-text-muted text-sm">Nenhum aluno encontrado para {selectedUnit === 'results' ? 'o resultado final' : 'esta unidade'}.</p>
+                </div>
+            )}
+
+            {/* DESKTOP TABLE VIEW (Hidden on Mobile) */}
+            <div className="hidden lg:block card overflow-hidden shadow-premium border-none">
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[800px] border-collapse">
+                        {/* ... Existing Table Header ... */}
                         <thead className={`bg-surface-subtle/50 backdrop-blur-md border-b border-border-default`}>
                             <tr>
                                 <th className="sticky left-0 z-40 bg-surface-subtle/95 backdrop-blur-md px-4 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider w-12 border-b border-border-default shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                                     Nº
                                 </th>
-                                <th className="sticky left-12 z-40 bg-surface-subtle/95 backdrop-blur-md px-4 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider min-w-[180px] border-b border-border-default shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                <th className="sticky left-12 z-40 bg-surface-subtle/95 backdrop-blur-md px-4 py-4 text-left text-xs font-bold text-text-muted uppercase tracking-wider min-w-[250px] border-b border-border-default shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                                     Nome
                                 </th>
                                 {selectedUnit === 'results' ? (
@@ -804,32 +899,39 @@ export const Grades: React.FC = () => {
                             }}
                             initial="hidden"
                             animate="visible"
-                            key={selectedUnit} // Key forces re-mount (and thus re-stagger) when unit changes
+                            key={selectedUnit}
                             className="divide-y divide-border-subtle"
                         >
-                            {visibleStudents.map((student) => (
-                                <GradeRow
-                                    key={student.id}
-                                    student={student}
-                                    selectedUnit={selectedUnit}
-                                    theme={theme}
-                                    onGradeChange={handleGradeChange}
-                                />
-                            ))}
+                            <AnimatePresence>
+                                {visibleStudents.map(student => (
+                                    <GradeRow
+                                        key={student.id}
+                                        student={student}
+                                        selectedUnit={selectedUnit}
+                                        theme={theme}
+                                        onGradeChange={handleGradeChange}
+                                    />
+                                ))}
+                            </AnimatePresence>
                         </motion.tbody>
                     </table>
-
-                    {visibleStudents.length === 0 && (
-                        <div className="text-center py-12">
-                            <p className="text-slate-500 dark:text-slate-400">
-                                {selectedUnit === 'final' ? 'Nenhum aluno em Prova Final.' :
-                                    selectedUnit === 'recovery' ? 'Nenhum aluno em Recuperação.' :
-                                        'Nenhum aluno encontrado nesta turma.'}
-                            </p>
-                        </div>
-                    )}
                 </div>
             </div>
-        </div >
+
+            {/* MOBILE CARD VIEW (Visible on Mobile) */}
+            <div className="lg:hidden space-y-3">
+                <AnimatePresence>
+                    {visibleStudents.map(student => (
+                        <MobileGradeCard
+                            key={student.id}
+                            student={student}
+                            selectedUnit={selectedUnit}
+                            theme={theme}
+                            onGradeChange={handleGradeChange}
+                        />
+                    ))}
+                </AnimatePresence>
+            </div>
+        </div>
     );
 };

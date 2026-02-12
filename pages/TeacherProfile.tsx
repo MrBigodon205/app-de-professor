@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Subject } from '../types';
+import { motion } from 'framer-motion';
+import { containerVariants, itemVariants } from '../components/PageTransition';
 
 export const TeacherProfile: React.FC = () => {
     const { currentUser, updateProfile } = useAuth();
@@ -102,7 +104,13 @@ export const TeacherProfile: React.FC = () => {
     );
 
     return (
-        <div className="max-w-[1200px] mx-auto flex flex-col gap-8 animate-in fade-in duration-500">
+
+        <motion.div
+            variants={containerVariants}
+            initial="initial"
+            animate="enter"
+            className="max-w-[1200px] mx-auto flex flex-col gap-8"
+        >
             {/* Header / Breadcrumb */}
             <div className="flex flex-col gap-4">
                 <nav className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-muted">
@@ -122,12 +130,15 @@ export const TeacherProfile: React.FC = () => {
             </div>
 
             {message && (
-                <div className={`p-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 ${message.type === 'success'
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400'
-                    : 'bg-rose-50 text-rose-700 border border-rose-100 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400'}`}>
+                <motion.div
+                    variants={itemVariants}
+                    className={`p-4 rounded-2xl flex items-center gap-3 ${message.type === 'success'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400'
+                        : 'bg-rose-50 text-rose-700 border border-rose-100 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400'}`}
+                >
                     <span className="material-symbols-outlined">{message.type === 'success' ? 'check_circle' : 'error'}</span>
                     <span className="font-bold">{message.text}</span>
-                </div>
+                </motion.div>
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -187,7 +198,10 @@ export const TeacherProfile: React.FC = () => {
                     </div>
 
                     {isEditingPhoto && (
-                        <div className="bg-surface-card p-6 rounded-[28px] shadow-lg border border-border-default animate-in slide-in-from-top-4 duration-300">
+                        <motion.div
+                            variants={itemVariants}
+                            className="bg-surface-card p-6 rounded-[28px] shadow-lg border border-border-default"
+                        >
                             <label className="text-xs font-black uppercase tracking-widest text-text-muted mb-3 block">URL da Foto de Perfil</label>
                             <div className="flex flex-col gap-3">
                                 <input
@@ -202,7 +216,7 @@ export const TeacherProfile: React.FC = () => {
                                     <button onClick={handleSaveProfile} className={`flex-1 h-10 rounded-xl bg-${theme.primaryColor} text-white font-black shadow-lg shadow-${theme.primaryColor}/20 transition-all text-xs uppercase`}>Confirmar</button>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     )}
                 </div>
 
@@ -392,6 +406,6 @@ export const TeacherProfile: React.FC = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };

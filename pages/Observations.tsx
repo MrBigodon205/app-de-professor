@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { containerVariants, itemVariants } from '../components/PageTransition';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -234,7 +236,7 @@ export const Observations: React.FC = () => {
     };
 
     const renderInlineEdit = (occ: Occurrence) => (
-        <div key={occ.id} className="bg-surface-card shadow-xl rounded-[24px] p-6 border-2 border-amber-500/50 animate-in fade-in zoom-in duration-300">
+        <motion.div variants={itemVariants} key={occ.id} className="bg-surface-card shadow-xl rounded-[24px] p-6 border-2 border-amber-500/50">
             <div className="flex items-center gap-3 mb-4 text-amber-600 font-bold uppercase text-xs tracking-widest">
                 <span className="material-symbols-outlined">edit_note</span>
                 Editando Ocorrência
@@ -283,7 +285,7 @@ export const Observations: React.FC = () => {
                     Cancelar
                 </button>
             </div>
-        </div>
+        </motion.div>
     );
 
     const handleDeleteOccurrence = async (id: string) => {
@@ -347,14 +349,14 @@ export const Observations: React.FC = () => {
     const studentOccurrences = occurrences.filter(o => o.studentId === selectedStudentId);
 
     if (loading) return (
-        <div className="flex flex-col items-center justify-center p-20 animate-pulse">
+        <div className="flex flex-col items-center justify-center p-20">
             <div className={`size-12 border-4 border-${theme.primaryColor}/20 border-t-${theme.primaryColor} rounded-full animate-spin mb-4 shadow-lg shadow-${theme.primaryColor}/20`}></div>
             <p className="font-black text-text-muted uppercase tracking-widest text-sm">Organizando Arquivo Escolar...</p>
         </div>
     );
 
     if (!selectedSeriesId) return (
-        <div className="flex flex-col items-center justify-center p-12 bg-surface-card rounded-3xl border-2 border-dashed border-border-default animate-in fade-in zoom-in duration-500">
+        <div className="flex flex-col items-center justify-center p-12 bg-surface-card rounded-3xl border-2 border-dashed border-border-default">
             <div className={`size-20 rounded-2xl bg-${theme.primaryColor}/10 flex items-center justify-center mb-6`}>
                 <span className={`material-symbols-outlined text-4xl text-${theme.primaryColor}`}>{theme.icon}</span>
             </div>
@@ -388,9 +390,15 @@ export const Observations: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1" data-tour="obs-student-list">
+                <motion.div
+                    variants={containerVariants}
+                    initial="initial"
+                    animate="enter"
+                    className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1"
+                    data-tour="obs-student-list"
+                >
                     {filteredStudents.map(student => (
-                        <div
+                        <motion.div
                             role="button"
                             tabIndex={0}
                             key={student.id}
@@ -400,6 +408,7 @@ export const Observations: React.FC = () => {
                                     setSelectedStudentId(student.id);
                                 }
                             }}
+                            variants={itemVariants}
                             className={`w-full flex items-center gap-4 p-4 landscape:p-2 rounded-2xl transition-all duration-300 relative group/item cursor-pointer ${selectedStudentId === student.id
                                 ? 'theme-bg-surface-subtle theme-border-soft'
                                 : 'hover:bg-surface-subtle border border-transparent'
@@ -414,15 +423,15 @@ export const Observations: React.FC = () => {
                                 <span className={`text-sm font-black truncate w-full text-left transition-colors ${selectedStudentId === student.id ? 'theme-text-primary' : 'text-text-secondary group-hover/item:text-text-primary'}`}>{student.name}</span>
                                 <span className="text-[10px] font-black text-text-muted uppercase tracking-widest landscape:hidden">Nº {student.number.padStart(2, '0')}</span>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             </div>
 
             {/* Main Content */}
             <div className={`flex-1 flex flex-col bg-surface-card rounded-[32px] landscape:rounded-none border border-border-default landscape:border-0 shadow-xl shadow-slate-200/50 dark:shadow-none lg:overflow-hidden relative group ${!selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
                 {!selectedStudentId ? (
-                    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in duration-500 h-[500px] lg:h-auto">
+                    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center h-[500px] lg:h-auto">
                         <div className={`size-24 rounded-full bg-${theme.primaryColor}/10 flex items-center justify-center mb-6`}>
                             <span className={`material-symbols-outlined text-5xl text-${theme.primaryColor}`}>person_search</span>
                         </div>
@@ -483,7 +492,12 @@ export const Observations: React.FC = () => {
 
                         <div className="flex-1 h-auto lg:h-full lg:overflow-y-auto p-4 sm:p-8 custom-scrollbar">
                             {activeTab === 'history' ? (
-                                <div className="max-w-4xl mx-auto flex flex-col gap-8 animate-in fade-in duration-500">
+                                <motion.div
+                                    variants={containerVariants}
+                                    initial="initial"
+                                    animate="enter"
+                                    className="max-w-4xl mx-auto flex flex-col gap-8"
+                                >
                                     <div className="flex items-center justify-between px-2">
                                         <h3 className="font-black text-xl text-text-primary flex items-center gap-3">
                                             Histórico de Ocorrências
@@ -519,10 +533,11 @@ export const Observations: React.FC = () => {
                                         ) : (
                                             studentOccurrences.map((occ, idx) => (
                                                 editingOccId === occ.id ? renderInlineEdit(occ) : (
-                                                    <div
+                                                    <motion.div
                                                         key={occ.id}
+                                                        variants={itemVariants}
                                                         onClick={() => toggleOccurrenceSelection(occ.id)}
-                                                        className={`bg-surface-card p-6 rounded-3xl border shadow-sm hover:shadow-md transition-all flex flex-col gap-3 animate-in fade-in duration-300 cursor-pointer group/card delay-stagger-${idx % 11} ${selectedOccIds.has(occ.id) ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-border-default hover:border-border-hover'}`}
+                                                        className={`bg-surface-card p-6 rounded-3xl border shadow-sm hover:shadow-md transition-all flex flex-col gap-3 cursor-pointer group/card ${selectedOccIds.has(occ.id) ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-border-default hover:border-border-hover'}`}
                                                     >
                                                         {/* LINTER REFRESH: Zero Inline Styles Verified */}
                                                         <div className="flex justify-between items-start gap-4">
@@ -560,12 +575,12 @@ export const Observations: React.FC = () => {
                                                             </div>
                                                         </div>
                                                         <p className="text-sm text-text-secondary font-medium leading-relaxed italic pr-4">"{occ.description}"</p>
-                                                    </div>
+                                                    </motion.div>
                                                 )
                                             ))
                                         )}
                                     </div>
-                                </div>
+                                </motion.div>
                             ) : (
                                 <div className="max-w-4xl mx-auto flex flex-col gap-10 animate-in fade-in duration-500">
                                     {/* Premium Form */}
@@ -661,8 +676,11 @@ export const Observations: React.FC = () => {
                                             ) : (
                                                 studentOccurrences.map((occ) => (
                                                     editingOccId === occ.id ? renderInlineEdit(occ) : (
-                                                        <div
+                                                        <motion.div
                                                             key={occ.id}
+                                                            variants={itemVariants}
+                                                            initial="initial"
+                                                            animate="enter"
                                                             className="group/occ relative"
                                                         >
                                                             <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 opacity-0 group-hover/occ:opacity-100 transition-all">
@@ -696,7 +714,7 @@ export const Observations: React.FC = () => {
                                                                 </div>
                                                                 <p className="text-sm text-text-secondary font-medium leading-relaxed italic pr-4 landscape:line-clamp-2">"{occ.description}"</p>
                                                             </div>
-                                                        </div>
+                                                        </motion.div>
                                                     )
                                                 ))
                                             )}

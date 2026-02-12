@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { containerVariants, itemVariants } from '../components/PageTransition';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -35,24 +36,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
     } = useStudentsData(selectedSeriesId?.toString(), selectedSection, currentUser?.id);
 
     // ANIMATIONS
-    const containerVariants: any = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.04,
-                delayChildren: 0.08
-            }
-        }
-    };
-
-    const itemVariants: any = {
-        hidden: { opacity: 0, y: 16, scale: 0.97 },
-        visible: {
-            opacity: 1, y: 0, scale: 1,
-            transition: { type: 'spring', stiffness: 150, damping: 20 }
-        }
-    };
+    // Variants imported from PageTransition.tsx
 
     // Local UI state
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -378,25 +362,34 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
     if (!selectedSeriesId || !selectedSection) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 bg-surface-card rounded-3xl border-2 border-dashed border-border-default animate-in fade-in zoom-in duration-500">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center p-12 bg-surface-card rounded-3xl border-2 border-dashed border-border-default"
+            >
                 <div className={`size-20 rounded-2xl bg-${theme.primaryColor}/10 flex items-center justify-center mb-6`}>
                     <span className={`material-symbols-outlined text-4xl text-${theme.primaryColor}`}>{theme.icon}</span>
                 </div>
                 <h3 className="text-2xl font-bold text-text-primary mb-2">Nenhuma Turma Selecionada</h3>
                 <p className="text-text-muted text-center max-w-sm mb-8">Selecione uma turma no menu superior para gerenciar os alunos.</p>
-            </div>
+            </motion.div>
         );
     }
 
     return (
-        <div className="max-w-[1200px] mx-auto flex flex-col gap-4 md:gap-8 animate-in fade-in duration-500 pb-20 lg:pb-12">
+        <motion.div
+            variants={containerVariants}
+            initial="initial"
+            animate="enter"
+            className="max-w-[1200px] mx-auto flex flex-col gap-4 md:gap-8 pb-20 lg:pb-12"
+        >
             {/* HEADER AREA */}
 
             {/* 1. MOBILE HEADER (Compact, Action-Focused) */}
-            <div className="md:hidden flex flex-col gap-3 w-full animate-in slide-in-from-top-2 duration-300">
+            <motion.div variants={itemVariants} className="md:hidden flex flex-col gap-3 w-full">
                 {mode === 'manage' && selectedIds.length > 0 ? (
                     /* Mobile Bulk Actions (Replaces Title) */
-                    <div className="bg-surface-card p-3 rounded-xl border border-border-default shadow-sm flex items-center gap-2 animate-in fade-in zoom-in">
+                    <motion.div variants={itemVariants} className="bg-surface-card p-3 rounded-xl border border-border-default shadow-sm flex items-center gap-2">
                         <button
                             onClick={() => setIsBulkTransferring(true)}
                             className="flex-1 flex items-center justify-center gap-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-bold h-10 px-2 rounded-lg text-xs"
@@ -411,7 +404,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                             <span className="material-symbols-outlined text-lg">delete</span>
                             Remover
                         </button>
-                    </div>
+                    </motion.div>
                 ) : (
                     /* Normal Mobile Header */
                     <>
@@ -449,7 +442,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                         </div>
                     </>
                 )}
-            </div>
+            </motion.div>
 
             {/* 2. DESKTOP HEADER (Original Card Style - Hidden on Mobile) */}
             <div className={`hidden md:flex bg-surface-card p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-border-default flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group`}>
@@ -469,7 +462,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                     {mode === 'manage' ? (
                         <>
                             {selectedIds.length > 0 ? (
-                                <div className="flex flex-row items-center gap-2 animate-in fade-in zoom-in w-full">
+                                <motion.div variants={itemVariants} className="flex flex-row items-center gap-2 w-full">
                                     <button
                                         onClick={() => setIsBulkTransferring(true)}
                                         className="flex-1 flex items-center justify-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-600 font-bold h-10 md:h-12 px-2 rounded-xl transition-all active:scale-95 text-xs md:text-base"
@@ -484,7 +477,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                         <span className="material-symbols-outlined text-lg">delete</span>
                                         <span className="truncate">Remover</span>
                                     </button>
-                                </div>
+                                </motion.div>
                             ) : (
                                 <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
                                     <button
@@ -518,8 +511,12 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             {/* Bulk Import Modal */}
             {
                 isImporting && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 animate-in fade-in duration-300">
-                        <div className="bg-white dark:bg-slate-900 rounded-[32px] w-full max-w-2xl p-6 md:p-8 shadow-2xl animate-in zoom-in-95 duration-300 border-2 border-border-default max-h-[90dvh] overflow-y-auto custom-scrollbar flex flex-col">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-white dark:bg-slate-900 rounded-[32px] w-full max-w-2xl p-6 md:p-8 shadow-2xl border-2 border-border-default max-h-[90dvh] overflow-y-auto custom-scrollbar flex flex-col"
+                        >
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="size-12 rounded-2xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 theme-text-primary">
                                     <span className="material-symbols-outlined">publish</span>
@@ -610,14 +607,17 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     )}
                                 </button>
                             </div>
-                        </div>
+                        </motion.div>
                     </div>
                 )
             }
 
             {
                 isAdding && (
-                    <div className={`bg-${theme.primaryColor}/5 border-2 border-dashed border-${theme.primaryColor}/20 p-4 sm:p-8 rounded-3xl animate-in fade-in slide-in-from-top-4 duration-300`}>
+                    <motion.div
+                        variants={itemVariants}
+                        className={`bg-${theme.primaryColor}/5 border-2 border-dashed border-${theme.primaryColor}/20 p-4 sm:p-8 rounded-3xl`}
+                    >
                         <div className="flex items-center gap-3 mb-4 sm:mb-6">
                             <span className={`material-symbols-outlined text-${theme.primaryColor}`}>person_add</span>
                             <h4 className="font-black text-text-primary uppercase tracking-widest text-sm">Adicionar Novo Aluno</h4>
@@ -649,14 +649,19 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 )
             }
 
             {/* OCR Cropper Overlay */}
             <AnimatePresence>
                 {showCropper && (
-                    <div className="fixed inset-0 z-[110] flex flex-col bg-slate-950 animate-in fade-in duration-300">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[110] flex flex-col bg-slate-950"
+                    >
                         <div className="flex-1 relative flex p-4 overflow-auto custom-scrollbar">
                             {ocrImage && (
                                 <ReactCrop
@@ -706,7 +711,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 Arraste os cantos ou a área para selecionar a coluna de nomes
                             </p>
                         </div>
-                    </div>
+                    </motion.div>
                 )}
             </AnimatePresence>
 
@@ -714,7 +719,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
                 {mode === 'report' ? (
                     /* REPORT MODE: GRID LAYOUT */
-                    <div className="flex flex-col gap-6 animate-in fade-in duration-700">
+                    <motion.div variants={containerVariants} className="flex flex-col gap-6">
 
                         {/* Search Bar */}
                         <div className="relative w-full max-w-md mx-auto mb-2">
@@ -739,8 +744,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
                         <motion.div
                             variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
+                            // initial/animate inherited from parent
                             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                         >
                             {students
@@ -800,7 +804,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     ))
                             )}
                         </motion.div>
-                    </div>
+                    </motion.div>
                 ) : (
                     /* MANAGE MODE: RESPONSIVE LAYOUT (Card List on Mobile, Table on Desktop) */
                     <div className="flex flex-col">
@@ -818,6 +822,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                             ) : (
                                 students.map((student) => (
                                     <motion.div
+                                        variants={itemVariants}
                                         layoutId={`student-row-mobile-${student.id}`}
                                         key={student.id}
                                         className={`group relative overflow-hidden transition-all duration-200 border-b border-border-subtle last:border-0 ${selectedIds.includes(student.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card'}`}
@@ -846,7 +851,12 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                             {/* Content (Name) */}
                                             <div className="flex-1 min-w-0 flex items-center">
                                                 {editingId === student.id ? (
-                                                    <div className="flex items-center gap-2 w-full animate-in fade-in zoom-in-95">
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0.95 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        transition={{ duration: 0.2 }}
+                                                        className="flex items-center gap-2 w-full"
+                                                    >
                                                         <input
                                                             type="text"
                                                             value={editName}
@@ -862,7 +872,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                         >
                                                             <span className="material-symbols-outlined text-sm">check</span>
                                                         </button>
-                                                    </div>
+                                                    </motion.div>
                                                 ) : (
                                                     <h3 className="font-bold text-text-primary text-sm leading-tight line-clamp-2 capitalize break-words">
                                                         {student.name.toLowerCase()}
@@ -936,8 +946,9 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                             </tr>
                                         ) : (
                                             students.map((student) => (
-                                                <tr
+                                                <motion.tr
                                                     key={student.id}
+                                                    variants={itemVariants}
                                                     className={`group transition-all duration-150 border-b border-border-subtle ${selectedIds.includes(student.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card hover:bg-surface-subtle'}`}
                                                 >
                                                     <td className="px-4 py-4">
@@ -958,7 +969,12 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                     </td>
                                                     <td className="px-8 py-4">
                                                         {editingId === student.id ? (
-                                                            <div className="flex items-center gap-3 animate-in fade-in zoom-in-95 duration-200">
+                                                            <motion.div
+                                                                initial={{ opacity: 0, scale: 0.95 }}
+                                                                animate={{ opacity: 1, scale: 1 }}
+                                                                transition={{ duration: 0.2 }}
+                                                                className="flex items-center gap-3"
+                                                            >
                                                                 <input
                                                                     type="text"
                                                                     value={editName}
@@ -971,7 +987,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                                 <button onClick={saveEdit} className="size-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 hover:scale-110 active:scale-95 transition-all">
                                                                     <span className="material-symbols-outlined font-bold">check</span>
                                                                 </button>
-                                                            </div>
+                                                            </motion.div>
                                                         ) : (
                                                             <span className="font-bold text-text-primary text-base group-hover:text-indigo-600 transition-colors">
                                                                 {student.name}
@@ -1003,7 +1019,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                                             </button>
                                                         </div>
                                                     </td>
-                                                </tr>
+                                                </motion.tr>
                                             ))
                                         )}
                                     </tbody>
@@ -1014,17 +1030,19 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                 )}
             </div>
 
-            {transferringStudent && (
-                <TransferStudentModal
-                    isOpen={!!transferringStudent}
-                    onClose={() => setTransferringStudent(null)}
-                    student={transferringStudent}
-                    onSuccess={() => {
-                        refreshStudents();
-                        setTransferringStudent(null);
-                    }}
-                />
-            )}
+            {
+                transferringStudent && (
+                    <TransferStudentModal
+                        isOpen={!!transferringStudent}
+                        onClose={() => setTransferringStudent(null)}
+                        student={transferringStudent}
+                        onSuccess={() => {
+                            refreshStudents();
+                            setTransferringStudent(null);
+                        }}
+                    />
+                )
+            }
 
             <BulkTransferModal
                 isOpen={isBulkTransferring}
@@ -1046,7 +1064,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                 </div>
                 <div className="h-px flex-1 bg-border-subtle"></div>
             </div>
-        </div >
+        </motion.div>
     );
 };
 
