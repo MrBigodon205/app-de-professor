@@ -15,6 +15,9 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate',
+        workbox: {
+          maximumFileSizeToCacheInBytes: 3000000 // Increase to 3MB to avoid build error
+        },
         manifest: {
           name: 'Prof. Acerta+ 3.1',
           short_name: 'Acerta+',
@@ -62,6 +65,15 @@ export default defineConfig(({ mode }) => {
               }
               if (id.includes('@supabase') || id.includes('dexie')) {
                 return 'vendor-db';
+              }
+              if (id.includes('jspdf') || id.includes('react-pdf')) {
+                return 'vendor-pdf';
+              }
+              if (id.includes('tesseract')) {
+                return 'vendor-ocr';
+              }
+              if (id.includes('docx') || id.includes('file-saver')) {
+                return 'vendor-docs';
               }
               return 'vendor-libs'; // Catch-all for other deps
             }
