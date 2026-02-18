@@ -125,11 +125,22 @@ const useTimetableConfig = () => {
         if (!configLoaded || !currentUser) return;
 
         const syncConfig = async () => {
-            // Force Sort Slots before saving
-            const sortedSlots = [...config.slots].sort((a, b) => a.start.localeCompare(b.start));
+            // Force Sort & Dedup Slots before saving
+            // Normalize times to HH:mm to prevent '07:10:00' vs '07:10' dupes
+            const uniqueSlotsMap = new Map<string, TimeSlot>();
+
+            config.slots.forEach(slot => {
+                const normalizedStart = slot.start.slice(0, 5); // Ensure HH:mm
+                if (!uniqueSlotsMap.has(normalizedStart)) {
+                    uniqueSlotsMap.set(normalizedStart, slot);
+                }
+            });
+
+            const sortedSlots = Array.from(uniqueSlotsMap.values()).sort((a, b) => a.start.localeCompare(b.start));
+
             const newConfig = { ...config, slots: sortedSlots };
 
-            // Only update state if needed to avoid loops, but ensure local storage has sorted version
+            // Only update state if needed to avoid loops
             if (JSON.stringify(config.slots) !== JSON.stringify(sortedSlots)) {
                 setConfig(prev => ({ ...prev, slots: sortedSlots }));
             }
@@ -176,14 +187,16 @@ const useTimetableConfig = () => {
             const missingSlots: TimeSlot[] = [];
 
             dbSchedules.forEach(dbItem => {
-                const hasMatch = config.slots.some(s => s.start === dbItem.start_time);
+                const dbStart = dbItem.start_time.slice(0, 5); // Normalize DB time
+                const hasMatch = config.slots.some(s => s.start.slice(0, 5) === dbStart);
+
                 if (!hasMatch) {
                     // Check if we already added this missing slot in this loop
-                    if (!missingSlots.some(s => s.start === dbItem.start_time)) {
+                    if (!missingSlots.some(s => s.start.slice(0, 5) === dbStart)) {
                         missingSlots.push({
-                            id: `recovered-${Date.now()}-${dbItem.start_time.replace(':', '')}`,
-                            start: dbItem.start_time,
-                            end: dbItem.end_time || dbItem.start_time // Fallback
+                            id: `recovered-${Date.now()}-${dbStart.replace(':', '')}`,
+                            start: dbStart, // Use normalized start
+                            end: dbItem.end_time ? dbItem.end_time.slice(0, 5) : dbStart // Fallback and normalize
                         });
                     }
                 }
@@ -191,10 +204,17 @@ const useTimetableConfig = () => {
 
             if (missingSlots.length > 0) {
                 console.log("Recovering missing slots from DB data:", missingSlots);
-                setConfig(prev => ({
-                    ...prev,
-                    slots: [...prev.slots, ...missingSlots].sort((a, b) => a.start.localeCompare(b.start))
-                }));
+                setConfig(prev => {
+                    // Dedup on merge just in case
+                    const mergedMap = new Map();
+                    [...prev.slots, ...missingSlots].forEach(s => mergedMap.set(s.start.slice(0, 5), s));
+                    const mergedSorted = Array.from(mergedMap.values()).sort((a: any, b: any) => a.start.localeCompare(b.start));
+
+                    return {
+                        ...prev,
+                        slots: mergedSorted
+                    };
+                });
                 // The re-run of this effect because of config.slots change will handle the mapping
                 return;
             }
