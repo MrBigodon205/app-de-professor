@@ -73,13 +73,8 @@ const useTimetableConfig = () => {
 
     // Config remains local for now (user preference on viewing slots)
     // Could eventually move to 'user_preferences' table
-    const [config, setConfig] = useState<TimetableConfig>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('timetable_config_v3');
-            return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
-        }
-        return DEFAULT_CONFIG;
-    });
+    const [config, setConfig] = useState<TimetableConfig>(DEFAULT_CONFIG);
+    const [configLoaded, setConfigLoaded] = useState(false);
 
     const [visibleDays, setVisibleDays] = useState(config.days.filter(d => d.enabled));
 
@@ -90,13 +85,66 @@ const useTimetableConfig = () => {
     // Get real classes from context
     const { classes: realClasses, loading: loadingClasses } = useClass();
 
-    // Persist Config Changes locally
+    // 1. Initial Load: Try Remote -> Fallback Local -> Fallback Default
     useEffect(() => {
-        if (typeof window !== 'undefined') {
+        const loadRemoteConfig = async () => {
+            if (!currentUser) return;
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('timetable_config')
+                    .eq('id', currentUser.id)
+                    .single();
+
+                if (error) throw error;
+
+                if (data?.timetable_config) {
+                    console.log("Timetable: Loaded config from Cloud", data.timetable_config);
+                    setConfig(data.timetable_config);
+                } else {
+                    const saved = localStorage.getItem('timetable_config_v3');
+                    if (saved) {
+                        console.log("Timetable: Loaded config from LocalStorage");
+                        setConfig(JSON.parse(saved));
+                    }
+                }
+            } catch (e) {
+                console.error("Timetable: Failed to fetch remote config", e);
+                const saved = localStorage.getItem('timetable_config_v3');
+                if (saved) setConfig(JSON.parse(saved));
+            } finally {
+                setConfigLoaded(true);
+            }
+        };
+
+        loadRemoteConfig();
+    }, [currentUser]);
+
+    // 2. Persist Changes: Sync to LocalStorage & Remote (Supabase)
+    useEffect(() => {
+        if (!configLoaded || !currentUser) return;
+
+        const syncConfig = async () => {
             localStorage.setItem('timetable_config_v3', JSON.stringify(config));
             setVisibleDays(config.days.filter(d => d.enabled));
-        }
-    }, [config]);
+
+            try {
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({ timetable_config: config })
+                    .eq('id', currentUser.id);
+
+                if (error) throw error;
+                console.log("Timetable: Config synced to Cloud");
+            } catch (e) {
+                console.error("Timetable: Failed to sync config to Cloud", e);
+            }
+        };
+
+        // Added small timeout to avoid spamming updates during rapid edits in config modal
+        const timer = setTimeout(syncConfig, 1000);
+        return () => clearTimeout(timer);
+    }, [config, currentUser, configLoaded]);
 
 
     // --- Database Sync Logic ---
@@ -113,18 +161,39 @@ const useTimetableConfig = () => {
 
             console.log("Fetched schedules from DB:", data);
 
+            // AUTO-SLOT RECOVERY:
+            // If we have items in DB that don't match our current config.slots, 
+            // we should probably add those slots to the config automatically to prevent "sumindo"
+            const dbSchedules = data || [];
+            const missingSlots: TimeSlot[] = [];
+
+            dbSchedules.forEach(dbItem => {
+                const hasMatch = config.slots.some(s => s.start === dbItem.start_time);
+                if (!hasMatch) {
+                    // Check if we already added this missing slot in this loop
+                    if (!missingSlots.some(s => s.start === dbItem.start_time)) {
+                        missingSlots.push({
+                            id: `recovered-${Date.now()}-${dbItem.start_time.replace(':', '')}`,
+                            start: dbItem.start_time,
+                            end: dbItem.end_time || dbItem.start_time // Fallback
+                        });
+                    }
+                }
+            });
+
+            if (missingSlots.length > 0) {
+                console.log("Recovering missing slots from DB data:", missingSlots);
+                setConfig(prev => ({
+                    ...prev,
+                    slots: [...prev.slots, ...missingSlots].sort((a, b) => a.start.localeCompare(b.start))
+                }));
+                // The re-run of this effect because of config.slots change will handle the mapping
+                return;
+            }
+
             // Map DB items to UI Items
-            // Note: We need to match existing slots or create ad-hoc items if they don't match exactly?
-            // For now, we attempt to match them to the NEAREST visible slot based on start time string
-
-            const mappedItems: TimetableItem[] = (data || []).map(dbItem => {
-                // Find matching slot by time
-                const slot = config.slots.find(s => s.start === dbItem.start_time); // Loose match on HH:mm string
-
-                // If no exact slot match found, we might want to still show it or just use the time
-                // For simplicity in V1 Sync, we only show items that match configured slot times
-                // Or better: We create a virtual slot ID if needed, but UI depends on config.slots
-
+            const mappedItems: TimetableItem[] = dbSchedules.map(dbItem => {
+                const slot = config.slots.find(s => s.start === dbItem.start_time);
                 const slotId = slot ? slot.id : `adhoc-${dbItem.start_time}`;
 
                 return {
@@ -132,7 +201,7 @@ const useTimetableConfig = () => {
                     dayId: mapDbDayToId(dbItem.day_of_week),
                     slotId: slotId,
                     classId: dbItem.class_id,
-                    subject: dbItem.subject, // DB has subject directly
+                    subject: dbItem.subject,
                     section: dbItem.section || '',
                     startTime: dbItem.start_time,
                     endTime: dbItem.end_time
@@ -143,7 +212,6 @@ const useTimetableConfig = () => {
 
         } catch (err) {
             console.error("Error fetching schedules:", err);
-            // Fallback? No, just empty for now or notify
         } finally {
             setLoadingSchedules(false);
         }

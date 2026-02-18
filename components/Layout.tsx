@@ -247,10 +247,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         {/* NEW: External Floating Sidebar Toggle - Tied to Sidebar Width */}
         <button
           onClick={toggleSidebar}
-          style={{
-            transform: isSidebarCollapsed ? "rotate(0deg)" : "rotate(180deg)"
-          }}
-          className="hidden lg:flex absolute top-4 left-[calc(100%+1rem)] z-[60] items-center justify-center size-11 rounded-full bg-surface-elevated border-2 border-primary/20 text-text-muted hover:text-primary shadow-2xl hover:shadow-primary/30 backdrop-blur-xl active:scale-90 transition-all duration-200 ease-out"
+          className={`hidden lg:flex absolute top-4 left-[calc(100%+1rem)] z-[60] items-center justify-center size-11 rounded-full bg-surface-elevated border-2 border-primary/20 text-text-muted hover:text-primary shadow-2xl hover:shadow-primary/30 backdrop-blur-xl active:scale-90 transition-all duration-200 ease-out ${!isSidebarCollapsed ? 'rotate-180' : 'rotate-0'}`}
           title={isSidebarCollapsed ? "Expandir Menu" : "Recolher Menu"}
         >
           <span className="material-symbols-outlined text-2xl block font-black leading-none">chevron_right</span>

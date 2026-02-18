@@ -141,8 +141,9 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }, [currentUser, activeSubject, fetchClasses]);
 
     const selectSeries = useCallback((id: string) => {
+        const contextKey = activeInstitutionId || 'personal';
         setSelectedSeriesId(id);
-        if (currentUser) localStorage.setItem(`selectedSeriesId_${currentUser.id}`, id);
+        if (currentUser) localStorage.setItem(`selectedSeriesId_${currentUser.id}_${contextKey}`, id);
 
         // Access classes via functional state to avoid dependency on the array
         setClasses(prevClasses => {
@@ -153,10 +154,10 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     // keep current section
                 } else if (target.sections.length > 0) {
                     setSelectedSection(target.sections[0]);
-                    if (currentUser) localStorage.setItem(`selectedSection_${currentUser.id}`, target.sections[0]);
+                    if (currentUser) localStorage.setItem(`selectedSection_${currentUser.id}_${contextKey}`, target.sections[0]);
                 } else {
                     setSelectedSection('');
-                    if (currentUser) localStorage.setItem(`selectedSection_${currentUser.id}`, '');
+                    if (currentUser) localStorage.setItem(`selectedSection_${currentUser.id}_${contextKey}`, '');
                 }
             }
             return prevClasses; // Don't mutate classes
@@ -164,9 +165,10 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }, [currentUser, selectedSection]);
 
     const selectSection = useCallback((section: string) => {
+        const contextKey = activeInstitutionId || 'personal';
         setSelectedSection(section);
-        if (currentUser) localStorage.setItem(`selectedSection_${currentUser.id}`, section);
-    }, [currentUser]);
+        if (currentUser) localStorage.setItem(`selectedSection_${currentUser.id}_${contextKey}`, section);
+    }, [currentUser, activeInstitutionId]);
 
     const addClass = useCallback(async (name: string) => {
         if (!currentUser) return;

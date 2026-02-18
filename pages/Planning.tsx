@@ -32,25 +32,32 @@ const PlanItem = React.memo(({ plan, isSelectionMode, isSelected, selectedPlanId
                 : (selectedPlanId === plan.id ? `bg-white/60 dark:bg-slate-900/80 backdrop-blur-xl border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white/40 dark:bg-slate-900/60 backdrop-blur-xl border-white/20 dark:border-white/5 hover:border-slate-300 dark:hover:border-slate-600')
                 }`}
         >
-            <div
-                onClick={(e) => { e.stopPropagation(); toggleSelection(plan.id); }}
-                className={`absolute left-4 top-1/2 -translate-y-1/2 size-6 rounded-lg border-2 flex items-center justify-center transition-all z-10 backdrop-blur-md ${isSelected ? 'theme-bg-primary border-primary shadow-lg shadow-primary/20 scale-105' : 'border-slate-400 dark:border-slate-500 bg-white/60 dark:bg-slate-800/60 hover:border-primary hover:bg-white dark:hover:bg-slate-700'}`}
-                role="button"
-                aria-label={`Selecionar plano ${plan.name}, ${isSelected ? 'selecionado' : 'não selecionado'}`}
-                tabIndex={0}
-            >
-                {isSelected && (
-                    <motion.span
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="material-symbols-outlined text-white text-lg font-black"
-                    >
-                        check
-                    </motion.span>
-                )}
-            </div>
-            <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedPlanId === plan.id ? 'theme-bg-primary' : 'bg-transparent group-hover:bg-slate-200'} transition-all z-20`}></div>
-            <div className={`pl-4 w-full transition-all duration-300 ${isSelectionMode ? 'pl-16 landscape:pl-16' : 'landscape:pl-0'}`}>
+            {isSelectionMode && (
+                <div
+                    onClick={(e) => { e.stopPropagation(); toggleSelection(plan.id); }}
+                    className={`absolute left-4 top-1/2 -translate-y-1/2 size-6 rounded-lg border-2 flex items-center justify-center transition-all z-10 backdrop-blur-md ${isSelected ? 'theme-bg-primary border-primary shadow-lg shadow-primary/20 scale-105' : 'border-slate-400 dark:border-slate-500 bg-white/60 dark:bg-slate-800/60 hover:border-primary hover:bg-white dark:hover:bg-slate-700'}`}
+                    role="button"
+                    aria-label={`Selecionar plano ${plan.name}, ${isSelected ? 'selecionado' : 'não selecionado'}`}
+                    tabIndex={0}
+                >
+                    {isSelected && (
+                        <motion.span
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="material-symbols-outlined text-white text-lg font-black"
+                        >
+                            check
+                        </motion.span>
+                    )}
+                </div>
+            )}
+
+            {/* Indicador lateral sutil quando selecionado individualmente (não em modo de seleção múltipla) */}
+            {!isSelectionMode && (
+                <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedPlanId === plan.id ? 'theme-bg-primary' : 'bg-transparent group-hover:bg-slate-200'} transition-all z-20`}></div>
+            )}
+
+            <div className={`transition-all duration-300 ${isSelectionMode ? 'pl-10 landscape:pl-10' : 'pl-0'}`}>
 
                 <div className="flex justify-between items-start mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
                     <h4 className={`font-bold text-base md:text-lg truncate pr-2 flex-1 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
@@ -89,6 +96,7 @@ const PlanItem = React.memo(({ plan, isSelectionMode, isSelected, selectedPlanId
                 </div>
             </div>
         </motion.button>
+
     );
 });
 

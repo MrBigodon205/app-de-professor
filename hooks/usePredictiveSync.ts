@@ -77,14 +77,8 @@ export const usePredictiveSync = () => {
                         }
                     }
                 } else {
-                    const currentKey = `${selectedSeriesIdRef.current}-${selectedSectionRef.current}`;
-
-                    if (lastAutoSelectedRef.current && currentKey === lastAutoSelectedRef.current) {
-                        console.log("Predictive Sync: releasing auto-selection (Free Time)");
-                        selectSeries('');
-                        selectSection('');
-                        lastAutoSelectedRef.current = null;
-                    }
+                    // We no longer release selection on free time to avoid "vanishing" UI
+                    // lastAutoSelectedRef.current = null;
                 }
 
             } catch (e) {

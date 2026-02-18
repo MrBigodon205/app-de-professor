@@ -519,7 +519,7 @@ export const Observations: React.FC = () => {
                                         <div className={`student-avatar student-avatar-lg shrink-0 bg-gradient-to-br ${selectedStudent.color || `from-indigo-600 to-indigo-800`}`}>
                                             {selectedStudent.initials}
                                         </div>
-                                        <div className="flex flex-col min-w-0 max-w-[150px] sm:max-w-none lg:max-w-[200px] xl:max-w-none">
+                                        <div className="flex-1 min-w-0 max-w-[min(70vw,400px)] sm:max-w-none lg:max-w-[200px] xl:max-w-none">
                                             <h1 className="text-xl sm:text-3xl landscape:text-base font-black text-text-primary tracking-tight leading-none mb-1 sm:mb-2 landscape:mb-0 truncate pr-2">{selectedStudent.name}</h1>
                                             <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-sm font-bold text-text-muted landscape:hidden truncate">
                                                 <span className="bg-surface-subtle px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl font-mono text-text-secondary shrink-0">#{selectedStudent.number.padStart(2, '0')}</span>
@@ -532,7 +532,7 @@ export const Observations: React.FC = () => {
                             </div>
 
                             {/* Tabs */}
-                            <div className="flex p-1.5 bg-surface-subtle rounded-2xl shadow-inner border-2 border-border-subtle w-full xl:w-auto overflow-x-auto scrollbar-none shrink-0" data-tour="obs-tabs" style={{ minWidth: 'fit-content' }}>
+                            <div className="flex p-1.5 bg-surface-subtle rounded-2xl shadow-inner border-2 border-border-subtle w-full xl:w-auto overflow-x-auto scrollbar-none shrink-0 min-w-fit" data-tour="obs-tabs">
                                 <button
                                     onClick={() => setActiveTab('occurrences')}
                                     className={`flex-1 xl:flex-none px-4 lg:px-6 xl:px-10 py-2.5 sm:py-4 landscape:py-1.5 rounded-xl sm:rounded-[18px] text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 xl:gap-3 whitespace-nowrap z-20 ${activeTab === 'occurrences' ? `bg-surface-card text-${theme.primaryColor} shadow-xl border-b-2 border-${theme.primaryColor}` : 'text-text-muted hover:text-text-primary hover:bg-surface-card/30'}`}
