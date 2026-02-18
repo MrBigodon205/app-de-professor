@@ -57,33 +57,33 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
-              // 1. Core React ecosystem - Keep strictly minimal to avoid circular deps
-              if (/node_modules[\\/](react|react-dom|react-router-dom|scheduler|prop-types|use-sync-external-store)[\\/]/.test(id)) {
-                return 'vendor-core';
-              }
-              // 2. Framer Motion (Heavy UI lib)
-              if (id.includes('framer-motion')) {
-                return 'vendor-framer';
-              }
-              // 3. Database & Auth
+              // SAFE CHUNKING STRATEGY: 
+              // Only split truly independent, heavy libraries. 
+              // Let Vite handle React core and shared dependencies automatically to prevent circular deps.
+
+              // 1. Database & Auth (Stand-alone)
               if (id.includes('@supabase') || id.includes('dexie')) {
                 return 'vendor-db';
               }
-              // 4. PDF Generation (Heavy)
+              // 2. PDF Generation (Very Heavy & Independent)
               if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('react-pdf') || id.includes('pdfjs-dist')) {
                 return 'vendor-pdf';
               }
-              // 5. OCR & Docs (Heavy)
-              if (id.includes('tesseract') || id.includes('docx') || id.includes('file-saver')) {
+              // 3. OCR (Very Heavy & Independent)
+              if (id.includes('tesseract')) {
+                return 'vendor-ocr';
+              }
+              // 4. Docs Generation (Heavy & Independent)
+              if (id.includes('docx') || id.includes('file-saver')) {
                 return 'vendor-docs';
               }
-              // 6. UI Libraries (Charts, Editors, Components)
-              if (id.includes('recharts') || id.includes('react-quill-new') || id.includes('lucide-react') || id.includes('react-joyride') || id.includes('react-easy-crop') || id.includes('react-image-crop') || id.includes('react-webcam')) {
-                return 'vendor-ui-libs';
+              // 5. Rich Text Editor (Heavy)
+              if (id.includes('react-quill-new')) {
+                return 'vendor-editor';
               }
 
-              // 7. Everything else goes to vendor-libs
-              return 'vendor-libs';
+              // CRITICAL: Do NOT bundle React or UI libs manually. 
+              // Leaving them to default ensures correct loading order and shared chunks.
             }
           }
         }
