@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         workbox: {
-          maximumFileSizeToCacheInBytes: 3000000 // Increase to 3MB to avoid build error
+          maximumFileSizeToCacheInBytes: 5000000 // Increase to 5MB to be safe
         },
         manifest: {
           name: 'Prof. Acerta+ 3.1',
@@ -57,25 +57,33 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              // 1. Core React ecosystem - Keep strictly minimal to avoid circular deps
+              if (/node_modules[\\/](react|react-dom|react-router-dom|scheduler|prop-types|use-sync-external-store)[\\/]/.test(id)) {
                 return 'vendor-core';
               }
+              // 2. Framer Motion (Heavy UI lib)
               if (id.includes('framer-motion')) {
                 return 'vendor-framer';
               }
+              // 3. Database & Auth
               if (id.includes('@supabase') || id.includes('dexie')) {
                 return 'vendor-db';
               }
-              if (id.includes('jspdf') || id.includes('react-pdf')) {
+              // 4. PDF Generation (Heavy)
+              if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('react-pdf') || id.includes('pdfjs-dist')) {
                 return 'vendor-pdf';
               }
-              if (id.includes('tesseract')) {
-                return 'vendor-ocr';
-              }
-              if (id.includes('docx') || id.includes('file-saver')) {
+              // 5. OCR & Docs (Heavy)
+              if (id.includes('tesseract') || id.includes('docx') || id.includes('file-saver')) {
                 return 'vendor-docs';
               }
-              return 'vendor-libs'; // Catch-all for other deps
+              // 6. UI Libraries (Charts, Editors, Components)
+              if (id.includes('recharts') || id.includes('react-quill-new') || id.includes('lucide-react') || id.includes('react-joyride') || id.includes('react-easy-crop') || id.includes('react-image-crop') || id.includes('react-webcam')) {
+                return 'vendor-ui-libs';
+              }
+
+              // 7. Everything else goes to vendor-libs
+              return 'vendor-libs';
             }
           }
         }
