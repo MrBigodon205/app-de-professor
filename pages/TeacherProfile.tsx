@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { Subject } from '../types';
 import { motion } from 'framer-motion';
-import { containerVariants, itemVariants } from '../components/PageTransition';
+import { VARIANTS } from '../constants/motion';
 
 export const TeacherProfile: React.FC = () => {
     const { currentUser, updateProfile } = useAuth();
@@ -106,9 +106,9 @@ export const TeacherProfile: React.FC = () => {
     return (
 
         <motion.div
-            variants={containerVariants}
+            variants={VARIANTS.staggerContainer}
             initial="initial"
-            animate="enter"
+            animate="animate"
             className="max-w-[1200px] mx-auto flex flex-col gap-8"
         >
             {/* Header / Breadcrumb */}
@@ -131,7 +131,7 @@ export const TeacherProfile: React.FC = () => {
 
             {message && (
                 <motion.div
-                    variants={itemVariants}
+                    variants={VARIANTS.fadeUp}
                     className={`p-4 rounded-2xl flex items-center gap-3 ${message.type === 'success'
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400'
                         : 'bg-rose-50 text-rose-700 border border-rose-100 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400'}`}
@@ -199,7 +199,7 @@ export const TeacherProfile: React.FC = () => {
 
                     {isEditingPhoto && (
                         <motion.div
-                            variants={itemVariants}
+                            variants={VARIANTS.fadeUp}
                             className="bg-surface-card p-6 rounded-[28px] shadow-lg border border-border-default"
                         >
                             <label className="text-xs font-black uppercase tracking-widest text-text-muted mb-3 block">URL da Foto de Perfil</label>

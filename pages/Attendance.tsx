@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
-import { containerVariants, itemVariants } from '../components/PageTransition';
+import { VARIANTS } from '../constants/motion';
+import { AnimatedRow } from '../components/ui/AnimatedRow';
+import { AnimatedCard } from '../components/ui/AnimatedCard';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -743,9 +745,9 @@ export const Attendance: React.FC = () => {
     if (!selectedSeriesId) {
         return (
             <motion.div
-                variants={containerVariants}
+                variants={VARIANTS.staggerContainer}
                 initial="initial"
-                animate="enter"
+                animate="animate"
                 className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800"
             >
                 <div className={`size-20 rounded-2xl bg-${theme.primaryColor}/10 flex items-center justify-center mb-6`}>
@@ -759,9 +761,9 @@ export const Attendance: React.FC = () => {
 
     return (
         <motion.div
-            variants={containerVariants}
+            variants={VARIANTS.staggerContainer}
             initial="initial"
-            animate="enter"
+            animate="animate"
             className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6 pb-6 lg:pb-12"
         >
             {/* Header Control */}
@@ -894,20 +896,9 @@ export const Attendance: React.FC = () => {
                                 <th className="px-3 sm:px-8 py-4 sm:py-5 text-[10px] font-black uppercase text-text-muted tracking-widest text-center">Registro</th>
                             </tr>
                         </thead>
-                        <motion.tbody
-                            variants={{
-                                hidden: { opacity: 0 },
-                                visible: {
-                                    opacity: 1,
-                                    transition: { staggerChildren: 0.05 }
-                                }
-                            }}
-                            initial="hidden"
-                            animate="visible"
-                            className="divide-y divide-border-subtle"
-                        >
+                        <tbody className="divide-y divide-border-subtle">
                             {students.length > 0 ? (
-                                students.map((s) => (
+                                students.map((s, i) => (
                                     <AttendanceRow
                                         key={s.id}
                                         student={s}
@@ -929,7 +920,7 @@ export const Attendance: React.FC = () => {
                                     </td>
                                 </tr>
                             )}
-                        </motion.tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -1007,8 +998,7 @@ interface AttendanceRowProps {
 // Mobile Card Component
 const MobileAttendanceCard = React.memo(({ student: s, status, onStatusChange, theme }: AttendanceRowProps) => {
     return (
-        <motion.div
-            variants={itemVariants}
+        <AnimatedCard
             className="bg-surface-card border border-border-default rounded-xl p-3 shadow-sm"
         >
             <div className="flex items-center gap-3 mb-3">
@@ -1051,22 +1041,14 @@ const MobileAttendanceCard = React.memo(({ student: s, status, onStatusChange, t
                     color="slate"
                 />
             </div>
-        </motion.div>
+        </AnimatedCard>
     );
 });
 
 const AttendanceRow = React.memo(({ student: s, status, onStatusChange, theme }: AttendanceRowProps) => {
     return (
-        <motion.tr
-            variants={{
-                hidden: { opacity: 0, y: 8 },
-                visible: {
-                    opacity: 1, y: 0,
-                    transition: { type: 'spring', stiffness: 160, damping: 22 }
-                }
-            }}
-            layoutId={`row-${s.id}`}
-            className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all"
+        <AnimatedRow
+            className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all border-b border-border-subtle last:border-0"
         >
             <td className="px-3 sm:px-8 py-3 sm:py-4 landscape:py-1.5 landscape:px-2 text-center sm:text-left">
                 <span className="font-mono text-xs sm:text-sm font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 sm:px-2 py-1 rounded-lg inline-block min-w-[2.2rem] text-center">
@@ -1117,6 +1099,6 @@ const AttendanceRow = React.memo(({ student: s, status, onStatusChange, theme }:
                     />
                 </div>
             </td>
-        </motion.tr>
+        </AnimatedRow>
     );
 });

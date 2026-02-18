@@ -50,7 +50,7 @@ export interface Activity {
   date: string;
   startDate?: string;
   endDate?: string;
-  description: string;
+  description?: string;
   files: AttachmentFile[];
   completions?: string[];
   userId: string;

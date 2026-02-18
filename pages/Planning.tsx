@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { containerVariants, itemVariants } from '../components/PageTransition';
+import { VARIANTS } from '../constants/motion';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -11,13 +11,86 @@ import DOMPurify from 'dompurify';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { DatePicker } from '../components/DatePicker';
 import { useDebounce } from '../hooks/useDebounce';
-import { jsPDF } from 'jspdf';
+// import { jsPDF } from 'jspdf'; // Dynamic import used instead
 import { DynamicSelect } from '../components/DynamicSelect';
 import FileViewerModal from '../components/FileViewerModal';
 import { FileImporterModal } from '../components/FileImporterModal';
 import { PlanningTemplateRenderer } from '../components/PlanningTemplateRenderer';
 import { PlanningTemplate, PlanningTemplateElement } from '../types';
 import { useToast } from '../components/Toast';
+
+// --- MEMOIZED COMPONENT ---
+const PlanItem = React.memo(({ plan, isSelectionMode, isSelected, selectedPlanId, toggleSelection, handleSelectPlan, theme }: any) => {
+    const isChecked: "true" | "false" = isSelected ? "true" : "false";
+    return (
+        <motion.button
+            layoutId={`plan-card-${plan.id}`}
+            variants={VARIANTS.fadeUp}
+            onClick={() => isSelectionMode ? toggleSelection(plan.id) : handleSelectPlan(plan)}
+            className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm ${isSelectionMode
+                ? (isSelected ? `bg-${theme.primaryColor}/5 border-${theme.primaryColor} dark:bg-${theme.primaryColor}/20` : 'bg-white/40 dark:bg-slate-900/60 backdrop-blur-xl border-white/20 dark:border-white/5')
+                : (selectedPlanId === plan.id ? `bg-white/60 dark:bg-slate-900/80 backdrop-blur-xl border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white/40 dark:bg-slate-900/60 backdrop-blur-xl border-white/20 dark:border-white/5 hover:border-slate-300 dark:hover:border-slate-600')
+                }`}
+        >
+            <div
+                onClick={(e) => { e.stopPropagation(); toggleSelection(plan.id); }}
+                className={`absolute left-4 top-1/2 -translate-y-1/2 size-6 rounded-lg border-2 flex items-center justify-center transition-all z-10 backdrop-blur-md ${isSelected ? 'theme-bg-primary border-primary shadow-lg shadow-primary/20 scale-105' : 'border-slate-400 dark:border-slate-500 bg-white/60 dark:bg-slate-800/60 hover:border-primary hover:bg-white dark:hover:bg-slate-700'}`}
+                role="button"
+                aria-label={`Selecionar plano ${plan.name}, ${isSelected ? 'selecionado' : 'não selecionado'}`}
+                tabIndex={0}
+            >
+                {isSelected && (
+                    <motion.span
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="material-symbols-outlined text-white text-lg font-black"
+                    >
+                        check
+                    </motion.span>
+                )}
+            </div>
+            <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedPlanId === plan.id ? 'theme-bg-primary' : 'bg-transparent group-hover:bg-slate-200'} transition-all z-20`}></div>
+            <div className={`pl-4 w-full transition-all duration-300 ${isSelectionMode ? 'pl-16 landscape:pl-16' : 'landscape:pl-0'}`}>
+
+                <div className="flex justify-between items-start mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
+                    <h4 className={`font-bold text-base md:text-lg truncate pr-2 flex-1 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
+                    <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
+                </div>
+                <div className="flex flex-wrap gap-2 landscape:hidden">
+                    {plan.section && (
+                        <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
+                            Turma {plan.section}
+                        </span>
+                    )}
+                    {plan.activity_type && (
+                        <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold flex items-center gap-1 ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                            <span className="material-symbols-outlined text-[0.7rem]">
+                                {plan.activity_type.includes('Expositiva') ? 'school' :
+                                    plan.activity_type.includes('Prática') ? 'science' :
+                                        plan.activity_type.includes('Grupo') ? 'groups' :
+                                            plan.activity_type.includes('Avaliação') ? 'assignment_turned_in' :
+                                                'category'}
+                            </span>
+                            {plan.activity_type}
+                        </span>
+                    )}
+                    {plan.theme_area && plan.theme_area !== 'Geral' && (
+                        <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                            {plan.theme_area}
+                        </span>
+                    )}
+                    <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                        {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                    </span>
+                </div>
+                {/* Mobile Landscape Only Date */}
+                <div className="hidden landscape:block text-xs text-slate-400 mt-1">
+                    {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                </div>
+            </div>
+        </motion.button>
+    );
+});
 
 export const Planning: React.FC = () => {
     const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
@@ -63,6 +136,7 @@ export const Planning: React.FC = () => {
     const [formThemeArea, setFormThemeArea] = useState('');
     const [formCoordinator, setFormCoordinator] = useState('');
     const [formActivityType, setFormActivityType] = useState('');
+    const [customActivityType, setCustomActivityType] = useState('');
     const [formSubject, setFormSubject] = useState('');
     const [filterSection, setFilterSection] = useState('');
     const [viewerFile, setViewerFile] = useState<{ name: string; url: string; } | null>(null);
@@ -305,12 +379,16 @@ export const Planning: React.FC = () => {
                 // Only auto-select if we are NOT currently in a form (creating or editing)
                 // This prevents "Creating" (showForm=true, selectedPlanId=null) from being closed
                 // Only auto-select first on Desktop if nothing selected and not creating
+                // Only auto-select first on Desktop if nothing selected and not creating
+                // DISABLED BY USER REQUEST: Start with no selection
+                /*
                 if (!selectedPlanId && !showForm && window.innerWidth >= 1024) {
                     if (formatted.length > 0 && selectedPlanId !== formatted[0].id) {
                         setSelectedPlanId(formatted[0].id);
                         setViewMode(true);
                     }
                 }
+                */
             } else {
                 // No plans for this series, ensure reset
                 if (selectedPlanId !== null) {
@@ -401,6 +479,7 @@ export const Planning: React.FC = () => {
         setFormThemeArea('');
         setFormCoordinator('');
         setFormActivityType('');
+        setCustomActivityType('');
         setFormSubject(activeSubject || '');
         clearDraft();
     };
@@ -423,41 +502,7 @@ export const Planning: React.FC = () => {
 
         // Check for template data
         // Check for template data
-        const tmpl = plan.template_id ? templates.find(t => t.id === plan.template_id) : null;
-        if (tmpl && tmpl.type === 'file') {
-            setSelectedTemplate(tmpl);
-            setShowForm(true);
-            setViewMode(false);
-            setFormTitle(plan.title);
-            setFormStartDate(plan.startDate);
-            setFormEndDate(plan.endDate);
-            setFormSection(plan.section || '');
-            setFormFiles(plan.files || []);
-            setFormDescription(plan.description || '');
-            setFormSeriesId(plan.seriesId);
-            setFormSubject(plan.subject || activeSubject || '');
-            return;
-        }
 
-        const dataMatch = plan.description?.match(/^<!-- DATA: ({.*}) -->/);
-        if (dataMatch && plan.template_id) {
-            try {
-                const storedValues = JSON.parse(dataMatch[1]);
-                setTemplateValues(storedValues);
-                // Find template (if not already found above)
-                const template = templates.find(t => t.id === plan.template_id);
-                if (template) {
-                    setSelectedTemplate(template);
-                    setShowForm(true);
-                    setViewMode(false);
-                    // Set basic fields just in case they are needed for list view
-                    setFormTitle(plan.title);
-                    setFormStartDate(plan.startDate);
-                    setFormEndDate(plan.endDate);
-                    return;
-                }
-            } catch (e) { console.error("Error parsing saved template data", e); }
-        }
 
         setShowForm(true);
         setViewMode(false);
@@ -477,7 +522,18 @@ export const Planning: React.FC = () => {
         setFormDuration(plan.duration || '');
         setFormThemeArea(plan.theme_area || '');
         setFormCoordinator(plan.coordinator_name || '');
-        setFormActivityType(plan.activity_type || '');
+
+        const standardTypes = ['Aula Expositiva', 'Atividade Prática', 'Trabalho em Grupo', 'Avaliação'];
+        if (standardTypes.includes(plan.activity_type || '')) {
+            setFormActivityType(plan.activity_type || '');
+            setCustomActivityType('');
+        } else if (plan.activity_type) {
+            setFormActivityType('Outro');
+            setCustomActivityType(plan.activity_type);
+        } else {
+            setFormActivityType('');
+            setCustomActivityType('');
+        }
         setFormSubject(plan.subject || currentUser?.subject || '');
     };
 
@@ -502,7 +558,18 @@ export const Planning: React.FC = () => {
         setFormDuration(plan.duration || '');
         setFormThemeArea(plan.theme_area || '');
         setFormCoordinator(plan.coordinator_name || '');
-        setFormActivityType(plan.activity_type || '');
+
+        const standardTypes = ['Aula Expositiva', 'Atividade Prática', 'Trabalho em Grupo', 'Avaliação'];
+        if (standardTypes.includes(plan.activity_type || '')) {
+            setFormActivityType(plan.activity_type || '');
+            setCustomActivityType('');
+        } else if (plan.activity_type) {
+            setFormActivityType('Outro');
+            setCustomActivityType(plan.activity_type);
+        } else {
+            setFormActivityType('');
+            setCustomActivityType('');
+        }
         setFormSubject(plan.subject || currentUser?.subject || '');
     };
 
@@ -578,7 +645,7 @@ export const Planning: React.FC = () => {
                 duration: formDuration,
                 theme_area: formThemeArea,
                 coordinator_name: formCoordinator,
-                activity_type: formActivityType,
+                activity_type: formActivityType === 'Outro' ? customActivityType : formActivityType,
                 subject: formSubject
             };
 
@@ -604,7 +671,7 @@ export const Planning: React.FC = () => {
             const { data: savedData, error } = await supabase.from('plans').upsert({
                 ...planData,
                 ...(finalId ? { id: finalId } : {}),
-                template_id: selectedTemplate?.id || null // Link template if active
+
             }).select();
 
             if (error) throw error;
@@ -767,6 +834,7 @@ export const Planning: React.FC = () => {
     const handleExportPDF = async () => {
         if (!currentPlan) return;
         setLoading(true);
+        const { jsPDF } = await import('jspdf');
 
         try {
             // Helper to strip HTML and decode entities
@@ -1248,9 +1316,9 @@ export const Planning: React.FC = () => {
 
     return (
         <motion.main
-            variants={containerVariants}
+            variants={VARIANTS.staggerContainer}
             initial="initial"
-            animate="enter"
+            animate="animate"
             className="flex flex-col lg:flex-row gap-4 md:gap-6 max-w-[1600px] mx-auto pb-24 md:pb-8 relative fluid-p-m fluid-gap-m px-4 md:px-0 w-full h-full overflow-hidden"
         >
             {/* Landscape FAB for New Plan */}
@@ -1375,15 +1443,15 @@ export const Planning: React.FC = () => {
                 )}
 
                 <motion.div
-                    variants={containerVariants}
+                    variants={VARIANTS.staggerContainer}
                     initial="initial"
-                    animate="enter"
+                    animate="animate"
                     className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-0"
                 >
 
                     {loading ? (
                         Array.from({ length: 5 }).map((_, i) => (
-                            <div key={i} className="w-full h-24 rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 p-4 animate-pulse">
+                            <div key={i} className="w-full h-24 rounded-2xl bg-white/20 dark:bg-slate-900/40 border border-white/10 p-4 animate-pulse">
                                 <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-3"></div>
                                 <div className="flex gap-2">
                                     <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
@@ -1395,61 +1463,16 @@ export const Planning: React.FC = () => {
                         <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 min-h-[200px] flex items-center justify-center">Nenhuma aula encontrada.</div>
                     ) : (
                         displayedPlans.map((plan, idx) => (
-                            <motion.button
+                            <PlanItem
                                 key={plan.id}
-                                variants={itemVariants}
-                                layoutId={`plan-card-${plan.id}`}
-                                onClick={() => isSelectionMode ? toggleSelection(plan.id) : handleSelectPlan(plan)}
-                                className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm ${isSelectionMode
-                                    ? (selectedIds.includes(plan.id) ? `bg-${theme.primaryColor}/5 border-${theme.primaryColor} dark:bg-${theme.primaryColor}/20` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800')
-                                    : (selectedPlanId === plan.id ? `bg-white dark:bg-surface-dark border-${theme.primaryColor} shadow-${theme.primaryColor}/10 ring-1 ring-${theme.primaryColor}` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600')
-                                    }`}
-                            >
-                                {isSelectionMode && (
-                                    <div className={`absolute left-4 top-1/2 -translate-y-1/2 size-5 rounded border-2 flex items-center justify-center transition-all z-10 ${selectedIds.includes(plan.id) ? `bg-${theme.primaryColor} border-${theme.primaryColor}` : 'border-slate-300 bg-white'}`}>
-                                        {selectedIds.includes(plan.id) && <span className="material-symbols-outlined text-sm text-white font-bold">check</span>}
-                                    </div>
-                                )}
-                                <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedPlanId === plan.id ? 'theme-bg-primary' : 'bg-transparent group-hover:bg-slate-200'} transition-all z-20`}></div>
-                                <div className={`pl-4 w-full transition-all duration-300 ${isSelectionMode ? 'pl-16 landscape:pl-16' : 'landscape:pl-0'}`}>
-
-                                    <div className="flex justify-between items-start mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
-                                        <h4 className={`font-bold text-base md:text-lg truncate pr-2 flex-1 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
-                                        <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2 landscape:hidden">
-                                        {plan.section && (
-                                            <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
-                                                Turma {plan.section}
-                                            </span>
-                                        )}
-                                        {plan.activity_type && (
-                                            <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold flex items-center gap-1 ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                                                <span className="material-symbols-outlined text-[0.7rem]">
-                                                    {plan.activity_type.includes('Expositiva') ? 'school' :
-                                                        plan.activity_type.includes('Prática') ? 'science' :
-                                                            plan.activity_type.includes('Grupo') ? 'groups' :
-                                                                plan.activity_type.includes('Avaliação') ? 'assignment_turned_in' :
-                                                                    'category'}
-                                                </span>
-                                                {plan.activity_type}
-                                            </span>
-                                        )}
-                                        {plan.theme_area && plan.theme_area !== 'Geral' && (
-                                            <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                                                {plan.theme_area}
-                                            </span>
-                                        )}
-                                        <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                                            {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                        </span>
-                                    </div>
-                                    {/* Mobile Landscape Only Date */}
-                                    <div className="hidden landscape:block text-xs text-slate-400 mt-1">
-                                        {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                    </div>
-                                </div>
-                            </motion.button>
+                                plan={plan}
+                                isSelectionMode={isSelectionMode}
+                                isSelected={selectedIds.includes(plan.id)}
+                                selectedPlanId={selectedPlanId}
+                                toggleSelection={toggleSelection}
+                                handleSelectPlan={handleSelectPlan}
+                                theme={theme}
+                            />
                         ))
                     )}
                 </motion.div>
@@ -1459,9 +1482,9 @@ export const Planning: React.FC = () => {
             <div className={`flex-1 flex flex-col card shadow-premium overflow-hidden relative transition-all ${showForm || viewMode ? 'flex' : 'hidden lg:flex'}`}>
                 {(!showForm && !viewMode) ? (
                     <motion.div
-                        variants={containerVariants}
+                        variants={VARIANTS.staggerContainer}
                         initial="initial"
-                        animate="enter"
+                        animate="animate"
                         className="flex-1 flex flex-col items-center justify-center p-8 text-center"
                     >
                         <div className={`size-32 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-8 shadow-sm border border-slate-100 dark:border-slate-700`}>
@@ -1480,13 +1503,7 @@ export const Planning: React.FC = () => {
                                 Criar Nova Aula
                                 <div className="absolute inset-0 rounded-2xl ring-2 ring-white/20 group-hover:ring-white/40 transition-all"></div>
                             </button>
-                            <button
-                                onClick={() => setShowTemplateSelector(true)}
-                                className="group relative inline-flex items-center justify-center gap-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-lg font-bold py-4 px-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 transition-all hover:-translate-y-1 active:translate-y-0"
-                            >
-                                <span className="material-symbols-outlined text-2xl text-indigo-500">grid_view</span>
-                                Usar Modelo
-                            </button>
+
                             {hasDraft && (
                                 <button
                                     onClick={loadDraft}
@@ -1688,19 +1705,35 @@ export const Planning: React.FC = () => {
                                                 />
                                             </div>
                                             <div>
-                                                <DynamicSelect
-                                                    label="Tipo de Atividade"
-                                                    value={formActivityType}
-                                                    onChange={setFormActivityType}
-                                                    options={[
-                                                        { value: 'Aula Expositiva', label: 'Aula Expositiva', icon: 'school', color: 'blue' },
-                                                        { value: 'Atividade Prática', label: 'Atividade Prática', icon: 'science', color: 'indigo' },
-                                                        { value: 'Trabalho em Grupo', label: 'Trabalho em Grupo', icon: 'groups', color: 'violet' },
-                                                        { value: 'Avaliação', label: 'Avaliação', icon: 'assignment_turned_in', color: 'rose' },
-                                                        { value: 'Outro', label: 'Outro', icon: 'category', color: 'slate' }
-                                                    ]}
-                                                    placeholder="Selecione..."
-                                                />
+                                                <div className="space-y-3">
+                                                    <DynamicSelect
+                                                        label="Tipo de Atividade"
+                                                        value={formActivityType}
+                                                        onChange={setFormActivityType}
+                                                        options={[
+                                                            { value: 'Aula Expositiva', label: 'Aula Expositiva', icon: 'school', color: 'blue' },
+                                                            { value: 'Atividade Prática', label: 'Atividade Prática', icon: 'science', color: 'indigo' },
+                                                            { value: 'Trabalho em Grupo', label: 'Trabalho em Grupo', icon: 'groups', color: 'violet' },
+                                                            { value: 'Avaliação', label: 'Avaliação', icon: 'assignment_turned_in', color: 'rose' },
+                                                            { value: 'Outro', label: 'Outro', icon: 'edit_note', color: 'slate' }
+                                                        ]}
+                                                        placeholder="Selecione..."
+                                                    />
+                                                    {formActivityType === 'Outro' && (
+                                                        <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="text"
+                                                                    value={customActivityType}
+                                                                    onChange={e => setCustomActivityType(e.target.value)}
+                                                                    placeholder="Qual o tipo de atividade?"
+                                                                    className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`}
+                                                                    autoFocus
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
 

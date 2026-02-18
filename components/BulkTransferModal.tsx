@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
 
@@ -37,8 +38,8 @@ export const BulkTransferModal: React.FC<BulkTransferModalProps> = ({ isOpen, on
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
@@ -149,6 +150,7 @@ export const BulkTransferModal: React.FC<BulkTransferModalProps> = ({ isOpen, on
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };

@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+// import jsPDF from 'jspdf'; // Dynamic
+// import autoTable from 'jspdf-autotable'; // Dynamic
+import { VARIANTS } from '../constants/motion';
+import { motion } from 'framer-motion';
+import { AnimatedRow } from '../components/ui/AnimatedRow';
+import { AnimatedCard } from '../components/ui/AnimatedCard';
 import { useAuth } from '../contexts/AuthContext';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
@@ -48,10 +51,7 @@ const MobileGradeCard = React.memo(({ student, selectedUnit, theme, onGradeChang
     const finalResult = getStatusResult(student, selectedUnit);
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+        <AnimatedCard
             className="bg-surface-card rounded-xl p-3 shadow-sm border border-border-default space-y-3"
         >
             {/* Header: Student Info & Total */}
@@ -126,7 +126,7 @@ const MobileGradeCard = React.memo(({ student, selectedUnit, theme, onGradeChang
                     </div>
                 )}
             </div>
-        </motion.div>
+        </AnimatedCard>
     );
 });
 
@@ -145,15 +145,7 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
         const { annualTotal } = calculateAnnualSummary(student);
         const res = getStatusResult(student, 'results'); // Using standardized helper
         return (
-            <motion.tr
-                variants={{
-                    hidden: { opacity: 0, y: 8 },
-                    visible: {
-                        opacity: 1, y: 0,
-                        transition: { type: 'spring', stiffness: 160, damping: 22 }
-                    }
-                }}
-                layoutId={`grade-row-res-${student.id}`}
+            <AnimatedRow
                 className="hover:bg-surface-subtle transition-colors duration-150"
             >
                 <td className="sticky left-0 z-30 bg-surface-card px-4 py-4 whitespace-nowrap text-xs text-text-muted font-mono border-r border-transparent group-hover:bg-surface-subtle transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
@@ -177,20 +169,12 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                         {res.text}
                     </span>
                 </td>
-            </motion.tr>
+            </AnimatedRow>
         );
     }
 
     return (
-        <motion.tr
-            variants={{
-                hidden: { opacity: 0, y: 10 },
-                visible: {
-                    opacity: 1, y: 0,
-                    transition: { type: 'spring', stiffness: 120, damping: 14 }
-                }
-            }}
-            layoutId={`grade-row-${student.id}`}
+        <AnimatedRow
             className="group hover:bg-surface-subtle transition-colors duration-150"
         >
             <td className="sticky left-0 z-30 bg-surface-card px-4 py-4 whitespace-nowrap text-xs text-text-muted font-mono border-r border-transparent group-hover:bg-surface-subtle transition-colors shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
@@ -247,7 +231,7 @@ const GradeRow = React.memo(({ student, selectedUnit, theme, onGradeChange }: Gr
                     </span>
                 )}
             </td>
-        </motion.tr>
+        </AnimatedRow>
     );
 });
 
@@ -344,7 +328,7 @@ export const Grades: React.FC = () => {
     const studentsRef = useRef(students);
     useEffect(() => { studentsRef.current = students; }, [students]);
 
-    const handleGradeChange = (studentId: string, field: string, value: string) => {
+    const handleGradeChange = useCallback((studentId: string, field: string, value: string) => {
         // Handle Brazilian locale (comma -> dot)
         const normalizedValue = value.replace(',', '.');
         const numericValue = value === '' ? null : parseFloat(normalizedValue);
@@ -352,7 +336,6 @@ export const Grades: React.FC = () => {
         // Allow if it's a valid number OR if null (clearing)
         if (value !== '' && (numericValue === null || isNaN(numericValue))) return;
 
-        // 1. Optimistic Update
         setStudents(prev => prev.map(s => {
             if (s.id === studentId) {
                 const newUnits = { ...s.units };
@@ -428,13 +411,13 @@ export const Grades: React.FC = () => {
 
             } catch (err: any) {
                 console.error("Save failed:", err);
-                alert(`Erro ao salvar: ${err.message}`);
+                // alert(`Erro ao salvar: ${err.message}`); // Disable alert for smoother typing
             } finally {
                 delete saveTimeoutRefs.current[studentId];
                 if (Object.keys(saveTimeoutRefs.current).length === 0) setIsSaving(false);
             }
         }, 1000);
-    };
+    }, [selectedUnit, selectedSeriesId, selectedSection, currentUser, activeSubject]);
 
     const getGrade = (student: Student, field: string) => {
         return student.units?.[selectedUnit]?.[field]?.toString() || '';
@@ -465,7 +448,10 @@ export const Grades: React.FC = () => {
         return map[colorClass] || [79, 70, 229];
     };
 
-    const exportPDF = () => {
+    const exportPDF = async () => {
+        const { jsPDF } = await import('jspdf');
+        const autoTable = (await import('jspdf-autotable')).default;
+
         const doc = new jsPDF();
         const primaryRGB = getThemeRGB(`${theme.baseColor}-600`);
 
@@ -714,9 +700,10 @@ export const Grades: React.FC = () => {
     });
 
     return (
-        <div className="space-y-4 md:space-y-6 pb-24 md:pb-12">
-            {/* ANIMATIONS */}
-            <motion.div className="hidden" animate={{ opacity: 0 }} />
+        <div
+            className="space-y-4 md:space-y-6 pb-24 md:pb-12"
+        >
+            {/* ANIMATIONS - Removed hidden dummy, now using proper stagger on parent */}
 
             {/* Header Controls - Optmized for Mobile */}
             <div className="glass-card-soft p-2 md:p-4 flex flex-col md:flex-row justify-between items-center gap-4 sticky top-0 md:static z-40 backdrop-blur-xl md:backdrop-blur-none bg-surface-page/80 md:bg-transparent -mx-4 px-4 md:mx-0 shadow-sm md:shadow-none border-b border-border-default/50 md:border-none">
@@ -764,81 +751,100 @@ export const Grades: React.FC = () => {
             </div>
 
             {/* Export Modal (Logic remains same, just rendering access) */}
-            <AnimatePresence>
-                {showExportModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            {showExportModal && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                >
+                    {/* ... Modal Content Reuse ... */}
+                    <div
+                        className="bg-surface-card rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] flex flex-col border border-border-subtle"
                     >
-                        {/* ... Modal Content Reuse ... */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-surface-card rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] flex flex-col border border-border-subtle"
-                        >
-                            <h3 className="text-lg font-black text-text-primary mb-4 flex items-center gap-2 shrink-0">
-                                <span className={`material-symbols-outlined text-${theme.baseColor}-600`}>picture_as_pdf</span>
-                                Relatório PDF
-                            </h3>
+                        <h3 className="text-lg font-black text-text-primary mb-4 flex items-center gap-2 shrink-0">
+                            <span className={`material-symbols-outlined text-${theme.baseColor}-600`}>picture_as_pdf</span>
+                            Relatório PDF
+                        </h3>
 
-                            <div className="space-y-4 mb-6 overflow-y-auto custom-scrollbar flex-1 pr-2">
-                                <div>
-                                    <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-3">Selecione as Etapas</label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {(['1', '2', '3', 'final', 'recovery', 'results'] as const).map(key => (
-                                            <label key={key} className={`flex items-center space-x-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${exportConfig.units[key] ? `border-${theme.baseColor}-500 bg-${theme.baseColor}-50 dark:bg-${theme.baseColor}-900/10` : 'border-border-default hover:border-border-strong'}`}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={exportConfig.units[key]}
-                                                    onChange={e => setExportConfig(prev => ({
-                                                        ...prev,
-                                                        units: { ...prev.units, [key]: e.target.checked }
-                                                    }))}
-                                                    className={`rounded text-${theme.baseColor}-600 focus:ring-${theme.baseColor}-500 size-4`}
-                                                />
-                                                <span className={`text-xs font-bold ${exportConfig.units[key] ? 'text-text-primary' : 'text-text-secondary'}`}>
-                                                    {{
-                                                        '1': '1ª Unidade', '2': '2ª Unidade', '3': '3ª Unidade',
-                                                        'final': 'Prova Final', 'recovery': 'Recuperação', 'results': 'Resultado'
-                                                    }[key]}
-                                                </span>
-                                            </label>
-                                        ))}
+                        <div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1">
+                            <div className="space-y-3">
+                                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Unidades</h4>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {Object.keys(exportConfig.units).map(key => (
+                                        <label key={key} className="flex items-center gap-3 p-3 rounded-lg bg-surface-subtle/50 hover:bg-surface-subtle transition-colors cursor-pointer border border-border-default/50 group">
+                                            <div
+                                                className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all backdrop-blur-md ${exportConfig.units[key as keyof typeof exportConfig.units] ? 'theme-bg-primary border-primary shadow-lg shadow-primary/20 scale-105' : 'border-slate-400 dark:border-slate-500 bg-white/60 dark:bg-slate-800/60 group-hover:border-primary/50'}`}
+                                            >
+                                                {exportConfig.units[key as keyof typeof exportConfig.units] && (
+                                                    <motion.span
+                                                        initial={{ scale: 0.5, opacity: 0 }}
+                                                        animate={{ scale: 1, opacity: 1 }}
+                                                        className="material-symbols-outlined text-white text-lg font-black"
+                                                    >
+                                                        check
+                                                    </motion.span>
+                                                )}
+                                            </div>
+                                            <input
+                                                type="checkbox"
+                                                checked={exportConfig.units[key as keyof typeof exportConfig.units]}
+                                                onChange={e => setExportConfig(prev => ({
+                                                    ...prev,
+                                                    units: { ...prev.units, [key]: e.target.checked }
+                                                }))}
+                                                className="sr-only"
+                                            />
+                                            <span className="text-sm font-medium text-text-primary">
+                                                {key === 'final' ? 'Prova Final' : key === 'recovery' ? 'Recuperação' : key === 'results' ? 'Resultado' : `${key}ª Unidade`}
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider">Opções</h4>
+                                <label className="flex items-center gap-3 p-3 rounded-lg bg-surface-subtle/50 hover:bg-surface-subtle transition-colors cursor-pointer border border-border-default/50 group">
+                                    <div
+                                        className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all backdrop-blur-md ${exportConfig.detailed ? 'theme-bg-primary border-primary shadow-lg shadow-primary/20 scale-105' : 'border-slate-400 dark:border-slate-500 bg-white/60 dark:bg-slate-800/60 group-hover:border-primary/50'}`}
+                                    >
+                                        {exportConfig.detailed && (
+                                            <motion.span
+                                                initial={{ scale: 0.5, opacity: 0 }}
+                                                animate={{ scale: 1, opacity: 1 }}
+                                                className="material-symbols-outlined text-white text-lg font-black"
+                                            >
+                                                check
+                                            </motion.span>
+                                        )}
                                     </div>
-                                </div>
-                                <div className="pt-4 border-t border-border-default">
-                                    <label className="flex items-center space-x-2 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={exportConfig.detailed}
-                                            onChange={e => setExportConfig(prev => ({ ...prev, detailed: e.target.checked }))}
-                                            className={`rounded text-${theme.baseColor}-600 focus:ring-${theme.baseColor}-500`}
-                                        />
-                                        <span className="text-sm font-medium text-text-primary">Incluir detalhes das notas</span>
-                                    </label>
-                                </div>
+                                    <input
+                                        type="checkbox"
+                                        checked={exportConfig.detailed}
+                                        onChange={e => setExportConfig(prev => ({ ...prev, detailed: e.target.checked }))}
+                                        className="sr-only"
+                                    />
+                                    <span className="text-sm font-medium text-text-primary">Incluir detalhes das notas</span>
+                                </label>
                             </div>
+                        </div>
 
-                            <div className="flex justify-end gap-3 shrink-0 pt-4 border-t border-border-default">
-                                <button
-                                    onClick={() => setShowExportModal(false)}
-                                    className="px-4 py-2.5 text-text-secondary font-bold hover:bg-surface-subtle rounded-lg transition-colors text-sm"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={exportPDF}
-                                    className={`px-6 py-2.5 bg-${theme.baseColor}-600 hover:bg-${theme.baseColor}-700 text-white rounded-lg shadow-lg shadow-${theme.baseColor}-500/30 transition-all flex items-center gap-2 font-bold text-sm`}
-                                >
-                                    <span className="material-symbols-outlined text-lg">download</span>
-                                    Baixar PDF
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        <div className="flex justify-end gap-3 shrink-0 pt-4 border-t border-border-default">
+                            <button
+                                onClick={() => setShowExportModal(false)}
+                                className="px-4 py-2.5 text-text-secondary font-bold hover:bg-surface-subtle rounded-lg transition-colors text-sm"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={exportPDF}
+                                className={`px-6 py-2.5 bg-${theme.baseColor}-600 hover:bg-${theme.baseColor}-700 text-white rounded-lg shadow-lg shadow-${theme.baseColor}-500/30 transition-all flex items-center gap-2 font-bold text-sm`}
+                            >
+                                <span className="material-symbols-outlined text-lg">download</span>
+                                Baixar PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ERROR STATE */}
             {visibleStudents.length === 0 && !loading && (
@@ -867,71 +873,65 @@ export const Grades: React.FC = () => {
                                             Total Anual
                                         </th>
                                         <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider">
-                                            Situação Final
+                                            Situação
                                         </th>
                                     </>
                                 ) : (
                                     <>
                                         {currentConfig?.columns.map((col: any) => (
-                                            <th key={col.key} className="px-4 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-32">
-                                                <div className="flex flex-col items-center">
-                                                    <span>{col.label}</span>
-                                                    <span className="text-[10px] opacity-70 font-normal">
-                                                        (Max: {col.max})
-                                                    </span>
-                                                </div>
+                                            <th key={col.key} className="px-4 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider">
+                                                {col.label}
+                                                <span className="block text-[9px] opacity-70 font-normal normal-case">
+                                                    Max: {(selectedUnit === '3' && col.key === 'exam') ? '10/8' : col.max}
+                                                </span>
                                             </th>
                                         ))}
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider w-40 bg-surface-subtle/50">
-                                            {(selectedUnit === 'final' || selectedUnit === 'recovery') ? 'Situação' : 'Média'}
+                                        <th className="px-6 py-4 text-center text-xs font-bold text-text-muted uppercase tracking-wider bg-surface-subtle/30 border-l border-border-default/50">
+                                            {(selectedUnit === 'final' || selectedUnit === 'recovery') ? 'Status' : 'Média'}
                                         </th>
                                     </>
                                 )}
                             </tr>
                         </thead>
+
                         <motion.tbody
-                            variants={{
-                                hidden: { opacity: 0 },
-                                visible: {
-                                    opacity: 1,
-                                    transition: { staggerChildren: 0.05 }
-                                }
-                            }}
-                            initial="hidden"
-                            animate="visible"
                             key={selectedUnit}
                             className="divide-y divide-border-subtle"
+                            variants={VARIANTS.staggerContainer}
+                            initial="initial"
+                            animate="animate"
                         >
-                            <AnimatePresence>
-                                {visibleStudents.map(student => (
-                                    <GradeRow
-                                        key={student.id}
-                                        student={student}
-                                        selectedUnit={selectedUnit}
-                                        theme={theme}
-                                        onGradeChange={handleGradeChange}
-                                    />
-                                ))}
-                            </AnimatePresence>
+                            {visibleStudents.map(student => (
+                                <GradeRow
+                                    key={student.id}
+                                    student={student}
+                                    selectedUnit={selectedUnit}
+                                    theme={theme}
+                                    onGradeChange={handleGradeChange}
+                                />
+                            ))}
                         </motion.tbody>
                     </table>
                 </div>
             </div>
 
             {/* MOBILE CARD VIEW (Visible on Mobile) */}
-            <div className="lg:hidden space-y-3">
-                <AnimatePresence>
-                    {visibleStudents.map(student => (
-                        <MobileGradeCard
-                            key={student.id}
-                            student={student}
-                            selectedUnit={selectedUnit}
-                            theme={theme}
-                            onGradeChange={handleGradeChange}
-                        />
-                    ))}
-                </AnimatePresence>
-            </div>
+            <motion.div
+                className="lg:hidden space-y-3"
+                variants={VARIANTS.staggerContainer}
+                initial="initial"
+                animate="animate"
+            >
+                {visibleStudents.map(student => (
+                    <MobileGradeCard
+                        key={student.id}
+                        student={student}
+                        selectedUnit={selectedUnit}
+                        theme={theme}
+                        onGradeChange={handleGradeChange}
+                    />
+                ))}
+            </motion.div>
         </div>
     );
 };

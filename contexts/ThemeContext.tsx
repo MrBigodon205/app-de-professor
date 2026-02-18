@@ -41,7 +41,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [isDarkMode]);
 
     const toggleTheme = React.useCallback(() => {
+        // STRONG TRANSITION KILLER
+        // We use a class on the body to strictly kill all transitions
+        document.body.classList.add('disable-transitions');
+
         setIsDarkMode(prev => !prev);
+
+        // Use double requestAnimationFrame to ensure the DOM has updated
+        // and painted the new theme colors BEFORE we re-enable transitions.
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                document.body.classList.remove('disable-transitions');
+            });
+        });
     }, []);
 
     const themeValue = useMemo(() => {

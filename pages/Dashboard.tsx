@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion'; // Import motion
+import { motion } from 'framer-motion';
+import { VARIANTS } from '../constants/motion';
+import { AnimatedList, AnimatedItem } from '../components/ui/AnimatedList';
+import { AnimatedCard } from '../components/ui/AnimatedCard';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../contexts/AuthContext';
@@ -692,30 +695,7 @@ export const Dashboard: React.FC = () => {
   const contextName = (classes.find(c => c.id === selectedSeriesId)?.name || `Série ${selectedSeriesId}`) + (selectedSection ? ` - Turma ${selectedSection}` : '');
 
   // EXTRAORDINARY ANIMATIONS - COREOGRAPHY
-  const containerVariants: any = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.04,
-        delayChildren: 0
-      }
-    }
-  };
 
-  const itemVariants: any = {
-    hidden: {
-      opacity: 0,
-      // No Y offset (slide up) as requested
-    },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.25,
-        ease: "easeOut"
-      }
-    }
-  };
 
   const heroVariants: any = {
     hidden: { opacity: 0 }, // No Y offset
@@ -730,27 +710,12 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <motion.div
+    <AnimatedList
       className="w-full fluid-p-m fluid-gap-m flex flex-col pb-6 lg:pb-12 landscape:fluid-p-s landscape:fluid-gap-s landscape:pb-10 theme-transition relative"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
     >
-      {/* Dynamic Background Glyphs */}
-      {/* Dynamic Background Glyphs - OPTIMIZED */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-5">
-        {React.useMemo(() => (theme.illustrations || []).map((icon, i) => (
-          <span
-            key={i}
-            className={`material-symbols-outlined absolute text-primary opacity-30 scatter-${(i % 15) + 1}`}
-          >
-            {icon}
-          </span>
-        )), [theme.illustrations])}
-      </div>
       {/* LINTER REFRESH: Zero Inline Styles Verified */}
 
-      <motion.div variants={itemVariants} className="relative z-10" data-tour="dashboard-kpi">
+      <AnimatedItem className="relative z-10" data-tour="dashboard-kpi">
         <DashboardHeader
           currentUser={currentUser}
           theme={theme}
@@ -758,14 +723,14 @@ export const Dashboard: React.FC = () => {
           isContextSelected={isContextSelected}
           contextName={contextName}
         />
-      </motion.div>
+      </AnimatedItem>
 
-      <motion.div variants={itemVariants} className="relative z-10">
+      <AnimatedItem className="relative z-10">
         <DashboardBanner theme={theme} currentUser={currentUser} />
-      </motion.div>
+      </AnimatedItem>
 
       {/* PLAN OF THE DAY - Holographic Glass Design */}
-      <motion.div variants={itemVariants} className="h-auto relative z-10">
+      <AnimatedItem className="h-auto relative z-10">
         {
           loadingPlans ? (
             <div className="min-h-[220px] rounded-[2rem] bg-white/5 animate-pulse border border-white/5"></div>
@@ -868,21 +833,21 @@ export const Dashboard: React.FC = () => {
             </div>
           ) : (
             <div
-              className="min-h-[220px] flex flex-col items-center justify-center glass-card-soft rounded-[2.5rem] border border-dashed text-text-muted group transition-all duration-500 relative overflow-hidden theme-border-subtle"
+              className="min-h-[220px] flex flex-col items-center justify-center glass-card-soft rounded-[2.5rem] border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 group transition-all duration-500 relative overflow-hidden"
             >
               <div
                 className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br from-primary-10/10 to-transparent"
               ></div>
-              <span className="material-symbols-outlined text-5xl opacity-20 mb-3 group-hover:scale-110 transition-all theme-text-primary">event_busy</span>
-              <h3 className="text-sm font-black uppercase tracking-widest opacity-60">Sem planejamento hoje</h3>
-              <p className="text-xs opacity-40 mt-1">Aproveite para organizar suas próximas aulas</p>
+              <span className="material-symbols-outlined text-5xl opacity-40 mb-3 group-hover:scale-110 transition-all theme-text-primary">event_busy</span>
+              <h3 className="text-sm font-black uppercase tracking-widest opacity-90">Sem planejamento hoje</h3>
+              <p className="text-xs opacity-70 mt-1 font-bold">Aproveite para organizar suas próximas aulas</p>
             </div>
           )
         }
-      </motion.div>
+      </AnimatedItem>
 
       {/* Help Banner - Visible for new users or quick access */}
-      <motion.div variants={itemVariants} className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-500 to-purple-600 p-[1px] shadow-lg shadow-indigo-500/20 group">
+      <motion.div variants={VARIANTS.fadeUp} className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-500 to-purple-600 p-[1px] shadow-lg shadow-indigo-500/20 group">
         <div className="relative bg-surface-card rounded-[23px] p-6 flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden">
           {/* Background decoration */}
           {/* Background decoration - OPTIMIZED */}
@@ -915,11 +880,39 @@ export const Dashboard: React.FC = () => {
         </div>
       </motion.div>
 
+      {/* QUICK ACTIONS GRID */}
+      <AnimatedItem className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        {[
+          { icon: 'design_services', label: 'Planejar', path: '/planning', color: 'text-blue-500', bg: 'bg-blue-500/10' },
+          { icon: 'playlist_add_check', label: 'Chamada', path: '/attendance', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+          { icon: 'hotel_class', label: 'Notas', path: '/grades', color: 'text-amber-500', bg: 'bg-amber-500/10' },
+          { icon: 'person_add', label: 'Alunos', path: '/students', color: 'text-purple-500', bg: 'bg-purple-500/10' },
+        ].map((action, i) => (
+          <Link to={action.path} key={i} className="group relative">
+            <AnimatedCard
+              className="h-24 lg:h-32 flex flex-col items-center justify-center gap-2 lg:gap-3 hover:border-primary/30 transition-all cursor-pointer relative overflow-hidden"
+              hoverEffect={true}
+            >
+              <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-transparent to-primary/5`} />
+
+              <div className={`p-3 rounded-xl ${action.bg} group-hover:scale-110 transition-transform duration-300`}>
+                <span className={`material-symbols-outlined text-2xl lg:text-3xl ${action.color}`}>{action.icon}</span>
+              </div>
+              <span className="font-bold text-sm lg:text-base text-text-primary">{action.label}</span>
+            </AnimatedCard>
+          </Link>
+        ))}
+      </AnimatedItem>
+
+
       {/* Main KPI Grid - Cyber-Glass Bento */}
-      <div className="grid grid-cols-1 landscape:grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-6 relative z-10">
+      <AnimatedItem className="grid grid-cols-1 landscape:grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-6 relative z-10">
 
         {/* Total Students (Large Card) */}
-        <motion.div variants={itemVariants} className="col-span-1 landscape:col-span-2 md:col-span-2 xl:col-span-2 glass-card-premium p-8 relative overflow-hidden group transition-all duration-500 flex flex-col justify-between h-auto min-h-[380px] md:min-h-[260px]">
+        <AnimatedCard
+          className="col-span-1 landscape:col-span-2 md:col-span-2 xl:col-span-2 glass-card-premium p-8 relative overflow-hidden group transition-all duration-500 flex flex-col justify-between h-auto min-h-[380px] md:min-h-[260px]"
+          hoverEffect={false} // Custom hover effect inside
+        >
           {/* Ambient Glows */}
           <div
             className="absolute -top-20 -right-20 w-[400px] h-[400px] opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none theme-radial-primary"
@@ -959,79 +952,71 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-        </motion.div>
+        </AnimatedCard>
 
         {/* Grades (Small Card) */}
         {/* Grades (Small Card) */}
-        <MotionLink
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          to="/grades"
-          className="glass-card-soft p-6 hover:bg-white/10 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px] hover:shadow-lg border-transparent hover:border-primary/50"
-        >
-          <div className="flex justify-between items-start relative z-10">
-            <div
-              className="size-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform theme-icon-secondary-transparent"
-            >
-              <span className="material-symbols-outlined text-2xl">grade</span>
-            </div>
-            <span className="material-symbols-outlined text-slate-400 group-hover:text-white transition-colors">arrow_outward</span>
-          </div>
-          <div className="relative z-10">
-            <h3 className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-1">Média Geral</h3>
-            {loadingStats ? (
-              <div className="h-10 w-24 bg-surface-subtle rounded-lg animate-pulse"></div>
-            ) : (
-              <div className="flex items-baseline gap-2">
-                <span
-                  className="text-4xl font-display font-black tracking-tight theme-text-primary"
-                >
-                  {stats.gradeAverage.toFixed(1)}
-                </span>
-                <span className="text-xs font-bold text-text-muted">/ 10</span>
+        <Link to="/grades">
+          <AnimatedCard className="h-full glass-card-soft p-6 hover:bg-white/10 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px] hover:shadow-lg border-transparent hover:border-primary/50">
+            <div className="flex justify-between items-start relative z-10">
+              <div
+                className="size-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform theme-icon-secondary-transparent"
+              >
+                <span className="material-symbols-outlined text-2xl">grade</span>
               </div>
-            )}
-          </div>
-          {/* Bg decoration */}
-          {/* Bg decoration - OPTIMIZED */}
-          <div className="absolute -bottom-10 -right-10 size-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none theme-radial-secondary"></div>
-        </MotionLink>
+              <span className="material-symbols-outlined theme-text-primary opacity-40 group-hover:opacity-100 transition-all">arrow_outward</span>
+            </div>
+            <div className="relative z-10">
+              <h3 className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-1">Média Geral</h3>
+              {loadingStats ? (
+                <div className="h-10 w-24 bg-surface-subtle rounded-lg animate-pulse"></div>
+              ) : (
+                <div className="flex items-baseline gap-2">
+                  <span
+                    className="text-4xl font-display font-black tracking-tight theme-text-primary"
+                  >
+                    {stats.gradeAverage.toFixed(1)}
+                  </span>
+                  <span className="text-xs font-bold text-text-muted">/ 10</span>
+                </div>
+              )}
+            </div>
+            {/* Bg decoration */}
+            {/* Bg decoration - OPTIMIZED */}
+            <div className="absolute -bottom-10 -right-10 size-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none theme-radial-secondary"></div>
+          </AnimatedCard>
+        </Link>
 
         {/* Attendance (Small Card) */}
-        <MotionLink
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          to="/attendance"
-          className="glass-card-soft p-6 hover:bg-white/10 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px] hover:shadow-lg"
-        >
-          <div className="flex justify-between items-start relative z-10">
-            <div
-              className="size-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform theme-icon-primary-transparent"
-            >
-              <span className="material-symbols-outlined text-2xl">event_available</span>
-            </div>
-            <span className="material-symbols-outlined text-slate-400 group-hover:text-white transition-colors">arrow_outward</span>
-          </div>
-          <div className="relative z-10">
-            <h3 className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-1">Presença Hoje</h3>
-            {loadingStats ? (
-              <div className="h-10 w-24 bg-surface-subtle rounded-lg animate-pulse"></div>
-            ) : (
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-display font-black text-text-primary tracking-tight">{stats.presentToday}</span>
-                <span className="text-xs font-bold text-text-muted">/ {displayCount}</span>
+        <Link to="/attendance">
+          <AnimatedCard className="h-full glass-card-soft p-6 hover:bg-white/10 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px] hover:shadow-lg">
+            <div className="flex justify-between items-start relative z-10">
+              <div
+                className="size-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform theme-icon-primary-transparent"
+              >
+                <span className="material-symbols-outlined text-2xl">event_available</span>
               </div>
-            )}
-          </div>
-          {/* Bg decoration */}
-          {/* Bg decoration - OPTIMIZED */}
-          <div className="absolute -bottom-10 -right-10 size-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none theme-radial-primary"></div>
-        </MotionLink>
+              <span className="material-symbols-outlined theme-text-primary opacity-40 group-hover:opacity-100 transition-all">arrow_outward</span>
+            </div>
+            <div className="relative z-10">
+              <h3 className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-1">Presença Hoje</h3>
+              {loadingStats ? (
+                <div className="h-10 w-24 bg-surface-subtle rounded-lg animate-pulse"></div>
+              ) : (
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-display font-black text-text-primary tracking-tight">{stats.presentToday}</span>
+                  <span className="text-xs font-bold text-text-muted">/ {displayCount}</span>
+                </div>
+              )}
+            </div>
+            {/* Bg decoration */}
+            {/* Bg decoration - OPTIMIZED */}
+            <div className="absolute -bottom-10 -right-10 size-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none theme-radial-primary"></div>
+          </AnimatedCard>
+        </Link>
 
         {/* Activities and Plans (Wide Card) */}
-        <motion.div variants={itemVariants} className="col-span-1 xl:col-span-2 glass-card-soft p-8 flex flex-col h-full" data-tour="dashboard-activities">
+        <AnimatedCard className="col-span-1 xl:col-span-2 glass-card-soft p-8 flex flex-col h-full" data-tour="dashboard-activities">
           <div className="flex items-center justify-between mb-8">
             <h3 className="font-display font-bold text-xl text-text-primary flex items-center gap-3">
               <span className="material-symbols-outlined theme-text-primary">assignment_turned_in</span>
@@ -1122,10 +1107,10 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-        </motion.div>
+        </AnimatedCard>
 
         {/* Recent Ocurrences (Wide Card) */}
-        <motion.div variants={itemVariants} className="col-span-1 xl:col-span-2 glass-card-soft p-8 flex flex-col h-full border border-white/10" data-tour="dashboard-occurrences">
+        <AnimatedCard className="col-span-1 xl:col-span-2 glass-card-soft p-8 flex flex-col h-full border border-white/10" data-tour="dashboard-occurrences">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4 md:gap-0">
             <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
               <span className="material-symbols-outlined text-amber-500">history</span>
@@ -1150,7 +1135,7 @@ export const Dashboard: React.FC = () => {
               [1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-800/10 rounded-2xl animate-pulse"></div>)
             ) : recentOccurrences.length === 0 ? (
               <div className="p-8 text-center bg-black/5 dark:bg-black/20 rounded-2xl border border-dashed border-white/10">
-                <span className="material-symbols-outlined text-3xl text-slate-400 mb-2">check_circle</span>
+                <span className="material-symbols-outlined text-3xl theme-text-primary opacity-20 mb-2">check_circle</span>
                 <p className="text-slate-500 font-medium text-sm">Nenhuma ocorrência registrada.</p>
               </div>
             ) : (
@@ -1173,9 +1158,10 @@ export const Dashboard: React.FC = () => {
             )}
 
           </div>
-        </motion.div>
+        </AnimatedCard>
+      </AnimatedItem>
 
-      </div>
-    </motion.div>
+
+    </AnimatedList >
   );
 };

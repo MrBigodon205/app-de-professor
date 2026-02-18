@@ -7,6 +7,7 @@ import { Subject } from '../types';
 import { BackgroundPattern } from '../components/BackgroundPattern';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, UserPlus, LogIn, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { VARIANTS } from '../constants/motion';
 import { useTheme } from '../hooks/useTheme';
 import { ForgotPasswordModal } from '../components/ForgotPasswordModal';
 
@@ -260,9 +261,9 @@ export const Login: React.FC = () => {
 
       {/* Main Glass Portal */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        variants={VARIANTS.scale}
+        initial="initial"
+        animate="animate"
         className="relative z-10 w-full max-w-[1000px] grid lg:grid-cols-[45%_55%] glass-card-premium overflow-hidden min-h-[650px] shadow-2xl shadow-slate-200/50 dark:shadow-[0_0_100px_-20px_rgba(0,0,0,0.5)]"
       >
         {/* Left Side: Brand Identity */}
@@ -349,7 +350,9 @@ export const Login: React.FC = () => {
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-text-muted uppercase tracking-widest ml-1">Nome Completo</label>
                       <div className="relative group">
-                        <input
+                        <motion.input
+                          whileFocus={{ scale: 1.01 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
                           className="w-full bg-surface-card border border-border-default rounded-2xl py-4 px-5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
                           placeholder="Como deseja ser chamado?"
                           value={name}
@@ -381,7 +384,9 @@ export const Login: React.FC = () => {
                           >
                             <label className="text-xs font-bold text-text-muted uppercase tracking-widest ml-1 mb-2 block">Nome da Instituição</label>
                             <div className="relative group">
-                              <input
+                              <motion.input
+                                whileFocus={{ scale: 1.01 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
                                 className="w-full bg-surface-card border border-border-default rounded-2xl py-4 px-5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
                                 placeholder="Ex: Colégio Futuro"
                                 value={institutionName}
@@ -431,7 +436,9 @@ export const Login: React.FC = () => {
 
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-text-muted uppercase tracking-widest ml-1">E-mail Corporativo</label>
-                    <input
+                    <motion.input
+                      whileFocus={{ scale: 1.01 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
                       className="w-full bg-surface-card border border-border-default rounded-2xl py-4 px-5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
                       type="email"
                       placeholder="professor@escola.com"
@@ -454,7 +461,9 @@ export const Login: React.FC = () => {
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-text-muted uppercase tracking-widest ml-1">Chave de Acesso</label>
                     <div className="relative group">
-                      <input
+                      <motion.input
+                        whileFocus={{ scale: 1.01 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
                         className="w-full bg-surface-card border border-border-default rounded-2xl py-4 pl-5 pr-12 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
@@ -486,7 +495,9 @@ export const Login: React.FC = () => {
                   {activeTab === 'register' && (
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Confirmar Chave</label>
-                      <input
+                      <motion.input
+                        whileFocus={{ scale: 1.01 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
                         className="w-full bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-2xl py-4 px-5 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
                         type={showConfirmPassword ? "text" : "password"}
                         placeholder="••••••••"

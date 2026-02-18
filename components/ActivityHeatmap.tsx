@@ -99,7 +99,7 @@ const ActivityHeatmapComponent: React.FC<ActivityHeatmapProps> = ({ data, loadin
                     <div key={index} className="flex items-center justify-center aspect-square">
                         {day.date ? (
                             <div
-                                className={`w-full h-full rounded-[4px] transition-all hover:scale-110 relative group ${getIntensityClass(day.count)}`}
+                                className={`w-full h-full rounded-[4px] transition-transform duration-200 ease-out hover:scale-110 relative group ${getIntensityClass(day.count)} will-change-transform`}
                                 title={`${new Date(day.date + 'T12:00:00').toLocaleDateString('pt-BR')}: ${day.count} atividades`}
                             >
                             </div>

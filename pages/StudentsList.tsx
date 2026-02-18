@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { containerVariants, itemVariants } from '../components/PageTransition';
+import { VARIANTS } from '../constants/motion';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -18,6 +19,194 @@ interface StudentsListProps {
 }
 
 import { useStudentsData } from '../hooks/useStudentsData';
+
+// --- MEMOIZED COMPONENT DEFINITIONS ---
+
+const StudentMobileCard = React.memo(({ student, isSelected, toggleSelect, isEditing, editName, setEditName, saveEdit, handleEdit, setTransferringStudent, handleDelete }: any) => {
+    const isChecked: "true" | "false" = isSelected ? "true" : "false";
+    return (
+        <motion.div
+            variants={VARIANTS.fadeUp}
+            layoutId={`student-row-mobile-${student.id}`}
+            className={`group relative overflow-hidden transition-all duration-200 border-b border-border-subtle last:border-0 ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card'}`}
+            onClick={() => toggleSelect(student.id)}
+        >
+            <div className="flex items-center gap-3 p-3 w-full">
+                {/* Checkbox */}
+                <div className="flex items-center flex-shrink-0">
+                    <div
+                        onClick={(e) => { e.stopPropagation(); toggleSelect(student.id); }}
+                        className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer backdrop-blur-md ${isSelected ? 'theme-bg-primary border-primary shadow-lg shadow-primary/20 scale-105' : 'border-slate-400 dark:border-slate-500 bg-white/60 dark:bg-slate-800/60 hover:border-primary/50'}`}
+                        role="button"
+                        aria-label={`Selecionar aluno ${student.name}, ${isSelected ? 'selecionado' : 'não selecionado'}`}
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSelect(student.id); } }}
+                    >
+                        {isSelected && (
+                            <motion.span
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="material-symbols-outlined text-white text-lg font-black"
+                            >
+                                check
+                            </motion.span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Number Badge (imitating Desktop) */}
+                <div className="flex-shrink-0">
+                    <span className="font-mono text-xs font-bold text-text-muted bg-surface-subtle px-1.5 py-0.5 rounded">
+                        {student.number}
+                    </span>
+                </div>
+
+                {/* Content (Name) */}
+                <div className="flex-1 min-w-0 flex items-center">
+                    {isEditing ? (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.2 }}
+                            className="flex items-center gap-2 w-full"
+                        >
+                            <input
+                                type="text"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                className="flex-1 h-8 px-2 rounded border border-indigo-500 bg-white dark:bg-black font-bold text-sm focus:outline-none"
+                                autoFocus
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label="Editar nome do aluno"
+                            />
+                            <button
+                                onClick={(e) => { e.stopPropagation(); saveEdit(); }}
+                                className="size-8 rounded bg-indigo-500 text-white flex items-center justify-center shadow-sm"
+                            >
+                                <span className="material-symbols-outlined text-sm">check</span>
+                            </button>
+                        </motion.div>
+                    ) : (
+                        <h3 className="font-bold text-text-primary text-sm leading-tight line-clamp-2 capitalize break-words">
+                            {student.name.toLowerCase()}
+                        </h3>
+                    )}
+                </div>
+
+                {/* Actions (Desktop Style but compact) */}
+                <div className={`flex items-center gap-1 flex-shrink-0 ${isEditing ? 'hidden' : ''}`}>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); handleEdit(student); }}
+                        className="size-8 rounded-lg text-text-muted hover:text-indigo-600 hover:bg-surface-subtle transition-colors flex items-center justify-center"
+                    >
+                        <span className="material-symbols-outlined text-[20px]">edit</span>
+                    </button>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setTransferringStudent(student); }}
+                        className="size-8 rounded-lg text-text-muted hover:text-amber-600 hover:bg-surface-subtle transition-colors flex items-center justify-center"
+                    >
+                        <span className="material-symbols-outlined text-[20px]">move_up</span>
+                    </button>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }}
+                        className="size-8 rounded-lg text-text-muted hover:text-red-600 hover:bg-surface-subtle transition-colors flex items-center justify-center"
+                    >
+                        <span className="material-symbols-outlined text-[20px]">delete</span>
+                    </button>
+                </div>
+            </div>
+        </motion.div>
+    );
+});
+
+const StudentDesktopRow = React.memo(({ student, isSelected, toggleSelect, isEditing, editName, setEditName, saveEdit, handleEdit, setTransferringStudent, handleDelete }: any) => {
+    return (
+        <motion.tr
+            variants={VARIANTS.fadeUp}
+            className={`group transition-all duration-150 border-b border-border-subtle ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card hover:bg-surface-subtle'}`}
+        >
+            <td className="px-4 py-4">
+                <div className="flex items-center justify-center">
+                    <div
+                        onClick={(e) => { e.stopPropagation(); toggleSelect(student.id); }}
+                        className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer backdrop-blur-md ${isSelected ? 'theme-bg-primary border-primary shadow-lg shadow-primary/20 scale-105' : 'border-slate-400 dark:border-slate-500 bg-white/60 dark:bg-slate-800/60 hover:border-primary/50'}`}
+                        role="button"
+                        aria-label={`Selecionar aluno ${student.name}, ${isSelected ? 'selecionado' : 'não selecionado'}`}
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSelect(student.id); } }}
+                    >
+                        {isSelected && (
+                            <motion.span
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="material-symbols-outlined text-white text-lg font-black"
+                            >
+                                check
+                            </motion.span>
+                        )}
+                    </div>
+                </div>
+            </td>
+            <td className="px-8 py-4">
+                <span className="font-mono text-sm font-bold text-text-muted bg-surface-subtle px-2 py-1 rounded-lg">
+                    {student.number}
+                </span>
+            </td>
+            <td className="px-8 py-4">
+                {isEditing ? (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex items-center gap-3"
+                    >
+                        <input
+                            type="text"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            className="h-10 px-4 rounded-xl border-2 border-indigo-500 bg-white dark:bg-black font-bold text-sm focus:outline-none shadow-lg shadow-indigo-500/20 w-full max-w-sm"
+                            placeholder="Nome do aluno"
+                            title="Editar nome do aluno"
+                            autoFocus
+                        />
+                        <button onClick={saveEdit} className="size-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 hover:scale-110 active:scale-95 transition-all">
+                            <span className="material-symbols-outlined font-bold">check</span>
+                        </button>
+                    </motion.div>
+                ) : (
+                    <span className="font-bold text-text-primary text-base group-hover:text-indigo-600 transition-colors">
+                        {student.name}
+                    </span>
+                )}
+            </td>
+            <td className="px-8 py-4 text-right">
+                <div className="flex items-center justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                    <button
+                        onClick={() => handleEdit(student)}
+                        className="size-9 rounded-lg hover:bg-surface-subtle text-text-muted hover:text-indigo-500 transition-colors flex items-center justify-center"
+                        title="Editar Nome"
+                    >
+                        <span className="material-symbols-outlined text-lg">edit</span>
+                    </button>
+                    <button
+                        onClick={() => setTransferringStudent(student)}
+                        className="size-9 rounded-lg hover:bg-amber-50 text-text-muted hover:text-amber-500 transition-colors flex items-center justify-center"
+                        title="Transferir Aluno"
+                    >
+                        <span className="material-symbols-outlined text-lg">move_up</span>
+                    </button>
+                    <button
+                        onClick={() => handleDelete(student.id)}
+                        className="size-9 rounded-lg hover:bg-red-50 text-text-muted hover:text-red-500 transition-colors flex items-center justify-center"
+                        title="Remover Aluno"
+                    >
+                        <span className="material-symbols-outlined text-lg">delete</span>
+                    </button>
+                </div>
+            </td>
+        </motion.tr>
+    );
+});
 
 export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) => {
     const navigate = useNavigate();
@@ -77,10 +266,10 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
         };
     }, []);
 
-    const handleEdit = (student: Student) => {
+    const handleEdit = useCallback((student: Student) => {
         setEditingId(student.id);
         setEditName(student.name);
-    };
+    }, []);
 
     const saveEdit = async () => {
         if (!editingId) return;
@@ -130,17 +319,14 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
         }
     };
 
-    const toggleSelect = (id: string) => {
-        if (selectedIds.includes(id)) {
-            setSelectedIds(selectedIds.filter(sid => sid !== id));
-        } else {
-            setSelectedIds([...selectedIds, id]);
-        }
-    };
+    const toggleSelect = useCallback((id: string) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]);
+    }, []);
+
 
     const handleBulkDelete = async () => {
         if (selectedIds.length === 0) return;
-        if (!confirm(`Tem certeza que deseja remover ${selectedIds.length} alunos?`)) return;
+        if (!confirm(`Tem certeza que deseja remover ${selectedIds.length} alunos ? `)) return;
 
         try {
             const { error } = await supabase
@@ -249,7 +435,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                     .filter(name => name.length >= 3) // Filter short noise strings
                     .join('\n');
 
-                setImportText(prev => prev ? `${prev}\n${cleanedNames}` : cleanedNames);
+                setImportText(prev => prev ? `${prev} \n${cleanedNames} ` : cleanedNames);
                 setShowCropper(false);
                 setOcrImage(null);
             }
@@ -367,81 +553,95 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center justify-center p-12 bg-surface-card rounded-3xl border-2 border-dashed border-border-default"
             >
-                <div className={`size-20 rounded-2xl bg-${theme.primaryColor}/10 flex items-center justify-center mb-6`}>
+                <div className={`size - 20 rounded - 2xl bg - ${theme.primaryColor}/10 flex items-center justify-center mb-6`}>
                     <span className={`material-symbols-outlined text-4xl text-${theme.primaryColor}`}>{theme.icon}</span>
-                </div>
+                </div >
                 <h3 className="text-2xl font-bold text-text-primary mb-2">Nenhuma Turma Selecionada</h3>
                 <p className="text-text-muted text-center max-w-sm mb-8">Selecione uma turma no menu superior para gerenciar os alunos.</p>
-            </motion.div>
+            </motion.div >
         );
     }
 
     return (
         <motion.div
-            variants={containerVariants}
+            variants={VARIANTS.staggerContainer}
             initial="initial"
-            animate="enter"
+            animate="animate"
             className="max-w-[1200px] mx-auto flex flex-col gap-4 md:gap-8 pb-20 lg:pb-12"
         >
             {/* HEADER AREA */}
 
             {/* 1. MOBILE HEADER (Compact, Action-Focused) */}
-            <motion.div variants={itemVariants} className="md:hidden flex flex-col gap-3 w-full">
-                {mode === 'manage' && selectedIds.length > 0 ? (
-                    /* Mobile Bulk Actions (Replaces Title) */
-                    <motion.div variants={itemVariants} className="bg-surface-card p-3 rounded-xl border border-border-default shadow-sm flex items-center gap-2">
-                        <button
-                            onClick={() => setIsBulkTransferring(true)}
-                            className="flex-1 flex items-center justify-center gap-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-bold h-10 px-2 rounded-lg text-xs"
+            <motion.div variants={VARIANTS.fadeUp} className="md:hidden flex flex-col gap-3 w-full">
+                <AnimatePresence mode="wait">
+                    {mode === 'manage' && selectedIds.length > 0 ? (
+                        /* Mobile Bulk Actions (Replaces Title) */
+                        <motion.div
+                            key="mobile-bulk-actions"
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="bg-surface-card p-3 rounded-xl border border-border-default shadow-sm flex items-center gap-2"
                         >
-                            <span className="material-symbols-outlined text-lg">move_up</span>
-                            Transferir ({selectedIds.length})
-                        </button>
-                        <button
-                            onClick={handleBulkDelete}
-                            className="flex-1 flex items-center justify-center gap-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold h-10 px-2 rounded-lg text-xs"
+                            <button
+                                onClick={() => setIsBulkTransferring(true)}
+                                className="flex-1 flex items-center justify-center gap-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-bold h-10 px-2 rounded-lg text-xs"
+                            >
+                                <span className="material-symbols-outlined text-lg">move_up</span>
+                                Transferir ({selectedIds.length})
+                            </button>
+                            <button
+                                onClick={handleBulkDelete}
+                                className="flex-1 flex items-center justify-center gap-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold h-10 px-2 rounded-lg text-xs"
+                            >
+                                <span className="material-symbols-outlined text-lg">delete</span>
+                                Remover
+                            </button>
+                        </motion.div>
+                    ) : (
+                        /* Normal Mobile Header */
+                        <motion.div
+                            key="mobile-normal-header"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex flex-col gap-3"
                         >
-                            <span className="material-symbols-outlined text-lg">delete</span>
-                            Remover
-                        </button>
-                    </motion.div>
-                ) : (
-                    /* Normal Mobile Header */
-                    <>
-                        <div className="flex items-center justify-between px-1">
-                            <div>
-                                <h1 className="text-[1.75rem] font-[900] text-text-primary leading-[0.9] tracking-tighter">
-                                    {activeSeries?.name}<span className="opacity-20 mx-1.5">/</span>{selectedSection}
-                                </h1>
-                                <div className="flex items-center gap-2 mt-2">
-                                    <div className={`size-2 rounded-full animate-pulse theme-bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]`}></div>
-                                    <p className="text-[10px] text-text-muted font-black uppercase tracking-[0.2em] opacity-80">
-                                        {students.length} {students.length === 1 ? 'Matriculado' : 'Matriculados'}
-                                    </p>
+                            <div className="flex items-center justify-between px-1">
+                                <div>
+                                    <h1 className="text-[1.75rem] font-[900] text-text-primary leading-[0.9] tracking-tighter">
+                                        {activeSeries?.name}<span className="opacity-20 mx-1.5">/</span>{selectedSection}
+                                    </h1>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <div className={`size-2 rounded-full animate-pulse theme-bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]`}></div>
+                                        <p className="text-[10px] text-text-muted font-black uppercase tracking-[0.2em] opacity-80">
+                                            {students.length} {students.length === 1 ? 'Matriculado' : 'Matriculados'}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Mobile Actions Grid - High Performance UI */}
-                        <div className="grid grid-cols-2 gap-2 w-full">
-                            <button
-                                onClick={() => setIsAdding(!isAdding)}
-                                className={`relative group flex items-center justify-center gap-1.5 h-12 rounded-xl text-white text-xs font-black transition-all active:scale-[0.97] overflow-hidden theme-gradient-to-br theme-shadow-primary`}
-                            >
-                                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <span className="material-symbols-outlined text-lg">person_add</span>
-                                <span>Novo</span>
-                            </button>
-                            <button
-                                onClick={() => setIsImporting(true)}
-                                className="flex items-center justify-center gap-1.5 h-12 rounded-xl bg-surface-card/60 border border-border-default text-text-primary text-xs font-black shadow-sm hover:bg-surface-subtle active:scale-[0.97] transition-all"
-                            >
-                                <span className="material-symbols-outlined text-lg text-text-muted">upload_file</span>
-                                <span>Importar</span>
-                            </button>
-                        </div>
-                    </>
-                )}
+                            {/* Mobile Actions Grid - High Performance UI */}
+                            <div className="grid grid-cols-2 gap-2 w-full">
+                                <button
+                                    onClick={() => setIsAdding(!isAdding)}
+                                    className={`relative group flex items-center justify-center gap-1.5 h-12 rounded-xl text-white text-xs font-black transition-all active:scale-[0.97] overflow-hidden theme-gradient-to-br theme-shadow-primary`}
+                                >
+                                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <span className="material-symbols-outlined text-lg">person_add</span>
+                                    <span>Novo</span>
+                                </button>
+                                <button
+                                    onClick={() => setIsImporting(true)}
+                                    className="flex items-center justify-center gap-1.5 h-12 rounded-xl bg-surface-card/60 border border-border-default text-text-primary text-xs font-black shadow-sm hover:bg-surface-subtle active:scale-[0.97] transition-all"
+                                >
+                                    <span className="material-symbols-outlined text-lg text-text-muted">upload_file</span>
+                                    <span>Importar</span>
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </motion.div>
 
             {/* 2. DESKTOP HEADER (Original Card Style - Hidden on Mobile) */}
@@ -461,43 +661,57 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                 <div className="flex flex-row items-center gap-2 w-full lg:w-auto relative z-10 transition-all">
                     {mode === 'manage' ? (
                         <>
-                            {selectedIds.length > 0 ? (
-                                <motion.div variants={itemVariants} className="flex flex-row items-center gap-2 w-full">
-                                    <button
-                                        onClick={() => setIsBulkTransferring(true)}
-                                        className="flex-1 flex items-center justify-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-600 font-bold h-10 md:h-12 px-2 rounded-xl transition-all active:scale-95 text-xs md:text-base"
+                            <AnimatePresence mode="wait">
+                                {selectedIds.length > 0 ? (
+                                    <motion.div
+                                        key="bulk-actions"
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        className="flex flex-row items-center gap-2 w-full"
                                     >
-                                        <span className="material-symbols-outlined text-lg">move_up</span>
-                                        <span className="truncate">Transferir ({selectedIds.length})</span>
-                                    </button>
-                                    <button
-                                        onClick={handleBulkDelete}
-                                        className="flex-1 flex items-center justify-center gap-2 bg-red-100 hover:bg-red-200 text-red-600 font-bold h-10 md:h-12 px-2 rounded-xl transition-all active:scale-95 text-xs md:text-base"
+                                        <button
+                                            onClick={() => setIsBulkTransferring(true)}
+                                            className="flex-1 flex items-center justify-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-600 font-bold h-10 md:h-12 px-2 rounded-xl transition-all active:scale-95 text-xs md:text-base"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">move_up</span>
+                                            <span className="truncate">Transferir ({selectedIds.length})</span>
+                                        </button>
+                                        <button
+                                            onClick={handleBulkDelete}
+                                            className="flex-1 flex items-center justify-center gap-2 bg-red-100 hover:bg-red-200 text-red-600 font-bold h-10 md:h-12 px-2 rounded-xl transition-all active:scale-95 text-xs md:text-base"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">delete</span>
+                                            <span className="truncate">Remover</span>
+                                        </button>
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="normal-actions"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="flex gap-2 w-full md:w-auto mt-4 md:mt-0"
                                     >
-                                        <span className="material-symbols-outlined text-lg">delete</span>
-                                        <span className="truncate">Remover</span>
-                                    </button>
-                                </motion.div>
-                            ) : (
-                                <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
-                                    <button
-                                        onClick={() => setIsImporting(true)}
-                                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 md:px-5 py-2.5 rounded-xl bg-surface-card border border-border-default text-text-primary font-bold shadow-sm hover:bg-surface-subtle transition-all active:scale-95`}
-                                    >
-                                        <span className="material-symbols-outlined text-xl">upload_file</span>
-                                        <span className="md:hidden">Importar</span>
-                                        <span className="hidden md:inline">Importar</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setIsAdding(!isAdding)}
-                                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 md:px-5 py-2.5 rounded-xl text-white font-bold shadow-lg transition-all active:scale-95 theme-bg-primary theme-shadow-primary"
-                                    >
-                                        <span className="material-symbols-outlined text-xl">add_circle</span>
-                                        <span className="md:hidden">Novo</span>
-                                        <span className="hidden md:inline">Novo Aluno</span>
-                                    </button>
-                                </div>
-                            )}
+                                        <button
+                                            onClick={() => setIsImporting(true)}
+                                            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 md:px-5 py-2.5 rounded-xl bg-surface-card border border-border-default text-text-primary font-bold shadow-sm hover:bg-surface-subtle transition-all active:scale-95`}
+                                        >
+                                            <span className="material-symbols-outlined text-xl">upload_file</span>
+                                            <span className="md:hidden">Importar</span>
+                                            <span className="hidden md:inline">Importar</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setIsAdding(!isAdding)}
+                                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 md:px-5 py-2.5 rounded-xl text-white font-bold shadow-lg transition-all active:scale-95 theme-bg-primary theme-shadow-primary"
+                                        >
+                                            <span className="material-symbols-outlined text-xl">add_circle</span>
+                                            <span className="md:hidden">Novo</span>
+                                            <span className="hidden md:inline">Novo Aluno</span>
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </>
                     ) : (
                         <div className="w-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-300 px-4 py-3 rounded-xl font-bold border border-indigo-100 dark:border-indigo-800 flex items-center justify-center gap-2 text-xs md:text-base">
@@ -615,7 +829,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             {
                 isAdding && (
                     <motion.div
-                        variants={itemVariants}
+                        variants={VARIANTS.fadeUp}
                         className={`bg-${theme.primaryColor}/5 border-2 border-dashed border-${theme.primaryColor}/20 p-4 sm:p-8 rounded-3xl`}
                     >
                         <div className="flex items-center gap-3 mb-4 sm:mb-6">
@@ -719,7 +933,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
                 {mode === 'report' ? (
                     /* REPORT MODE: GRID LAYOUT */
-                    <motion.div variants={containerVariants} className="flex flex-col gap-6">
+                    <motion.div variants={VARIANTS.staggerContainer} className="flex flex-col gap-6">
 
                         {/* Search Bar */}
                         <div className="relative w-full max-w-md mx-auto mb-2">
@@ -743,7 +957,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                         </div>
 
                         <motion.div
-                            variants={containerVariants}
+                            variants={VARIANTS.staggerContainer}
                             // initial/animate inherited from parent
                             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                         >
@@ -771,8 +985,8 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     .map((student, index) => (
                                         <motion.div
                                             key={student.id}
-                                            variants={itemVariants}
-                                            layoutId={`student-card-${student.id}`}
+                                            variants={VARIANTS.fadeUp}
+                                            // layoutId={`student-card-${student.id}`}
                                             onClick={() => navigate(`/reports/${student.id}`)}
                                             className="group bg-surface-card rounded-[24px] p-6 border border-border-default shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-500/20 hover:-translate-y-1 transition-all cursor-pointer relative overflow-hidden"
                                         >
@@ -807,7 +1021,12 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                     </motion.div>
                 ) : (
                     /* MANAGE MODE: RESPONSIVE LAYOUT (Card List on Mobile, Table on Desktop) */
-                    <div className="flex flex-col">
+                    <motion.div
+                        className="flex flex-col"
+                        variants={VARIANTS.staggerContainer}
+                        initial="initial"
+                        animate="animate"
+                    >
 
                         {/* A. MOBILE CARD VIEW (< md) */}
                         <div className="md:hidden flex flex-col gap-2">
@@ -821,88 +1040,19 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                 </div>
                             ) : (
                                 students.map((student) => (
-                                    <motion.div
-                                        variants={itemVariants}
-                                        layoutId={`student-row-mobile-${student.id}`}
+                                    <StudentMobileCard
                                         key={student.id}
-                                        className={`group relative overflow-hidden transition-all duration-200 border-b border-border-subtle last:border-0 ${selectedIds.includes(student.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card'}`}
-                                        onClick={() => toggleSelect(student.id)}
-                                    >
-                                        <div className="flex items-center gap-3 p-3 w-full">
-                                            {/* Checkbox */}
-                                            <div className="flex items-center flex-shrink-0">
-                                                <input
-                                                    type="checkbox"
-                                                    aria-label="Selecionar aluno"
-                                                    className="size-5 rounded border-2 border-slate-300 dark:border-slate-600 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer accent-indigo-600"
-                                                    checked={selectedIds.includes(student.id)}
-                                                    onChange={() => toggleSelect(student.id)}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
-                                            </div>
-
-                                            {/* Number Badge (imitating Desktop) */}
-                                            <div className="flex-shrink-0">
-                                                <span className="font-mono text-xs font-bold text-text-muted bg-surface-subtle px-1.5 py-0.5 rounded">
-                                                    {student.number}
-                                                </span>
-                                            </div>
-
-                                            {/* Content (Name) */}
-                                            <div className="flex-1 min-w-0 flex items-center">
-                                                {editingId === student.id ? (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, scale: 0.95 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        transition={{ duration: 0.2 }}
-                                                        className="flex items-center gap-2 w-full"
-                                                    >
-                                                        <input
-                                                            type="text"
-                                                            value={editName}
-                                                            onChange={(e) => setEditName(e.target.value)}
-                                                            className="flex-1 h-8 px-2 rounded border border-indigo-500 bg-white dark:bg-black font-bold text-sm focus:outline-none"
-                                                            autoFocus
-                                                            onClick={(e) => e.stopPropagation()}
-                                                            aria-label="Editar nome do aluno"
-                                                        />
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); saveEdit(); }}
-                                                            className="size-8 rounded bg-indigo-500 text-white flex items-center justify-center shadow-sm"
-                                                        >
-                                                            <span className="material-symbols-outlined text-sm">check</span>
-                                                        </button>
-                                                    </motion.div>
-                                                ) : (
-                                                    <h3 className="font-bold text-text-primary text-sm leading-tight line-clamp-2 capitalize break-words">
-                                                        {student.name.toLowerCase()}
-                                                    </h3>
-                                                )}
-                                            </div>
-
-                                            {/* Actions (Desktop Style but compact) */}
-                                            <div className={`flex items-center gap-1 flex-shrink-0 ${editingId === student.id ? 'hidden' : ''}`}>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleEdit(student); }}
-                                                    className="size-8 rounded-lg text-text-muted hover:text-indigo-600 hover:bg-surface-subtle transition-colors flex items-center justify-center"
-                                                >
-                                                    <span className="material-symbols-outlined text-[20px]">edit</span>
-                                                </button>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); setTransferringStudent(student); }}
-                                                    className="size-8 rounded-lg text-text-muted hover:text-amber-600 hover:bg-surface-subtle transition-colors flex items-center justify-center"
-                                                >
-                                                    <span className="material-symbols-outlined text-[20px]">move_up</span>
-                                                </button>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }}
-                                                    className="size-8 rounded-lg text-text-muted hover:text-red-600 hover:bg-surface-subtle transition-colors flex items-center justify-center"
-                                                >
-                                                    <span className="material-symbols-outlined text-[20px]">delete</span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </motion.div>
+                                        student={student}
+                                        isSelected={selectedIds.includes(student.id)}
+                                        toggleSelect={toggleSelect}
+                                        isEditing={editingId === student.id}
+                                        editName={editingId === student.id ? editName : ''}
+                                        setEditName={setEditName}
+                                        saveEdit={saveEdit}
+                                        handleEdit={handleEdit}
+                                        setTransferringStudent={setTransferringStudent}
+                                        handleDelete={handleDelete}
+                                    />
                                 ))
                             )}
                         </div>
@@ -915,13 +1065,24 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                         <tr className="bg-surface-subtle/50 border-b border-border-default">
                                             <th className="px-4 py-3 w-12">
                                                 <div className="flex items-center justify-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
-                                                        checked={students.length > 0 && selectedIds.length === students.length}
-                                                        onChange={toggleSelectAll}
-                                                        title="Selecionar todos os alunos"
-                                                    />
+                                                    <div
+                                                        onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
+                                                        className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer backdrop-blur-md ${students.length > 0 && selectedIds.length === students.length ? 'theme-bg-primary border-primary shadow-lg shadow-primary/20 scale-105' : 'border-slate-400 dark:border-slate-500 bg-white/60 dark:bg-slate-800/60 hover:border-primary hover:bg-white dark:hover:bg-slate-700'}`}
+                                                        role="button"
+                                                        aria-label={`Selecionar todos os alunos, ${students.length > 0 && selectedIds.length === students.length ? 'selecionado' : 'não selecionado'}`}
+                                                        tabIndex={0}
+                                                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSelectAll(); } }}
+                                                    >
+                                                        {students.length > 0 && selectedIds.length === students.length && (
+                                                            <motion.span
+                                                                initial={{ scale: 0.5, opacity: 0 }}
+                                                                animate={{ scale: 1, opacity: 1 }}
+                                                                className="material-symbols-outlined text-white text-lg font-black"
+                                                            >
+                                                                check
+                                                            </motion.span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </th>
                                             <th className="px-8 py-5 text-[10px] font-black uppercase text-text-muted tracking-widest w-24">Nº</th>
@@ -946,87 +1107,26 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                             </tr>
                                         ) : (
                                             students.map((student) => (
-                                                <motion.tr
+                                                <StudentDesktopRow
                                                     key={student.id}
-                                                    variants={itemVariants}
-                                                    className={`group transition-all duration-150 border-b border-border-subtle ${selectedIds.includes(student.id) ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card hover:bg-surface-subtle'}`}
-                                                >
-                                                    <td className="px-4 py-4">
-                                                        <div className="flex items-center justify-center">
-                                                            <input
-                                                                type="checkbox"
-                                                                className="size-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 checked:bg-primary checked:border-primary transition-all cursor-pointer accent-indigo-600"
-                                                                checked={selectedIds.includes(student.id)}
-                                                                onChange={() => toggleSelect(student.id)}
-                                                                title={`Selecionar ${student.name}`}
-                                                            />
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-8 py-4">
-                                                        <span className="font-mono text-sm font-bold text-text-muted bg-surface-subtle px-2 py-1 rounded-lg">
-                                                            {student.number}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-8 py-4">
-                                                        {editingId === student.id ? (
-                                                            <motion.div
-                                                                initial={{ opacity: 0, scale: 0.95 }}
-                                                                animate={{ opacity: 1, scale: 1 }}
-                                                                transition={{ duration: 0.2 }}
-                                                                className="flex items-center gap-3"
-                                                            >
-                                                                <input
-                                                                    type="text"
-                                                                    value={editName}
-                                                                    onChange={(e) => setEditName(e.target.value)}
-                                                                    className="h-10 px-4 rounded-xl border-2 border-indigo-500 bg-white dark:bg-black font-bold text-sm focus:outline-none shadow-lg shadow-indigo-500/20 w-full max-w-sm"
-                                                                    placeholder="Nome do aluno"
-                                                                    title="Editar nome do aluno"
-                                                                    autoFocus
-                                                                />
-                                                                <button onClick={saveEdit} className="size-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 hover:scale-110 active:scale-95 transition-all">
-                                                                    <span className="material-symbols-outlined font-bold">check</span>
-                                                                </button>
-                                                            </motion.div>
-                                                        ) : (
-                                                            <span className="font-bold text-text-primary text-base group-hover:text-indigo-600 transition-colors">
-                                                                {student.name}
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-8 py-4 text-right">
-                                                        <div className="flex items-center justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                                                            <button
-                                                                onClick={() => handleEdit(student)}
-                                                                className="size-9 rounded-lg hover:bg-surface-subtle text-text-muted hover:text-indigo-500 transition-colors flex items-center justify-center"
-                                                                title="Editar Nome"
-                                                            >
-                                                                <span className="material-symbols-outlined text-lg">edit</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setTransferringStudent(student)}
-                                                                className="size-9 rounded-lg hover:bg-amber-50 text-text-muted hover:text-amber-500 transition-colors flex items-center justify-center"
-                                                                title="Transferir Aluno"
-                                                            >
-                                                                <span className="material-symbols-outlined text-lg">move_up</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDelete(student.id)}
-                                                                className="size-9 rounded-lg hover:bg-red-50 text-text-muted hover:text-red-500 transition-colors flex items-center justify-center"
-                                                                title="Remover Aluno"
-                                                            >
-                                                                <span className="material-symbols-outlined text-lg">delete</span>
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </motion.tr>
+                                                    student={student}
+                                                    isSelected={selectedIds.includes(student.id)}
+                                                    toggleSelect={toggleSelect}
+                                                    isEditing={editingId === student.id}
+                                                    editName={editingId === student.id ? editName : ''}
+                                                    setEditName={setEditName}
+                                                    saveEdit={saveEdit}
+                                                    handleEdit={handleEdit}
+                                                    setTransferringStudent={setTransferringStudent}
+                                                    handleDelete={handleDelete}
+                                                />
                                             ))
                                         )}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 )}
             </div>
 

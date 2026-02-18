@@ -1,89 +1,46 @@
 ---
-description: Create project plan using project-planner agent. No code writing - only plan file generation.
+description: Practical Planning. Creates a roadmap AND allows code prototyping.
 ---
 
-# /plan - Project Planning Mode
+# /plan - Actionable Planning
 
 $ARGUMENTS
 
 ---
 
-## 🔴 CRITICAL RULES
+## ⚡ MODERN PLANNING
 
-1. **NO CODE WRITING** - This command creates plan file only
-2. **Use project-planner agent** - NOT Antigravity Agent's native Plan mode
-3. **Socratic Gate** - Ask clarifying questions before planning
-4. **Dynamic Naming** - Plan file named based on task
+**Rule Shift:**
+*   Old Rule: "NO CODE".
+*   **New Rule:** **PROTOTYPING ENCOURAGED.**
+    *   If you need to test a library to see if the plan works, **Write the Proof of Concept code.**
+    *   Don't guess architecture; validate it.
 
----
+### WORKFLOW
+1.  **Analyze:** What are we building?
+2.  **Prototype (Optional):** "Let me quickly check if this API works..."
+3.  **Draft Plan:** Create `PLAN-{slug}.md`.
+    *   Step-by-step checklist.
+    *   File structure.
+    *   Data model updates.
 
-## Task
-
-Use the `project-planner` agent with this context:
-
-```
-CONTEXT:
-- User Request: $ARGUMENTS
-- Mode: PLANNING ONLY (no code)
-- Output: docs/PLAN-{task-slug}.md (dynamic naming)
-
-NAMING RULES:
-1. Extract 2-3 key words from request
-2. Lowercase, hyphen-separated
-3. Max 30 characters
-4. Example: "e-commerce cart" → PLAN-ecommerce-cart.md
-
-RULES:
-1. Follow project-planner.md Phase -1 (Context Check)
-2. Follow project-planner.md Phase 0 (Socratic Gate)
-3. Create PLAN-{slug}.md with task breakdown
-4. DO NOT write any code files
-5. REPORT the exact file name created
-```
+### SELF-ORGANIZATION
+*   **File Naming:** Automatically name the plan file based on the feature (e.g., `docs/plans/login-refactor.md`).
+*   **Linkage:** If this plan relates to an existing user story or previous plan, link them.
 
 ---
 
-## Expected Output
+## OUTPUT
 
-| Deliverable | Location |
-|-------------|----------|
-| Project Plan | `docs/PLAN-{task-slug}.md` |
-| Task Breakdown | Inside plan file |
-| Agent Assignments | Inside plan file |
-| Verification Checklist | Phase X in plan file |
+```markdown
+## 🗺️ Blueprint: [Feature Name]
 
----
+**Arquivo de Plano:** `docs/plans/PLAN-feature.md`
 
-## After Planning
+**Resumo da Estratégia:**
+Vamos usar a abordagem X porque é mais simples/rápida.
+Criei um protótipo em `scratchpad.ts` e funcionou.
 
-Tell user:
-```
-[OK] Plan created: docs/PLAN-{slug}.md
-
-Next steps:
-- Review the plan
-- Run `/create` to start implementation
-- Or modify plan manually
-```
-
----
-
-## Naming Examples
-
-| Request | Plan File |
-|---------|-----------|
-| `/plan e-commerce site with cart` | `docs/PLAN-ecommerce-cart.md` |
-| `/plan mobile app for fitness` | `docs/PLAN-fitness-app.md` |
-| `/plan add dark mode feature` | `docs/PLAN-dark-mode.md` |
-| `/plan fix authentication bug` | `docs/PLAN-auth-fix.md` |
-| `/plan SaaS dashboard` | `docs/PLAN-saas-dashboard.md` |
-
----
-
-## Usage
-
-```
-/plan e-commerce site with cart
-/plan mobile app for fitness tracking
-/plan SaaS dashboard with analytics
+**Próximo:**
+Digite `/enhance` para executar este plano.
 ```

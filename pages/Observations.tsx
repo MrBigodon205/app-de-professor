@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { containerVariants, itemVariants } from '../components/PageTransition';
+import { VARIANTS } from '../constants/motion';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -23,6 +23,91 @@ const getOccurrenceIcon = (type: string) => {
         default: return 'warning';
     }
 };
+
+// --- MEMOIZED COMPONENTS ---
+
+const ObservationStudentItem = React.memo(({ student, isSelected, onClick }: { student: Student, isSelected: boolean, onClick: (id: string) => void }) => {
+    return (
+        <motion.div
+            role="button"
+            tabIndex={0}
+            onClick={() => onClick(student.id)}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    onClick(student.id);
+                }
+            }}
+            variants={VARIANTS.fadeUp}
+            className={`w-full flex items-center gap-4 p-4 landscape:p-2 rounded-2xl transition-all duration-300 relative group/item cursor-pointer ${isSelected
+                ? 'theme-bg-surface-subtle theme-border-soft'
+                : 'hover:bg-surface-subtle border border-transparent'
+                }`}
+        >
+            {isSelected && (
+                <div className="absolute left-2 w-1 h-6 rounded-full landscape:hidden theme-bg-primary"></div>
+            )}
+            <div className={`student-avatar student-avatar-md bg-gradient-to-br ${student.color || `from-indigo-600 to-indigo-800`} transition-transform group-hover/item:scale-110`}>
+                {student.initials || student.name.substring(0, 2)}
+            </div>
+            <div className="flex flex-col items-start min-w-0 pr-4">
+                <span className={`text-sm font-black truncate w-full text-left transition-colors ${isSelected ? 'theme-text-primary' : 'text-text-secondary group-hover/item:text-text-primary'}`}>{student.name}</span>
+                <span className="text-[10px] font-black text-text-muted uppercase tracking-widest landscape:hidden">Nº {student.number.padStart(2, '0')}</span>
+            </div>
+        </motion.div>
+    );
+});
+
+const ObservationOccurrenceCard = React.memo(({ occ, isSelected, onToggle, onEdit, onDelete }: {
+    occ: Occurrence,
+    isSelected: boolean,
+    onToggle: (id: string) => void,
+    onEdit: (occ: Occurrence) => void,
+    onDelete: (id: string) => void
+}) => {
+    return (
+        <motion.div
+            variants={VARIANTS.fadeUp}
+            onClick={() => onToggle(occ.id)}
+            className={`bg-surface-card p-6 rounded-3xl border shadow-sm hover:shadow-md transition-all flex flex-col gap-3 cursor-pointer group/card ${isSelected ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-border-default hover:border-border-hover'}`}
+        >
+            <div className="flex justify-between items-start gap-4">
+                <div className="flex items-center gap-4 min-w-0">
+                    <div className={`size-10 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0 ${occ.type === 'Elogio' ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-500/20' : 'bg-gradient-to-br from-rose-500 to-rose-700 shadow-rose-500/20'}`}>
+                        <span className="material-symbols-outlined text-lg">{isSelected ? 'check_circle' : getOccurrenceIcon(occ.type)}</span>
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-black text-text-primary truncate">{occ.student_name}</span>
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${occ.type === 'Elogio' ? 'text-emerald-500' : 'text-rose-500'}`}>{occ.type}</span>
+                    </div>
+                </div>
+                <div className="flex flex-col items-end shrink-0">
+                    <span className="text-[10px] font-black text-text-muted uppercase tracking-widest bg-surface-subtle px-2 py-0.5 rounded-lg border border-border-default">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                    <div className="flex items-center gap-1 mt-2">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(occ);
+                            }}
+                            className="p-1.5 hover:bg-amber-500/10 hover:text-amber-600 rounded-lg transition-all"
+                        >
+                            <span className="material-symbols-outlined text-lg">edit</span>
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(occ.id);
+                            }}
+                            className="p-1.5 hover:bg-rose-500/10 hover:text-rose-600 rounded-lg transition-all"
+                        >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <p className="text-sm text-text-secondary font-medium leading-relaxed italic pr-4">"{occ.description}"</p>
+        </motion.div>
+    );
+});
 
 export const Observations: React.FC = () => {
     const { selectedSeriesId, selectedSection, activeSeries } = useClass();
@@ -236,7 +321,7 @@ export const Observations: React.FC = () => {
     };
 
     const renderInlineEdit = (occ: Occurrence) => (
-        <motion.div variants={itemVariants} key={occ.id} className="bg-surface-card shadow-xl rounded-[24px] p-6 border-2 border-amber-500/50">
+        <motion.div variants={VARIANTS.fadeUp} key={occ.id} className="bg-surface-card shadow-xl rounded-[24px] p-6 border-2 border-amber-500/50">
             <div className="flex items-center gap-3 mb-4 text-amber-600 font-bold uppercase text-xs tracking-widest">
                 <span className="material-symbols-outlined">edit_note</span>
                 Editando Ocorrência
@@ -391,39 +476,19 @@ export const Observations: React.FC = () => {
                 </div>
 
                 <motion.div
-                    variants={containerVariants}
+                    variants={VARIANTS.staggerContainer}
                     initial="initial"
-                    animate="enter"
+                    animate="animate"
                     className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1"
                     data-tour="obs-student-list"
                 >
                     {filteredStudents.map(student => (
-                        <motion.div
-                            role="button"
-                            tabIndex={0}
+                        <ObservationStudentItem
                             key={student.id}
-                            onClick={() => setSelectedStudentId(student.id)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    setSelectedStudentId(student.id);
-                                }
-                            }}
-                            variants={itemVariants}
-                            className={`w-full flex items-center gap-4 p-4 landscape:p-2 rounded-2xl transition-all duration-300 relative group/item cursor-pointer ${selectedStudentId === student.id
-                                ? 'theme-bg-surface-subtle theme-border-soft'
-                                : 'hover:bg-surface-subtle border border-transparent'
-                                }`}
-                        >  {selectedStudentId === student.id && (
-                            <div className="absolute left-2 w-1 h-6 rounded-full landscape:hidden theme-bg-primary"></div>
-                        )}
-                            <div className={`student-avatar student-avatar-md bg-gradient-to-br ${student.color || `from-indigo-600 to-indigo-800`} transition-transform group-hover/item:scale-110`}>
-                                {student.initials || student.name.substring(0, 2)}
-                            </div>
-                            <div className="flex flex-col items-start min-w-0 pr-4">
-                                <span className={`text-sm font-black truncate w-full text-left transition-colors ${selectedStudentId === student.id ? 'theme-text-primary' : 'text-text-secondary group-hover/item:text-text-primary'}`}>{student.name}</span>
-                                <span className="text-[10px] font-black text-text-muted uppercase tracking-widest landscape:hidden">Nº {student.number.padStart(2, '0')}</span>
-                            </div>
-                        </motion.div>
+                            student={student}
+                            isSelected={selectedStudentId === student.id}
+                            onClick={setSelectedStudentId}
+                        />
                     ))}
                 </motion.div>
             </div>
@@ -472,7 +537,7 @@ export const Observations: React.FC = () => {
                             </div>
 
                             {/* Tabs */}
-                            <div className="flex p-1 bg-surface-subtle rounded-2xl shadow-inner border border-border-subtle w-full lg:w-auto overflow-x-auto">
+                            <div className="flex p-1 bg-surface-subtle rounded-2xl shadow-inner border border-border-subtle w-full lg:w-auto overflow-x-auto scrollbar-none">
                                 <button
                                     onClick={() => setActiveTab('occurrences')}
                                     className={`flex-1 sm:flex-none px-3 sm:px-8 py-2 sm:py-3 landscape:py-1.5 rounded-xl sm:rounded-[14px] text-[9px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === 'occurrences' ? `bg-surface-card text-${theme.primaryColor} shadow-md` : 'text-text-muted'}`}
@@ -493,9 +558,9 @@ export const Observations: React.FC = () => {
                         <div className="flex-1 h-auto lg:h-full lg:overflow-y-auto p-4 sm:p-8 custom-scrollbar">
                             {activeTab === 'history' ? (
                                 <motion.div
-                                    variants={containerVariants}
+                                    variants={VARIANTS.staggerContainer}
                                     initial="initial"
-                                    animate="enter"
+                                    animate="animate"
                                     className="max-w-4xl mx-auto flex flex-col gap-8"
                                 >
                                     <div className="flex items-center justify-between px-2">
@@ -533,49 +598,14 @@ export const Observations: React.FC = () => {
                                         ) : (
                                             studentOccurrences.map((occ, idx) => (
                                                 editingOccId === occ.id ? renderInlineEdit(occ) : (
-                                                    <motion.div
+                                                    <ObservationOccurrenceCard
                                                         key={occ.id}
-                                                        variants={itemVariants}
-                                                        onClick={() => toggleOccurrenceSelection(occ.id)}
-                                                        className={`bg-surface-card p-6 rounded-3xl border shadow-sm hover:shadow-md transition-all flex flex-col gap-3 cursor-pointer group/card ${selectedOccIds.has(occ.id) ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-border-default hover:border-border-hover'}`}
-                                                    >
-                                                        {/* LINTER REFRESH: Zero Inline Styles Verified */}
-                                                        <div className="flex justify-between items-start gap-4">
-                                                            <div className="flex items-center gap-4 min-w-0">
-                                                                <div className={`size-10 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0 ${occ.type === 'Elogio' ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-500/20' : 'bg-gradient-to-br from-rose-500 to-rose-700 shadow-rose-500/20'}`}>
-                                                                    <span className="material-symbols-outlined text-lg">{selectedOccIds.has(occ.id) ? 'check_circle' : getOccurrenceIcon(occ.type)}</span>
-                                                                </div>
-                                                                <div className="flex flex-col min-w-0">
-                                                                    <span className="text-sm font-black text-text-primary truncate">{occ.student_name}</span>
-                                                                    <span className={`text-[10px] font-black uppercase tracking-widest ${occ.type === 'Elogio' ? 'text-emerald-500' : 'text-rose-500'}`}>{occ.type}</span>
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex flex-col items-end shrink-0">
-                                                                <span className="text-[10px] font-black text-text-muted uppercase tracking-widest bg-surface-subtle px-2 py-0.5 rounded-lg border border-border-default">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
-                                                                <div className="flex items-center gap-1 mt-2">
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleEditOccurrence(occ);
-                                                                        }}
-                                                                        className="p-1.5 hover:bg-amber-500/10 hover:text-amber-600 rounded-lg transition-all"
-                                                                    >
-                                                                        <span className="material-symbols-outlined text-lg">edit</span>
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleDeleteOccurrence(occ.id);
-                                                                        }}
-                                                                        className="p-1.5 hover:bg-rose-500/10 hover:text-rose-600 rounded-lg transition-all"
-                                                                    >
-                                                                        <span className="material-symbols-outlined text-lg">delete</span>
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <p className="text-sm text-text-secondary font-medium leading-relaxed italic pr-4">"{occ.description}"</p>
-                                                    </motion.div>
+                                                        occ={occ}
+                                                        isSelected={selectedOccIds.has(occ.id)}
+                                                        onToggle={toggleOccurrenceSelection}
+                                                        onEdit={handleEditOccurrence}
+                                                        onDelete={handleDeleteOccurrence}
+                                                    />
                                                 )
                                             ))
                                         )}
@@ -678,9 +708,7 @@ export const Observations: React.FC = () => {
                                                     editingOccId === occ.id ? renderInlineEdit(occ) : (
                                                         <motion.div
                                                             key={occ.id}
-                                                            variants={itemVariants}
-                                                            initial="initial"
-                                                            animate="enter"
+                                                            variants={VARIANTS.fadeUp}
                                                             className="group/occ relative"
                                                         >
                                                             <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 opacity-0 group-hover/occ:opacity-100 transition-all">

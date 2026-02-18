@@ -1,103 +1,60 @@
 ---
-description: Debugging command. Activates DEBUG mode for systematic problem investigation.
+description: The Master Healer. Auto-detects bugs, generates tests, and fixes issues.
 ---
 
-# /debug - Systematic Problem Investigation
+# /debug - Auto-Healer
 
 $ARGUMENTS
 
 ---
 
-## Purpose
+## ⚡ PROTOCOL: DETECT -> TEST -> FIX
 
-This command activates DEBUG mode for systematic investigation of issues, errors, or unexpected behavior.
+**User Request:** "$ARGUMENTS"
 
----
+### 1. DIAGNOSIS (The "Dr. House" Phase)
+*   **Scan:** Read error logs, file context, and `types.ts`.
+*   **Hypothesis:** Formulate the most likely cause.
 
-## Behavior
+### 2. TEST GENERATION (The "Evidence")
+*   **Rule:** If the bug is logical (not just a typo), **Write a Test Case code block** to reproduce it.
+*   *Note:* You don't need to save the test file if it's a quick verify, just run it in your mind or a temp script.
 
-When `/debug` is triggered:
-
-1. **Gather information**
-   - Error message
-   - Reproduction steps
-   - Expected vs actual behavior
-   - Recent changes
-
-2. **Form hypotheses**
-   - List possible causes
-   - Order by likelihood
-
-3. **Investigate systematically**
-   - Test each hypothesis
-   - Check logs, data flow
-   - Use elimination method
-
-4. **Fix and prevent**
-   - Apply fix
-   - Explain root cause
-   - Add prevention measures
+### 3. REPAIR (The Fix)
+*   **Apply Fix:** Edit the code.
+*   **Safety Gate:**
+    *   If fixing **Auth/DB**: 🔴 **STOP & ASK**.
+    *   If fixing **UI/Logic**: 🟢 **AUTO-APPLY**.
+*   **Verify:** Did the test pass?
+    *   *Yes:* Commit.
+    *   *No:* Revert and Retry (Max 3 attempts).
 
 ---
 
-## Output Format
+## 🧪 SUB-COMMAND: /debug test
+If the user asks specifically for tests:
+1.  Analyze the component.
+2.  Generate Unit Tests (Jest/Vitest).
+3.  Check Coverage.
+
+---
+
+## OUTPUT
 
 ```markdown
-## 🔍 Debug: [Issue]
+## 🐛 Debug Report
 
-### 1. Symptom
-[What's happening]
+**Issue:** [Simple Explanation]
+**Diagnosis:** [Root Cause]
 
-### 2. Information Gathered
-- Error: `[error message]`
-- File: `[filepath]`
-- Line: [line number]
+**Action:**
+1. Created reproduction test.
+2. Fixed logic in `useAuth.ts`.
+3. Verified fix.
 
-### 3. Hypotheses
-1. ❓ [Most likely cause]
-2. ❓ [Second possibility]
-3. ❓ [Less likely cause]
-
-### 4. Investigation
-
-**Testing hypothesis 1:**
-[What I checked] → [Result]
-
-**Testing hypothesis 2:**
-[What I checked] → [Result]
-
-### 5. Root Cause
-🎯 **[Explanation of why this happened]**
-
-### 6. Fix
-```[language]
-// Before
-[broken code]
-
-// After
-[fixed code]
+**Code:**
+```typescript
+// Fixed Code
+...
 ```
-
-### 7. Prevention
-🛡️ [How to prevent this in the future]
 ```
-
----
-
-## Examples
-
-```
-/debug login not working
-/debug API returns 500
-/debug form doesn't submit
-/debug data not saving
-```
-
----
-
-## Key Principles
-
-- **Ask before assuming** - get full error context
-- **Test hypotheses** - don't guess randomly
-- **Explain why** - not just what to fix
-- **Prevent recurrence** - add tests, validation

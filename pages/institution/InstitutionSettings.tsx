@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { VARIANTS } from '../../constants/motion';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import {
@@ -204,8 +205,9 @@ export const InstitutionSettings: React.FC = () => {
     return (
         <div className="min-h-screen bg-surface-page p-6">
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                variants={VARIANTS.fadeUp}
+                initial="initial"
+                animate="animate"
                 className="max-w-5xl mx-auto"
             >
                 {/* Header */}
@@ -269,9 +271,10 @@ export const InstitutionSettings: React.FC = () => {
                     {activeTab === 'calc' && (
                         <motion.div
                             key="calc"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
+                            variants={VARIANTS.slideHorizontal}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
                             className="space-y-6"
                         >
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -373,9 +376,10 @@ export const InstitutionSettings: React.FC = () => {
                     {activeTab === 'units' && (
                         <motion.div
                             key="units"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
+                            variants={VARIANTS.slideHorizontal}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
                             className="space-y-6"
                         >
                             {/* Unit Selector */}
@@ -551,9 +555,10 @@ export const InstitutionSettings: React.FC = () => {
                     {activeTab === 'approval' && (
                         <motion.div
                             key="approval"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
+                            variants={VARIANTS.slideHorizontal}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
                             className="grid grid-cols-1 lg:grid-cols-2 gap-6"
                         >
                             {/* Approval Settings */}

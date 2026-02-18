@@ -23,7 +23,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 <div className="relative group">
                     {/* Pulsing glow background */}
                     <div
-                        className="absolute -inset-1 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 animate-pulse theme-gradient-to-r"
+                        className="absolute -inset-1 rounded-full blur-sm opacity-25 group-hover:opacity-50 transition-opacity duration-300 animate-pulse theme-gradient-to-r"
                     ></div>
 
                     <div className="relative size-16 md:size-20 landscape:size-12 rounded-full border-4 border-surface-card shadow-2xl overflow-hidden bg-surface-card group-hover:scale-105 transition-transform duration-500">

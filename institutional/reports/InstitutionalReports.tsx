@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSchool } from '../contexts/SchoolContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// import jsPDF from 'jspdf'; // Dynamic
+// import autoTable from 'jspdf-autotable'; // Dynamic
 import {
     FileText,
     Download,
@@ -223,7 +223,10 @@ export default function InstitutionalReports() {
     };
 
     // Export to PDF
-    const handleExportPDF = () => {
+    const handleExportPDF = async () => {
+        const { jsPDF } = await import('jspdf');
+        const autoTable = (await import('jspdf-autotable')).default;
+
         const doc = new jsPDF();
 
         doc.setFontSize(16);

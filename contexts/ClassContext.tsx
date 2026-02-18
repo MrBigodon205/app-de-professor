@@ -47,13 +47,11 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const location = useLocation();
 
-    // Helper to extract ID
-    const getInstitutionId = useCallback(() => {
+    // Helper to extract ID - Memoized to prevent re-fetching on sub-route changes if ID stays same
+    const activeInstitutionId = useMemo(() => {
         const match = location.pathname.match(/\/institution\/([a-f0-9-]+)/i);
         return match ? match[1] : null;
     }, [location.pathname]);
-
-    const activeInstitutionId = getInstitutionId();
 
     const fetchClasses = useCallback(async () => {
         if (!currentUser) return;

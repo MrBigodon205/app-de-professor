@@ -215,11 +215,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
             >
                 <span className={`material-symbols-outlined text-xl ${internalIsOpen ? 'icon-filled animate-none' : 'group-hover:animate-pulse'}`}>notifications</span>
                 {notifications.length > 0 && (
-                    <span className="absolute top-0 right-0 flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-white dark:border-surface-dark text-[8px] text-white items-center justify-center font-bold">
-                            {notifications.length}
-                        </span>
+                    <span className="absolute top-0 right-0 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 border-2 border-surface-card text-[9px] font-bold text-white leading-none shadow-sm">
+                        {notifications.length}
                     </span>
                 )}
             </button>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { VARIANTS } from '../constants/motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -59,7 +60,7 @@ export const ResetPassword: React.FC = () => {
     };
 
     return (
-        <div className={`flex min-h-screen w-full items-center justify-center p-4 md:p-8 font-display bg-slate-950 overflow-hidden relative selection:bg-primary/30 selection:text-white ${window.electronAPI?.isElectron ? 'pt-10' : ''}`}>
+        <div className={`flex min - h - screen w - full items - center justify - center p - 4 md: p - 8 font - display bg - slate - 950 overflow - hidden relative selection: bg - primary / 30 selection: text - white ${window.electronAPI?.isElectron ? 'pt-10' : ''} `}>
             <DesktopTitleBar />
             {/* Immersive Background (Same as Login) */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
@@ -76,9 +77,10 @@ export const ResetPassword: React.FC = () => {
             </div>
 
             <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="relative z-10 w-full max-w-md glass-card-premium overflow-hidden shadow-[0_0_100px_-20px_rgba(0,0,0,0.5)] p-8 lg:p-12"
+                variants={VARIANTS.scale}
+                initial="initial"
+                animate="animate"
+                className="relative z-10 w-full max-w-md bg-surface-card/60 backdrop-blur-3xl p-8 sm:p-10 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 dark:shadow-black/50 border border-white/20 dark:border-white/5 overflow-hidden"
             >
                 <div className="flex flex-col items-center mb-10">
                     <div className="bg-gradient-to-tr from-primary to-emerald-400 p-4 rounded-2xl mb-6 shadow-xl shadow-primary/20 border border-white/10">
@@ -102,9 +104,12 @@ export const ResetPassword: React.FC = () => {
                     </div>
                 ) : success ? (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="text-center space-y-4"
+                        key="success"
+                        variants={VARIANTS.fadeUp}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        className="text-center space-y-6"
                     >
                         <div className="flex justify-center">
                             <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center border border-emerald-500/30">

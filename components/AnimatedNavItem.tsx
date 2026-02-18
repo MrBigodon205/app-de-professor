@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+// import { motion } from 'framer-motion'; // Removed for lightness
 
 interface AnimatedNavItemProps {
     path: string;
@@ -9,6 +9,7 @@ interface AnimatedNavItemProps {
     isActive: boolean;
     isCollapsed: boolean;
     onClick?: () => void;
+    onMouseEnter?: () => void;
 }
 
 export const AnimatedNavItem: React.FC<AnimatedNavItemProps> = ({
@@ -17,29 +18,22 @@ export const AnimatedNavItem: React.FC<AnimatedNavItemProps> = ({
     icon,
     isActive,
     isCollapsed,
-    onClick
+    onClick,
+    onMouseEnter
 }) => {
     return (
         <Link
             to={path}
             onClick={onClick}
+            onMouseEnter={onMouseEnter}
             className={`relative flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group z-10 ${isCollapsed ? 'justify-center px-2' : ''
                 }`}
             title={isCollapsed ? label : ''}
         >
-            {/* Magnetic Background Pill */}
-            {isActive && (
-                <motion.div
-                    layoutId="activeNavTab"
-                    className="absolute inset-0 bg-primary/10 border border-primary/20 rounded-xl shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] dark:shadow-neon"
-                    initial={false}
-                    transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 28
-                    }}
-                />
-            )}
+            {/* Magnetic Background Pill (CSS Only) */}
+            <div
+                className={`absolute inset-0 bg-primary/10 border border-primary/20 rounded-xl shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] dark:shadow-neon transition-opacity duration-200 ${isActive ? 'opacity-100' : 'opacity-0'}`}
+            />
 
             {/* Hover Background (Subtle) for non-active items */}
             {!isActive && (
@@ -58,20 +52,18 @@ export const AnimatedNavItem: React.FC<AnimatedNavItemProps> = ({
 
             {/* Label */}
             {!isCollapsed && (
-                <span
-                    className={`text-sm tracking-wide block truncate relative z-10 ${isActive ? 'font-bold text-primary dark:text-white' : 'font-medium text-text-secondary group-hover:text-primary'
-                        }`}
-                >
+                <span className={`font-medium relative z-10 transition-colors duration-200 whitespace-nowrap ${isActive
+                    ? 'text-slate-900 dark:text-white font-bold'
+                    : 'text-text-secondary group-hover:text-text-primary'
+                    }`}>
                     {label}
                 </span>
             )}
 
-            {/* Active Indicator Dot (Floating) */}
-            {isActive && !isCollapsed && (
-                <motion.span
-                    layoutId="activeNavDot"
-                    className="absolute right-3 w-1.5 h-1.5 bg-primary rounded-full shadow-neon z-10"
-                    transition={{ type: "spring", stiffness: 250, damping: 25 }}
+            {/* Active Indicator Dot (Collapsed) */}
+            {isCollapsed && isActive && (
+                <div
+                    className="absolute right-2 size-1.5 rounded-full bg-primary shadow-neon"
                 />
             )}
         </Link>

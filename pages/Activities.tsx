@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { containerVariants, itemVariants } from '../components/PageTransition';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -11,9 +9,11 @@ import DOMPurify from 'dompurify';
 import { DatePicker } from '../components/DatePicker';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { useDebounce } from '../hooks/useDebounce';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { DynamicSelect } from '../components/DynamicSelect';
+// import { jsPDF } from 'jspdf'; // Dynamic
+// import autoTable from 'jspdf-autotable'; // Dynamic
+import { motion } from 'framer-motion';
+import { VARIANTS } from '../constants/motion';
+// import { DynamicSelect } from '../components/DynamicSelect';
 import FileViewerModal from '../components/FileViewerModal';
 import { FileImporterModal } from '../components/FileImporterModal';
 import { useStudentsData } from '../hooks/useStudentsData';
@@ -118,27 +118,26 @@ export const Activities: React.FC = () => {
         setHasDraft(false);
     };
 
-    // ANIMATIONS
-    const containerVariants: any = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.06,
-                delayChildren: 0.08
+    // Auto-load draft on mount if exists
+    // Auto-load draft on mount if exists - DISABLED BY USER REQUEST
+    /*
+    useEffect(() => {
+        if (!currentUser || !selectedSeriesId) return;
+        const key = `draft_activities_${currentUser.id}_${selectedSeriesId}`;
+        const saved = localStorage.getItem(key);
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                // Only auto-load if it was in editing mode
+                if (data.isEditing) {
+                    loadDraft();
+                }
+            } catch (e) {
+                console.error("Failed to auto-load draft", e);
             }
         }
-    };
-
-    const itemVariants: any = {
-        hidden: { opacity: 0, x: -16, scale: 0.97 },
-        visible: {
-            opacity: 1, x: 0, scale: 1,
-            transition: { type: 'spring', stiffness: 150, damping: 20 }
-        }
-    };
-
-
+    }, [selectedSeriesId, currentUser]); // Run once per series/user change
+    */
 
     // File Processing Helper
     const handleFiles = (files: File[]) => {
@@ -196,8 +195,23 @@ export const Activities: React.FC = () => {
 
     useEffect(() => {
         fetchActivities();
-        setSelectedActivityId(null);
-        setIsEditing(false);
+
+        // Navigation / Series Change Logic
+        const key = `draft_activities_${currentUser?.id}_${selectedSeriesId}`;
+        const saved = localStorage.getItem(key);
+        let hasDraftEditing = false;
+
+        if (saved) {
+            try {
+                const d = JSON.parse(saved);
+                if (d.isEditing) hasDraftEditing = true;
+            } catch (e) { }
+        }
+
+        if (!hasDraftEditing) {
+            setSelectedActivityId(null);
+            setIsEditing(false);
+        }
     }, [selectedSeriesId, activeSubject]);
 
     // useEffect removed to fix "Create New" bug.
@@ -237,11 +251,38 @@ export const Activities: React.FC = () => {
         currentUser?.id
     );
 
+    const loadActivityFormData = async (act: Activity) => {
+        setFormTitle(act.title);
+        setFormType(act.type);
+        setFormDate(act.date);
+        setFormStartDate(act.startDate || act.date);
+        setFormEndDate(act.endDate || act.date);
+        setFormFiles(act.files);
+        setFormSeriesId(act.seriesId);
+        setFormSection(act.section || '');
+
+        // Lazy Load Description
+        if (act.description) {
+            setFormDescription(act.description);
+        } else {
+            setFormDescription('Carregando...');
+            const { data } = await supabase.from('activities').select('description').eq('id', act.id).single();
+            if (data) {
+                setFormDescription(data.description || '');
+            } else {
+                setFormDescription('');
+            }
+        }
+    };
+
     const fetchActivities = async (silent = false) => {
         if (!currentUser) return;
         if (!silent) setLoading(true);
         try {
-            let query = supabase.from('activities').select('*').eq('user_id', currentUser.id);
+            // OPTIMIZED FETCH: Exclude 'description' to prevent freezing with large base64 images
+            let query = supabase.from('activities')
+                .select('id, title, type, date, section, user_id, series_id, start_date, end_date, files, completions, subject, created_at') // Excludes description
+                .eq('user_id', currentUser.id);
 
             if (selectedSeriesId) {
                 query = query.eq('series_id', selectedSeriesId);
@@ -253,7 +294,7 @@ export const Activities: React.FC = () => {
             const { data, error } = await query;
             if (error) throw error;
 
-            const activityData = data || [];
+            const activityData = (data as any[]) || [];
 
             const formatted: Activity[] = activityData.map(a => ({
                 id: a.id.toString(),
@@ -288,23 +329,29 @@ export const Activities: React.FC = () => {
                 const isCurrentFound = selectedActivityId ? formatted.find(a => a.id === selectedActivityId) : false;
 
                 if (!isEditing) {
-                    if ((!selectedActivityId) || (selectedActivityId && !isCurrentFound)) {
-                        setIsEditing(false);
-                        if (window.innerWidth >= 1024) {
-                            if (formatted.length > 0 && selectedActivityId !== formatted[0].id) {
-                                setSelectedActivityId(formatted[0].id);
-                            }
-                        } else {
+                    // Check if we have a draft that should override this reset
+                    const key = `draft_activities_${currentUser?.id}_${selectedSeriesId}`;
+                    const hasSavedDraft = localStorage.getItem(key);
+
+                    if (!hasSavedDraft) {
+                        if ((!selectedActivityId) || (selectedActivityId && !isCurrentFound)) {
+                            setIsEditing(false);
+                            // Auto-select disabled by user request. Always reset if invalid.
+                            /*
+                            if (window.innerWidth >= 1024) {
+                                if (formatted.length > 0 && selectedActivityId !== formatted[0].id) {
+                                    setSelectedActivityId(formatted[0].id);
+                                    loadActivityFormData(formatted[0]);
+                                }
+                            } else {
+                            */
                             if (selectedActivityId !== null) {
                                 setSelectedActivityId(null);
                             }
+                            // }
                         }
                     }
-                }
-            } else {
-                if (selectedActivityId !== null) {
-                    setSelectedActivityId(null);
-                    setIsEditing(false);
+                    // If draft exists, we do nothing -> preserving isEditing=true (set by loadDraft)
                 }
             }
         } catch (e) {
@@ -366,18 +413,10 @@ export const Activities: React.FC = () => {
         clearDraft();
     };
 
-    const handleSelectActivity = (act: Activity) => {
+    const handleSelectActivity = async (act: Activity) => {
         setIsEditing(false);
         setSelectedActivityId(act.id);
-        setFormTitle(act.title);
-        setFormType(act.type);
-        setFormDate(act.date);
-        setFormStartDate(act.startDate || act.date);
-        setFormEndDate(act.endDate || act.date);
-        setFormDescription(act.description);
-        setFormFiles(act.files);
-        setFormSeriesId(act.seriesId);
-        setFormSection(act.section || '');
+        loadActivityFormData(act);
     };
 
     const handleSave = async () => {
@@ -599,8 +638,11 @@ export const Activities: React.FC = () => {
         return map[colorClass] || [59, 130, 246];
     };
 
-    const handleExportPDF = () => {
+    const handleExportPDF = async () => {
         if (!currentActivity) return;
+
+        const { jsPDF } = await import('jspdf');
+        const autoTable = (await import('jspdf-autotable')).default;
 
         const doc = new jsPDF();
         const primaryRGB = getThemeRGB(`${theme.baseColor}-600`);
@@ -690,53 +732,38 @@ export const Activities: React.FC = () => {
         }
 
         // Student List Table
+        // Only if it's NOT 'Conteúdo'? Or always? Let's include if it has completions tracked.
         if (currentActivity.type !== 'Conteúdo') {
             doc.setFontSize(11);
             doc.setTextColor(30, 41, 59);
             doc.setFont('helvetica', 'bold');
             doc.text('Lista de Entrega / Realização:', 14, currentY);
+            currentY += 5;
 
             const body = students.map(s => {
                 const isDone = currentActivity.completions?.includes(s.id);
-                return [s.number, s.name, isDone ? 'CONCLUÍDO' : 'PENDENTE'];
+                return [s.number, s.name, isDone ? 'OK' : ''];
             });
 
             autoTable(doc, {
-                startY: currentY + 5,
+                startY: currentY,
                 head: [['Nº', 'ALUNO', 'STATUS']],
                 body: body,
                 theme: 'grid',
-                styles: {
-                    fontSize: 9,
-                    cellPadding: 3,
-                    valign: 'middle',
-                    lineColor: [241, 245, 249],
-                    lineWidth: 0.1,
-                    textColor: [51, 65, 85]
-                },
-                headStyles: {
-                    fillColor: [248, 250, 252],
-                    textColor: [71, 85, 105],
-                    fontStyle: 'bold',
-                },
+                styles: { fontSize: 8, cellPadding: 2, valign: 'middle' },
+                headStyles: { fillColor: [241, 245, 249], textColor: [71, 85, 105], fontStyle: 'bold' },
                 columnStyles: {
-                    0: { cellWidth: 15, halign: 'center', fontStyle: 'bold' },
-                    1: { cellWidth: 'auto' },
-                    2: { cellWidth: 40, halign: 'center', fontStyle: 'bold' }
+                    0: { cellWidth: 15, fontStyle: 'bold' },
+                    2: { cellWidth: 30, halign: 'center', fontStyle: 'bold' }
                 },
                 didParseCell: (data) => {
                     if (data.section === 'body' && data.column.index === 2) {
-                        const val = data.cell.raw;
-                        if (val === 'CONCLUÍDO') {
-                            data.cell.styles.textColor = [22, 163, 74];
-                        } else {
-                            data.cell.styles.textColor = [148, 163, 184];
+                        if (data.cell.raw === 'OK') {
+                            data.cell.styles.textColor = [34, 197, 94]; // Green
                         }
                     }
                 }
             });
-
-            currentY = (doc as any).lastAutoTable.finalY + 15;
         }
 
         // Footer
@@ -821,24 +848,19 @@ export const Activities: React.FC = () => {
     }
 
     return (
-        <motion.div
-            variants={containerVariants}
-            initial="initial"
-            animate="enter"
+        <div
             className="flex flex-col lg:flex-row gap-4 md:gap-6 max-w-[1600px] mx-auto pb-24 md:pb-8 relative fluid-p-m fluid-gap-m px-4 md:px-0 w-full h-full overflow-hidden"
         >
             {/* Landscape FAB for New Activity */}
             <div className="hidden landscape:flex fixed bottom-6 right-6 z-50 flex-col gap-3 lg:hidden">
                 {hasDraft && !isEditing && (
-                    <motion.button
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                    <button
                         onClick={loadDraft}
                         className="size-12 bg-amber-500 text-white rounded-2xl shadow-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95"
                         title="Continuar Rascunho"
                     >
                         <span className="material-symbols-outlined">edit_note</span>
-                    </motion.button>
+                    </button>
                 )}
                 <button
                     onClick={handleNewActivity}
@@ -864,7 +886,7 @@ export const Activities: React.FC = () => {
             {/* Sidebar with Card List Style */}
             <div className={`w-full lg:w-80 h-full flex flex-col gap-4 shrink-0 transition-all ${selectedActivityId || isEditing ? 'hidden lg:flex' : 'flex'}`} data-tour="activities-sidebar">
                 {/* Sidebar Header */}
-                <div className="glass-card-soft fluid-p-s landscape:p-2 flex flex-col landscape:flex-row landscape:items-center landscape:gap-2">
+                <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 landscape:p-2">
                     <div className="flex justify-between items-center mb-4 landscape:mb-0 landscape:gap-2 shrink-0">
                         <div className="flex gap-2 p-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-xl">
                             <Link to="/planning" className="px-3 py-1.5 landscape:p-1.5 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all whitespace-nowrap">
@@ -913,7 +935,7 @@ export const Activities: React.FC = () => {
                         ) : (
                             <button
                                 onClick={() => setIsSelectionMode(true)}
-                                className="w-full py-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 border border-dashed border-slate-300 dark:border-slate-700"
+                                className="px-6 py-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 border border-dashed border-slate-300 dark:border-slate-700 whitespace-nowrap"
                             >
                                 <span className="material-symbols-outlined text-sm">checklist</span>
                                 Selecionar
@@ -934,19 +956,16 @@ export const Activities: React.FC = () => {
                             className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-${theme.primaryColor}/50 text-sm transition-all focus:bg-white dark:focus:bg-black font-medium`}
                         />
                     </div>
-
-
-
                 </div>
 
                 {/* Section Switcher Tabs - Matching Planning.tsx */}
                 {activeSeries && activeSeries.sections?.length > 0 && (
-                    <motion.div variants={itemVariants} className="px-1">
+                    <div className="px-1">
                         <div className="flex items-center gap-2 flex-wrap py-1">
                             <button
                                 onClick={() => setFilterSection('')}
                                 className={`shrink-0 px-5 py-2.5 lg:px-3 lg:py-1 rounded-xl text-sm font-black transition-all border-2 ${filterSection === ''
-                                    ? `theme-bg-primary theme-gradient-to-br text-white border-transparent theme-shadow-primary`
+                                    ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-md shadow-${theme.primaryColor}/20`
                                     : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
                                     }`}
                             >
@@ -957,7 +976,7 @@ export const Activities: React.FC = () => {
                                     key={sec}
                                     onClick={() => setFilterSection(sec)}
                                     className={`shrink-0 px-5 py-2.5 lg:px-3 lg:py-1 rounded-xl text-sm font-black transition-all border-2 ${filterSection === sec
-                                        ? `theme-bg-primary theme-gradient-to-br text-white border-transparent theme-shadow-primary`
+                                        ? `bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white border-transparent shadow-md shadow-${theme.primaryColor}/20`
                                         : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200'
                                         }`}
                                 >
@@ -965,19 +984,19 @@ export const Activities: React.FC = () => {
                                 </button>
                             ))}
                         </div>
-                    </motion.div>
+                    </div>
                 )}
                 {/* List Items */}
                 <motion.div
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
                     className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-0"
+                    variants={VARIANTS.staggerContainer}
+                    initial="initial"
+                    animate="animate"
                 >
                     {loading ? (
 
                         Array.from({ length: 5 }).map((_, i) => (
-                            <div key={i} className="w-full h-24 rounded-2xl bg-white dark:bg-surface-dark border border-slate-100 dark:border-slate-800 p-4 animate-pulse">
+                            <div key={i} className="w-full h-24 rounded-2xl bg-white/20 dark:bg-slate-900/40 border border-white/10 p-4 animate-pulse">
                                 <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-3"></div>
                                 <div className="flex gap-2">
                                     <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
@@ -988,289 +1007,244 @@ export const Activities: React.FC = () => {
                     ) : displayedActivities.length === 0 ? (
                         <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 min-h-[200px] flex items-center justify-center">Nenhuma atividade encontrada.{searchTerm && ' Tente outro termo.'}</div>
                     ) : (
-                        displayedActivities.map(act => {
-                            return (
-                                <motion.button
-                                    variants={itemVariants}
-                                    layoutId={`activity-card-${act.id}`}
-                                    key={act.id}
-                                    onClick={() => isSelectionMode ? toggleSelection(act.id) : handleSelectActivity(act)}
-                                    className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${isSelectionMode
-                                        ? (selectedIds.includes(act.id) ? 'bg-indigo-50 border-indigo-500 dark:bg-indigo-900/20 dark:border-indigo-500' : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800')
-                                        : (selectedActivityId === act.id ? `bg-white dark:bg-surface-dark shadow-lg ring-1 theme-ring-primary theme-border-primary theme-shadow-primary` : 'bg-white dark:bg-surface-dark border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600')
-                                        }`}
-                                >
-                                    {isSelectionMode && (
-                                        <div className={`absolute left-4 top-1/2 -translate-y-1/2 size-5 rounded border-2 flex items-center justify-center transition-all z-10 ${selectedIds.includes(act.id) ? 'bg-indigo-500 border-indigo-500' : 'border-slate-300 bg-white'}`}>
-                                            {selectedIds.includes(act.id) && <span className="material-symbols-outlined text-sm text-white font-bold">check</span>}
-                                        </div>
-                                    )}
-                                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedActivityId === act.id ? 'theme-bg-primary' : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
-                                    <div className={`pl-4 w-full ${isSelectionMode ? 'pl-16 landscape:pl-16' : 'landscape:pl-0'}`}>
-                                        <div className="flex justify-between items-center mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
-                                            <h4 className={`font-bold text-base md:text-lg truncate pr-2 flex-1 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
-                                            <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2 landscape:hidden">
-                                            {act.section && (
-                                                <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
-                                                    Turma {act.section}
-                                                </span>
-                                            )}
-                                            <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                                                {act.type}
-                                            </span>
-                                            <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                                                {new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                            </span>
-                                        </div>
-                                        {/* Mobile Landscape Only Date */}
-                                        <div className="hidden landscape:block text-xs text-slate-400 mt-1">
-                                            {new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                        </div>
-                                    </div>
-                                </motion.button>
-                            );
-                        })
-                    )}
+                        displayedActivities.map(act => (
+                            <ActivityListItem
+                                key={act.id}
+                                act={act}
+                                isSelected={selectedIds.includes(act.id)}
+                                isSelectionMode={isSelectionMode}
+                                selectedActivityId={selectedActivityId}
+                                theme={theme}
+                                onSelect={handleSelectActivity}
+                                onToggle={toggleSelection}
+                            />
+                        )))
+                    }
                 </motion.div>
 
             </div >
-
             {/* Main Content */}
             <div className={`flex-1 flex flex-col card shadow-premium overflow-hidden relative transition-all ${selectedActivityId || isEditing ? 'flex' : 'hidden lg:flex'}`}>
                 {(!selectedActivityId && !isEditing) ? (
-                    // --- HERO EMPTY STATE ---
-                    <motion.div
-                        variants={containerVariants}
-                        initial="initial"
-                        animate="enter"
-                        className="flex-1 flex flex-col items-center justify-center p-8 text-center"
-                    >
-                        <div className={`size-32 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-8 shadow-sm border border-slate-100 dark:border-slate-700`}>
-                            <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600">assignment_add</span>
+                    <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center bg-slate-50/50 dark:bg-slate-800/20">
+                        <div className="w-24 h-24 bg-indigo-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                            <span className="material-symbols-outlined text-5xl text-indigo-200 dark:text-slate-600">assignment</span>
                         </div>
-                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">Gerenciar Atividades</h2>
-                        <p className="text-slate-500 max-w-md mb-8 leading-relaxed">
-                            Crie e distribua provas, trabalhos e deveres de casa para sua turma de <span className={`text-${theme.primaryColor} font-bold`}>{theme.subject}</span> de forma organizada.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                            <button
-                                onClick={handleNewActivity}
-                                className={`group relative inline-flex items-center justify-center gap-3 text-white text-lg font-bold py-4 px-8 rounded-2xl transition-all hover:-translate-y-1 active:translate-y-0 overflow-hidden theme-bg-primary theme-shadow-primary`}
-                            >
-                                <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">add</span>
-                                Criar Nova Atividade
-                                <div className="absolute inset-0 rounded-2xl ring-2 ring-white/20 group-hover:ring-white/40 transition-all"></div>
-                            </button>
-                            {hasDraft && (
-                                <button
-                                    onClick={loadDraft}
-                                    className="inline-flex items-center justify-center gap-3 bg-amber-500 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl shadow-amber-500/20 hover:-translate-y-1 transition-all"
-                                >
-                                    <span className="material-symbols-outlined">edit_note</span>
-                                    Continuar Rascunho
-                                </button>
-                            )}
-                        </div>
-                    </motion.div>
+                        <h2 className="text-xl font-bold text-slate-600 dark:text-slate-300 mb-2">Nenhuma atividade selecionada</h2>
+                        <p className="max-w-xs mx-auto text-sm">Selecione uma atividade ao lado para ver os detalhes ou crie uma nova.</p>
+                        <button
+                            onClick={handleNewActivity}
+                            className="mt-6 px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all"
+                        >
+                            Criar Atividade
+                        </button>
+                    </div>
                 ) : isEditing ? (
-                    // --- EDIT / CREATE MODE ---
-                    <div className="flex-1 flex flex-col h-[100dvh] md:h-full overflow-hidden relative">
-                        {/* EDITOR HEADER */}
-                        <div className="p-6 landscape:p-3 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark z-20 sticky top-0 shadow-sm">
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={() => { setSelectedActivityId(null); setIsEditing(false); }}
-                                    className="lg:hidden p-2 -ml-2 text-slate-400"
-                                >
+                    // --- EDIT MODE ---
+                    <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-900">
+                        {/* Header */}
+
+                        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-20">
+                            <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+                                <button onClick={() => { setIsEditing(false); setSelectedActivityId(null); }} className="lg:hidden p-1 -ml-2 mr-1 text-slate-400">
                                     <span className="material-symbols-outlined">arrow_back</span>
                                 </button>
-                                <h2 className="text-xl landscape:text-base font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                                    <div className={`size-8 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center landscape:hidden`}>
-                                        <span className="material-symbols-outlined text-lg">{selectedActivityId ? 'edit_document' : 'post_add'}</span>
-                                    </div>
-                                    {selectedActivityId ? 'Editar Atividade' : 'Nova Atividade'}
-                                </h2>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto p-8 landscape:p-4 custom-scrollbar pb-0">
-                            <div className="max-w-4xl mx-auto flex flex-col gap-8 landscape:gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Título da Atividade</label>
-                                    <input
-                                        type="text"
-                                        value={formTitle}
-                                        onChange={e => setFormTitle(e.target.value)}
-                                        className={`w-full text-lg font-bold p-4 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`}
-                                        placeholder="Ex: Exercícios de Fixação"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {formType === 'Conteúdo' ? (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <DatePicker
-                                                label="Início"
-                                                value={formStartDate}
-                                                onChange={setFormStartDate}
-                                            />
-                                            <DatePicker
-                                                label="Fim"
-                                                value={formEndDate}
-                                                onChange={setFormEndDate}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <DatePicker
-                                            label="Data de Entrega"
-                                            value={formDate}
-                                            onChange={setFormDate}
-                                        />
-                                    )}
-
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Tipo de Atividade</label>
-                                        <DynamicSelect
-                                            value={formType}
-                                            onChange={(val) => setFormType(val)}
-                                            options={activityTypes.map(t => ({
-                                                value: t,
-                                                label: t,
-                                                icon: getIconForType(t)
-                                            }))}
-                                            placeholder="Selecione..."
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row gap-8">
-                                    <div className="flex-1">
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Série (Obrigatória)</label>
-                                        <div className="font-bold text-lg text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-slate-400">school</span>
-                                            {activeSeries?.name || formSeriesId || 'Selecione no Menu'}
-                                        </div>
-                                    </div>
-                                    <div className="w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
-                                    <div className="flex-1">
-                                        <DynamicSelect
-                                            label="Turma (Opcional)"
-                                            value={formSection}
-                                            onChange={setFormSection}
-                                            options={[
-                                                { value: '', label: 'Todas as Turmas', icon: 'domain' },
-                                                ...(activeSeries?.sections.map(s => ({ value: s, label: `Turma ${s}`, icon: 'groups' })) || [])
-                                            ]}
-                                            placeholder="Selecione..."
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1.5 ml-1">Descrição</label>
-                                    <RichTextEditor
-                                        value={formDescription}
-                                        onChange={setFormDescription}
-                                        placeholder="Descreva a atividade, critérios de avaliação e instruções..."
-                                    />
-                                </div>
-
-                                {/* Files Section */}
-                                <div>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <label className="text-xs font-black uppercase text-slate-400 ml-1 tracking-widest">Materiais de Apoio</label>
-                                    </div>
-                                    <div
-                                        className={`col-span-full border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 ${isDragging ? `border-${theme.primaryColor} bg-${theme.primaryColor}/5` : 'border-slate-200 dark:border-slate-700'}`}
-                                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                                        onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
-                                        onDrop={(e) => {
-                                            e.preventDefault();
-                                            setIsDragging(false);
-                                            const files = Array.from(e.dataTransfer.files);
-                                            if (files.length > 0) handleFiles(files);
-                                        }}
-                                        onClick={() => setIsImporterOpen(true)}
-                                    >
-                                        <div className={`size-16 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-2 ${isDragging ? 'animate-bounce' : ''}`}>
-                                            <span className={`material-symbols-outlined text-3xl ${isDragging ? `text-${theme.primaryColor}` : 'text-slate-400'}`}>cloud_upload</span>
-                                        </div>
-                                        <div className="text-center">
-                                            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                                                Toque ou arraste arquivos aqui
-                                            </p>
-                                            <p className="text-xs text-slate-400 mt-1 mb-2">PDF, Imagens, Word, PowerPoint (Máx 20MB)</p>
-
-                                            {/* Explicit Cloud Options */}
-                                            <div className="grid grid-cols-2 gap-2 mt-3 w-full max-w-sm px-4">
-                                                <button type="button" onClick={(e) => { e.stopPropagation(); setIsImporterOpen(true); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 hover:bg-blue-100 transition-colors cursor-pointer">
-                                                    <span className="material-symbols-outlined text-xl">add_to_drive</span>
-                                                    <span className="text-[9px] font-bold uppercase tracking-wide">Google Drive</span>
-                                                </button>
-                                                <button type="button" onClick={(e) => { e.stopPropagation(); setIsImporterOpen(true); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-800 hover:bg-sky-100 transition-colors cursor-pointer">
-                                                    <span className="material-symbols-outlined text-xl">cloud</span>
-                                                    <span className="text-[9px] font-bold uppercase tracking-wide">OneDrive</span>
-                                                </button>
-                                                <button type="button" onClick={(e) => { e.stopPropagation(); setIsImporterOpen(true); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-100 dark:border-orange-800 hover:bg-orange-100 transition-colors cursor-pointer">
-                                                    <span className="material-symbols-outlined text-xl">folder_shared</span>
-                                                    <span className="text-[9px] font-bold uppercase tracking-wide">Arquivos</span>
-                                                </button>
-                                                <button type="button" onClick={(e) => { e.stopPropagation(); setIsImporterOpen(true); }} className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
-                                                    <span className="material-symbols-outlined text-xl">image</span>
-                                                    <span className="text-[9px] font-bold uppercase tracking-wide">Galeria</span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-                                        {formFiles.map(file => (
-                                            <div key={file.id} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 group relative">
-                                                <div className={`size-10 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0`}>
-                                                    <span className="material-symbols-outlined">description</span>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm font-bold truncate text-slate-700 dark:text-slate-200">{file.name}</div>
-                                                    <div className="text-xs text-slate-400">{file.size}</div>
-                                                </div>
-                                                <button onClick={() => handleRemoveFile(file.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
-                                                    <span className="material-symbols-outlined">close</span>
-                                                </button>
-                                            </div>
-                                        ))}
-
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Static Footer Actions - Part of the scrollable flow */}
-                            <div className="max-w-4xl mx-auto mt-8 mb-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
-                                <button onClick={() => setIsEditing(false)} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200 dark:border-slate-700 sm:border-transparent">Cancelar</button>
-                                {selectedActivityId && (
-                                    <button onClick={handleDelete} className="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-colors bg-red-50 dark:bg-red-900/10 sm:bg-transparent sm:dark:bg-transparent">Excluir</button>
-                                )}
+                                {selectedActivityId ? 'Editar Atividade' : 'Nova Atividade'}
+                            </h2>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => { setIsEditing(false); if (!selectedActivityId) setSelectedActivityId(null); }}
+                                    className="px-4 py-2 text-slate-500 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all text-sm"
+                                >
+                                    Cancelar
+                                </button>
                                 <button
                                     onClick={handleSave}
                                     disabled={loading}
-                                    className={`w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-xl text-white font-bold transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-2 theme-bg-primary theme-shadow-primary`}
+                                    className="px-6 py-2 rounded-xl font-bold transition-all active:scale-95 text-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed hover:brightness-110 bg-[var(--theme-primary)] text-white shadow-lg shadow-[var(--theme-primary-alpha)]"
                                 >
-                                    {loading && <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>}
-                                    {loading ? 'Salvando...' : 'Salvar Atividade'}
+                                    {loading ? <span className="material-symbols-outlined animate-spin text-lg">sync</span> : <span className="material-symbols-outlined text-lg">save</span>}
+                                    Salvar
                                 </button>
                             </div>
                         </div>
-                    </div>
 
+                        {/* Form Body */}
+                        <div className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6 custom-scrollbar">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Left Column */}
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Título da Atividade</label>
+                                        <input
+                                            value={formTitle}
+                                            onChange={e => setFormTitle(e.target.value)}
+                                            className="theme-input w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 transition-all font-bold text-lg text-slate-800 dark:text-slate-100 placeholder:font-normal"
+                                            placeholder="Ex: Prova de Matemática - 1º Bimestre"
+                                            autoFocus
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tipo</label>
+                                            <div className="flex gap-2">
+                                                <select
+                                                    aria-label="Tipo de Atividade"
+                                                    value={formType}
+                                                    onChange={e => setFormType(e.target.value)}
+                                                    className="theme-input w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 transition-all font-bold text-sm text-slate-800 dark:text-slate-100"
+                                                >
+                                                    <option value="" disabled>Selecione...</option>
+                                                    {activityTypes.map(t => (
+                                                        <option key={t} value={t}>{t}</option>
+                                                    ))}
+                                                </select>
+                                                {/* Add Type Button Placeholder */}
+                                                <button
+                                                    onClick={() => {
+                                                        const newType = prompt("Novo tipo de atividade:");
+                                                        if (newType) {
+                                                            supabase.from('activity_types').insert({ name: newType }).then(({ error }) => {
+                                                                if (!error) {
+                                                                    setActivityTypes(prev => [...prev.sort(), newType]);
+                                                                    setFormType(newType);
+                                                                }
+                                                            });
+                                                        }
+                                                    }}
+                                                    className="px-3 rounded-xl border-2 hover:brightness-90 font-bold text-[var(--theme-primary)] border-[var(--theme-primary)] bg-[var(--theme-surface)]"
+                                                    title="Adicionar Novo Tipo"
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Data</label>
+                                            <DatePicker
+                                                value={formDate}
+                                                onChange={setFormDate}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {formType === 'Conteúdo' && (
+                                        <div
+                                            className="grid grid-cols-2 gap-4 p-4 rounded-xl border bg-[var(--theme-surface)] border-[rgb(var(--primary)/0.3)]"
+                                        >
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold uppercase tracking-wider text-[var(--theme-primary)]">Início</label>
+                                                <DatePicker value={formStartDate} onChange={setFormStartDate} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold uppercase tracking-wider text-[var(--theme-primary)]">Fim</label>
+                                                <DatePicker value={formEndDate} onChange={setFormEndDate} />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Turma (Opcional)</label>
+                                            <select
+                                                aria-label="Selecione a Turma"
+                                                value={formSection}
+                                                onChange={e => setFormSection(e.target.value)}
+                                                className="theme-input w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 transition-all font-bold text-sm"
+                                            >
+                                                <option value="">Todas</option>
+                                                {activeSeries?.sections?.map(sec => (
+                                                    <option key={sec} value={sec}>{sec}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Right Column - Description & Files */}
+                                <div className="space-y-6">
+                                    <div className="space-y-2 h-[300px] flex flex-col">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Descrição / Conteúdo</label>
+                                        <div
+                                            className={`theme-input-wrapper flex-1 border-2 rounded-xl overflow-hidden transition-colors bg-white dark:bg-slate-900 focus-within:!border-[var(--theme-primary)]`}
+                                        >
+                                            <RichTextEditor
+                                                value={formDescription}
+                                                onChange={setFormDescription}
+                                                placeholder="Digite os detalhes da atividade..."
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Anexos</label>
+                                            <button
+                                                onClick={() => setIsImporterOpen(true)}
+                                                className="text-xs font-bold flex items-center gap-1 hover:brightness-75 text-[var(--theme-primary)]"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">cloud_upload</span>
+                                                Importar
+                                            </button>
+                                        </div>
+
+                                        {/* File Drag Area */}
+                                        <div
+                                            className={`border-2 border-dashed rounded-xl p-6 transition-all text-center ${isDragging
+                                                ? `bg-[var(--theme-surface)] border-[var(--theme-primary)]`
+                                                : `border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50`
+                                                }`}
+                                            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                            onDragLeave={() => setIsDragging(false)}
+                                            onDrop={(e) => {
+                                                e.preventDefault();
+                                                setIsDragging(false);
+                                                if (e.dataTransfer.files?.length) handleFiles(Array.from(e.dataTransfer.files));
+                                            }}
+                                            onClick={() => fileInputRef.current?.click()}
+                                        >
+                                            <div className="flex flex-col items-center gap-2 cursor-pointer">
+                                                <div className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                                    <span className="material-symbols-outlined text-slate-400">attach_file</span>
+                                                </div>
+                                                <span className="text-sm font-bold text-slate-500">Clique ou arraste arquivos</span>
+                                                <span className="text-[10px] text-slate-400">PDF, Imagens, Word, Excel (Max 20MB)</span>
+                                            </div>
+                                        </div>
+
+                                        {/* File List */}
+                                        <div className="space-y-2 mt-4">
+                                            {formFiles.map((file, i) => (
+                                                <div key={i} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl group hover:shadow-sm transition-all">
+                                                    <div className="size-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                                                        <span className="material-symbols-outlined text-slate-500">description</span>
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{file.name}</div>
+                                                        <div className="text-[10px] text-slate-400 uppercase">{file.size}</div>
+                                                    </div>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleRemoveFile(file.id); }}
+                                                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                    >
+                                                        <span className="material-symbols-outlined">close</span>
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div >
+                        </div >
+
+
+                    </div >
 
                 ) : (
                     // --- VIEW MODE ---
                     currentActivity && (
-                        <motion.div
-                            variants={containerVariants}
-                            initial="initial"
-                            animate="enter"
+                        <div
                             className="flex-1 overflow-y-auto relative h-[100dvh] md:h-full"
                         >
                             {/* Header Image/Gradient */}
@@ -1303,8 +1277,7 @@ export const Activities: React.FC = () => {
                                 </div>
 
                                 {/* Actions (Visible on Mobile & Desktop) */}
-                                <motion.div
-                                    variants={itemVariants}
+                                <div
                                     className="absolute top-4 right-4 lg:top-6 lg:right-6 flex gap-2 lg:gap-3 z-10"
                                 >
                                     <button
@@ -1312,43 +1285,28 @@ export const Activities: React.FC = () => {
                                         className="p-2 size-10 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
                                         title="Baixar PDF"
                                     >
-                                        <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
-                                    </button>
-                                    {currentActivity?.files?.find(f => f.name.match(/\.(ppt|pptx)$/i)) && (
-                                        <button
-                                            onClick={() => setIsPresentationOpen(true)}
-                                            className="p-2 size-10 rounded-2xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 backdrop-blur-md border border-orange-500/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
-                                            title="Apresentar Slide"
-                                        >
-                                            <span className="material-symbols-outlined text-xl">slideshow</span>
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={handlePrint}
-                                        className="p-2 size-10 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
-                                        title="Imprimir"
-                                    >
-                                        <span className="material-symbols-outlined text-xl">print</span>
+                                        <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
                                     </button>
                                     <button
                                         onClick={() => {
-                                            if (currentActivity) {
-                                                setFormTitle(currentActivity.title);
-                                                setFormType(currentActivity.type);
-                                                setFormDate(currentActivity.date);
-                                                setFormStartDate(currentActivity.startDate || currentActivity.date);
-                                                setFormEndDate(currentActivity.endDate || currentActivity.date);
-                                                setFormDescription(currentActivity.description);
-                                                setFormFiles(currentActivity.files);
-                                                setFormSeriesId(currentActivity.seriesId);
-                                                setFormSection(currentActivity.section || '');
+                                            const ppt = currentActivity.files?.find(f => f.name.match(/\.(ppt|pptx)$/i));
+                                            if (ppt) {
+                                                setIsPresentationOpen(true);
+                                            } else {
+                                                alert("Nenhuma apresentação PowerPoint encontrada nesta atividade.");
                                             }
-                                            setIsEditing(true);
                                         }}
+                                        className="p-2 size-10 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
+                                        title="Apresentar (PowerPoint)"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">slideshow</span>
+                                    </button>
+                                    <button
+                                        onClick={() => { setIsEditing(true); }}
                                         className="p-2 size-10 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 transition-all shadow-lg flex items-center justify-center hover:scale-105 active:scale-95"
                                         title="Editar Atividade"
                                     >
-                                        <span className="material-symbols-outlined text-xl">edit</span>
+                                        <span className="material-symbols-outlined text-lg">edit</span>
                                     </button>
                                     <button
                                         onClick={handleDelete}
@@ -1357,7 +1315,7 @@ export const Activities: React.FC = () => {
                                     >
                                         <span className="material-symbols-outlined text-lg group-hover:text-red-200 transaction-colors">delete</span>
                                     </button>
-                                </motion.div>
+                                </div>
                             </div>
 
 
@@ -1390,87 +1348,63 @@ export const Activities: React.FC = () => {
                                     </div>
 
                                     <div className="py-4">
-                                        <h3 className="font-bold text-lg border-b border-slate-100 mb-2">Descrição / Orientações:</h3>
-                                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentActivity.description) }} className="text-sm leading-relaxed" />
+                                        <h3 className="font-bold text-lg mb-2">Descrição / Orientações:</h3>
+                                        <div className="text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: currentActivity.description || '' }}></div>
                                     </div>
-
-                                    {currentActivity.type !== 'Conteúdo' && (
-                                        <div className="mt-8">
-                                            <h3 className="font-bold text-lg border-b border-slate-100 mb-4">Lista de Realização:</h3>
-                                            <div className="grid grid-cols-2 gap-x-8 gap-y-2">
-                                                {students.map((s, idx) => (
-                                                    <div key={s.id}
-                                                        className="flex items-center justify-between gap-3 border-b border-slate-100 py-1"
-                                                    >
-                                                        <span className="text-xs truncate min-w-0 flex-1">{s.number}. {s.name}</span>
-                                                        <div className="size-4 border border-slate-300 flex items-center justify-center shrink-0">
-                                                            {currentActivity.completions?.includes(s.id) && <span className="material-symbols-outlined text-[12px]">check</span>}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
 
-                            <div className="p-8 landscape:p-4 max-w-5xl mx-auto space-y-8 landscape:space-y-4">
-                                {/* Info Cards */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 landscape:grid-cols-3">
-                                    <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
-                                        <div className="size-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
-                                            <span className="material-symbols-outlined">event</span>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs uppercase font-bold text-slate-400">
-                                                {currentActivity.type === 'Conteúdo' ? 'Período' : 'Entrega'}
-                                            </div>
-                                            <div className="font-bold text-slate-700 dark:text-gray-200">
-                                                {currentActivity.type === 'Conteúdo' ? (
-                                                    `${new Date((currentActivity.startDate || currentActivity.date) + 'T12:00:00').toLocaleDateString('pt-BR')} - ${new Date((currentActivity.endDate || currentActivity.date) + 'T12:00:00').toLocaleDateString('pt-BR')}`
-                                                ) : (
-                                                    new Date(currentActivity.date + 'T12:00:00').toLocaleDateString('pt-BR')
-                                                )}
-                                            </div>
+                            {/* View Content */}
+                            <div className="p-6 md:p-8 space-y-8">
+                                {/* INFO CARDS */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Tipo</div>
+                                        <div className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-[18px] text-indigo-500">{getIconForType(currentActivity.type)}</span>
+                                            {currentActivity.type}
                                         </div>
                                     </div>
-                                    <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
-                                        <div className="size-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
-                                            <span className="material-symbols-outlined">category</span>
+                                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Data</div>
+                                        <div className="font-bold text-slate-700 dark:text-slate-200">
+                                            {currentActivity.type === 'Conteúdo'
+                                                ? `${new Date((currentActivity.startDate || currentActivity.date) + 'T12:00:00').toLocaleDateString('pt-BR').slice(0, 5)} - ${new Date((currentActivity.endDate || currentActivity.date) + 'T12:00:00').toLocaleDateString('pt-BR').slice(0, 5)}`
+                                                : new Date(currentActivity.date + 'T12:00:00').toLocaleDateString('pt-BR')}
                                         </div>
-                                        <div>
-                                            <div className="text-xs uppercase font-bold text-slate-400">Tipo</div>
-                                            <div className="font-bold text-slate-700 dark:text-gray-200">
-                                                {currentActivity.type}
-                                            </div>
-                                        </div>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Criado em</div>
+                                        <div className="font-bold text-slate-700 dark:text-slate-200">{new Date(currentActivity.createdAt || '').toLocaleDateString('pt-BR')}</div>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Turma</div>
+                                        <div className="font-bold text-slate-700 dark:text-slate-200">{currentActivity.section || 'Todas'}</div>
                                     </div>
                                 </div>
 
-                                {/* Description */}
-                                <div className="prose dark:prose-invert max-w-none">
+                                {/* DESCRIPTION */}
+                                <div>
                                     <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                                        <span className={`material-symbols-outlined text-${theme.primaryColor}`}>subject</span>
-                                        Detalhes da Atividade
+                                        <span className={`material-symbols-outlined text-${theme.primaryColor}`}>description</span>
+                                        Descrição / Conteúdo
                                     </h3>
-                                    <div
-                                        className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 leading-relaxed custom-html-content"
-                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentActivity.description) }}
-                                    />
+                                    <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none bg-white dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentActivity.description || '<p class="text-slate-400 italic">Sem descrição.</p>') }} />
+                                    </div>
                                 </div>
 
                                 {/* ATTACHMENTS */}
                                 {currentActivity.files && currentActivity.files.length > 0 && (
-                                    <motion.div variants={itemVariants}>
+                                    <div>
                                         <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                                             <span className={`material-symbols-outlined text-${theme.primaryColor}`}>attachment</span>
                                             Anexos
                                         </h3>
                                         <div className="flex flex-wrap gap-3">
                                             {currentActivity.files.map((file, index) => (
-                                                <motion.div
+                                                <div
                                                     key={index}
-                                                    variants={itemVariants}
                                                     className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group shadow-sm max-w-full"
                                                 >
                                                     <div className="flex items-center gap-3 flex-1 min-w-0 pointer-events-none">
@@ -1499,7 +1433,6 @@ export const Activities: React.FC = () => {
                                                                 </button>
                                                             )}
                                                         <a
-                                                            href={file.url}
                                                             download={file.name}
                                                             className="p-1.5 md:p-2 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
                                                             title="Baixar"
@@ -1507,15 +1440,15 @@ export const Activities: React.FC = () => {
                                                             <span className="material-symbols-outlined">download</span>
                                                         </a>
                                                     </div>
-                                                </motion.div>
+                                                </div>
                                             ))}
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 )}
 
                                 {/* Delivery List / Completion Tracking */}
                                 {currentActivity.type !== 'Conteúdo' && (
-                                    <motion.div variants={itemVariants}>
+                                    <div>
                                         <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center justify-between">
                                             <div className="flex flex-col gap-2">
                                                 <div className="flex items-center gap-2">
@@ -1545,18 +1478,14 @@ export const Activities: React.FC = () => {
                                             </button>
                                         </h3>
 
-                                        <motion.div
-                                            variants={containerVariants}
-                                            initial="hidden"
-                                            animate="visible"
+                                        <div
                                             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 min-h-[200px]"
                                         >
                                             {students.map(s => {
                                                 const isDone = currentActivity.completions?.includes(s.id);
                                                 return (
-                                                    <motion.div
+                                                    <div
                                                         key={s.id}
-                                                        variants={itemVariants}
                                                         className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group ${isDone
                                                             ? 'theme-bg-surface-subtle theme-border-soft'
                                                             : 'bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 hover:border-slate-200'}`}
@@ -1566,28 +1495,35 @@ export const Activities: React.FC = () => {
                                                             <span className="text-xs font-mono text-slate-400 shrink-0 min-w-[1.5rem]">{s.number}</span>
                                                             <span className={`text-sm font-bold truncate ${isDone ? `text-${theme.primaryColor}` : 'text-slate-600 dark:text-slate-300'}`}>{s.name}</span>
                                                         </div>
-                                                        <div className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 shrink-0 ${isDone ? 'theme-bg-primary theme-border-primary text-white scale-110 theme-shadow-primary' : 'border-slate-200'}`}>
-                                                            {isDone && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="material-symbols-outlined text-[16px] font-bold">check</motion.span>}
+                                                        <div
+                                                            className={`size-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 shrink-0 backdrop-blur-md ${isDone ? 'theme-bg-primary border-primary text-white scale-110 shadow-lg shadow-primary/20' : 'border-slate-400 dark:border-slate-500 bg-white/60 dark:bg-slate-800/60 hover:border-primary/50 hover:bg-white dark:hover:bg-slate-700'}`}
+                                                        >
+                                                            {isDone && (
+                                                                <motion.span
+                                                                    initial={{ scale: 0.5, opacity: 0 }}
+                                                                    animate={{ scale: 1, opacity: 1 }}
+                                                                    className="material-symbols-outlined text-[16px] font-black"
+                                                                >
+                                                                    check
+                                                                </motion.span>
+                                                            )}
                                                         </div>
-                                                    </motion.div>
+                                                    </div>
                                                 );
                                             })}
-                                        </motion.div>
+                                        </div>
 
-                                    </motion.div>
+                                    </div>
                                 )}
                             </div>
-                        </motion.div>
+                        </div>
                     ))
                 }
             </div >
             {/* Presentation Modal */}
             {
                 isPresentationOpen && currentActivity && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                    <div
                         className="fixed inset-0 z-[100] bg-black"
                     >
                         <button
@@ -1609,7 +1545,7 @@ export const Activities: React.FC = () => {
                             }
                             return null;
                         })()}
-                    </motion.div>
+                    </div>
                 )
             }
 
@@ -1632,8 +1568,71 @@ export const Activities: React.FC = () => {
                 }}
                 multiple
             />
-
-
-        </motion.div>
+        </div >
     );
 };
+const ActivityListItem = React.memo(({ act, isSelected, isSelectionMode, selectedActivityId, theme, onSelect, onToggle }: {
+    act: Activity,
+    isSelected: boolean,
+    isSelectionMode: boolean,
+    selectedActivityId: string | null,
+    theme: any,
+    onSelect: (act: Activity) => void,
+    onToggle: (id: string) => void
+}) => {
+    return (
+        <motion.button
+            layout="position"
+            variants={VARIANTS.fadeUp}
+            onClick={() => isSelectionMode ? onToggle(act.id) : onSelect(act)}
+            className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${isSelectionMode
+                ? (isSelected ? 'bg-indigo-50/10 border-indigo-500 dark:bg-indigo-900/40 dark:border-indigo-500 backdrop-blur-md' : 'bg-white/40 dark:bg-slate-900/60 border-white/20 dark:border-white/5 backdrop-blur-xl')
+                : (selectedActivityId === act.id ? `bg-white/60 dark:bg-slate-900/80 backdrop-blur-xl shadow-lg ring-1 theme-ring-primary theme-border-primary theme-shadow-primary` : 'bg-white/40 dark:bg-slate-900/60 border-white/20 dark:border-white/5 backdrop-blur-xl hover:border-slate-300 dark:hover:border-slate-600')
+                }`}
+            role={isSelectionMode ? "button" : undefined}
+            aria-label={isSelectionMode ? `Selecionar atividade, ${isSelected ? 'selecionada' : 'não selecionada'}` : undefined}
+            tabIndex={isSelectionMode ? 0 : undefined}
+        >
+            {isSelectionMode && (
+                <div
+                    onClick={(e) => { e.stopPropagation(); onToggle(act.id); }}
+                    className={`absolute left-4 top-1/2 -translate-y-1/2 size-6 rounded-lg border-2 flex items-center justify-center transition-all z-10 backdrop-blur-md ${isSelected ? 'theme-bg-primary border-primary shadow-lg shadow-primary/20 scale-105' : 'border-slate-400 dark:border-slate-500 bg-white/60 dark:bg-slate-800/60 hover:border-primary hover:bg-white dark:hover:bg-slate-700'}`}
+                >
+                    {isSelected && (
+                        <motion.span
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="material-symbols-outlined text-white text-lg font-black"
+                        >
+                            check
+                        </motion.span>
+                    )}
+                </div>
+            )}
+            <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedActivityId === act.id ? 'theme-bg-primary' : 'bg-transparent group-hover:bg-slate-200'} transition-all`}></div>
+            <div className={`pl-4 w-full ${isSelectionMode ? 'pl-16 landscape:pl-16' : 'landscape:pl-0'}`}>
+                <div className="flex justify-between items-center mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
+                    <h4 className={`font-bold text-base md:text-lg truncate pr-2 flex-1 ${selectedActivityId === act.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{act.title}</h4>
+                    <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
+                </div>
+                <div className="flex flex-wrap gap-2 landscape:hidden">
+                    {act.section && (
+                        <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
+                            Turma {act.section}
+                        </span>
+                    )}
+                    <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                        {act.type}
+                    </span>
+                    <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedActivityId === act.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                        {new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}
+                    </span>
+                </div>
+                {/* Mobile Landscape Only Date */}
+                <div className="hidden landscape:block text-xs text-slate-400 mt-1">
+                    {new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}
+                </div>
+            </div>
+        </motion.button>
+    );
+});

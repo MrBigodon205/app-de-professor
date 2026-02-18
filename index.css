@@ -87,6 +87,12 @@
     --sar: env(safe-area-inset-right);
     --sab: env(safe-area-inset-bottom);
     --sal: env(safe-area-inset-left);
+
+    /* Background Gradient Intensities */
+    --bg-gradient-op-1: 0.15;
+    --bg-gradient-op-2: 0.12;
+    --bg-gradient-op-3: 0.12;
+    --bg-gradient-op-4: 0.08;
 }
 
 .dark {
@@ -109,6 +115,12 @@
     /* Borders - Glowing Edges */
     --border-default: rgba(148, 163, 184, 0.1);
     --border-subtle: rgba(148, 163, 184, 0.05);
+
+    /* Background Gradient Intensities - SIGNIFICANTLY HIGHER for visibility on black */
+    --bg-gradient-op-1: 0.45;
+    --bg-gradient-op-2: 0.35;
+    --bg-gradient-op-3: 0.35;
+    --bg-gradient-op-4: 0.25;
 }
 
 /* Fully Fluid Root Scaling */
@@ -116,8 +128,7 @@
 /* Everything using 'rem' (padding, margin, width, height) will scale automatically */
 html {
     font-size: clamp(14px, 0.75rem + 0.75vw, 20px);
-    scroll-behavior: smooth;
-    background-color: var(--surface-page);
+    /* scroll-behavior: smooth; -- REMOVED CAUSES SCROLL DELAY */
     color: var(--text-primary);
 }
 
@@ -141,6 +152,27 @@ html {
 
 .bg-noise {
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.02;
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+}
+
+@media screen and (max-width: 768px) {
+    .bg-noise {
+        display: none !important;
+    }
+}
+
+.rendering-pixelated {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: pixelated;
+}
+
+.timetable-grid-container {
+    display: grid;
+    grid-template-columns: var(--grid-cols);
 }
 
 body {
@@ -148,7 +180,19 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-family: 'Outfit', sans-serif;
-    @apply bg-surface-page text-text-primary;
+    color: var(--text-primary);
+    background: radial-gradient(circle at top right, rgba(var(--primary), var(--bg-gradient-op-1)), transparent 700px),
+        radial-gradient(circle at 80% 20%, rgba(var(--secondary), var(--bg-gradient-op-2)), transparent 600px),
+        radial-gradient(circle at bottom left, rgba(var(--primary), var(--bg-gradient-op-3)), transparent 700px),
+        radial-gradient(circle at 20% 80%, rgba(var(--secondary), var(--bg-gradient-op-4)), transparent 500px),
+        var(--surface-page);
+    background-attachment: fixed;
+    transition: background 0.7s ease-in-out;
+
+    @media screen and (max-width: 768px) {
+        background-attachment: scroll !important;
+        transition: none !important;
+    }
 
     padding-top: var(--sat);
     padding-right: var(--sar);
@@ -213,7 +257,7 @@ body {
 
 /* Student Initials Avatar Base */
 .student-avatar {
-    @apply flex items-center justify-center font-black shadow-sm transition-all duration-300;
+    @apply flex items-center justify-center font-black shadow-sm transition-transform duration-200;
     /* Default (Light Mode): Dark text on light background */
     background-image: none !important;
     background-color: #f1f5f9 !important;
@@ -221,6 +265,7 @@ body {
     color: #0f172a !important;
     /* slate-900 */
     @apply ring-1 ring-black/10;
+    will-change: transform;
 }
 
 .dark .student-avatar {
@@ -406,15 +451,31 @@ body {
 }
 
 .animate-mesh-flow {
-    animation: meshFlow 20s ease-in-out infinite;
+    animation: meshFlow 10s ease-in-out infinite;
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+}
+
+@media screen and (max-width: 768px) {
+    .animate-mesh-flow {
+        animation-duration: 30s !important;
+    }
+}
+
+.will-change-transform {
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
 }
 
 .animate-float-slow {
-    animation: floatSlow 8s ease-in-out infinite;
+    animation: floatSlow 5s ease-in-out infinite;
+    transform: translate3d(0, 0, 0);
 }
 
 .animate-float-random {
-    animation: floatRandom 20s ease-in-out infinite;
+    animation: floatRandom 10s ease-in-out infinite;
+    transform: translate3d(0, 0, 0);
 }
 
 .animation-delay-2000 {
@@ -583,9 +644,8 @@ body {
     padding-bottom: var(--space-l);
 }
 
-.fluid-px-xs {
-    padding-left: var(--space-xs);
-    padding-right: var(--space-xs);
+.tap-highlight-transparent {
+    -webkit-tap-highlight-color: transparent;
 }
 
 .fluid-px-s {
@@ -791,9 +851,16 @@ body {
     background: radial-gradient(circle, var(--theme-primary-alpha) 0%, transparent 70%) !important;
 }
 
-.theme-radial-secondary {
-    background: radial-gradient(circle, var(--theme-secondary-alpha, rgba(var(--theme-primary-rgb), 0.2)) 0%, transparent 70%);
+
+/* STRICT THEME TRANSITION LOCK */
+.disable-transitions,
+.disable-transitions *,
+.disable-transitions *:before,
+.disable-transitions *:after {
+    transition: none !important;
+    animation: none !important;
 }
+
 
 /* Support for dynamic progress bars without inline style width */
 .theme-progress-bar {
@@ -808,11 +875,11 @@ body {
 }
 
 /* Custom Utilities for dynamic layout */
-@utility pointer-events-none {
+.pointer-events-none {
     pointer-events: none;
 }
 
-@utility select-none {
+.select-none {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -1333,4 +1400,60 @@ body {
     .animate-float {
         animation: none !important;
     }
+}
+
+/* --- NEON PULSE ANIMATIONS (INTENSITY MAX) --- */
+@keyframes neon-pulse-logo {
+
+    0%,
+    100% {
+        filter: drop-shadow(0 0 5px rgba(var(--primary), 0.4)) brightness(1);
+        transform: scale(1);
+    }
+
+    50% {
+        filter: drop-shadow(0 0 20px rgba(var(--primary), 0.8)) drop-shadow(0 0 40px rgba(var(--primary), 0.4)) brightness(1.2);
+        transform: scale(1.03);
+    }
+}
+
+@keyframes neon-pulse-text {
+
+    0%,
+    100% {
+        text-shadow: 0 0 8px rgba(var(--primary), 0.4);
+        opacity: 0.9;
+    }
+
+    50% {
+        text-shadow: 0 0 15px rgba(var(--primary), 0.9), 0 0 30px rgba(var(--primary), 0.6);
+        opacity: 1;
+    }
+}
+
+.animate-neon-pulse-logo {
+    animation: neon-pulse-logo 3.5s infinite ease-in-out;
+}
+
+.animate-neon-pulse-text {
+    animation: neon-pulse-text 3.5s infinite ease-in-out;
+}
+
+/* Specific Shadow for Box Pulse */
+@keyframes neon-pulse-box {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px rgba(var(--primary), 0.2), inset 0 0 5px rgba(var(--primary), 0.1);
+        transform: scale(1);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(var(--primary), 0.4), 0 0 40px rgba(var(--primary), 0.2), inset 0 0 10px rgba(var(--primary), 0.2);
+        transform: scale(1.02);
+    }
+}
+
+.animate-neon-pulse-box {
+    animation: neon-pulse-box 3.5s infinite ease-in-out;
 }

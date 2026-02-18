@@ -13,12 +13,12 @@ export const DashboardBanner: React.FC<DashboardBannerProps> = ({ theme, current
                 <span className="material-symbols-outlined text-[200px]">{theme.icon}</span>
             </div>
 
-            {/* Decorative subject icons */}
+            {/* Decorative subject icons - Static opacity instead of pulse */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 {React.useMemo(() => theme.illustrations.map((icon: string, idx: number) => (
                     <span
                         key={idx}
-                        className={`material-symbols-outlined absolute opacity-10 animate-pulse scatter-${(idx % 15) + 1} delay-stagger-${idx % 11}`}
+                        className={`material-symbols-outlined absolute opacity-[0.15] scatter-${(idx % 15) + 1}`}
                     >
                         {icon}
                     </span>
@@ -40,7 +40,7 @@ export const DashboardBanner: React.FC<DashboardBannerProps> = ({ theme, current
 
                 <div className="flex flex-col gap-4 shrink-0 relative">
                     {/* The profile photo also appears here, overlapping nicely */}
-                    <div className="flex items-center gap-4 bg-white/10 backdrop-blur-xl p-4 md:p-6 rounded-[2rem] border border-white/20 shadow-2xl relative overflow-hidden group/profile">
+                    <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 md:p-6 rounded-[2rem] border border-white/20 shadow-2xl relative overflow-hidden group/profile will-change-transform">
                         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover/profile:opacity-100 transition-opacity"></div>
 
                         <div className="relative size-16 md:size-20 rounded-2xl border-2 border-white/50 shadow-lg overflow-hidden shrink-0">
@@ -64,6 +64,6 @@ export const DashboardBanner: React.FC<DashboardBannerProps> = ({ theme, current
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { motion } from 'framer-motion';
-import { containerVariants, itemVariants } from '../components/PageTransition';
+import { VARIANTS } from '../constants/motion';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -753,9 +753,9 @@ export const StudentProfile: React.FC = () => {
 
     return (
         <motion.div
-            variants={containerVariants}
+            variants={VARIANTS.staggerContainer}
             initial="initial"
-            animate="enter"
+            animate="animate"
             className="max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-8 h-auto lg:h-[calc(100vh-6rem)] overflow-visible lg:overflow-hidden pb-20 lg:pb-0"
         >
 
@@ -806,10 +806,16 @@ export const StudentProfile: React.FC = () => {
                         />
                     </div>
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 pr-1">
+                    <motion.div
+                        variants={VARIANTS.staggerContainer}
+                        initial="initial"
+                        animate="animate"
+                        className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 pr-1"
+                    >
                         {students.map(s => (
-                            <button
+                            <motion.button
                                 key={s.id}
+                                variants={VARIANTS.fadeUp}
                                 onClick={() => setSelectedStudentId(s.id)}
                                 className={`flex items-center gap-3 p-3 rounded-xl text-left transition-all ${selectedStudentId === s.id
                                     ? `bg-${theme.primaryColor}/10 border border-${theme.primaryColor}/20`
@@ -822,9 +828,9 @@ export const StudentProfile: React.FC = () => {
                                     <p className={`text-sm font-bold truncate ${selectedStudentId === s.id ? `text-${theme.primaryColor}` : 'text-slate-700 dark:text-slate-300'}`}>{s.name}</p>
                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">#{s.number}</p>
                                 </div>
-                            </button>
+                            </motion.button>
                         ))}
-                    </div>
+                    </motion.div>
                 </div>
             </div>
 
@@ -988,57 +994,56 @@ export const StudentProfile: React.FC = () => {
 
                                     {/* UNIT BLOCKS */}
                                     <div className="flex flex-col fluid-gap-s">
-                                        {['1', '2', '3']
-                                            .filter(u => selectedUnit === 'all' || selectedUnit === u)
-                                            .map(unit => (
-                                                <div key={unit} className="bg-white dark:bg-slate-900 fluid-p-m rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 group/unit hover:border-primary/20 transition-all duration-500">
-                                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="size-14 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover/unit:bg-primary/10 transition-colors">
-                                                                <span className="material-symbols-outlined text-slate-400 group-hover/unit:text-primary">{unit === '1' ? 'looks_one' : unit === '2' ? 'looks_two' : 'looks_3'}</span>
-                                                            </div>
-                                                            <div>
-                                                                <h4 className="font-black text-slate-900 dark:text-white text-lg">{unit}ª Unidade</h4>
-                                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Relatório de Desempenho</p>
-                                                            </div>
+                                        {['1', '2', '3'].filter(u => selectedUnit === 'all' || selectedUnit === u).map(unit => (
+                                            <div key={unit} className="bg-white dark:bg-slate-900 fluid-p-m rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 group/unit hover:border-primary/20 transition-all duration-500">
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="size-14 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover/unit:bg-primary/10 transition-colors">
+                                                            <span className="material-symbols-outlined text-slate-400 group-hover/unit:text-primary">{unit === '1' ? 'looks_one' : unit === '2' ? 'looks_two' : 'looks_3'}</span>
                                                         </div>
-
-                                                        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-2 rounded-2xl border border-slate-100 dark:border-slate-700">
-                                                            <div className="px-4 py-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm">
-                                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Média Final</p>
-                                                                <p className="text-xl font-black text-slate-800 dark:text-white leading-none">
-                                                                    {student ? calculateUnitTotal(student, unit).toFixed(1) : '0.0'}
-                                                                </p>
-                                                            </div>
-                                                            <div className={`px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest ${student && calculateUnitTotal(student, unit) >= 6 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>
-                                                                {student && calculateUnitTotal(student, unit) >= 6 ? 'Acima da Média' : 'Abaixo da Média'}
-                                                            </div>
+                                                        <div>
+                                                            <h4 className="font-black text-slate-900 dark:text-white text-lg">{unit}ª Unidade</h4>
+                                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Relatório de Desempenho</p>
                                                         </div>
                                                     </div>
 
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                                                        {student && Object.entries(student.units[unit] || {}).map(([key, value]) => {
-                                                            if (key === 'observation' || typeof value !== 'number') return null;
-                                                            return (
-                                                                <div key={key} className="bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100/50 dark:border-slate-700/50 flex flex-col gap-1 transition-all hover:translate-y-[-2px] hover:shadow-lg hover:shadow-slate-200/20 dark:hover:shadow-none">
-                                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{key}</p>
-                                                                    <p className="text-xl font-black text-slate-800 dark:text-white">{(value as number).toFixed(1)}</p>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-
-                                                    <div className="relative mt-4">
-                                                        <span className="material-symbols-outlined absolute left-4 top-4 text-slate-400 text-lg">edit_note</span>
-                                                        <textarea
-                                                            placeholder="Adicione uma observação pedagógica para esta unidade..."
-                                                            className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 pl-12 h-32 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all outline-none resize-none font-medium dark:text-slate-200"
-                                                            value={student?.units[unit]?.observation || ''}
-                                                            onChange={(e) => saveObservation(unit, e.target.value)}
-                                                        />
+                                                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-2 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                                        <div className="px-4 py-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Média Final</p>
+                                                            <p className="text-xl font-black text-slate-800 dark:text-white leading-none">
+                                                                {student ? calculateUnitTotal(student, unit).toFixed(1) : '0.0'}
+                                                            </p>
+                                                        </div>
+                                                        <div className={`px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest ${student && calculateUnitTotal(student, unit) >= 6 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>
+                                                            {student && calculateUnitTotal(student, unit) >= 6 ? 'Acima da Média' : 'Abaixo da Média'}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            ))}
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                                                    {student && Object.entries(student.units[unit] || {}).map(([key, value]) => {
+                                                        if (key === 'observation' || typeof value !== 'number') return null;
+                                                        return (
+                                                            <div key={key} className="bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100/50 dark:border-slate-700/50 flex flex-col gap-1 transition-all hover:translate-y-[-2px] hover:shadow-lg hover:shadow-slate-200/20 dark:hover:shadow-none">
+                                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{key}</p>
+                                                                <p className="text-xl font-black text-slate-800 dark:text-white">{(value as number).toFixed(1)}</p>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                <div className="relative mt-4">
+                                                    <span className="material-symbols-outlined absolute left-4 top-4 text-slate-400 text-lg">edit_note</span>
+                                                    <textarea
+                                                        placeholder="Adicione uma observação pedagógica para esta unidade..."
+                                                        className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 pl-12 h-32 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all outline-none resize-none font-medium dark:text-slate-200"
+                                                        value={student?.units[unit]?.observation || ''}
+                                                        onChange={(e) => saveObservation(unit, e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))
+                                        }
                                     </div>
                                 </div>
 
