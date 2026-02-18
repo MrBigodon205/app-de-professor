@@ -233,6 +233,24 @@ body {
     @apply bg-white/30 dark:bg-slate-900/30 backdrop-blur-xl border border-white/20 dark:border-white/5 shadow-lg rounded-2xl;
 }
 
+/* PERFORMANCE: Disable Backdrop Blur on Mobile (CRITICAL) */
+@media screen and (max-width: 768px) {
+
+    .card,
+    .glass-card-premium,
+    .glass-card-soft {
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+        background-color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .dark .card,
+    .dark .glass-card-premium,
+    .dark .glass-card-soft {
+        background-color: rgba(15, 23, 42, 0.95) !important;
+    }
+}
+
 /* Neon Glows */
 .shadow-neon {
     box-shadow: 0 0 20px -5px rgba(6, 182, 212, 0.3);

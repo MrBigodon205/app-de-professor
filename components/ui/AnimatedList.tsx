@@ -19,9 +19,11 @@ export const AnimatedList: React.FC<{ children: React.ReactNode, className?: str
 };
 
 export const AnimatedItem: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className }) => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
     return (
         <motion.div
-            variants={VARIANTS.fadeUp}
+            variants={isMobile ? VARIANTS.fade : VARIANTS.fadeUp}
             className={`${className}`}
         >
             {children}

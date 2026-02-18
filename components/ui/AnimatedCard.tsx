@@ -12,13 +12,15 @@ export const AnimatedCard = React.forwardRef<HTMLDivElement, AnimatedCardProps>(
     hoverEffect = true,
     ...props
 }, ref) => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
     return (
         <motion.div
             ref={ref}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: isMobile ? 0 : 20 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={hoverEffect ? { y: -4 } : undefined} // Lift up on hover (safer than scale)
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            whileHover={!isMobile && hoverEffect ? { y: -4 } : undefined} // No hover transform on mobile
+            transition={{ duration: isMobile ? 0.25 : 0.4, ease: "easeOut" }}
             className={`bg-white dark:bg-slate-800 rounded-3xl border border-border-default/50 shadow-sm transition-shadow hover:shadow-lg ${className}`}
             {...props}
         >

@@ -17,8 +17,10 @@ interface PageTransitionProps extends React.HTMLAttributes<HTMLDivElement> {
 export const PageTransition = React.forwardRef<HTMLDivElement, PageTransitionProps>(({ children, type, className, ...props }, ref) => {
     const location = useLocation();
 
-    // V2: Light Fade Up
-    const variants = VARIANTS.fadeUp;
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+    // V2: Light Fade Up on Desktop, Pure Fade on Mobile for Max PPS
+    const variants = isMobile ? VARIANTS.fade : VARIANTS.fadeUp;
 
     return (
         <motion.div

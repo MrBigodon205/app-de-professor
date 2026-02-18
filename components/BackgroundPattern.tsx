@@ -11,6 +11,7 @@ interface BackgroundPatternProps {
 const getSubjectConfig = (subjectName: string) => {
     // Normalize: Remove accents/diacritics and lowercase
     const s = subjectName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
     // Maths
     if (s.includes('matematica') || s.includes('calculo') || s.includes('algebra') || s.includes('math')) {
@@ -119,14 +120,14 @@ export const BackgroundPattern: React.FC<BackgroundPatternProps> = React.memo(({
 
     // Generate a denser field of interaction
     const particles = useMemo(() => {
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
         const items = [];
-        const count = 15; // PERFORMANCE: Increased from 8 to 15 per user request
+        const count = isMobile ? 6 : 15; // Performance: Lower count on mobile
 
         for (let i = 0; i < count; i++) {
             const token = config.particles[i % config.particles.length];
 
             // 3D DEPTH SIMULATION (1 = Far, 2 = Mid, 3 = Close)
-            // Use index to deterministically assign depth for stable consistent renders
             const depth = (i % 3) + 1;
 
             // Position Grid with randomness
@@ -134,30 +135,28 @@ export const BackgroundPattern: React.FC<BackgroundPatternProps> = React.memo(({
             const left = (i * 23 + 3) % 95;
 
             // Physics based on Depth
-            // Close = Faster, Larger range, Clearer
-            // Far = Slower, Smaller range, Blurry
-            const duration = 15 + (4 - depth) * 5; // 20s (Far) to 10s (Close)
-            const scale = 0.5 + (depth * 0.3); // 0.8 to 1.4
+            const duration = isMobile ? (20 + (4 - depth) * 5) : (15 + (4 - depth) * 5);
+            const scale = 0.5 + (depth * 0.3);
 
-            // Random floating range - Multiplied by depth for parallax
-            const floatY = ((i % 2 === 0 ? -1 : 1) * (20 + (depth * 20))); // -80 to +80 range
-            const floatX = ((i % 3 === 0 ? 1 : -1) * (10 + (depth * 15))); // -55 to +55 range
+            // Random floating range
+            const floatY = ((i % 2 === 0 ? -1 : 1) * (20 + (depth * 20)));
+            const floatX = ((i % 3 === 0 ? 1 : -1) * (10 + (depth * 15)));
 
-            // Blur effect for depth
-            const blur = depth === 1 ? '2px' : (depth === 2 ? '1px' : '0px');
+            // PERFORMANCE: NO BLUR ON MOBILE (CRITICAL)
+            const blur = isMobile ? '0px' : (depth === 1 ? '2px' : (depth === 2 ? '1px' : '0px'));
             const opacity = depth === 1 ? 0.15 : (depth === 2 ? 0.25 : 0.4);
 
             items.push({
                 obj: token,
                 top: `${top}%`,
                 left: `${left}%`,
-                delay: i * 0.5,
+                delay: i * (isMobile ? 0.8 : 0.5),
                 duration,
                 scale,
-                floatY,
-                floatX,
+                floatY: isMobile ? floatY * 0.5 : floatY, // Smaller movements on mobile
+                floatX: isMobile ? floatX * 0.5 : floatX,
                 blur,
-                baseOpacity: opacity,
+                baseOpacity: isMobile ? opacity * 0.8 : opacity,
                 showOnMobile: true
             });
         }
@@ -202,9 +201,9 @@ export const BackgroundPattern: React.FC<BackgroundPatternProps> = React.memo(({
                     {particles.map((p, idx) => (
                         <motion.div
                             key={`${config.icon}-${idx}`}
-                            className={`absolute font-black theme-text-primary dark:text-white flex items-center justify-center drop-shadow-md`}
+                            className={`absolute font-black theme-text-primary dark:text-white flex items-center justify-center drop-shadow-md will-change-transform`}
                             style={{
-                                filter: `blur(${p.blur})`, // Depth of field
+                                filter: p.blur === '0px' ? 'none' : `blur(${p.blur})`, // Avoid filter if 0px
                             }}
                             initial={{
                                 top: p.top,
