@@ -4,11 +4,10 @@
 
 :root {
 
-    /* --- FLUID SCALING (Desktop Only) --- */
-    /* Only apply scaling on screens larger than 1024px (Laptops/Desktops) */
-    /* Mobile/Tablet continues to use default 16px for safety */
-    @media (min-width: 1024px) {
-        font-size: clamp(100%, 0.9rem + 0.35vw, 125%);
+    /* --- FLUID SCALING (Tablet & Desktop) --- */
+    /* Scaling begins at 768px (iPad Portrait) to ensure smooth transition */
+    @media (min-width: 768px) {
+        font-size: clamp(100%, 0.85rem + 0.4vw, 120%);
     }
 
     /* --- PREMIUM SEMANTIC TOKENS --- */

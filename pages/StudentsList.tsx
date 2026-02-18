@@ -715,7 +715,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                         </>
                     ) : (
                         <div className="w-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-300 px-4 py-3 rounded-xl font-bold border border-indigo-100 dark:border-indigo-800 flex items-center justify-center gap-2 text-xs md:text-base">
-                            <span className="material-symbols-outlined">touch_app</span>
+                            <span className="material-symbols-outlined font-black">touch_app</span>
                             Selecione um aluno
                         </div>
                     )}
@@ -733,7 +733,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                         >
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="size-12 rounded-2xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 theme-text-primary">
-                                    <span className="material-symbols-outlined">publish</span>
+                                    <span className="material-symbols-outlined font-black">publish</span>
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Importação em Massa</h2>
@@ -900,7 +900,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     Ajuste a área de seleção
                                 </h3>
                                 <button onClick={() => setShowCropper(false)} className="p-2 text-slate-400">
-                                    <span className="material-symbols-outlined">close</span>
+                                    <span className="material-symbols-outlined font-black">close</span>
                                 </button>
                             </div>
 
@@ -916,7 +916,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     </>
                                 ) : (
                                     <>
-                                        <span className="material-symbols-outlined">auto_fix_high</span>
+                                        <span className="material-symbols-outlined font-black">auto_fix_high</span>
                                         Extrair Nomes da Seleção
                                     </>
                                 )}

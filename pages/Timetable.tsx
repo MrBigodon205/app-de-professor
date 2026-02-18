@@ -588,7 +588,7 @@ export const Timetable: React.FC = () => {
                                 <button onClick={() => setIsModalOpen(false)} className="bg-white/20 hover:bg-white/30 text-white p-1.5 rounded-full transition-colors relative z-10">
                                     <span className="material-symbols-outlined text-lg">close</span>
                                 </button>
-                                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_2px_2px,_white_1px,_transparent_0)] bg-[length:16px_16px]"></div>
+                                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_2px_2px,_white_1px,_transparent_0)] bg-[length:16px_16px] pointer-events-none"></div>
                             </div>
 
 
@@ -669,7 +669,7 @@ export const Timetable: React.FC = () => {
                             className="bg-white dark:bg-slate-900 w-full max-w-2xl max-h-[90vh] rounded-[24px] shadow-2xl overflow-hidden flex flex-col my-auto"
                         >
                             <div className={`h-20 bg-gradient-to-br ${theme.bgGradient} relative shrink-0 overflow-hidden`}>
-                                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_2px_2px,_white_1px,_transparent_0)] bg-[length:24px_24px]"></div>
+                                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_2px_2px,_white_1px,_transparent_0)] bg-[length:24px_24px] pointer-events-none"></div>
                                 <div className="absolute top-0 right-0 p-3 opacity-10 rotate-12 transform translate-x-2 -translate-y-2">
                                     <span className="material-symbols-outlined text-[80px] text-white">{theme.icon}</span>
                                 </div>

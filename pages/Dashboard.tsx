@@ -848,8 +848,7 @@ export const Dashboard: React.FC = () => {
 
       {/* Help Banner - Visible for new users or quick access */}
       <motion.div variants={VARIANTS.fadeUp} className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-500 to-purple-600 p-[1px] shadow-lg shadow-indigo-500/20 group">
-        <div className="relative bg-surface-card rounded-[23px] p-6 flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden">
-          {/* Background decoration */}
+        <div className={`relative bg-gradient-to-br transition-all duration-700 p-4 md:p-8 lg:p-12 flex flex-col items-center md:items-start text-center md:text-left gap-6 md:gap-10 ${theme.isDarkMode ? 'from-slate-800/80 to-slate-900/90' : 'from-indigo-600 to-indigo-800'}`}>
           {/* Background decoration - OPTIMIZED */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2 bg-[radial-gradient(circle,rgba(99,102,241,0.2)_0%,transparent_70%)]"></div>
 
@@ -880,8 +879,8 @@ export const Dashboard: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* QUICK ACTIONS GRID */}
-      <AnimatedItem className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+      {/* QUICK ACTIONS GRID - Fluid version */}
+      <AnimatedItem className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] md:grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 lg:gap-6">
         {[
           { icon: 'design_services', label: 'Planejar', path: '/planning', color: 'text-blue-500', bg: 'bg-blue-500/10' },
           { icon: 'playlist_add_check', label: 'Chamada', path: '/attendance', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
@@ -896,7 +895,7 @@ export const Dashboard: React.FC = () => {
               <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-transparent to-primary/5`} />
 
               <div className={`p-3 rounded-xl ${action.bg} group-hover:scale-110 transition-transform duration-300`}>
-                <span className={`material-symbols-outlined text-2xl lg:text-3xl ${action.color}`}>{action.icon}</span>
+                <span className={`material-symbols-outlined text-xl md:text-2xl font-black ${action.color}`}>{action.icon}</span>
               </div>
               <span className="font-bold text-sm lg:text-base text-text-primary">{action.label}</span>
             </AnimatedCard>
@@ -905,12 +904,12 @@ export const Dashboard: React.FC = () => {
       </AnimatedItem>
 
 
-      {/* Main KPI Grid - Cyber-Glass Bento */}
-      <AnimatedItem className="grid grid-cols-1 landscape:grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-6 relative z-10">
+      {/* Main KPI Grid - Cyber-Glass Bento - Responsive & Fluid */}
+      <AnimatedItem className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(340px,1fr))] gap-6 relative z-10">
 
         {/* Total Students (Large Card) */}
         <AnimatedCard
-          className="col-span-1 landscape:col-span-2 md:col-span-2 xl:col-span-2 glass-card-premium p-8 relative overflow-hidden group transition-all duration-500 flex flex-col justify-between h-auto min-h-[380px] md:min-h-[260px]"
+          className="col-span-1 md:col-span-full xl:col-span-2 glass-card-premium p-8 relative overflow-hidden group transition-all duration-500 flex flex-col justify-between h-auto min-h-[300px]"
           hoverEffect={false} // Custom hover effect inside
         >
           {/* Ambient Glows */}
@@ -932,7 +931,7 @@ export const Dashboard: React.FC = () => {
                 {loadingCounts ? (
                   <div className="h-16 w-32 bg-surface-subtle rounded-2xl animate-pulse"></div>
                 ) : (
-                  <span className="block text-6xl lg:text-7xl font-display font-black text-transparent bg-clip-text bg-gradient-to-b from-text-primary to-text-secondary tracking-tighter leading-none shadow-xl drop-shadow-sm">{displayCount}</span>
+                  <span className="block text-5xl md:text-5xl lg:text-7xl font-display font-black text-transparent bg-clip-text bg-gradient-to-b from-text-primary to-text-secondary tracking-tighter leading-none shadow-xl drop-shadow-sm">{displayCount}</span>
                 )}
                 <h2 className="text-sm font-bold text-text-muted uppercase tracking-widest mt-2">{isContextSelected ? 'Alunos na Turma' : 'Total de Alunos'}</h2>
               </div>
@@ -973,7 +972,7 @@ export const Dashboard: React.FC = () => {
               ) : (
                 <div className="flex items-baseline gap-2">
                   <span
-                    className="text-4xl font-display font-black tracking-tight theme-text-primary"
+                    className="text-3xl md:text-3xl lg:text-4xl font-display font-black tracking-tight theme-text-primary"
                   >
                     {stats.gradeAverage.toFixed(1)}
                   </span>
@@ -1004,7 +1003,7 @@ export const Dashboard: React.FC = () => {
                 <div className="h-10 w-24 bg-surface-subtle rounded-lg animate-pulse"></div>
               ) : (
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-display font-black text-text-primary tracking-tight">{stats.presentToday}</span>
+                  <span className="text-3xl md:text-3xl lg:text-4xl font-display font-black text-text-primary tracking-tight">{stats.presentToday}</span>
                   <span className="text-xs font-bold text-text-muted">/ {displayCount}</span>
                 </div>
               )}

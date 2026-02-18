@@ -859,7 +859,7 @@ export const Activities: React.FC = () => {
                         className="size-12 bg-amber-500 text-white rounded-2xl shadow-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95"
                         title="Continuar Rascunho"
                     >
-                        <span className="material-symbols-outlined">edit_note</span>
+                        <span className="material-symbols-outlined font-black">edit_note</span>
                     </button>
                 )}
                 <button
@@ -1047,7 +1047,7 @@ export const Activities: React.FC = () => {
                         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-20">
                             <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
                                 <button onClick={() => { setIsEditing(false); setSelectedActivityId(null); }} className="lg:hidden p-1 -ml-2 mr-1 text-slate-400">
-                                    <span className="material-symbols-outlined">arrow_back</span>
+                                    <span className="material-symbols-outlined font-black">arrow_back</span>
                                 </button>
                                 {selectedActivityId ? 'Editar Atividade' : 'Nova Atividade'}
                             </h2>
@@ -1228,7 +1228,7 @@ export const Activities: React.FC = () => {
                                                         onClick={(e) => { e.stopPropagation(); handleRemoveFile(file.id); }}
                                                         className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                                     >
-                                                        <span className="material-symbols-outlined">close</span>
+                                                        <span className="material-symbols-outlined font-black">close</span>
                                                     </button>
                                                 </div>
                                             ))}
@@ -1248,11 +1248,11 @@ export const Activities: React.FC = () => {
                             className="flex-1 overflow-y-auto relative h-[100dvh] md:h-full"
                         >
                             {/* Header Image/Gradient */}
-                            <div className={`h-48 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden`}>
+                            <div className={`h-28 md:h-32 lg:h-36 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden`}>
                                 <div className="absolute inset-0 opacity-10 flex flex-wrap gap-8 justify-end p-8 rotate-12 scale-150 pointer-events-none">
                                     <span className="material-symbols-outlined text-[150px] text-white">{theme.icon}</span>
                                 </div>
-                                <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/50 to-transparent">
+                                <div className="absolute bottom-0 left-0 right-0 fluid-p-m bg-gradient-to-t from-black/50 to-transparent">
                                     <div className="flex gap-2 mb-2">
                                         <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-xs font-bold border border-white/20">
                                             {classes.find(c => c.id === currentActivity.seriesId)?.name}
@@ -1263,7 +1263,7 @@ export const Activities: React.FC = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <h1 className="text-3xl md:text-4xl font-bold text-white text-shadow-premium">{currentActivity.title}</h1>
+                                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white text-shadow-premium">{currentActivity.title}</h1>
                                 </div>
                                 {/* Mobile Back Button (Visible on View Mode) */}
                                 <div className="absolute top-4 left-4 lg:hidden z-10">
@@ -1272,7 +1272,7 @@ export const Activities: React.FC = () => {
                                         className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg active:scale-95"
                                         title="Voltar para Lista"
                                     >
-                                        <span className="material-symbols-outlined">arrow_back</span>
+                                        <span className="material-symbols-outlined font-black">arrow_back</span>
                                     </button>
                                 </div>
 
@@ -1355,7 +1355,7 @@ export const Activities: React.FC = () => {
                             </div>
 
                             {/* View Content */}
-                            <div className="p-6 md:p-8 space-y-8">
+                            <div className="fluid-p-m md:fluid-p-l space-y-6 md:space-y-8">
                                 {/* INFO CARDS */}
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                     <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
@@ -1429,7 +1429,7 @@ export const Activities: React.FC = () => {
                                                                     className="p-1.5 md:p-2 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-all"
                                                                     title={file.url.startsWith('data:') && file.name.match(/\.(doc|docx|ppt|pptx|xls|xlsx)$/i) ? "Salve para visualizar" : "Visualizar / Apresentar"}
                                                                 >
-                                                                    <span className="material-symbols-outlined">visibility</span>
+                                                                    <span className="material-symbols-outlined font-black">visibility</span>
                                                                 </button>
                                                             )}
                                                         <a
@@ -1437,7 +1437,7 @@ export const Activities: React.FC = () => {
                                                             className="p-1.5 md:p-2 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
                                                             title="Baixar"
                                                         >
-                                                            <span className="material-symbols-outlined">download</span>
+                                                            <span className="material-symbols-outlined font-black">download</span>
                                                         </a>
                                                     </div>
                                                 </div>

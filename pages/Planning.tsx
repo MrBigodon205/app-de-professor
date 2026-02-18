@@ -1331,7 +1331,7 @@ export const Planning: React.FC = () => {
                         className="size-12 bg-amber-500 text-white rounded-2xl shadow-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95"
                         title="Continuar Rascunho"
                     >
-                        <span className="material-symbols-outlined">edit_note</span>
+                        <span className="material-symbols-outlined font-black">edit_note</span>
                     </motion.button>
                 )}
                 <button
@@ -1509,7 +1509,7 @@ export const Planning: React.FC = () => {
                                     onClick={loadDraft}
                                     className="inline-flex items-center justify-center gap-3 bg-amber-500 text-white text-lg font-bold py-4 px-8 rounded-2xl shadow-xl shadow-amber-500/20 hover:-translate-y-1 transition-all"
                                 >
-                                    <span className="material-symbols-outlined">edit_note</span>
+                                    <span className="material-symbols-outlined font-black">edit_note</span>
                                     Continuar Rascunho
                                 </button>
                             )}
@@ -1525,7 +1525,7 @@ export const Planning: React.FC = () => {
                                         onClick={() => { setSelectedTemplate(null); setShowForm(false); setIsEditing(false); }}
                                         className="lg:hidden p-2 -ml-2 text-slate-400"
                                     >
-                                        <span className="material-symbols-outlined">arrow_back</span>
+                                        <span className="material-symbols-outlined font-black">arrow_back</span>
                                     </button>
                                     <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                         <div className="px-2 py-1 bg-indigo-100 text-indigo-600 rounded-md text-xs uppercase tracking-wider font-black">Modelo</div>
@@ -1602,7 +1602,7 @@ export const Planning: React.FC = () => {
                                                     onClick={() => selectedTemplate.file_url && window.open(selectedTemplate.file_url, '_blank')}
                                                     className="px-6 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-bold text-sm text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2"
                                                 >
-                                                    <span className="material-symbols-outlined">download</span>
+                                                    <span className="material-symbols-outlined font-black">download</span>
                                                     Baixar Arquivo
                                                 </button>
                                             </div>
@@ -1633,7 +1633,7 @@ export const Planning: React.FC = () => {
                                                             onClick={() => fileInputRef.current?.click()}
                                                             className="w-full px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
                                                         >
-                                                            <span className="material-symbols-outlined">add_circle</span>
+                                                            <span className="material-symbols-outlined font-black">add_circle</span>
                                                             Selecionar Arquivo
                                                         </button>
                                                     )}
@@ -1647,7 +1647,7 @@ export const Planning: React.FC = () => {
                                                 disabled={formFiles.length === 0 || !formTitle}
                                                 className="px-8 py-3 bg-green-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-lg hover:bg-green-700 transition-all flex items-center gap-2"
                                             >
-                                                <span className="material-symbols-outlined">check_circle</span>
+                                                <span className="material-symbols-outlined font-black">check_circle</span>
                                                 Salvar Planejamento
                                             </button>
                                         </div>
@@ -1670,7 +1670,7 @@ export const Planning: React.FC = () => {
                                         onClick={() => { setSelectedPlanId(null); setIsEditing(false); setShowForm(false); }}
                                         className="lg:hidden p-2 -ml-2 text-slate-400"
                                     >
-                                        <span className="material-symbols-outlined">arrow_back</span>
+                                        <span className="material-symbols-outlined font-black">arrow_back</span>
                                     </button>
                                     <h2 className="text-xl landscape:text-base font-bold text-slate-900 dark:text-white flex items-center gap-3">
                                         <div className={`size-8 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center landscape:hidden`}>
@@ -1826,7 +1826,7 @@ export const Planning: React.FC = () => {
                                             {formFiles.map((file, index) => (
                                                 <div key={index} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 group shadow-sm">
                                                     <div className={`size-10 rounded-lg bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0`}>
-                                                        <span className="material-symbols-outlined">description</span>
+                                                        <span className="material-symbols-outlined font-black">description</span>
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <div className="text-sm font-bold truncate text-slate-700 dark:text-slate-200">{file.name}</div>
@@ -1837,7 +1837,7 @@ export const Planning: React.FC = () => {
                                                         className="p-2 text-slate-300 hover:text-red-500 transition-colors"
                                                         title="Remover arquivo"
                                                     >
-                                                        <span className="material-symbols-outlined">close</span>
+                                                        <span className="material-symbols-outlined font-black">close</span>
                                                     </button>
                                                 </div>
                                             ))}
@@ -1901,7 +1901,7 @@ export const Planning: React.FC = () => {
                                             className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all shadow-lg active:scale-95"
                                             title="Voltar"
                                         >
-                                            <span className="material-symbols-outlined">arrow_back</span>
+                                            <span className="material-symbols-outlined font-black">arrow_back</span>
                                         </button>
                                     </div>
 
@@ -1952,7 +1952,7 @@ export const Planning: React.FC = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                         <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
                                             <div className="size-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
-                                                <span className="material-symbols-outlined">event</span>
+                                                <span className="material-symbols-outlined font-black">event</span>
                                             </div>
                                             <div className="min-w-0">
                                                 <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Data</div>
@@ -1964,7 +1964,7 @@ export const Planning: React.FC = () => {
 
                                         <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
                                             <div className="size-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                                                <span className="material-symbols-outlined">school</span>
+                                                <span className="material-symbols-outlined font-black">school</span>
                                             </div>
                                             <div className="min-w-0">
                                                 <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Disciplina</div>
@@ -1976,7 +1976,7 @@ export const Planning: React.FC = () => {
 
                                         <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
                                             <div className="size-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-                                                <span className="material-symbols-outlined">timer</span>
+                                                <span className="material-symbols-outlined font-black">timer</span>
                                             </div>
                                             <div className="min-w-0">
                                                 <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Duração</div>
@@ -1988,7 +1988,7 @@ export const Planning: React.FC = () => {
 
                                         <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
                                             <div className="size-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                                                <span className="material-symbols-outlined">category</span>
+                                                <span className="material-symbols-outlined font-black">category</span>
                                             </div>
                                             <div className="min-w-0">
                                                 <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Eixo / Tema</div>
@@ -2116,7 +2116,7 @@ export const Planning: React.FC = () => {
                                             }}
                                             className="flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl shadow-lg transition-all"
                                         >
-                                            <span className="material-symbols-outlined">print</span> Imprimir Documento
+                                            <span className="material-symbols-outlined font-black">print</span> Imprimir Documento
                                         </button>
                                     </div>
 
@@ -2155,7 +2155,7 @@ export const Planning: React.FC = () => {
                                                                             className="p-2 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-all"
                                                                             title={file.url.startsWith('data:') && file.name.match(/\.(doc|docx|ppt|pptx|xls|xlsx)$/i) ? "Salve para visualizar" : "Visualizar / Apresentar"}
                                                                         >
-                                                                            <span className="material-symbols-outlined">visibility</span>
+                                                                            <span className="material-symbols-outlined font-black">visibility</span>
                                                                         </button>
                                                                     )}
                                                                 <a
@@ -2164,7 +2164,7 @@ export const Planning: React.FC = () => {
                                                                     className="p-2 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
                                                                     title="Baixar"
                                                                 >
-                                                                    <span className="material-symbols-outlined">download</span>
+                                                                    <span className="material-symbols-outlined font-black">download</span>
                                                                 </a>
                                                             </div>
                                                         </div>
@@ -2341,7 +2341,7 @@ export const Planning: React.FC = () => {
                                 <p className="text-sm text-slate-500">Selecione um modelo para iniciar seu planejamento</p>
                             </div>
                             <button onClick={() => setShowTemplateSelector(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                                <span className="material-symbols-outlined">close</span>
+                                <span className="material-symbols-outlined font-black">close</span>
                             </button>
                         </div>
 

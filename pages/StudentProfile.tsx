@@ -25,8 +25,9 @@ export const StudentProfile: React.FC = () => {
     const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
 
-    // Mount Ref
+    // Mount & Manual Clear Ref
     const mountedRef = useRef(true);
+    const manualClearRef = useRef(false);
     useEffect(() => {
         mountedRef.current = true;
         return () => { mountedRef.current = false; };
@@ -183,14 +184,21 @@ export const StudentProfile: React.FC = () => {
                 const found = students.find(s => s.id === id);
                 if (found) setSelectedStudentId(id);
             } else {
-                // Desktop: Auto-select first if none. Mobile: Keep empty to show list.
-                const isMobile = window.innerWidth < 1024; // lg breakpoint
-                if (!isMobile && !selectedStudentId) {
+                // Desktop: Auto-select first ONLY if not manually cleared and not in mobile view
+                const isMobile = window.innerWidth < 1024;
+                if (!isMobile && !selectedStudentId && !manualClearRef.current) {
                     setSelectedStudentId(students[0].id);
                 }
             }
         }
     }, [students, selectedStudentId, id]);
+
+    const handleClearSelection = () => {
+        manualClearRef.current = true;
+        setSelectedStudentId('');
+        // Reset manual clear after a short delay or if student list changes
+        setTimeout(() => { manualClearRef.current = false; }, 500);
+    };
 
     // --- REALTIME SUBSCRIPTION ---
     useEffect(() => {
@@ -756,12 +764,12 @@ export const StudentProfile: React.FC = () => {
             variants={VARIANTS.staggerContainer}
             initial="initial"
             animate="animate"
-            className="max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-8 h-auto lg:h-[calc(100vh-6rem)] overflow-visible lg:overflow-hidden pb-20 lg:pb-0"
+            className="max-w-[1600px] mx-auto flex flex-col xl:flex-row gap-6 md:gap-8 h-auto xl:h-[calc(100vh-6rem)] overflow-visible xl:overflow-hidden pb-20 xl:pb-0"
         >
 
             {/* LEFT SIDEBAR: Student List */}
             {/* Desktop: Always distinct. Mobile: Visible only when NO student selected */}
-            <div className={`${selectedStudentId ? 'hidden lg:flex' : 'flex'} flex-col w-full lg:w-80 shrink-0 gap-4 h-full`}>
+            <div className={`${selectedStudentId ? 'hidden xl:flex' : 'flex'} flex-col w-full xl:w-80 shrink-0 gap-4 h-full`}>
                 <div className="bg-surface-card p-6 rounded-[2rem] border border-border-default shadow-xl h-full flex flex-col">
                     {/* Mobile Portrait Only Selectors */}
                     <div className="flex portrait:flex landscape:hidden lg:hidden flex-col gap-2 mb-4">
@@ -835,7 +843,7 @@ export const StudentProfile: React.FC = () => {
             </div>
 
             {/* MAIN CONTENT AREA */}
-            <div className={`${!selectedStudentId ? 'hidden lg:flex' : 'flex'} flex-1 flex-col gap-8 h-auto lg:h-full lg:overflow-y-auto custom-scrollbar lg:pr-2 pb-20 lg:pb-0`}>
+            <div className={`${!selectedStudentId ? 'hidden xl:flex' : 'flex'} flex-1 flex-col gap-6 md:gap-8 h-auto xl:h-full xl:overflow-y-auto custom-scrollbar xl:pr-2 pb-20 xl:pb-0`}>
                 {!student && !loading ? (
                     <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-900 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-800 h-full animate-in fade-in zoom-in duration-500">
                         <div className={`size-24 rounded-3xl bg-${theme.primaryColor}/10 flex items-center justify-center mb-6`}>
@@ -852,23 +860,23 @@ export const StudentProfile: React.FC = () => {
                                 <div className={`absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-${theme.primaryColor}/20 to-${theme.secondaryColor}/20`}></div>
                                 <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-${theme.primaryColor}/10 to-transparent rounded-full -mr-40 -mt-40 blur-3xl group-hover:from-${theme.primaryColor}/15 transition-colors duration-700`}></div>
 
-                                {/* Back Button - Mobile Only - Clears Selection */}
-                                <div className="w-full flex justify-start px-0 mb-4 md:mb-0 md:absolute md:top-6 md:left-6 z-20 no-print lg:hidden">
+                                {/* Back Button - Mobile/Tablet Only - Clears Selection */}
+                                <div className="w-full flex justify-start px-0 mb-6 md:mb-0 md:absolute md:top-4 md:left-4 z-20 no-print xl:hidden">
                                     <button
-                                        onClick={() => setSelectedStudentId('')}
-                                        className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm hover:shadow-md"
+                                        onClick={handleClearSelection}
+                                        className="group flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-white dark:bg-slate-800 border-2 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-xl active:scale-95"
                                     >
-                                        <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span>
-                                        <span className="text-sm font-bold">Voltar</span>
+                                        <span className="material-symbols-outlined text-xl group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                                        <span className="text-sm font-black uppercase tracking-widest">Voltar para Lista</span>
                                     </button>
                                 </div>
 
                                 <div className="relative z-10 -mt-4 flex flex-col items-center">
-                                    <div className={`student-avatar student-avatar-lg bg-gradient-to-br ${student?.color || `from-indigo-600 to-indigo-800`}`}>
+                                    <div className={`student-avatar student-avatar-md md:student-avatar-lg bg-gradient-to-br ${student?.color || `from-indigo-600 to-indigo-800`}`}>
                                         {student?.initials}
                                     </div>
 
-                                    <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight mt-4 text-center">{student?.name}</h1>
+                                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight mt-4 text-center">{student?.name}</h1>
 
                                     <div className="flex items-center gap-3 mt-2">
                                         <span className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-xl font-mono font-bold text-slate-500 text-xs">#{student?.number.padStart(2, '0')}</span>
@@ -956,7 +964,7 @@ export const StudentProfile: React.FC = () => {
 
                                         <div className="h-72 w-full">
                                             <ResponsiveContainer width="100%" height="100%">
-                                                <LineChart data={getChartData()} margin={{ top: 20, right: 30, left: -20, bottom: 0 }}>
+                                                <LineChart data={getChartData()} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                                                     <CartesianGrid strokeDasharray="8 8" vertical={false} stroke="#e2e8f0" strokeOpacity={0.4} />
                                                     <XAxis
                                                         dataKey="name"
@@ -993,29 +1001,29 @@ export const StudentProfile: React.FC = () => {
 
 
                                     {/* UNIT BLOCKS */}
-                                    <div className="flex flex-col fluid-gap-s">
+                                    <div className="flex flex-col gap-4 md:gap-6">
                                         {['1', '2', '3'].filter(u => selectedUnit === 'all' || selectedUnit === u).map(unit => (
                                             <div key={unit} className="bg-white dark:bg-slate-900 fluid-p-m rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 group/unit hover:border-primary/20 transition-all duration-500">
-                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="size-14 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover/unit:bg-primary/10 transition-colors">
-                                                            <span className="material-symbols-outlined text-slate-400 group-hover/unit:text-primary">{unit === '1' ? 'looks_one' : unit === '2' ? 'looks_two' : 'looks_3'}</span>
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4 mb-3 md:mb-4">
+                                                    <div className="flex items-center gap-2 md:gap-3">
+                                                        <div className="size-8 md:size-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover/unit:bg-primary/10 transition-colors">
+                                                            <span className="material-symbols-outlined text-slate-400 group-hover/unit:text-primary text-sm md:text-lg">{unit === '1' ? 'looks_one' : unit === '2' ? 'looks_two' : 'looks_3'}</span>
                                                         </div>
                                                         <div>
-                                                            <h4 className="font-black text-slate-900 dark:text-white text-lg">{unit}ª Unidade</h4>
-                                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Relatório de Desempenho</p>
+                                                            <h4 className="font-black text-slate-900 dark:text-white text-sm md:text-base leading-tight">{unit}ª Unid.</h4>
+                                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Resumo</p>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-2 rounded-2xl border border-slate-100 dark:border-slate-700">
-                                                        <div className="px-4 py-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm">
-                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Média Final</p>
-                                                            <p className="text-xl font-black text-slate-800 dark:text-white leading-none">
+                                                    <div className="flex items-center gap-1 md:gap-2 bg-slate-50 dark:bg-slate-800 p-1 md:p-1.5 rounded-xl border border-slate-100 dark:border-slate-700">
+                                                        <div className="px-2 md:px-3 py-1 bg-white dark:bg-slate-900 rounded-lg shadow-sm">
+                                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-0.5">Nota</p>
+                                                            <p className="text-base font-black text-slate-800 dark:text-white leading-none">
                                                                 {student ? calculateUnitTotal(student, unit).toFixed(1) : '0.0'}
                                                             </p>
                                                         </div>
-                                                        <div className={`px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest ${student && calculateUnitTotal(student, unit) >= 6 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>
-                                                            {student && calculateUnitTotal(student, unit) >= 6 ? 'Acima da Média' : 'Abaixo da Média'}
+                                                        <div className={`px-2 md:px-3 py-1 rounded-lg font-black text-[9px] uppercase tracking-tighter ${student && calculateUnitTotal(student, unit) >= 6 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>
+                                                            {student && calculateUnitTotal(student, unit) >= 6 ? 'OK' : 'BAIXA'}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1033,7 +1041,7 @@ export const StudentProfile: React.FC = () => {
                                                 </div>
 
                                                 <div className="relative mt-4">
-                                                    <span className="material-symbols-outlined absolute left-4 top-4 text-slate-400 text-lg">edit_note</span>
+                                                    <span className="material-symbols-outlined absolute left-4 top-4 text-slate-400 text-lg font-black">edit_note</span>
                                                     <textarea
                                                         placeholder="Adicione uma observação pedagógica para esta unidade..."
                                                         className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 pl-12 h-32 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all outline-none resize-none font-medium dark:text-slate-200"
@@ -1047,11 +1055,10 @@ export const StudentProfile: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Right Column: Sidebar Stats */}
-                                <div className="flex flex-col fluid-gap-m">
+                                <div className="flex flex-col gap-4 md:gap-6 lg:gap-8">
                                     {/* EXAM STATUS CARD */}
-                                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 text-slate-800 dark:text-white relative overflow-hidden group shadow-xl border border-slate-100 dark:border-slate-800">
-                                        <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-${theme.primaryColor}/20 to-transparent rounded-full -mr-16 -mt-16 blur-2xl group-hover:blur-3xl transition-all duration-700`}></div>
+                                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] fluid-p-m md:p-4 lg:p-8 text-slate-800 dark:text-white relative overflow-hidden group shadow-xl border border-slate-100 dark:border-slate-800">
+                                        <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-${theme.primaryColor}/20 to-transparent rounded-full -mr-16 -mt-16 blur-2xl group-hover:blur-3xl transition-all duration-700 pointer-events-none`}></div>
 
 
                                         <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
@@ -1064,9 +1071,9 @@ export const StudentProfile: React.FC = () => {
                                             const score = status === 'APPROVED' ? (annualTotal / 3) : annualTotal;
 
                                             return (
-                                                <div className="flex flex-col gap-8">
-                                                    <div className="flex items-end gap-3">
-                                                        <p className="text-6xl font-black tracking-tighter leading-none">{score.toFixed(1)}</p>
+                                                <div className="flex flex-col gap-6 md:gap-8">
+                                                    <div className="flex items-end gap-2 md:gap-3">
+                                                        <p className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-none">{score.toFixed(1)}</p>
                                                         <div className="flex flex-col mb-1">
                                                             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{status === 'APPROVED' ? 'Média Final' : 'Pontos Totais'}</p>
                                                             <div className="h-1.5 w-12 bg-primary rounded-full mt-1"></div>
@@ -1098,19 +1105,19 @@ export const StudentProfile: React.FC = () => {
 
                                     {/* QUICK STATS GRID */}
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
-                                            <div className="size-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-4">
-                                                <span className="material-symbols-outlined">event_available</span>
+                                        <div className="bg-white dark:bg-slate-900 fluid-p-s rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none min-w-0">
+                                            <div className="size-8 md:size-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-2 md:mb-4">
+                                                <span className="material-symbols-outlined text-lg md:text-xl font-black">event_available</span>
                                             </div>
-                                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Presença</p>
-                                            <p className="text-2xl font-black text-slate-800 dark:text-white leading-none">{getAttendanceStats().percentage}%</p>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight md:tracking-widest mb-1 truncate">Presença</p>
+                                            <p className="text-xl md:text-2xl font-black text-slate-800 dark:text-white leading-none whitespace-nowrap">{getAttendanceStats().percentage}%</p>
                                         </div>
-                                        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
-                                            <div className="size-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 mb-4">
-                                                <span className="material-symbols-outlined">warning</span>
+                                        <div className="bg-white dark:bg-slate-900 fluid-p-s rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none min-w-0">
+                                            <div className="size-8 md:size-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 mb-2 md:mb-4">
+                                                <span className="material-symbols-outlined text-lg md:text-xl font-black">warning</span>
                                             </div>
-                                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Ocorrências</p>
-                                            <p className="text-2xl font-black text-slate-800 dark:text-white leading-none">{getStudentOccurrences().length}</p>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-tight md:tracking-widest mb-1 truncate">Ocorrências</p>
+                                            <p className="text-xl md:text-2xl font-black text-slate-800 dark:text-white leading-none">{getStudentOccurrences().length}</p>
                                         </div>
                                     </div>
 

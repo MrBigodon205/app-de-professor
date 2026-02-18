@@ -268,7 +268,7 @@ export const Login: React.FC = () => {
       >
         {/* Left Side: Brand Identity */}
         <div className="relative bg-surface-section/50 flex flex-col items-center p-8 lg:p-12 border-r border-border-default/50 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 pointer-events-none" />
 
           {/* Centered Content */}
           <div className="flex-1 flex flex-col items-center justify-center w-full z-10">

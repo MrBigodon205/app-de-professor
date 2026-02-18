@@ -351,7 +351,7 @@ export const TeacherProfile: React.FC = () => {
 
                     {/* App Appearance Preview */}
                     <div className="bg-surface-card p-8 rounded-[32px] shadow-xl border border-border-default overflow-hidden relative group">
-                        <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700`}></div>
+                        <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700 pointer-events-none`}></div>
 
                         <div className="flex items-center gap-4 mb-8 relative z-10">
                             <div className={`size-12 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>

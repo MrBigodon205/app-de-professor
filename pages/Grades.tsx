@@ -61,16 +61,16 @@ const MobileGradeCard = React.memo(({ student, selectedUnit, theme, onGradeChang
                         {student.initials}
                     </div>
                     <div className="min-w-0">
-                        <div className="text-sm font-bold text-text-primary leading-tight truncate">
+                        <div className="text-[13px] font-black text-text-primary leading-tight truncate">
                             {student.number}. {student.name}
                         </div>
                     </div>
                 </div>
 
                 {selectedUnit !== 'results' && (
-                    <div className={`shrink-0 flex flex-col items-end px-2 py-1 rounded bg-surface-subtle border border-border-default min-w-[60px]`}>
-                        <span className="text-[9px] uppercase tracking-wider text-text-muted font-bold">Média</span>
-                        <span className={`text-base font-black leading-none ${total >= 6 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    <div className={`shrink-0 flex flex-col items-end px-1.5 py-0.5 rounded bg-surface-subtle border border-border-default min-w-[50px]`}>
+                        <span className="text-[8px] uppercase tracking-tighter text-text-muted font-bold">Média</span>
+                        <span className={`text-sm font-black leading-none ${total >= 6 ? 'text-emerald-500' : 'text-rose-500'}`}>
                             {total.toFixed(1)}
                         </span>
                     </div>
@@ -730,12 +730,12 @@ export const Grades: React.FC = () => {
                     {/* Saving Indicator */}
                     {isSaving ? (
                         <span className="flex items-center text-amber-500 text-xs font-bold bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800 transition-all">
-                            <span className="material-symbols-outlined text-sm mr-2 animate-pulse">cloud_upload</span>
+                            <span className="material-symbols-outlined text-sm mr-2 animate-pulse font-black">cloud_upload</span>
                             Salvando
                         </span>
                     ) : (
                         <span className="flex items-center text-emerald-600 dark:text-emerald-400 text-xs font-bold bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-800 transition-all">
-                            <span className="material-symbols-outlined text-sm mr-2">check_circle</span>
+                            <span className="material-symbols-outlined text-sm mr-2 font-black">check_circle</span>
                             Salvo
                         </span>
                     )}
@@ -744,7 +744,7 @@ export const Grades: React.FC = () => {
                         onClick={() => setShowExportModal(true)}
                         className={`flex items-center space-x-2 px-4 py-2 bg-${theme.baseColor}-600 text-white rounded-lg shadow-lg shadow-${theme.baseColor}-500/30 active:scale-95 transition-all text-xs font-bold uppercase tracking-wide`}
                     >
-                        <span className="material-symbols-outlined text-lg">download</span>
+                        <span className="material-symbols-outlined text-lg font-black">download</span>
                         <span className="hidden sm:inline">Exportar PDF</span>
                     </button>
                 </div>
@@ -760,7 +760,7 @@ export const Grades: React.FC = () => {
                         className="bg-surface-card rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] flex flex-col border border-border-subtle"
                     >
                         <h3 className="text-lg font-black text-text-primary mb-4 flex items-center gap-2 shrink-0">
-                            <span className={`material-symbols-outlined text-${theme.baseColor}-600`}>picture_as_pdf</span>
+                            <span className={`material-symbols-outlined text-${theme.baseColor}-600 font-black`}>picture_as_pdf</span>
                             Relatório PDF
                         </h3>
 
@@ -838,7 +838,7 @@ export const Grades: React.FC = () => {
                                 onClick={exportPDF}
                                 className={`px-6 py-2.5 bg-${theme.baseColor}-600 hover:bg-${theme.baseColor}-700 text-white rounded-lg shadow-lg shadow-${theme.baseColor}-500/30 transition-all flex items-center gap-2 font-bold text-sm`}
                             >
-                                <span className="material-symbols-outlined text-lg">download</span>
+                                <span className="material-symbols-outlined text-lg font-black">download</span>
                                 Baixar PDF
                             </button>
                         </div>
@@ -849,7 +849,7 @@ export const Grades: React.FC = () => {
             {/* ERROR STATE */}
             {visibleStudents.length === 0 && !loading && (
                 <div className="text-center py-12 px-4 rounded-xl border border-dashed border-border-default bg-surface-subtle/30">
-                    <span className="material-symbols-outlined text-4xl text-text-muted mb-3 opacity-50 block">sentiment_dissatisfied</span>
+                    <span className="material-symbols-outlined text-4xl text-text-muted mb-3 opacity-50 block font-black">sentiment_dissatisfied</span>
                     <p className="text-text-muted text-sm">Nenhum aluno encontrado para {selectedUnit === 'results' ? 'o resultado final' : 'esta unidade'}.</p>
                 </div>
             )}

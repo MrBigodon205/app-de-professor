@@ -26,34 +26,24 @@ const getOccurrenceIcon = (type: string) => {
 
 // --- MEMOIZED COMPONENTS ---
 
-const ObservationStudentItem = React.memo(({ student, isSelected, onClick }: { student: Student, isSelected: boolean, onClick: (id: string) => void }) => {
+const ObservationStudentItem = React.memo(({ student, isSelected, onClick, theme }: { student: Student, isSelected: boolean, onClick: (id: string) => void, theme: any }) => {
     return (
-        <motion.div
-            role="button"
-            tabIndex={0}
+        <motion.button
             onClick={() => onClick(student.id)}
-            onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    onClick(student.id);
-                }
-            }}
             variants={VARIANTS.fadeUp}
-            className={`w-full flex items-center gap-4 p-4 landscape:p-2 rounded-2xl transition-all duration-300 relative group/item cursor-pointer ${isSelected
-                ? 'theme-bg-surface-subtle theme-border-soft'
-                : 'hover:bg-surface-subtle border border-transparent'
+            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-300 relative text-left ${isSelected
+                ? `bg-${theme.primaryColor}/10 border border-${theme.primaryColor}/20`
+                : 'hover:bg-surface-subtle border border-transparent hover:border-border-default'
                 }`}
         >
-            {isSelected && (
-                <div className="absolute left-2 w-1 h-6 rounded-full landscape:hidden theme-bg-primary"></div>
-            )}
-            <div className={`student-avatar student-avatar-md bg-gradient-to-br ${student.color || `from-indigo-600 to-indigo-800`} transition-transform group-hover/item:scale-110`}>
+            <div className={`student-avatar student-avatar-sm shrink-0 bg-gradient-to-br ${student.color || `from-indigo-600 to-indigo-800`}`}>
                 {student.initials || student.name.substring(0, 2)}
             </div>
-            <div className="flex flex-col items-start min-w-0 pr-4">
-                <span className={`text-sm font-black truncate w-full text-left transition-colors ${isSelected ? 'theme-text-primary' : 'text-text-secondary group-hover/item:text-text-primary'}`}>{student.name}</span>
-                <span className="text-[10px] font-black text-text-muted uppercase tracking-widest landscape:hidden">Nº {student.number.padStart(2, '0')}</span>
+            <div className="flex flex-col min-w-0 pr-4">
+                <span className={`text-sm font-bold truncate transition-colors ${isSelected ? 'theme-text-primary' : 'text-text-secondary'}`}>{student.name}</span>
+                <span className="text-[10px] text-text-muted font-medium">Nº {student.number.padStart(2, '0')}</span>
             </div>
-        </motion.div>
+        </motion.button>
     );
 });
 
@@ -143,6 +133,13 @@ export const Observations: React.FC = () => {
     const [editingOccId, setEditingOccId] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
     const [selectedOccIds, setSelectedOccIds] = useState<Set<string>>(new Set());
+
+    const handleSelectStudent = (id: string) => {
+        setSelectedStudentId(id);
+        if (window.innerWidth < 1280) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
 
     const fetchData = useCallback(async (silent = false) => {
         if (!currentUser) return;
@@ -323,7 +320,7 @@ export const Observations: React.FC = () => {
     const renderInlineEdit = (occ: Occurrence) => (
         <motion.div variants={VARIANTS.fadeUp} key={occ.id} className="bg-surface-card shadow-xl rounded-[24px] p-6 border-2 border-amber-500/50">
             <div className="flex items-center gap-3 mb-4 text-amber-600 font-bold uppercase text-xs tracking-widest">
-                <span className="material-symbols-outlined">edit_note</span>
+                <span className="material-symbols-outlined font-black">edit_note</span>
                 Editando Ocorrência
             </div>
 
@@ -451,35 +448,30 @@ export const Observations: React.FC = () => {
     );
 
     return (
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 h-auto lg:h-[calc(100vh-6rem)] overflow-visible lg:overflow-hidden pb-6 lg:pb-8">
+        <div className="flex flex-col xl:flex-row gap-4 xl:gap-8 h-auto xl:h-[calc(100vh-6rem)] overflow-visible xl:overflow-hidden pb-6 xl:pb-8">
             {/* Sidebar List */}
-            <div className={`w-full lg:w-96 flex flex-col bg-surface-card rounded-[32px] shadow-xl shadow-slate-200/50 dark:shadow-none border border-border-default overflow-hidden shrink-0 ${selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
-                <div className={`p-4 sm:p-8 border-b border-border-default bg-gradient-to-br from-surface-subtle to-surface-card`}>
-                    <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                        <div className="size-8 sm:size-10 rounded-xl flex items-center justify-center theme-bg-surface-subtle theme-text-primary">
-                            <span className="material-symbols-outlined text-lg sm:text-2xl">badge</span>
-                        </div>
-                        <h2 className="font-black text-text-primary uppercase tracking-widest text-xs sm:text-sm">
-                            {activeSeries?.name} • {selectedSection}
-                        </h2>
-                    </div>
-                    <div className="relative group">
-                        <span className={`material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-${theme.primaryColor} transition-colors`}>search</span>
-                        <input
-                            type="text"
-                            placeholder="Buscar..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className={`w-full h-10 sm:h-12 pl-10 sm:pl-12 pr-4 rounded-xl sm:rounded-2xl bg-surface-card border-2 border-border-default focus:border-${theme.primaryColor} focus:ring-4 focus:ring-${theme.primaryColor}/10 text-xs sm:text-sm font-bold transition-all shadow-sm`}
-                        />
-                    </div>
+            <div className={`w-full xl:w-96 flex flex-col bg-surface-card p-6 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-border-default h-full shrink-0 ${selectedStudentId ? 'hidden xl:flex' : 'flex'}`}>
+                <h3 className="flex font-bold text-text-primary mb-4 items-center gap-2">
+                    <span className="material-symbols-outlined text-primary font-black">groups</span>
+                    Turma {activeSeries?.name}
+                </h3>
+
+                <div className="relative mb-4 group/search">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted group-focus-within/search:text-primary transition-colors">search</span>
+                    <input
+                        type="text"
+                        placeholder="Buscar aluno..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface-subtle border border-border-default focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium"
+                    />
                 </div>
 
                 <motion.div
                     variants={VARIANTS.staggerContainer}
                     initial="initial"
                     animate="animate"
-                    className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1"
+                    className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 pr-1"
                     data-tour="obs-student-list"
                 >
                     {filteredStudents.map(student => (
@@ -487,16 +479,17 @@ export const Observations: React.FC = () => {
                             key={student.id}
                             student={student}
                             isSelected={selectedStudentId === student.id}
-                            onClick={setSelectedStudentId}
+                            onClick={handleSelectStudent}
+                            theme={theme}
                         />
                     ))}
                 </motion.div>
             </div>
 
             {/* Main Content */}
-            <div className={`flex-1 flex flex-col bg-surface-card rounded-[32px] landscape:rounded-none border border-border-default landscape:border-0 shadow-xl shadow-slate-200/50 dark:shadow-none lg:overflow-hidden relative group ${!selectedStudentId ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`flex-1 flex flex-col bg-surface-card rounded-[32px] landscape:rounded-none border border-border-default landscape:border-0 shadow-xl shadow-slate-200/50 dark:shadow-none xl:overflow-hidden relative group ${!selectedStudentId ? 'hidden xl:flex' : 'flex'}`}>
                 {!selectedStudentId ? (
-                    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center h-[500px] lg:h-auto">
+                    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center h-[500px] xl:h-auto">
                         <div className={`size-24 rounded-full bg-${theme.primaryColor}/10 flex items-center justify-center mb-6`}>
                             <span className={`material-symbols-outlined text-5xl text-${theme.primaryColor}`}>person_search</span>
                         </div>
@@ -506,30 +499,32 @@ export const Observations: React.FC = () => {
                 ) : (
                     <>
 
-                        {/* Mobile Back Button */}
-                        <button
-                            onClick={() => setSelectedStudentId('')}
-                            className="lg:hidden absolute top-6 left-6 z-50 size-10 rounded-full bg-surface-subtle flex items-center justify-center text-text-muted active:scale-95 transition-all"
-                        >
-                            <span className="material-symbols-outlined">arrow_back</span>
-                        </button>
+                        {/* Back Button - Mobile Only - Follows StudentProfile Pattern */}
+                        <div className="xl:hidden w-full flex justify-start p-4 bg-surface-card border-b border-border-default z-50">
+                            <button
+                                onClick={() => setSelectedStudentId('')}
+                                className="group flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-surface-subtle border-2 border-theme-primary/20 text-theme-primary hover:bg-theme-primary hover:text-white transition-all shadow-lg active:scale-95"
+                            >
+                                <span className="material-symbols-outlined text-xl group-hover:-translate-x-1 transition-transform font-black">arrow_back</span>
+                                <span className="text-sm font-black uppercase tracking-widest">Voltar para Lista</span>
+                            </button>
+                        </div>
                         {/* Header Background Accent */}
-                        <div className="absolute top-0 right-0 w-80 h-80 rounded-full -mr-40 -mt-40 blur-3xl theme-radial-primary opacity-20"></div>
+                        <div className="absolute top-0 right-0 w-80 h-80 rounded-full -mr-40 -mt-40 blur-3xl theme-radial-primary opacity-20 pointer-events-none"></div>
 
-                        {/* Header */}
-                        <div className="p-3 sm:p-8 landscape:p-2 border-b border-border-default flex flex-col lg:flex-row justify-between items-center gap-4 sm:gap-8 bg-surface-card/80 backdrop-blur-md z-10 shrink-0">
-                            <div className="flex items-center gap-3 sm:gap-6 w-full lg:w-auto mt-8 lg:mt-0 landscape:mt-0">
+                        <div className="p-4 sm:p-6 sm:py-6 landscape:p-2 border-b border-border-default flex flex-col xl:flex-row justify-between items-center gap-4 xl:gap-6 bg-surface-card/80 backdrop-blur-md z-10 shrink-0">
+                            <div className="flex items-center gap-4 sm:gap-8 xl:flex-1 mt-8 xl:mt-0 landscape:mt-0 min-w-0">
                                 {selectedStudent && (
                                     <>
-                                        <div className={`student-avatar student-avatar-lg bg-gradient-to-br ${selectedStudent.color || `from-indigo-600 to-indigo-800`}`}>
+                                        <div className={`student-avatar student-avatar-lg shrink-0 bg-gradient-to-br ${selectedStudent.color || `from-indigo-600 to-indigo-800`}`}>
                                             {selectedStudent.initials}
                                         </div>
-                                        <div className="flex flex-col min-w-0">
-                                            <h1 className="text-lg sm:text-3xl landscape:text-base font-black text-text-primary tracking-tight leading-none mb-1 sm:mb-2 landscape:mb-0 truncate">{selectedStudent.name}</h1>
-                                            <div className="flex items-center gap-2 sm:gap-3 text-[9px] sm:text-sm font-bold text-text-muted landscape:hidden">
-                                                <span className="bg-surface-subtle px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl font-mono text-text-secondary">#{selectedStudent.number.padStart(2, '0')}</span>
-                                                <span>•</span>
-                                                <span className="truncate theme-text-primary">{activeSeries?.name} • Turma {selectedSection}</span>
+                                        <div className="flex flex-col min-w-0 max-w-[150px] sm:max-w-none lg:max-w-[200px] xl:max-w-none">
+                                            <h1 className="text-xl sm:text-3xl landscape:text-base font-black text-text-primary tracking-tight leading-none mb-1 sm:mb-2 landscape:mb-0 truncate pr-2">{selectedStudent.name}</h1>
+                                            <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-sm font-bold text-text-muted landscape:hidden truncate">
+                                                <span className="bg-surface-subtle px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl font-mono text-text-secondary shrink-0">#{selectedStudent.number.padStart(2, '0')}</span>
+                                                <span className="shrink-0">•</span>
+                                                <span className="truncate theme-text-primary font-black uppercase tracking-widest text-[8px] sm:text-[11px]">{activeSeries?.name} • Turma {selectedSection}</span>
                                             </div>
                                         </div>
                                     </>
@@ -537,19 +532,19 @@ export const Observations: React.FC = () => {
                             </div>
 
                             {/* Tabs */}
-                            <div className="flex p-1 bg-surface-subtle rounded-2xl shadow-inner border border-border-subtle w-full lg:w-auto overflow-x-auto scrollbar-none">
+                            <div className="flex p-1.5 bg-surface-subtle rounded-2xl shadow-inner border-2 border-border-subtle w-full xl:w-auto overflow-x-auto scrollbar-none shrink-0" data-tour="obs-tabs" style={{ minWidth: 'fit-content' }}>
                                 <button
                                     onClick={() => setActiveTab('occurrences')}
-                                    className={`flex-1 sm:flex-none px-3 sm:px-8 py-2 sm:py-3 landscape:py-1.5 rounded-xl sm:rounded-[14px] text-[9px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === 'occurrences' ? `bg-surface-card text-${theme.primaryColor} shadow-md` : 'text-text-muted'}`}
+                                    className={`flex-1 xl:flex-none px-4 lg:px-6 xl:px-10 py-2.5 sm:py-4 landscape:py-1.5 rounded-xl sm:rounded-[18px] text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 xl:gap-3 whitespace-nowrap z-20 ${activeTab === 'occurrences' ? `bg-surface-card text-${theme.primaryColor} shadow-xl border-b-2 border-${theme.primaryColor}` : 'text-text-muted hover:text-text-primary hover:bg-surface-card/30'}`}
                                 >
-                                    <span className="material-symbols-outlined text-base sm:text-lg">history_edu</span>
+                                    <span className="material-symbols-outlined text-lg sm:text-xl font-black">history_edu</span>
                                     Ocorrências
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('history')}
-                                    className={`flex-1 sm:flex-none px-3 sm:px-8 py-2 sm:py-3 landscape:py-1.5 rounded-xl sm:rounded-[14px] text-[9px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === 'history' ? `bg-surface-card text-${theme.primaryColor} shadow-md` : 'text-text-muted'}`}
+                                    className={`flex-1 xl:flex-none px-4 lg:px-6 xl:px-10 py-2.5 sm:py-4 landscape:py-1.5 rounded-xl sm:rounded-[18px] text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 xl:gap-3 whitespace-nowrap z-20 ${activeTab === 'history' ? `bg-surface-card text-${theme.primaryColor} shadow-xl border-b-2 border-${theme.primaryColor}` : 'text-text-muted hover:text-text-primary hover:bg-surface-card/30'}`}
                                 >
-                                    <span className="material-symbols-outlined text-base sm:text-lg">history</span>
+                                    <span className="material-symbols-outlined text-lg sm:text-xl font-black">history</span>
                                     Histórico
                                 </button>
                             </div>

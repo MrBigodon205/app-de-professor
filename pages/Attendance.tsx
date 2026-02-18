@@ -767,15 +767,15 @@ export const Attendance: React.FC = () => {
             className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6 pb-6 lg:pb-12"
         >
             {/* Header Control */}
-            <div className={`bg-surface-card p-4 sm:p-8 rounded-3xl shadow-card border border-border-default flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-8 relative z-30 group landscape:p-2`}>
-                <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700`}></div>
+            <div className={`bg-surface-card fluid-p-m md:p-6 lg:p-8 rounded-3xl shadow-card border border-border-default flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-8 relative z-30 group landscape:p-2`}>
+                <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-${theme.primaryColor}/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl group-hover:from-${theme.primaryColor}/10 transition-colors duration-700 pointer-events-none`}></div>
 
                 <div className="flex items-center gap-4 sm:gap-6 relative z-10 w-full lg:w-auto">
-                    <div className={`hidden sm:flex size-14 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
-                        <span className="material-symbols-outlined text-2xl">check_circle</span>
+                    <div className={`hidden sm:flex size-10 md:size-12 lg:size-14 rounded-2xl bg-gradient-to-br from-${theme.primaryColor} to-${theme.secondaryColor} text-white items-center justify-center shadow-lg shadow-${theme.primaryColor}/20`}>
+                        <span className="material-symbols-outlined text-xl md:text-2xl">check_circle</span>
                     </div>
                     <div className="flex flex-col">
-                        <h1 className="text-xl md:text-3xl font-black text-text-primary tracking-tight leading-none mb-1">Presenças</h1>
+                        <h1 className="text-xl md:text-2xl lg:text-3xl font-black text-text-primary tracking-tight leading-none mb-1">Presenças</h1>
                         <p className="text-text-muted font-medium text-xs md:text-base">Frequência para <span className={`text-${theme.primaryColor} font-bold`}>{activeSeries?.name} • {selectedSection}</span></p>
                     </div>
                 </div>
@@ -816,7 +816,7 @@ export const Attendance: React.FC = () => {
                         className={`h-11 w-11 flex items-center justify-center border border-border-default hover:border-${theme.primaryColor} hover:text-${theme.primaryColor} text-text-muted rounded-2xl transition-all shadow-sm active:scale-95`}
                         title="Exportar Relatório PDF"
                     >
-                        <span className="material-symbols-outlined">description</span>
+                        <span className="material-symbols-outlined font-black">description</span>
                     </button>
 
                     <div className="h-8 w-px bg-border-default mx-1 hidden sm:block"></div>
