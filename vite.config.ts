@@ -81,6 +81,18 @@ export default defineConfig(({ mode }) => {
               if (id.includes('react-quill-new')) {
                 return 'vendor-editor';
               }
+              // 6. Charts & Visuals (Heavy)
+              if (id.includes('recharts')) {
+                return 'vendor-charts';
+              }
+              // 7. Animations (Common)
+              if (id.includes('framer-motion')) {
+                return 'vendor-motion';
+              }
+              // 8. Icons (Common)
+              if (id.includes('lucide-react')) {
+                return 'vendor-icons';
+              }
 
               // CRITICAL: Do NOT bundle React or UI libs manually. 
               // Leaving them to default ensures correct loading order and shared chunks.
@@ -88,13 +100,7 @@ export default defineConfig(({ mode }) => {
           }
         }
       },
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: true,
-          drop_debugger: true
-        }
-      },
+      minify: 'esbuild', // Faster than Terser (20-40x)
       sourcemap: false
     }
   };

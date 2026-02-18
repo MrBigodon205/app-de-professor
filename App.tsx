@@ -52,22 +52,22 @@ import { SchoolProvider } from './institutional/contexts/SchoolContext';
 import { useAuth } from './contexts/AuthContext';
 import { useTheme } from './hooks/useTheme';
 
+// Helper to wrap pages with Transition + Suspense
+// We pass 'type' to BOTH PageTransition (for animation variant) AND SkeletonLayout (for layout matching)
+const SuspendedPage = ({ children, type = 'default' }: { children: React.ReactNode, type?: 'default' | 'dashboard' | 'table' | 'profile' | string }) => (
+  <PageTransition type={type}>
+    <Suspense fallback={<SkeletonLayout type={type as any} />}>
+      {children}
+    </Suspense>
+  </PageTransition>
+);
+
 const App: React.FC = () => {
   const location = useLocation();
   const { activeSubject } = useAuth();
   const theme = useTheme();
 
   const isInstitutionalRoute = location.pathname.startsWith('/institution/') && !location.pathname.startsWith('/institution/create') && !location.pathname.startsWith('/institution/join');
-
-  // Helper to wrap pages with Transition + Suspense
-  // We pass 'type' to BOTH PageTransition (for animation variant) AND SkeletonLayout (for layout matching)
-  const SuspendedPage = ({ children, type = 'default' }: { children: React.ReactNode, type?: 'default' | 'dashboard' | 'table' | 'profile' | string }) => (
-    <PageTransition type={type}>
-      <Suspense fallback={<SkeletonLayout type={type as any} />}>
-        {children}
-      </Suspense>
-    </PageTransition>
-  );
 
   return (
     <ErrorBoundary>
