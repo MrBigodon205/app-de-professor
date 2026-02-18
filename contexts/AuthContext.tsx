@@ -78,15 +78,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     account_type: profile.account_type || 'personal'
                 };
 
-                setCurrentUser(finalUser);
-                setUserId(finalUser.id);
+                // OPTIMIZATION: Deep Compare to avoid triggering re-renders everywhere
+                setCurrentUser(prev => {
+                    if (prev && JSON.stringify(prev) === JSON.stringify(finalUser)) {
+                        return prev;
+                    }
+                    return finalUser;
+                });
+
+                if (userId !== finalUser.id) setUserId(finalUser.id);
 
                 // Handle Subject Persistence
                 const storedSubject = localStorage.getItem('last_active_subject');
                 if (!storedSubject || (finalUser.subject !== storedSubject && !finalUser.subjects?.includes(storedSubject))) {
                     const defaultSubject = finalUser.subject || 'Matemática';
-                    setActiveSubject(defaultSubject);
-                    localStorage.setItem('last_active_subject', defaultSubject);
+                    if (activeSubject !== defaultSubject) {
+                        setActiveSubject(defaultSubject);
+                        localStorage.setItem('last_active_subject', defaultSubject);
+                    }
                 }
             }
         } catch (err) {

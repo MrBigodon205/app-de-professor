@@ -218,7 +218,7 @@ export const Dashboard: React.FC = () => {
 
   const fetchStats = React.useCallback(async (silent = false, prefetchedStudentIds?: string[]) => {
     if (!currentUser) return;
-    if (!silent) setLoadingStats(true);
+    if (!silent && stats.gradeAverage === 0 && stats.presentToday === 0) setLoadingStats(true);
     try {
       let relevantIds: string[] = [];
 
@@ -313,7 +313,7 @@ export const Dashboard: React.FC = () => {
 
   const fetchOccurrences = React.useCallback(async (silent = false, prefetchedStudentIds?: string[]) => {
     if (!currentUser) return;
-    if (!silent) setLoadingOccurrences(true);
+    if (!silent && recentOccurrences.length === 0) setLoadingOccurrences(true);
     try {
       const today = new Date().toLocaleDateString('sv-SE');
 
@@ -399,7 +399,7 @@ export const Dashboard: React.FC = () => {
 
   const fetchPlans = React.useCallback(async (silent = false) => {
     if (!currentUser) return;
-    if (!silent) setLoadingPlans(true);
+    if (!silent && todaysPlans.length === 0) setLoadingPlans(true);
     try {
       const today = new Date().toLocaleDateString('sv-SE');
       let query = supabase.from('plans')
@@ -463,7 +463,7 @@ export const Dashboard: React.FC = () => {
 
   const fetchActivities = React.useCallback(async (silent = false) => {
     if (!currentUser) return;
-    if (!silent) setLoadingActivities(true);
+    if (!silent && upcomingActivities.length === 0) setLoadingActivities(true);
     try {
       const today = new Date().toLocaleDateString('sv-SE');
       let query = supabase.from('activities')

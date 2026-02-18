@@ -1,7 +1,6 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
 import { Layout } from './components/Layout';
 import { BackgroundPattern } from './components/BackgroundPattern';
 import { Login } from './pages/Login';
@@ -85,60 +84,60 @@ const App: React.FC = () => {
               <SchoolProvider>
                 <Layout>
                   {/* Mode="wait" ensures clean transitions without overlap/layout thrashing */}
-                  <AnimatePresence mode="wait">
-                    <Routes location={location} key={location.pathname}>
-                      <Route path="/" element={<SuspendedPage type="dashboard"><Dashboard /></SuspendedPage>} />
-                      <Route path="/attendance" element={<SuspendedPage type="table"><Attendance /></SuspendedPage>} />
-                      <Route path="/grades" element={<SuspendedPage type="table"><Grades /></SuspendedPage>} />
-                      <Route path="/activities" element={<SuspendedPage type="table"><Activities /></SuspendedPage>} />
-                      <Route path="/planning" element={<SuspendedPage type="default"><Planning /></SuspendedPage>} />
-                      <Route path="/students" element={<SuspendedPage type="table"><StudentsList mode="manage" /></SuspendedPage>} />
-                      <Route path="/reports" element={<SuspendedPage type="profile"><StudentProfile /></SuspendedPage>} />
-                      <Route path="/reports/:id" element={<SuspendedPage type="profile"><StudentProfile /></SuspendedPage>} />
-                      <Route path="/students/:id" element={<SuspendedPage type="profile"><StudentProfile /></SuspendedPage>} />
-                      <Route path="/profile" element={<SuspendedPage type="profile"><TeacherProfile /></SuspendedPage>} />
-                      <Route path="/timetable" element={<SuspendedPage type="default"><Timetable /></SuspendedPage>} />
-                      <Route path="/observations" element={<SuspendedPage type="dashboard"><Observations /></SuspendedPage>} />
-                      <Route path="/instructions" element={<SuspendedPage type="default"><Instructions /></SuspendedPage>} />
+                  {/* REMOVED AnimatePresence at Root Level to fix 'Blinking' issues. 
+                      Individual pages now handle their own entry animations via PageTransition. */}
+                  <Routes>
+                    <Route path="/" element={<SuspendedPage type="dashboard"><Dashboard /></SuspendedPage>} />
+                    <Route path="/attendance" element={<SuspendedPage type="table"><Attendance /></SuspendedPage>} />
+                    <Route path="/grades" element={<SuspendedPage type="table"><Grades /></SuspendedPage>} />
+                    <Route path="/activities" element={<SuspendedPage type="table"><Activities /></SuspendedPage>} />
+                    <Route path="/planning" element={<SuspendedPage type="default"><Planning /></SuspendedPage>} />
+                    <Route path="/students" element={<SuspendedPage type="table"><StudentsList mode="manage" /></SuspendedPage>} />
+                    <Route path="/reports" element={<SuspendedPage type="profile"><StudentProfile /></SuspendedPage>} />
+                    <Route path="/reports/:id" element={<SuspendedPage type="profile"><StudentProfile /></SuspendedPage>} />
+                    <Route path="/students/:id" element={<SuspendedPage type="profile"><StudentProfile /></SuspendedPage>} />
+                    <Route path="/profile" element={<SuspendedPage type="profile"><TeacherProfile /></SuspendedPage>} />
+                    <Route path="/timetable" element={<SuspendedPage type="default"><Timetable /></SuspendedPage>} />
+                    <Route path="/observations" element={<SuspendedPage type="dashboard"><Observations /></SuspendedPage>} />
+                    <Route path="/instructions" element={<SuspendedPage type="default"><Instructions /></SuspendedPage>} />
 
-                      {/* Institutional Routes */}
-                      <Route path="/institution/create" element={<SuspendedPage type="modal"><CreateInstitutionForm /></SuspendedPage>} />
-                      <Route path="/institution/join" element={<SuspendedPage type="modal"><JoinInstitutionForm /></SuspendedPage>} />
+                    {/* Institutional Routes */}
+                    <Route path="/institution/create" element={<SuspendedPage type="modal"><CreateInstitutionForm /></SuspendedPage>} />
+                    <Route path="/institution/join" element={<SuspendedPage type="modal"><JoinInstitutionForm /></SuspendedPage>} />
 
-                      {/* Institutional Dashboard Area */}
-                      <Route path="/institution/:id/*" element={
-                        <PageTransition type="dashboard">
-                          <Suspense fallback={<SkeletonLayout type="dashboard" />}>
-                            <Routes>
-                              <Route path="dashboard" element={<InstitutionalDashboard />} />
-                              <Route path="teachers" element={<TeachersList />} />
+                    {/* Institutional Dashboard Area */}
+                    <Route path="/institution/:id/*" element={
+                      <PageTransition type="dashboard">
+                        <Suspense fallback={<SkeletonLayout type="dashboard" />}>
+                          <Routes>
+                            <Route path="dashboard" element={<InstitutionalDashboard />} />
+                            <Route path="teachers" element={<TeachersList />} />
 
-                              {/* Management Routes */}
-                              <Route path="classes" element={<ClassesList />} />
-                              <Route path="classes/new" element={<ManageClassForm />} />
-                              <Route path="classes/:classId/edit" element={<ManageClassForm />} />
-                              <Route path="classes/:classId/subjects" element={<ClassSubjectsManager />} />
+                            {/* Management Routes */}
+                            <Route path="classes" element={<ClassesList />} />
+                            <Route path="classes/new" element={<ManageClassForm />} />
+                            <Route path="classes/:classId/edit" element={<ManageClassForm />} />
+                            <Route path="classes/:classId/subjects" element={<ClassSubjectsManager />} />
 
-                              <Route path="students" element={<InstitutionalStudents />} />
-                              <Route path="schedule" element={<InstitutionalSchedule />} />
-                              <Route path="grades" element={<InstitutionalGrades />} />
-                              <Route path="attendance" element={<InstitutionalAttendance />} />
-                              <Route path="student-attendance" element={<StudentAttendanceOverview />} />
-                              <Route path="occurrences" element={<InstitutionalOccurrences />} />
-                              <Route path="plans" element={<InstitutionalPlans />} />
-                              <Route path="reports" element={<InstitutionalReports />} />
-                              <Route path="checkins" element={<InstitutionalCheckins />} />
-                              <Route path="events" element={<InstitutionalEvents />} />
-                              <Route path="ai-reports" element={<InstitutionalAIReports />} />
-                              <Route path="settings" element={<InstitutionSettings />} />
-                            </Routes>
-                          </Suspense>
-                        </PageTransition>
-                      } />
+                            <Route path="students" element={<InstitutionalStudents />} />
+                            <Route path="schedule" element={<InstitutionalSchedule />} />
+                            <Route path="grades" element={<InstitutionalGrades />} />
+                            <Route path="attendance" element={<InstitutionalAttendance />} />
+                            <Route path="student-attendance" element={<StudentAttendanceOverview />} />
+                            <Route path="occurrences" element={<InstitutionalOccurrences />} />
+                            <Route path="plans" element={<InstitutionalPlans />} />
+                            <Route path="reports" element={<InstitutionalReports />} />
+                            <Route path="checkins" element={<InstitutionalCheckins />} />
+                            <Route path="events" element={<InstitutionalEvents />} />
+                            <Route path="ai-reports" element={<InstitutionalAIReports />} />
+                            <Route path="settings" element={<InstitutionSettings />} />
+                          </Routes>
+                        </Suspense>
+                      </PageTransition>
+                    } />
 
-                      <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
-                  </AnimatePresence>
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
                 </Layout>
               </SchoolProvider>
             </ProtectedRoute>

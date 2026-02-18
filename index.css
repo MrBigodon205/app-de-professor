@@ -1459,10 +1459,12 @@ body {
 
 .animate-neon-pulse-logo {
     animation: neon-pulse-logo 3.5s infinite ease-in-out;
+    will-change: filter, transform;
 }
 
 .animate-neon-pulse-text {
     animation: neon-pulse-text 3.5s infinite ease-in-out;
+    will-change: text-shadow, opacity;
 }
 
 /* Specific Shadow for Box Pulse */
@@ -1482,4 +1484,5 @@ body {
 
 .animate-neon-pulse-box {
     animation: neon-pulse-box 3.5s infinite ease-in-out;
+    will-change: box-shadow, transform;
 }

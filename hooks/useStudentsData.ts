@@ -29,7 +29,7 @@ export const useStudentsData = (
             return;
         }
 
-        if (mountedRef.current) setLoading(true);
+        if (mountedRef.current && students.length === 0) setLoading(true);
         try {
             // Direct Supabase Fetch
             let query = supabase

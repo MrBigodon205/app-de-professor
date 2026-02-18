@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { motion, Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 import { VARIANTS } from '../../constants/motion';
+import { useMobile } from '../../hooks/useMobile';
 
 export const AnimatedList: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className }) => {
     return (
@@ -19,7 +20,7 @@ export const AnimatedList: React.FC<{ children: React.ReactNode, className?: str
 };
 
 export const AnimatedItem: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className }) => {
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const isMobile = useMobile();
 
     return (
         <motion.div
