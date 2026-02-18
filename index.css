@@ -188,9 +188,17 @@ body {
     background-attachment: fixed;
     transition: background 0.7s ease-in-out;
 
+    /* Optimized Background: No transitions on mobile to prevent scroll lag */
     @media screen and (max-width: 768px) {
         background-attachment: scroll !important;
         transition: none !important;
+        background-image: linear-gradient(to bottom right, var(--surface-page), #f1f5f9) !important;
+    }
+
+    .dark body {
+        @media screen and (max-width: 768px) {
+            background-image: linear-gradient(to bottom right, #020617, #0f172a) !important;
+        }
     }
 
     padding-top: var(--sat);
@@ -250,17 +258,18 @@ body {
     }
 }
 
-/* Neon Glows */
+/* Neon Glows - Optimizer: Static Shadows instead of blurry messes */
 .shadow-neon {
-    box-shadow: 0 0 20px -5px rgba(6, 182, 212, 0.3);
+    box-shadow: 0 0 10px -2px rgba(6, 182, 212, 0.2);
 }
 
 .shadow-neon-purple {
-    box-shadow: 0 0 20px -5px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 0 10px -2px rgba(139, 92, 246, 0.2);
 }
 
 .text-shadow-neon {
-    text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+    /* Removed text-shadow to prevent sub-pixel antialiasing jitter */
+    text-shadow: none;
 }
 
 /* Profile Avatar constraints */

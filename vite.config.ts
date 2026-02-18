@@ -48,22 +48,34 @@ export default defineConfig(({ mode }) => {
       }
     },
     build: {
-      target: 'es2020',
-      chunkSizeWarningLimit: 1000,
+      target: 'esnext',
+      chunkSizeWarningLimit: 1600,
       rollupOptions: {
         output: {
-          manualChunks: {
-            'vendor-react': ['react', 'react-router-dom'],
-            'vendor-react-dom': ['react-dom'], // Isolate heavy react-dom
-            'vendor-ui': ['lucide-react'], // Lightweight UI utils
-            'vendor-framer': ['framer-motion'], // ISOLATE: Very heavy (100kb+)
-            'vendor-charts': ['recharts'],
-            'vendor-editor': ['react-quill-new'],
-            'vendor-db': ['@supabase/supabase-js', 'dexie'],
-            'vendor-utils': ['canvas-confetti', 'dompurify', 'react-joyride']
+          manualChunks: (id) => {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+                return 'vendor-core';
+              }
+              if (id.includes('framer-motion')) {
+                return 'vendor-framer';
+              }
+              if (id.includes('@supabase') || id.includes('dexie')) {
+                return 'vendor-db';
+              }
+              return 'vendor-libs'; // Catch-all for other deps
+            }
           }
         }
-      }
+      },
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true,
+          drop_debugger: true
+        }
+      },
+      sourcemap: false
     }
   };
 });

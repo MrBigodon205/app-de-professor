@@ -125,13 +125,22 @@ const useTimetableConfig = () => {
         if (!configLoaded || !currentUser) return;
 
         const syncConfig = async () => {
-            localStorage.setItem('timetable_config_v3', JSON.stringify(config));
-            setVisibleDays(config.days.filter(d => d.enabled));
+            // Force Sort Slots before saving
+            const sortedSlots = [...config.slots].sort((a, b) => a.start.localeCompare(b.start));
+            const newConfig = { ...config, slots: sortedSlots };
+
+            // Only update state if needed to avoid loops, but ensure local storage has sorted version
+            if (JSON.stringify(config.slots) !== JSON.stringify(sortedSlots)) {
+                setConfig(prev => ({ ...prev, slots: sortedSlots }));
+            }
+
+            localStorage.setItem('timetable_config_v3', JSON.stringify(newConfig));
+            setVisibleDays(newConfig.days.filter(d => d.enabled));
 
             try {
                 const { error } = await supabase
                     .from('profiles')
-                    .update({ timetable_config: config })
+                    .update({ timetable_config: newConfig })
                     .eq('id', currentUser.id);
 
                 if (error) throw error;
@@ -141,7 +150,6 @@ const useTimetableConfig = () => {
             }
         };
 
-        // Added small timeout to avoid spamming updates during rapid edits in config modal
         const timer = setTimeout(syncConfig, 1000);
         return () => clearTimeout(timer);
     }, [config, currentUser, configLoaded]);
@@ -286,7 +294,7 @@ const useTimetableConfig = () => {
         };
 
         setTimetableItems(prev => {
-            // Remove any existing for this slot
+            // Remove any existing for this specific slot (prevent duplicates in UI)
             const others = prev.filter(item => !(item.dayId === dayId && item.slotId === slotId));
             return [...others, newItem];
         });
@@ -294,8 +302,9 @@ const useTimetableConfig = () => {
         const dbDay = mapIdToDbDay(dayId);
 
         try {
-            // 1. Delete existing for specific slot (to avoid overlap if any)
-            await supabase
+            // 1. DELETE EXISTING for this exact slot (User + Day + Start Time)
+            // This ensures we never have duplicates for the same time slot
+            const { error: deleteError } = await supabase
                 .from('schedules')
                 .delete()
                 .match({
@@ -304,7 +313,12 @@ const useTimetableConfig = () => {
                     start_time: slot.start
                 });
 
-            // 2. Insert new
+            if (deleteError) {
+                console.error("Error deleting previous schedule:", deleteError);
+                throw deleteError;
+            }
+
+            // 2. INSERT NEW
             const { data, error } = await supabase
                 .from('schedules')
                 .insert({
@@ -315,7 +329,6 @@ const useTimetableConfig = () => {
                     class_id: classId,
                     section: section,
                     subject: fullSubject,
-                    // className is optional
                 })
                 .select()
                 .single();
@@ -330,7 +343,7 @@ const useTimetableConfig = () => {
         } catch (err) {
             console.error("Failed to save schedule to DB:", err);
             // Rollback
-            fetchSchedules(); // Simplest rollback is re-fetch
+            fetchSchedules();
             alert("Erro ao salvar no banco de dados.");
         }
     };
