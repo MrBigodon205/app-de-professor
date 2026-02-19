@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -13,7 +13,7 @@ interface AnimatedNavItemProps {
     isSpecial?: boolean;
 }
 
-export const AnimatedNavItem = memo(({
+export const AnimatedNavItem = React.memo(({
     path,
     label,
     icon,

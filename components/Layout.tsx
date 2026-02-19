@@ -22,7 +22,7 @@ import { DesktopTitleBar } from './DesktopTitleBar';
 import { usePredictiveSync } from '../hooks/usePredictiveSync';
 import { prefetchRoute } from '../utils/routeLoaders';
 
-export const Layout = React.memo(({ children }: { children: React.ReactNode }) => {
+export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, logout, activeSubject, updateActiveSubject } = useAuth();
   const theme = useTheme();
   const { isDarkMode, toggleTheme } = theme;
@@ -636,6 +636,4 @@ export const Layout = React.memo(({ children }: { children: React.ReactNode }) =
 
     </div >
   );
-});
-
-Layout.displayName = 'Layout';
+};

@@ -247,18 +247,16 @@ body {
 
     .card,
     .glass-card-premium,
-    .glass-card-soft,
-    [class*="backdrop-blur"] {
+    .glass-card-soft {
         -webkit-backdrop-filter: none !important;
         backdrop-filter: none !important;
-        background-color: rgba(255, 255, 255, 0.95) !important;
+        background-color: rgba(255, 255, 255, 0.9) !important;
     }
 
     .dark .card,
     .dark .glass-card-premium,
-    .dark .glass-card-soft,
-    .dark [class*="backdrop-blur"] {
-        background-color: rgba(15, 23, 42, 0.98) !important;
+    .dark .glass-card-soft {
+        background-color: rgba(15, 23, 42, 0.95) !important;
     }
 }
 

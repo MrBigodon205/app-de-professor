@@ -1,4 +1,5 @@
 import React, { useRef, useState, useCallback } from 'react';
+import Webcam from 'react-webcam';
 import { useSchool } from '../contexts/SchoolContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useGeoLocation } from '../../hooks/useGeoLocation';
@@ -12,48 +13,47 @@ export const InstitutionalAttendance: React.FC = () => {
     const { showToast } = useToast();
     const { coords, error: geoError, loading: geoLoading, calculateDistance, refresh: refreshGeo } = useGeoLocation();
 
-    // Native File Input Ref
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const webcamRef = useRef<Webcam>(null);
     const [imgSrc, setImgSrc] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [status, setStatus] = useState<'idle' | 'success' | 'GPS_FAIL'>('idle');
 
-    // Handle Native File Capture
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImgSrc(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+    const capture = useCallback(() => {
+        if (webcamRef.current) {
+            const imageSrc = webcamRef.current.getScreenshot();
+            setImgSrc(imageSrc);
         }
-    };
-
-    const triggerCamera = () => {
-        if (fileInputRef.current) {
-            fileInputRef.current.click();
-        }
-    };
+    }, [webcamRef]);
 
     const handleSubmit = async (type: 'check_in' | 'check_out') => {
         if (!currentSchool || !currentUser || !coords || !imgSrc) return;
         setSubmitting(true);
 
         try {
+            // 1. GPS Validation (Simple check against first perimeter for now)
+            // Ideally currentSchool.geo_perimeters should be checked.
+            // Assuming for Phase 4 we just store status based on ANY tolerance.
+            // Let's assume a default perimeter at coords if none set (just for testing flow)
+            // In prod: check against currentSchool.geo_perimeters
+
+            // Simulating Validation Logic
+            // If school has NO perimeters, we assume "Pending Validation" or "OK" depending on policy.
+            // Using "Pending Validation" as safe default if no perimeters defined.
+            // If perimeters exist, we check range.
 
             let attendanceStatus = 'pending_validation';
 
-            // Upload Photo - Convert Base64 to Blob
-            const res = await fetch(imgSrc);
-            const blob = await res.blob();
+            // Upload Photo
+            const blob = await fetch(imgSrc).then(res => res.blob());
             const fileName = `attendance/${currentSchool.id}/${currentUser.id}/${Date.now()}.jpg`;
 
             const { error: uploadError } = await supabase.storage
-                .from('attendance-photos')
+                .from('attendance-photos') // Bucket must exist!
                 .upload(fileName, blob);
 
             if (uploadError) throw uploadError;
+
+            const photoUrl = supabase.storage.from('attendance-photos').getPublicUrl(fileName).data.publicUrl;
 
             // Insert Record
             const { error: dbError } = await supabase
@@ -72,9 +72,9 @@ export const InstitutionalAttendance: React.FC = () => {
             setStatus('success');
             setImgSrc(null);
 
-        } catch (err: any) {
+        } catch (err) {
             console.error("Attendance error:", err);
-            showToast("Erro ao registrar ponto: " + (err.message || "Erro desconhecido"), 'error');
+            showToast("Erro ao registrar ponto via App. Verifique sua conexão e tente novamente.", 'error');
         } finally {
             setSubmitting(false);
         }
@@ -86,76 +86,69 @@ export const InstitutionalAttendance: React.FC = () => {
         return data?.id;
     };
 
-    if (geoLoading) return <div className="p-10 text-center"><Loader2 className="animate-spin mx-auto text-primary" /> <p className="mt-2 text-sm text-text-muted">Obtendo GPS...</p></div>;
+    if (geoLoading) return <div className="p-10 text-center"><Loader2 className="animate-spin mx-auto" /> Obtendo GPS...</div>;
 
     if (status === 'success') {
         return (
-            <div className="p-10 text-center text-green-600 bg-surface-card rounded-2xl border border-border-default shadow-sm m-4">
-                <CheckCircle size={64} className="mx-auto mb-4 animate-in zoom-in duration-300" />
-                <h2 className="text-2xl font-bold text-text-primary">Ponto Registrado!</h2>
-                <p className="text-text-secondary mt-2">Seus dados foram enviados para a coordenação.</p>
-                <button onClick={() => setStatus('idle')} className="mt-6 text-primary font-bold hover:underline">Novo Registro</button>
+            <div className="p-10 text-center text-green-600">
+                <CheckCircle size={64} className="mx-auto mb-4" />
+                <h2 className="text-2xl font-bold">Ponto Registrado!</h2>
+                <p>Seus dados foram enviados para a coordenação.</p>
+                <button onClick={() => setStatus('idle')} className="mt-6 text-indigo-600 underline">Voltar</button>
             </div>
         );
     }
 
     return (
         <div className="p-4 max-w-md mx-auto">
-            <h1 className="text-2xl font-bold text-text-primary mb-6 flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <ClockIcon /> Registro de Ponto
             </h1>
 
             {/* GPS Status */}
-            <div className={`p-4 rounded-xl mb-6 flex items-start gap-3 border ${geoError ? 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400' : 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 text-green-700 dark:text-green-400'}`}>
+            <div className={`p-4 rounded-lg mb-6 flex items-start gap-3 ${geoError ? 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400' : 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400'}`}>
                 <MapPin className="shrink-0 mt-1" size={20} />
                 <div>
-                    <p className="font-bold text-sm">{geoError ? "Erro no GPS" : "Localização Ativa"}</p>
-                    <p className="text-xs opacity-80 font-mono mt-0.5">
+                    <p className="font-semibold">{geoError ? "Erro no GPS" : "Localização Ativa"}</p>
+                    <p className="text-xs opacity-80">
                         {geoError || (coords ? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` : "Aguardando...")}
                     </p>
                     {!geoError && (
-                        <button onClick={refreshGeo} className="text-[10px] font-bold uppercase tracking-wider underline mt-2 hover:text-black dark:hover:text-white">Atualizar GPS</button>
+                        <button onClick={refreshGeo} className="text-xs underline mt-1">Atualizar</button>
                     )}
                 </div>
             </div>
 
-            {/* Native Camera Input (Hidden) */}
-            <input
-                type="file"
-                accept="image/*"
-                capture="user"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="hidden"
-            />
-
-            {/* Camera Preview */}
-            <div className="bg-surface-elevated rounded-2xl overflow-hidden shadow-lg aspect-[3/4] relative mb-6 border border-border-default group">
+            {/* Camera */}
+            <div className="bg-black rounded-xl overflow-hidden shadow-lg aspect-[3/4] relative mb-6">
                 {imgSrc ? (
-                    <img src={imgSrc} alt="Preview" className="w-full h-full object-cover animate-in fade-in duration-500" />
+                    <img src={imgSrc} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-text-muted bg-surface-subtle/50">
-                        <Camera size={48} className="mb-2 opacity-50" />
-                        <span className="text-sm font-medium">Toque na câmera abaixo</span>
-                    </div>
+                    <Webcam
+                        audio={false}
+                        ref={webcamRef}
+                        screenshotFormat="image/jpeg"
+                        videoConstraints={{ facingMode: "user" }}
+                        className="w-full h-full object-cover"
+                    />
                 )}
 
                 {/* Overlay Controls */}
-                <div className="absolute bottom-6 left-0 right-0 flex justify-center pb-2 z-10">
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center pb-2">
                     {imgSrc ? (
                         <button
                             onClick={() => setImgSrc(null)}
-                            className="bg-surface-elevated/80 text-text-primary px-6 py-2.5 rounded-full text-sm font-bold shadow-lg backdrop-blur-md border border-border-default hover:bg-surface-elevated transition-transform active:scale-95"
+                            className="bg-white/90 text-gray-800 px-6 py-2 rounded-full text-sm font-medium shadow-sm backdrop-blur-sm"
                         >
                             Tirar Outra
                         </button>
                     ) : (
                         <button
-                            onClick={triggerCamera}
+                            onClick={capture}
                             aria-label="Capturar Foto"
-                            className="bg-primary text-white rounded-full p-5 shadow-neon hover:scale-105 active:scale-90 transition-all duration-300"
+                            className="bg-white rounded-full p-4 shadow-lg hover:bg-gray-100 active:scale-95 transition-all"
                         >
-                            <Camera size={32} />
+                            <Camera size={32} className="text-indigo-600" />
                         </button>
                     )}
                 </div>
@@ -166,14 +159,14 @@ export const InstitutionalAttendance: React.FC = () => {
                 <button
                     onClick={() => handleSubmit('check_in')}
                     disabled={!imgSrc || !coords || submitting}
-                    className="py-3.5 bg-green-600 text-white rounded-xl font-bold shadow-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all active:scale-95"
+                    className="py-3 bg-green-600 text-white rounded-lg font-bold shadow-sm hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                     {submitting ? <Loader2 className="animate-spin" /> : 'ENTRADA'}
                 </button>
                 <button
                     onClick={() => handleSubmit('check_out')}
                     disabled={!imgSrc || !coords || submitting}
-                    className="py-3.5 bg-red-600 text-white rounded-xl font-bold shadow-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all active:scale-95"
+                    className="py-3 bg-red-600 text-white rounded-lg font-bold shadow-sm hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                     {submitting ? <Loader2 className="animate-spin" /> : 'SAÍDA'}
                 </button>
