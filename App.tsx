@@ -1,5 +1,4 @@
 import React, { Suspense, lazy, useEffect } from 'react';
-import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AnimatePresence } from 'framer-motion';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
@@ -79,8 +78,6 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <ToastProvider>
-        {import.meta.env.PROD && !window.location.hostname.includes('localhost') && <SpeedInsights />}
-
         {/* Persistent Background Layer - Lazy Loaded */}
         <Suspense fallback={null}>
           <BackgroundPattern theme={theme} activeSubject={activeSubject} />
