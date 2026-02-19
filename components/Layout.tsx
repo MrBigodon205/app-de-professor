@@ -53,6 +53,16 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebar_collapsed') === 'true');
 
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   useEffect(() => {
     // SECURITY CHECK:
     // If user is logged in but has no password (e.g., initial Google Login),
@@ -451,10 +461,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         )}
 
         <header
-          className={`flex flex-col md:flex-row items-center justify-between mx-1 md:mx-3 mt-1 mb-1 rounded-2xl px-2 py-0.5 md:px-3 md:py-0.5 z-[40] shrink-0 gap-1 md:gap-2 sticky top-1 min-h-[36px] md:min-h-[38px]
-            bg-white/95 dark:bg-slate-900/95 lg:bg-white/80 lg:dark:bg-slate-900/80 backdrop-blur-none lg:backdrop-blur-md
-            border border-primary/10 dark:border-primary/20 shadow-lg shadow-primary/5 dark:shadow-primary/10
-            lg:px-6
+          className={`sticky top-0 z-40 w-full transition-all duration-200 border-b ${isScrolled
+            ? 'bg-white/95 dark:bg-slate-900/95 border-border-default shadow-sm'
+            : 'bg-white/95 dark:bg-slate-900/95 border-transparent'
+            } lg:px-6
           `}
         >
           {/* Main Flex Container - Single Row on Mobile */}

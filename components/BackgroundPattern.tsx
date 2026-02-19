@@ -163,12 +163,13 @@ export const BackgroundPattern: React.FC<BackgroundPatternProps> = React.memo(({
         return items;
     }, [config]);
 
-    // OPTIMIZATION: Detect Mobile
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    // OPTIMIZATION: Global Performance (Disable Shader/Particles everywhere)
+    // const isMobile = typeof window !== 'undefined' && window.innerWidth < 768; 
+    const isMobile = true; // Force "Mobile" (Lite) mode on all devices
 
     return (
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 select-none transition-colors duration-700" aria-hidden="true">
-            {/* WEBGL SHADER BACKGROUND (God Tier Performance on PC, HEAVY on Mobile) */}
+            {/* WEBGL SHADER BACKGROUND (Disabled Globally for Performance) */}
             {!isMobile ? (
                 <ShaderBackground
                     subjectColor1={theme?.primaryColorHex || config.colors[0]}
@@ -178,7 +179,7 @@ export const BackgroundPattern: React.FC<BackgroundPatternProps> = React.memo(({
                 <div className="absolute inset-0 bg-gradient-to-br from-surface-page via-surface-page/90 to-surface-subtle" />
             )}
 
-            {/* COLOR FOG - Extra vibrancy behind the icons (Disable animation on mobile) */}
+            {/* COLOR FOG - Extra vibrancy behind the icons (Disable animation globally) */}
             <div className={`absolute inset-0 opacity-25 dark:opacity-60 pointer-events-none ${isMobile ? 'hidden' : ''}`}>
                 <motion.div
                     animate={{
@@ -202,7 +203,7 @@ export const BackgroundPattern: React.FC<BackgroundPatternProps> = React.memo(({
                 />
             </div>
 
-            {/* LIVING DISCIPLINES LAYER (Framer Motion) - PC ONLY */}
+            {/* LIVING DISCIPLINES LAYER (Framer Motion) - Disabled Globally */}
             {activeSubject && !isMobile && (
                 <div className="absolute inset-0 z-[2] overflow-hidden perspective-1000">
                     {particles.map((p, idx) => (
