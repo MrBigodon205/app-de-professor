@@ -57,45 +57,32 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
-              // SAFE CHUNKING STRATEGY: 
-              // Only split truly independent, heavy libraries. 
-              // Let Vite handle React core and shared dependencies automatically to prevent circular deps.
-
-              // 1. Database & Auth (Stand-alone)
-              if (id.includes('@supabase') || id.includes('dexie')) {
-                return 'vendor-db';
+              // CORE VENDOR (React + Router + Framer) - Keep together for stability
+              if (id.includes('react/') || id.includes('react-dom') || id.includes('react-router') || id.includes('scheduler')) {
+                return 'vendor-react';
               }
-              // 2. PDF Generation (Very Heavy & Independent)
-              if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('react-pdf') || id.includes('pdfjs-dist')) {
-                return 'vendor-pdf';
-              }
-              // 3. OCR (Very Heavy & Independent)
-              if (id.includes('tesseract')) {
-                return 'vendor-ocr';
-              }
-              // 4. Docs Generation (Heavy & Independent)
-              if (id.includes('docx') || id.includes('file-saver')) {
-                return 'vendor-docs';
-              }
-              // 5. Rich Text Editor (Heavy)
-              if (id.includes('react-quill-new')) {
-                return 'vendor-editor';
-              }
-              // 6. Charts & Visuals (Heavy)
-              if (id.includes('recharts')) {
-                return 'vendor-charts';
-              }
-              // 7. Animations (Common)
               if (id.includes('framer-motion')) {
                 return 'vendor-motion';
               }
-              // 8. Icons (Common)
-              if (id.includes('lucide-react')) {
-                return 'vendor-icons';
-              }
 
-              // CRITICAL: Do NOT bundle React or UI libs manually. 
-              // Leaving them to default ensures correct loading order and shared chunks.
+              // HEAVY LIBS (Split efficiently)
+              if (id.includes('@supabase')) return 'vendor-supabase';
+              if (id.includes('dexie')) return 'vendor-dexie';
+              if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('canvg')) return 'vendor-pdf';
+              if (id.includes('react-pdf') || id.includes('pdfjs-dist')) return 'vendor-pdf-viewer';
+              if (id.includes('tesseract')) return 'vendor-ocr';
+              if (id.includes('docx') || id.includes('file-saver')) return 'vendor-docs';
+              if (id.includes('react-quill-new')) return 'vendor-editor';
+              if (id.includes('recharts')) return 'vendor-charts';
+              if (id.includes('lucide-react')) return 'vendor-icons';
+              if (id.includes('lottie')) return 'vendor-lottie';
+
+              // UTILS
+              if (id.includes('date-fns') || id.includes('dayjs') || id.includes('moment')) return 'vendor-date';
+              if (id.includes('lodash') || id.includes('ramda')) return 'vendor-utils';
+
+              // EVERYTHING ELSE
+              return 'vendor-missc';
             }
           }
         }

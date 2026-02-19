@@ -20,6 +20,9 @@ export const PageTransition = React.forwardRef<HTMLDivElement, PageTransitionPro
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
     // V2: Light Fade Up on Desktop, Pure Fade on Mobile for Max PPS
+    // "popLayout" requires the exiting component to be taken out of flow (absolute)
+    // or the entering component to overlay. Framer Motion handles the exit absolute, 
+    // but we ensure the *entering* one starts clean.
     const variants = isMobile ? VARIANTS.fade : VARIANTS.fadeUp;
 
     return (

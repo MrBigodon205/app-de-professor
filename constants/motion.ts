@@ -20,13 +20,13 @@ export const VARIANTS: Record<string, Variants> = {
     fade: {
         initial: { opacity: 0 },
         animate: { opacity: 1, transition: { duration: DURATION_FAST, ease: "linear" } },
-        exit: { opacity: 0, transition: { duration: DURATION_FAST, ease: "linear" } }
+        exit: { opacity: 0, transition: { duration: 0 } } // INSTANT EXIT
     },
     // 2. FADE UP (Subtle movement)
     fadeUp: {
         initial: { opacity: 0, y: 10 },
         animate: { opacity: 1, y: 0, transition: { duration: DURATION_NORMAL, ease: EASE_STANDARD } },
-        exit: { opacity: 0, y: 5, transition: { duration: DURATION_FAST, ease: "easeIn" } }
+        exit: { opacity: 0, transition: { duration: 0 } } // INSTANT EXIT
     },
     // 3. SCALE (Cards/Modals) - Very subtle
     scale: {

@@ -12,18 +12,17 @@ import { PasswordSetupModal } from './PasswordSetupModal';
 import { NotificationCenter } from './NotificationCenter';
 import { AnimatedNavItem } from './AnimatedNavItem';
 import { AnimatedButton } from './ui/AnimatedButton'; // New Primitive
+import { SystemMonitor } from './SystemMonitor';
 
 import { MobileClassSelector } from './MobileClassSelector';
 import { ClassManager } from './ClassManager';
 import { useSchool } from '../institutional/contexts/SchoolContext';
 import { DesktopTitleBar } from './DesktopTitleBar';
 
-
 import { usePredictiveSync } from '../hooks/usePredictiveSync';
 import { prefetchRoute } from '../utils/routeLoaders';
 
-
-export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const Layout = React.memo(({ children }: { children: React.ReactNode }) => {
   const { currentUser, logout, activeSubject, updateActiveSubject } = useAuth();
   const theme = useTheme();
   const { isDarkMode, toggleTheme } = theme;
@@ -33,6 +32,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   // Active Predictive Sync
   usePredictiveSync();
+
+  // SCROLL RESTORATION FIX
+  const mainRef = React.useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTo({ top: 0, behavior: 'instant' }); // Instant is better for route changes to feel responsive
+    }
+  }, [location.pathname]);
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [profileDefaultTab, setProfileDefaultTab] = useState<'profile' | 'schools' | 'security'>('profile');
@@ -45,9 +52,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [isPasswordSetupOpen, setIsPasswordSetupOpen] = useState(false);
   const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebar_collapsed') === 'true');
-
-
-
 
   useEffect(() => {
     // SECURITY CHECK:
@@ -448,7 +452,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
         <header
           className={`flex flex-col md:flex-row items-center justify-between mx-1 md:mx-3 mt-1 mb-1 rounded-2xl px-2 py-0.5 md:px-3 md:py-0.5 z-[40] shrink-0 gap-1 md:gap-2 sticky top-1 min-h-[36px] md:min-h-[38px]
-            bg-white/95 dark:bg-slate-900/80 backdrop-blur-md
+            bg-white/95 dark:bg-slate-900/95 lg:bg-white/80 lg:dark:bg-slate-900/80 backdrop-blur-none lg:backdrop-blur-md
             border border-primary/10 dark:border-primary/20 shadow-lg shadow-primary/5 dark:shadow-primary/10
             lg:px-6
           `}
@@ -596,7 +600,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 </div>
               </div>
 
-              <button onClick={() => setIsProfileModalOpen(true)} className="flex items-center gap-3 h-10 bg-white dark:bg-slate-800/80 px-1.5 lg:pl-1 lg:pr-3 rounded-xl border border-border-default hover:border-primary/40 transition-all active:scale-95 group shrink-0 shadow-sm hover:shadow-md">
+              <button onClick={() => setIsProfileModalOpen(true)} className="hidden lg:flex items-center gap-3 h-10 bg-white dark:bg-slate-800/80 px-1.5 lg:pl-1 lg:pr-3 rounded-xl border border-border-default hover:border-primary/40 transition-all active:scale-95 group shrink-0 shadow-sm hover:shadow-md">
                 <div className="size-8 rounded-lg bg-surface-subtle overflow-hidden border border-border-default shadow-inner group-hover:ring-2 group-hover:ring-primary/20 transition-all">
                   {currentUser?.photoUrl ? (
                     <img src={currentUser.photoUrl} alt="Profile" className="size-full object-cover" />
@@ -623,15 +627,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
         {/* Main Content Area - Fixed Scrolling */}
         {/* Main Content Area - Fixed Scrolling */}
-        <main className={`flex-1 overflow-y-auto overflow-x-hidden scroll-smooth custom-scrollbar relative px-[var(--space-s)] md:px-[var(--space-m)] lg:px-[var(--space-l)] pb-24 md:pb-12 pb-safe-area-bottom`}>
+        <main ref={mainRef} className={`flex-1 overflow-y-scroll overflow-x-hidden scroll-smooth custom-scrollbar relative px-[var(--space-s)] md:px-[var(--space-m)] lg:px-[var(--space-l)] pb-24 md:pb-12 pb-safe-area-bottom`}>
           {children}
         </main>
 
-        <div>
-          {/* Mobile Bottom Nav Removed */}
-        </div>
+        <SystemMonitor />
       </div>
 
     </div >
   );
-};
+});
+
+Layout.displayName = 'Layout';

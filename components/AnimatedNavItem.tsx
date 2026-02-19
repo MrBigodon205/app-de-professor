@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
-// import { motion } from 'framer-motion'; // Removed for lightness
+import { motion } from 'framer-motion';
 
 interface AnimatedNavItemProps {
     path: string;
@@ -10,62 +10,61 @@ interface AnimatedNavItemProps {
     isCollapsed: boolean;
     onClick?: () => void;
     onMouseEnter?: () => void;
+    isSpecial?: boolean;
 }
 
-export const AnimatedNavItem: React.FC<AnimatedNavItemProps> = ({
+export const AnimatedNavItem = memo(({
     path,
     label,
     icon,
     isActive,
     isCollapsed,
     onClick,
-    onMouseEnter
-}) => {
+    onMouseEnter,
+    isSpecial = false
+}: AnimatedNavItemProps) => {
+    // DIAGNOSTIC LOG: Check if this item is re-rendering
+    // console.log(`[Item] ${label} rendered. Active=${isActive}`);
+
     return (
         <Link
             to={path}
             onClick={onClick}
             onMouseEnter={onMouseEnter}
-            className={`relative flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group z-10 ${isCollapsed ? 'justify-center px-2' : ''
-                }`}
+            className={`relative flex items-center gap-3 px-3 py-2.5 lg:px-4 lg:py-3.5 rounded-xl transition-all duration-300 group overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${isCollapsed ? 'justify-center px-0 w-11 h-11 lg:w-14 lg:h-14 mx-auto' : ''
+                } ${isActive ? 'text-primary font-bold' : 'text-text-secondary hover:text-text-primary'}`}
             title={isCollapsed ? label : ''}
         >
-            {/* Magnetic Background Pill (CSS Only) */}
-            <div
-                className={`absolute inset-0 bg-primary/10 border border-primary/20 rounded-xl shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] dark:shadow-neon transition-opacity duration-200 ${isActive ? 'opacity-100' : 'opacity-0'}`}
-            />
+            {/* Active Indicator with Layout Animation -Prevents Blink */}
+            {isActive && (
+                <motion.div
+                    layoutId="active-nav-indicator"
+                    className={`absolute inset-0 bg-primary/10 border-primary rounded-xl z-0 ${isCollapsed ? 'border-2' : 'border-r-[3px]'}`}
+                    initial={false}
+                    transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                />
+            )}
 
-            {/* Hover Background (Subtle) for non-active items */}
+            {/* Hover Background */}
             {!isActive && (
-                <div className="absolute inset-0 bg-surface-subtle opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-200" />
+                <div className="absolute inset-0 bg-surface-subtle opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl z-0" />
             )}
 
             {/* Icon */}
-            <span
-                className={`material-symbols-outlined text-2xl relative z-10 transition-all duration-200 ${isActive
-                    ? 'icon-filled text-primary dark:text-white scale-110'
-                    : 'text-text-secondary group-hover:text-primary group-hover:scale-110'
-                    }`}
-            >
+            <span className={`material-symbols-outlined text-[22px] relative z-10 transition-colors duration-200 ${isActive ? 'icon-filled text-primary' : 'text-text-muted group-hover:text-text-primary'
+                } ${isSpecial ? 'rotate-180' : ''}`}>
                 {icon}
             </span>
 
             {/* Label */}
             {!isCollapsed && (
-                <span className={`font-medium relative z-10 transition-colors duration-200 whitespace-nowrap ${isActive
-                    ? 'text-slate-900 dark:text-white font-bold'
-                    : 'text-text-secondary group-hover:text-text-primary'
+                <span className={`text-sm truncate relative z-10 transition-colors duration-200 ${isActive ? 'text-primary font-bold' : 'text-text-secondary group-hover:text-text-primary font-medium'
                     }`}>
                     {label}
                 </span>
             )}
-
-            {/* Active Indicator Dot (Collapsed) */}
-            {isCollapsed && isActive && (
-                <div
-                    className="absolute right-2 size-1.5 rounded-full bg-primary shadow-neon"
-                />
-            )}
         </Link>
     );
-};
+});
+
+AnimatedNavItem.displayName = 'AnimatedNavItem';

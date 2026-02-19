@@ -98,13 +98,15 @@ export const SchoolProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         refreshSchool();
     }, [id, currentUser]);
 
+    const contextValue = React.useMemo(() => ({
+        currentSchool,
+        loading,
+        refreshSchool,
+        isCoordinator: currentSchool?.role === 'admin' || currentSchool?.role === 'coordinator'
+    }), [currentSchool, loading]);
+
     return (
-        <SchoolContext.Provider value={{
-            currentSchool,
-            loading,
-            refreshSchool,
-            isCoordinator: currentSchool?.role === 'admin' || currentSchool?.role === 'coordinator'
-        }}>
+        <SchoolContext.Provider value={contextValue}>
             {children}
         </SchoolContext.Provider>
     );

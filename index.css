@@ -129,6 +129,8 @@ html {
     font-size: clamp(14px, 0.75rem + 0.75vw, 20px);
     /* scroll-behavior: smooth; -- REMOVED CAUSES SCROLL DELAY */
     color: var(--text-primary);
+    background-color: var(--surface-page);
+    /* PREVENTS WHITE FLASH ON TRANSITIONS */
 }
 
 /* HIGH DENSITY SCREEN OPTIMIZATIONS (Retina/4K) */
@@ -245,16 +247,18 @@ body {
 
     .card,
     .glass-card-premium,
-    .glass-card-soft {
+    .glass-card-soft,
+    [class*="backdrop-blur"] {
         -webkit-backdrop-filter: none !important;
         backdrop-filter: none !important;
-        background-color: rgba(255, 255, 255, 0.9) !important;
+        background-color: rgba(255, 255, 255, 0.95) !important;
     }
 
     .dark .card,
     .dark .glass-card-premium,
-    .dark .glass-card-soft {
-        background-color: rgba(15, 23, 42, 0.95) !important;
+    .dark .glass-card-soft,
+    .dark [class*="backdrop-blur"] {
+        background-color: rgba(15, 23, 42, 0.98) !important;
     }
 }
 
@@ -502,6 +506,20 @@ body {
 .animate-float-random {
     animation: floatRandom 10s ease-in-out infinite;
     transform: translate3d(0, 0, 0);
+}
+
+/* PERFORMANCE: Disable Infinite Animations on Mobile */
+@media screen and (max-width: 768px) {
+
+    .animate-float,
+    .animate-blob,
+    .animate-mesh-flow,
+    .animate-float-slow,
+    .animate-float-random,
+    .animate-shimmer {
+        animation: none !important;
+        transform: none !important;
+    }
 }
 
 .animation-delay-2000 {

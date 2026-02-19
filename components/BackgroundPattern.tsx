@@ -163,16 +163,23 @@ export const BackgroundPattern: React.FC<BackgroundPatternProps> = React.memo(({
         return items;
     }, [config]);
 
+    // OPTIMIZATION: Detect Mobile
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
     return (
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 select-none transition-colors duration-700" aria-hidden="true">
-            {/* WEBGL SHADER BACKGROUND (God Tier Performance) */}
-            <ShaderBackground
-                subjectColor1={theme?.primaryColorHex || config.colors[0]}
-                subjectColor2={theme?.secondaryColorHex || config.colors[1]}
-            />
+            {/* WEBGL SHADER BACKGROUND (God Tier Performance on PC, HEAVY on Mobile) */}
+            {!isMobile ? (
+                <ShaderBackground
+                    subjectColor1={theme?.primaryColorHex || config.colors[0]}
+                    subjectColor2={theme?.secondaryColorHex || config.colors[1]}
+                />
+            ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-surface-page via-surface-page/90 to-surface-subtle" />
+            )}
 
-            {/* COLOR FOG - Extra vibrancy behind the icons */}
-            <div className="absolute inset-0 opacity-25 dark:opacity-60 pointer-events-none">
+            {/* COLOR FOG - Extra vibrancy behind the icons (Disable animation on mobile) */}
+            <div className={`absolute inset-0 opacity-25 dark:opacity-60 pointer-events-none ${isMobile ? 'hidden' : ''}`}>
                 <motion.div
                     animate={{
                         scale: [1, 1.2, 1],
@@ -195,8 +202,8 @@ export const BackgroundPattern: React.FC<BackgroundPatternProps> = React.memo(({
                 />
             </div>
 
-            {/* LIVING DISCIPLINES LAYER (Framer Motion) */}
-            {activeSubject && (
+            {/* LIVING DISCIPLINES LAYER (Framer Motion) - PC ONLY */}
+            {activeSubject && !isMobile && (
                 <div className="absolute inset-0 z-[2] overflow-hidden perspective-1000">
                     {particles.map((p, idx) => (
                         <motion.div
@@ -241,7 +248,7 @@ export const BackgroundPattern: React.FC<BackgroundPatternProps> = React.memo(({
                         </motion.div>
                     ))}
 
-                    {/* GIANT HERO ICON - Subtle */}
+                    {/* GIANT HERO ICON - Subtle (Keep on PC) */}
                     <div className="absolute -right-[10%] -bottom-[10%] opacity-[0.03] dark:opacity-[0.02] mix-blend-overlay">
                         <span
                             className={`material-symbols-outlined text-[80vh] font-thin rotate-[-15deg]`}

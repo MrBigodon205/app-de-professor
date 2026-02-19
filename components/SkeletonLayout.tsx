@@ -11,7 +11,7 @@ export const SkeletonLayout: React.FC<SkeletonLayoutProps> = ({ type = 'default'
     // Default Grid Layout (Dashboard)
     if (type === 'default' || type === 'dashboard') {
         return (
-            <div className="w-full h-full flex flex-col gap-6 p-4 md:p-8">
+            <div className={`w-full h-full flex flex-col gap-6 p-4 md:p-8`}>
                 {/* Header / Title Area Skeleton */}
                 <div className="flex items-center justify-between w-full mb-4">
                     <div className="h-8 w-48 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
