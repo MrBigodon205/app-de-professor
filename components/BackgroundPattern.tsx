@@ -163,9 +163,8 @@ export const BackgroundPattern: React.FC<BackgroundPatternProps> = React.memo(({
         return items;
     }, [config]);
 
-    // OPTIMIZATION: Global Performance (Disable Shader/Particles everywhere)
-    // const isMobile = typeof window !== 'undefined' && window.innerWidth < 768; 
-    const isMobile = true; // Force "Mobile" (Lite) mode on all devices
+    // OPTIMIZED: Responsive Performance (Disable Shader/Particles on Mobile only)
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
     return (
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 select-none transition-colors duration-700" aria-hidden="true">
