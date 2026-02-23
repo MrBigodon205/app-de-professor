@@ -49,6 +49,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [selectedSeriesId, setSelectedSeriesId] = useState<string>('');
     const [selectedSection, setSelectedSection] = useState<string>('');
     const [loading, setLoading] = useState(true);
+    const [isHydrated, setIsHydrated] = useState(false);
 
     const { currentUser, activeSubject } = useAuth();
 
@@ -65,6 +66,20 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const match = location.pathname.match(/\/institution\/([a-f0-9-]+)/i);
         return match ? match[1] : null;
     }, [location.pathname]);
+
+    // Persistent Save Effect (Guarded by Hydration)
+    useEffect(() => {
+        if (currentUser && isHydrated) {
+            const contextKey = activeInstitutionId || 'personal';
+            const key = `classGroups_${currentUser.id}_${contextKey}`;
+            try {
+                localStorage.setItem(key, JSON.stringify(virtualGroups));
+                console.info(`[ClassContext] Auto-persisted ${virtualGroups.length} groups to ${key}`);
+            } catch (e) {
+                console.error("[ClassContext] Auto-save failed", e);
+            }
+        }
+    }, [virtualGroups, currentUser, activeInstitutionId, isHydrated]);
 
 
     const fetchClasses = useCallback(async () => {
@@ -138,16 +153,27 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             if (savedGroupsStr) {
                 try {
                     const savedGroups: VirtualGroup[] = JSON.parse(savedGroupsStr);
+                    console.info(`[ClassContext] Loading ${savedGroups.length} groups from ${groupsKey}`);
+
                     // Filter out classIds that no longer exist in uniqueClasses
                     const validGroups = savedGroups.map(g => ({
                         ...g,
                         classIds: g.classIds.filter(id => uniqueClasses.some(c => c.id === id))
                     })).filter(g => g.classIds.length > 0); // Remove empty groups
+
+                    if (validGroups.length !== savedGroups.length) {
+                        console.warn(`[ClassContext] Filtered out ${savedGroups.length - validGroups.length} invalid/empty groups`);
+                    }
+
                     setVirtualGroups(validGroups);
                 } catch (e) {
-                    console.error("Failed to parse saved virtual groups", e);
+                    console.error("[ClassContext] Failed to parse saved virtual groups", e);
                 }
+            } else {
+                console.info("[ClassContext] No virtual groups found in localStorage for this context");
+                setVirtualGroups([]);
             }
+            setIsHydrated(true);
 
             setClasses(uniqueClasses);
 
@@ -448,75 +474,52 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }, [currentUser, activeInstitutionId]);
 
     // Virtual Group Functions
-    const createVirtualGroup = useCallback((name: string, classIds: string[]) => {
-        setVirtualGroups(prev => {
-            const next = [...prev, {
-                id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                name,
-                classIds
-            }];
-            if (currentUser) {
-                const contextKey = activeInstitutionId || 'personal';
-                localStorage.setItem(`classGroups_${currentUser.id}_${contextKey}`, JSON.stringify(next));
-            }
-            return next;
-        });
+    const saveVirtualGroups = useCallback((groups: VirtualGroup[]) => {
+        if (!currentUser) return;
+        const contextKey = activeInstitutionId || 'personal';
+        const key = `classGroups_${currentUser.id}_${contextKey}`;
+        try {
+            localStorage.setItem(key, JSON.stringify(groups));
+            console.info(`[ClassContext] Persisted ${groups.length} groups to ${key}`);
+        } catch (e) {
+            console.error("[ClassContext] Failed to save groups to localStorage", e);
+        }
     }, [currentUser, activeInstitutionId]);
+
+    const createVirtualGroup = useCallback((name: string, classIds: string[]) => {
+        console.info(`[ClassContext] Creating virtual group "${name}"`);
+        setVirtualGroups(prev => [...prev, {
+            id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            name,
+            classIds
+        }]);
+    }, []);
 
     const renameVirtualGroup = useCallback((groupId: string, newName: string) => {
-        setVirtualGroups(prev => {
-            const next = prev.map(g => g.id === groupId ? { ...g, name: newName } : g);
-            if (currentUser) {
-                const contextKey = activeInstitutionId || 'personal';
-                localStorage.setItem(`classGroups_${currentUser.id}_${contextKey}`, JSON.stringify(next));
-            }
-            return next;
-        });
-    }, [currentUser, activeInstitutionId]);
+        setVirtualGroups(prev => prev.map(g => g.id === groupId ? { ...g, name: newName } : g));
+    }, []);
 
     const deleteVirtualGroup = useCallback((groupId: string) => {
-        setVirtualGroups(prev => {
-            const next = prev.filter(g => g.id !== groupId);
-            if (currentUser) {
-                const contextKey = activeInstitutionId || 'personal';
-                localStorage.setItem(`classGroups_${currentUser.id}_${contextKey}`, JSON.stringify(next));
-            }
-            return next;
-        });
-    }, [currentUser, activeInstitutionId]);
+        setVirtualGroups(prev => prev.filter(g => g.id !== groupId));
+    }, []);
 
     const addSeriesToGroup = useCallback((groupId: string, classId: string) => {
-        setVirtualGroups(prev => {
-            const next = prev.map(g => {
-                if (g.id === groupId && !g.classIds.includes(classId)) {
-                    return { ...g, classIds: [...g.classIds, classId] };
-                }
-                return g;
-            });
-            if (currentUser) {
-                const contextKey = activeInstitutionId || 'personal';
-                localStorage.setItem(`classGroups_${currentUser.id}_${contextKey}`, JSON.stringify(next));
+        setVirtualGroups(prev => prev.map(g => {
+            if (g.id === groupId && !g.classIds.includes(classId)) {
+                return { ...g, classIds: [...g.classIds, classId] };
             }
-            return next;
-        });
-    }, [currentUser, activeInstitutionId]);
+            return g;
+        }));
+    }, []);
 
     const removeSeriesFromGroup = useCallback((groupId: string, classId: string) => {
-        setVirtualGroups(prev => {
-            const next = prev.map(g => {
-                if (g.id === groupId) {
-                    return { ...g, classIds: g.classIds.filter(id => id !== classId) };
-                }
-                return g;
-            }).filter(g => g.classIds.length > 0);
-
-            if (currentUser) {
-                const contextKey = activeInstitutionId || 'personal';
-                localStorage.setItem(`classGroups_${currentUser.id}_${contextKey}`, JSON.stringify(next));
+        setVirtualGroups(prev => prev.map(g => {
+            if (g.id === groupId) {
+                return { ...g, classIds: g.classIds.filter(id => id !== classId) };
             }
-            return next;
-        });
-    }, [currentUser, activeInstitutionId]);
+            return g;
+        }).filter(g => g.classIds.length > 0));
+    }, []);
 
     const contextValue = useMemo(() => ({
         classes,
