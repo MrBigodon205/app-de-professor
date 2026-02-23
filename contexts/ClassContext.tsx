@@ -66,14 +66,6 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         return match ? match[1] : null;
     }, [location.pathname]);
 
-    // Save Virtual Groups to LocalStorage automatically when they change
-    useEffect(() => {
-        if (currentUser) {
-            const contextKey = activeInstitutionId || 'personal';
-            const groupsKey = `classGroups_${currentUser.id}_${contextKey}`;
-            localStorage.setItem(groupsKey, JSON.stringify(virtualGroups));
-        }
-    }, [virtualGroups, currentUser, activeInstitutionId]);
 
     const fetchClasses = useCallback(async () => {
         if (!currentUser) return;
@@ -457,30 +449,57 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     // Virtual Group Functions
     const createVirtualGroup = useCallback((name: string, classIds: string[]) => {
-        const newGroup: VirtualGroup = {
-            id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            name,
-            classIds
-        };
-        setVirtualGroups(prev => [...prev, newGroup]);
-    }, []);
+        setVirtualGroups(prev => {
+            const next = [...prev, {
+                id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                name,
+                classIds
+            }];
+            if (currentUser) {
+                const contextKey = activeInstitutionId || 'personal';
+                localStorage.setItem(`classGroups_${currentUser.id}_${contextKey}`, JSON.stringify(next));
+            }
+            return next;
+        });
+    }, [currentUser, activeInstitutionId]);
 
     const renameVirtualGroup = useCallback((groupId: string, newName: string) => {
-        setVirtualGroups(prev => prev.map(g => g.id === groupId ? { ...g, name: newName } : g));
-    }, []);
+        setVirtualGroups(prev => {
+            const next = prev.map(g => g.id === groupId ? { ...g, name: newName } : g);
+            if (currentUser) {
+                const contextKey = activeInstitutionId || 'personal';
+                localStorage.setItem(`classGroups_${currentUser.id}_${contextKey}`, JSON.stringify(next));
+            }
+            return next;
+        });
+    }, [currentUser, activeInstitutionId]);
 
     const deleteVirtualGroup = useCallback((groupId: string) => {
-        setVirtualGroups(prev => prev.filter(g => g.id !== groupId));
-    }, []);
+        setVirtualGroups(prev => {
+            const next = prev.filter(g => g.id !== groupId);
+            if (currentUser) {
+                const contextKey = activeInstitutionId || 'personal';
+                localStorage.setItem(`classGroups_${currentUser.id}_${contextKey}`, JSON.stringify(next));
+            }
+            return next;
+        });
+    }, [currentUser, activeInstitutionId]);
 
     const addSeriesToGroup = useCallback((groupId: string, classId: string) => {
-        setVirtualGroups(prev => prev.map(g => {
-            if (g.id === groupId && !g.classIds.includes(classId)) {
-                return { ...g, classIds: [...g.classIds, classId] };
+        setVirtualGroups(prev => {
+            const next = prev.map(g => {
+                if (g.id === groupId && !g.classIds.includes(classId)) {
+                    return { ...g, classIds: [...g.classIds, classId] };
+                }
+                return g;
+            });
+            if (currentUser) {
+                const contextKey = activeInstitutionId || 'personal';
+                localStorage.setItem(`classGroups_${currentUser.id}_${contextKey}`, JSON.stringify(next));
             }
-            return g;
-        }));
-    }, []);
+            return next;
+        });
+    }, [currentUser, activeInstitutionId]);
 
     const removeSeriesFromGroup = useCallback((groupId: string, classId: string) => {
         setVirtualGroups(prev => {
@@ -489,11 +508,15 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     return { ...g, classIds: g.classIds.filter(id => id !== classId) };
                 }
                 return g;
-            });
-            // Auto-delete empty groups
-            return next.filter(g => g.classIds.length > 0);
+            }).filter(g => g.classIds.length > 0);
+
+            if (currentUser) {
+                const contextKey = activeInstitutionId || 'personal';
+                localStorage.setItem(`classGroups_${currentUser.id}_${contextKey}`, JSON.stringify(next));
+            }
+            return next;
         });
-    }, []);
+    }, [currentUser, activeInstitutionId]);
 
     const contextValue = useMemo(() => ({
         classes,
