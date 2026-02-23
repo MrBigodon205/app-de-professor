@@ -15,6 +15,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
         selectSeries,
         selectSection,
         addClass,
+        renameClass,
         removeClass,
         addSection,
         removeSection
@@ -24,12 +25,16 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
 
     const [newSeriesName, setNewSeriesName] = useState('');
     const [newSectionName, setNewSectionName] = useState('');
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editingName, setEditingName] = useState('');
 
     // Reset state and handle scroll lock
     React.useEffect(() => {
         if (!isOpen) {
             setNewSeriesName('');
             setNewSectionName('');
+            setEditingId(null);
+            setEditingName('');
             document.body.style.overflow = 'unset';
         } else {
             document.body.style.overflow = 'hidden';
@@ -57,6 +62,17 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
             } catch (error: any) {
                 alert('Erro ao excluir série: ' + error.message);
             }
+        }
+    };
+
+    const handleRenameSeries = async (id: string) => {
+        if (!editingName.trim()) { setEditingId(null); return; }
+        try {
+            await renameClass(id, editingName);
+            setEditingId(null);
+            setEditingName('');
+        } catch (error: any) {
+            alert('Erro ao renomear série: ' + error.message);
         }
     };
 
@@ -192,12 +208,37 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                                                 {activeSeries?.id === cls.id ? 'folder_managed' : 'folder'}
                                                             </span>
                                                         </div>
-                                                        <div className="flex flex-col leading-tight">
-                                                            <span className={`text-lg font-black tracking-tight ${activeSeries?.id === cls.id ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
-                                                                {cls.name}
-                                                            </span>
+                                                        <div className="flex flex-col leading-tight flex-1 min-w-0">
+                                                            {editingId === cls.id ? (
+                                                                <input
+                                                                    autoFocus
+                                                                    value={editingName}
+                                                                    onChange={(e) => setEditingName(e.target.value)}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === 'Enter') handleRenameSeries(cls.id);
+                                                                        if (e.key === 'Escape') { setEditingId(null); setEditingName(''); }
+                                                                    }}
+                                                                    onBlur={() => handleRenameSeries(cls.id)}
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                    aria-label="Renomear série"
+                                                                    placeholder="Nome da série"
+                                                                    className="text-lg font-black tracking-tight text-slate-900 dark:text-white bg-transparent border-b-2 border-[var(--theme-primary)] outline-none w-full"
+                                                                />
+                                                            ) : (
+                                                                <span className={`text-lg font-black tracking-tight truncate ${activeSeries?.id === cls.id ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
+                                                                    {cls.name}
+                                                                </span>
+                                                            )}
                                                             <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{cls.sections.length} turmas</span>
                                                         </div>
+                                                    </button>
+
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setEditingId(cls.id); setEditingName(cls.name); }}
+                                                        className="size-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-all flex items-center justify-center"
+                                                        title="Renomear"
+                                                    >
+                                                        <span className="material-symbols-outlined text-lg">edit</span>
                                                     </button>
 
                                                     <button

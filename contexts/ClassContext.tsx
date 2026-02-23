@@ -18,6 +18,7 @@ interface ClassContextType {
     selectSeries: (id: string) => void;
     selectSection: (section: string) => void;
     addClass: (name: string) => Promise<void>;
+    renameClass: (id: string, newName: string) => Promise<void>;
     removeClass: (id: string) => Promise<void>;
     addSection: (classId: string, section: string) => Promise<void>;
     removeSection: (classId: string, section: string) => Promise<void>;
@@ -220,6 +221,22 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setSelectedSection('A');
     }, [currentUser, activeSubject]);
 
+    const renameClass = useCallback(async (id: string, newName: string) => {
+        if (!newName.trim()) return;
+
+        const { error } = await supabase
+            .from('classes')
+            .update({ name: newName.trim() })
+            .eq('id', id);
+
+        if (error) {
+            console.error("Failed to rename class", error.message);
+            throw new Error(error.message);
+        }
+
+        setClasses(prev => prev.map(c => c.id === id ? { ...c, name: newName.trim() } : c));
+    }, []);
+
     const removeClass = useCallback(async (id: string) => {
         // Clean up related schedules first (safety net alongside CASCADE)
         await supabase.from('schedules').delete().eq('class_id', id);
@@ -363,6 +380,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         selectSeries,
         selectSection,
         addClass,
+        renameClass,
         removeClass,
         addSection,
         removeSection,
@@ -379,6 +397,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         selectSeries,
         selectSection,
         addClass,
+        renameClass,
         removeClass,
         addSection,
         removeSection,
