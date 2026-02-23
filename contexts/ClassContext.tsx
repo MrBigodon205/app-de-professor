@@ -33,11 +33,11 @@ interface ClassContextType {
     reorderClasses: (orderedIds: string[]) => void;
     // Virtual Groups
     virtualGroups: VirtualGroup[];
-    createVirtualGroup: (name: string, classIds: string[]) => void;
-    renameVirtualGroup: (groupId: string, newName: string) => void;
-    deleteVirtualGroup: (groupId: string) => void;
-    addSeriesToGroup: (groupId: string, classId: string) => void;
-    removeSeriesFromGroup: (groupId: string, classId: string) => void;
+    createVirtualGroup: (name: string, classIds: string[]) => Promise<void>;
+    renameVirtualGroup: (groupId: string, newName: string) => Promise<void>;
+    deleteVirtualGroup: (groupId: string) => Promise<void>;
+    addSeriesToGroup: (groupId: string, classId: string) => Promise<void>;
+    removeSeriesFromGroup: (groupId: string, classId: string) => Promise<void>;
     refreshData: () => Promise<void>;
 }
 
@@ -67,19 +67,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         return match ? match[1] : null;
     }, [location.pathname]);
 
-    // Persistent Save Effect (Guarded by Hydration)
-    useEffect(() => {
-        if (currentUser && isHydrated) {
-            const contextKey = activeInstitutionId || 'personal';
-            const key = `classGroups_${currentUser.id}_${contextKey}`;
-            try {
-                localStorage.setItem(key, JSON.stringify(virtualGroups));
-                console.info(`[ClassContext] Auto-persisted ${virtualGroups.length} groups to ${key}`);
-            } catch (e) {
-                console.error("[ClassContext] Auto-save failed", e);
-            }
-        }
-    }, [virtualGroups, currentUser, activeInstitutionId, isHydrated]);
+    // Persistent Save Effect - REMOVED: Now we save directly to Supabase in each action
 
 
     const fetchClasses = useCallback(async () => {
@@ -147,32 +135,74 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 }
             }
 
-            // Restore Virtual Groups from localStorage
-            const groupsKey = `classGroups_${currentUser.id}_${contextKey}`;
-            const savedGroupsStr = localStorage.getItem(groupsKey);
-            if (savedGroupsStr) {
-                try {
-                    const savedGroups: VirtualGroup[] = JSON.parse(savedGroupsStr);
-                    console.info(`[ClassContext] Loading ${savedGroups.length} groups from ${groupsKey}`);
+            // Restore Virtual Groups from Supabase (Cloud Sync)
+            const { data: cloudGroups, error: cloudError } = await supabase
+                .from('virtual_groups')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .eq('context_key', contextKey);
 
-                    // Filter out classIds that no longer exist in uniqueClasses
-                    const validGroups = savedGroups.map(g => ({
-                        ...g,
-                        classIds: g.classIds.filter(id => uniqueClasses.some(c => c.id === id))
-                    })).filter(g => g.classIds.length > 0); // Remove empty groups
-
-                    if (validGroups.length !== savedGroups.length) {
-                        console.warn(`[ClassContext] Filtered out ${savedGroups.length - validGroups.length} invalid/empty groups`);
-                    }
-
-                    setVirtualGroups(validGroups);
-                } catch (e) {
-                    console.error("[ClassContext] Failed to parse saved virtual groups", e);
-                }
-            } else {
-                console.info("[ClassContext] No virtual groups found in localStorage for this context");
-                setVirtualGroups([]);
+            if (cloudError) {
+                console.error("[ClassContext] Failed to load virtual groups from cloud", cloudError);
             }
+
+            let finalGroups: VirtualGroup[] = [];
+
+            if (cloudGroups && cloudGroups.length > 0) {
+                console.info(`[ClassContext] Loaded ${cloudGroups.length} groups from Supabase`);
+                finalGroups = cloudGroups.map(g => ({
+                    id: g.id,
+                    name: g.name,
+                    classIds: g.class_ids
+                }));
+            } else {
+                // No groups in cloud, check localStorage for migration
+                const groupsKey = `classGroups_${currentUser.id}_${contextKey}`;
+                const savedGroupsStr = localStorage.getItem(groupsKey);
+
+                if (savedGroupsStr) {
+                    try {
+                        const localGroups: VirtualGroup[] = JSON.parse(savedGroupsStr);
+                        if (localGroups.length > 0) {
+                            console.info(`[ClassContext] Migrating ${localGroups.length} local groups to cloud...`);
+
+                            // Upload to Supabase
+                            const toUpload = localGroups.map(lg => ({
+                                user_id: currentUser.id,
+                                name: lg.name,
+                                context_key: contextKey,
+                                class_ids: lg.classIds
+                            }));
+
+                            const { data: uploaded, error: uploadErr } = await supabase
+                                .from('virtual_groups')
+                                .insert(toUpload)
+                                .select();
+
+                            if (!uploadErr && uploaded) {
+                                finalGroups = uploaded.map(g => ({
+                                    id: g.id,
+                                    name: g.name,
+                                    classIds: g.class_ids
+                                }));
+                                console.info("[ClassContext] Migration successful");
+                                // Clear localStorage migration flag/data if desired? 
+                                // Better keep it for safety but we now have cloud as source of truth
+                            }
+                        }
+                    } catch (e) {
+                        console.error("[ClassContext] Failed to migrate local groups", e);
+                    }
+                }
+            }
+
+            // Filter out classIds that no longer exist in uniqueClasses
+            const cleanedGroups = finalGroups.map(g => ({
+                ...g,
+                classIds: g.classIds.filter(id => uniqueClasses.some(c => c.id === id))
+            })).filter(g => g.classIds.length > 0);
+
+            setVirtualGroups(cleanedGroups);
             setIsHydrated(true);
 
             setClasses(uniqueClasses);
@@ -473,53 +503,131 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         });
     }, [currentUser, activeInstitutionId]);
 
-    // Virtual Group Functions
-    const saveVirtualGroups = useCallback((groups: VirtualGroup[]) => {
+    // Virtual Group Functions (Sync with Supabase)
+    const createVirtualGroup = useCallback(async (name: string, classIds: string[]) => {
         if (!currentUser) return;
+        console.info(`[ClassContext] Creating virtual group "${name}" in cloud`);
+
         const contextKey = activeInstitutionId || 'personal';
-        const key = `classGroups_${currentUser.id}_${contextKey}`;
-        try {
-            localStorage.setItem(key, JSON.stringify(groups));
-            console.info(`[ClassContext] Persisted ${groups.length} groups to ${key}`);
-        } catch (e) {
-            console.error("[ClassContext] Failed to save groups to localStorage", e);
+        const { data, error } = await supabase
+            .from('virtual_groups')
+            .insert({
+                user_id: currentUser.id,
+                name,
+                context_key: contextKey,
+                class_ids: classIds
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error("[ClassContext] Failed to create virtual group in cloud", error);
+            return;
+        }
+
+        if (data) {
+            setVirtualGroups(prev => [...prev, {
+                id: data.id,
+                name: data.name,
+                classIds: data.class_ids
+            }]);
         }
     }, [currentUser, activeInstitutionId]);
 
-    const createVirtualGroup = useCallback((name: string, classIds: string[]) => {
-        console.info(`[ClassContext] Creating virtual group "${name}"`);
-        setVirtualGroups(prev => [...prev, {
-            id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            name,
-            classIds
-        }]);
-    }, []);
+    const renameVirtualGroup = useCallback(async (groupId: string, newName: string) => {
+        if (!currentUser) return;
+        console.info(`[ClassContext] Renaming ${groupId} to ${newName} in cloud`);
 
-    const renameVirtualGroup = useCallback((groupId: string, newName: string) => {
+        const { error } = await supabase
+            .from('virtual_groups')
+            .update({ name: newName })
+            .eq('id', groupId);
+
+        if (error) {
+            console.error("[ClassContext] Failed to rename group in cloud", error);
+            return;
+        }
+
         setVirtualGroups(prev => prev.map(g => g.id === groupId ? { ...g, name: newName } : g));
-    }, []);
+    }, [currentUser]);
 
-    const deleteVirtualGroup = useCallback((groupId: string) => {
+    const deleteVirtualGroup = useCallback(async (groupId: string) => {
+        if (!currentUser) return;
+        console.info(`[ClassContext] Deleting group ${groupId} in cloud`);
+
+        const { error } = await supabase
+            .from('virtual_groups')
+            .delete()
+            .eq('id', groupId);
+
+        if (error) {
+            console.error("[ClassContext] Failed to delete group in cloud", error);
+            return;
+        }
+
         setVirtualGroups(prev => prev.filter(g => g.id !== groupId));
-    }, []);
+    }, [currentUser]);
 
-    const addSeriesToGroup = useCallback((groupId: string, classId: string) => {
+    const addSeriesToGroup = useCallback(async (groupId: string, classId: string) => {
+        if (!currentUser) return;
+
+        const group = virtualGroups.find(g => g.id === groupId);
+        if (!group || group.classIds.includes(classId)) return;
+
+        const nextClassIds = [...group.classIds, classId];
+        console.info(`[ClassContext] Adding series ${classId} to group ${groupId} in cloud`);
+
+        const { error } = await supabase
+            .from('virtual_groups')
+            .update({ class_ids: nextClassIds })
+            .eq('id', groupId);
+
+        if (error) {
+            console.error("[ClassContext] Failed to add series to group in cloud", error);
+            return;
+        }
+
         setVirtualGroups(prev => prev.map(g => {
-            if (g.id === groupId && !g.classIds.includes(classId)) {
-                return { ...g, classIds: [...g.classIds, classId] };
+            if (g.id === groupId) {
+                return { ...g, classIds: nextClassIds };
             }
             return g;
         }));
-    }, []);
+    }, [currentUser, virtualGroups]);
 
-    const removeSeriesFromGroup = useCallback((groupId: string, classId: string) => {
+    const removeSeriesFromGroup = useCallback(async (groupId: string, classId: string) => {
+        if (!currentUser) return;
+
+        const group = virtualGroups.find(g => g.id === groupId);
+        if (!group) return;
+
+        const nextClassIds = group.classIds.filter(id => id !== classId);
+
+        if (nextClassIds.length === 0) {
+            // Delete group if empty
+            await deleteVirtualGroup(groupId);
+            return;
+        }
+
+        console.info(`[ClassContext] Removing series ${classId} from group ${groupId} in cloud`);
+
+        const { error } = await supabase
+            .from('virtual_groups')
+            .update({ class_ids: nextClassIds })
+            .eq('id', groupId);
+
+        if (error) {
+            console.error("[ClassContext] Failed to remove series from group in cloud", error);
+            return;
+        }
+
         setVirtualGroups(prev => prev.map(g => {
             if (g.id === groupId) {
-                return { ...g, classIds: g.classIds.filter(id => id !== classId) };
+                return { ...g, classIds: nextClassIds };
             }
             return g;
-        }).filter(g => g.classIds.length > 0));
-    }, []);
+        }));
+    }, [currentUser, virtualGroups, deleteVirtualGroup]);
 
     const contextValue = useMemo(() => ({
         classes,

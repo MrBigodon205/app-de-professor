@@ -199,7 +199,7 @@ body {
         radial-gradient(circle at bottom left, rgba(var(--primary), var(--bg-gradient-op-3)), transparent 700px),
         radial-gradient(circle at 20% 80%, rgba(var(--secondary), var(--bg-gradient-op-4)), transparent 500px),
         var(--surface-page);
-    background-attachment: fixed;
+    background-attachment: scroll;
     transition: background 0.7s ease-in-out;
 
     /* Optimized Background: No transitions on mobile to prevent scroll lag */

@@ -59,11 +59,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      setIsScrolled(main.scrollTop > 10);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    main.addEventListener('scroll', handleScroll);
+    return () => main.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
@@ -641,7 +644,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
         {/* Main Content Area - Fixed Scrolling */}
         {/* Main Content Area - Fixed Scrolling */}
-        <main ref={mainRef} className={`flex-1 overflow-y-scroll overflow-x-hidden scroll-smooth custom-scrollbar relative px-[var(--space-s)] md:px-[var(--space-m)] lg:px-[var(--space-l)] pb-24 md:pb-12 pb-safe-area-bottom`}>
+        <main ref={mainRef} className={`flex-1 overflow-y-scroll overflow-x-hidden custom-scrollbar relative px-[var(--space-s)] md:px-[var(--space-m)] lg:px-[var(--space-l)] pb-24 md:pb-12 pb-safe-area-bottom`}>
           {children}
         </main>
 
