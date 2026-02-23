@@ -532,10 +532,13 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             console.error("[ClassContext] Failed to create virtual group in cloud", error);
             // Rollback
             setVirtualGroups(prev => prev.filter(g => g.id !== tempId));
+            // Show alert to user
+            alert("Erro ao salvar grupo na nuvem. Verifique sua conexão.");
             return;
         }
 
         if (data) {
+            console.info(`[ClassContext] Group created with ID: ${data.id}`);
             // Replace temp ID with real ID
             setVirtualGroups(prev => prev.map(g => g.id === tempId ? { ...g, id: data.id } : g));
         }
@@ -543,14 +546,15 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const renameVirtualGroup = useCallback(async (groupId: string, newName: string) => {
         if (!currentUser) return;
+        // Prevent action on temp IDs
+        if (groupId.startsWith('temp-')) {
+            console.warn("[ClassContext] Cannot rename group while syncing...");
+            return;
+        }
 
-        // Save old name for rollback
         const oldGroups = [...virtualGroups];
-
-        // Optimistic Update
         setVirtualGroups(prev => prev.map(g => g.id === groupId ? { ...g, name: newName } : g));
 
-        console.info(`[ClassContext] Renaming ${groupId} to ${newName} in cloud`);
         const { error } = await supabase
             .from('virtual_groups')
             .update({ name: newName })
@@ -565,14 +569,11 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const deleteVirtualGroup = useCallback(async (groupId: string) => {
         if (!currentUser) return;
+        if (groupId.startsWith('temp-')) return; // Ignore delete on unsynced items
 
-        // Save state for rollback
         const oldGroups = [...virtualGroups];
-
-        // Optimistic Update
         setVirtualGroups(prev => prev.filter(g => g.id !== groupId));
 
-        console.info(`[ClassContext] Deleting group ${groupId} in cloud`);
         const { error } = await supabase
             .from('virtual_groups')
             .delete()
@@ -587,6 +588,10 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const addSeriesToGroup = useCallback(async (groupId: string, classId: string) => {
         if (!currentUser) return;
+        if (groupId.startsWith('temp-')) {
+            console.warn("[ClassContext] Please wait for group to sync before adding more series.");
+            return;
+        }
 
         const group = virtualGroups.find(g => g.id === groupId);
         if (!group || group.classIds.includes(classId)) return;
@@ -594,10 +599,8 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const nextClassIds = [...group.classIds, classId];
         const oldGroups = [...virtualGroups];
 
-        // Optimistic Update
         setVirtualGroups(prev => prev.map(g => g.id === groupId ? { ...g, classIds: nextClassIds } : g));
 
-        console.info(`[ClassContext] Adding series ${classId} to group ${groupId} in cloud`);
         const { error } = await supabase
             .from('virtual_groups')
             .update({ class_ids: nextClassIds })
@@ -612,6 +615,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const removeSeriesFromGroup = useCallback(async (groupId: string, classId: string) => {
         if (!currentUser) return;
+        if (groupId.startsWith('temp-')) return;
 
         const group = virtualGroups.find(g => g.id === groupId);
         if (!group) return;
@@ -624,10 +628,8 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             return;
         }
 
-        // Optimistic Update
         setVirtualGroups(prev => prev.map(g => g.id === groupId ? { ...g, classIds: nextClassIds } : g));
 
-        console.info(`[ClassContext] Removing series ${classId} from group ${groupId} in cloud`);
         const { error } = await supabase
             .from('virtual_groups')
             .update({ class_ids: nextClassIds })

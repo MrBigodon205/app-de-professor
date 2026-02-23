@@ -352,7 +352,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overflow-x-hidden custom-scrollbar py-6 md:py-12 lg:py-20">
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overflow-x-hidden custom-scrollbar py-6 md:py-12 lg:py-20 scroll-standard">
             {/* Backdrop with Blur */}
             <div
                 className="fixed inset-0 bg-slate-950/40 backdrop-blur-md animate-in fade-in duration-500"

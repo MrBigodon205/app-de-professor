@@ -644,7 +644,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
         {/* Main Content Area - Fixed Scrolling */}
         {/* Main Content Area - Fixed Scrolling */}
-        <main ref={mainRef} className={`flex-1 overflow-y-scroll overflow-x-hidden custom-scrollbar relative px-[var(--space-s)] md:px-[var(--space-m)] lg:px-[var(--space-l)] pb-24 md:pb-12 pb-safe-area-bottom`}>
+        <main ref={mainRef} className={`flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar relative px-[var(--space-s)] md:px-[var(--space-m)] lg:px-[var(--space-l)] pb-24 md:pb-12 pb-safe-area-bottom`}>
           {children}
         </main>
 
