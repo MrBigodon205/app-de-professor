@@ -506,9 +506,17 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Virtual Group Functions (Sync with Supabase)
     const createVirtualGroup = useCallback(async (name: string, classIds: string[]) => {
         if (!currentUser) return;
-        console.info(`[ClassContext] Creating virtual group "${name}" in cloud`);
-
+        const tempId = `temp-${Date.now()}`;
         const contextKey = activeInstitutionId || 'personal';
+
+        // Optimistic Update
+        setVirtualGroups(prev => [...prev, {
+            id: tempId,
+            name,
+            classIds: classIds
+        }]);
+
+        console.info(`[ClassContext] Creating virtual group "${name}" in cloud`);
         const { data, error } = await supabase
             .from('virtual_groups')
             .insert({
@@ -522,22 +530,27 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         if (error) {
             console.error("[ClassContext] Failed to create virtual group in cloud", error);
+            // Rollback
+            setVirtualGroups(prev => prev.filter(g => g.id !== tempId));
             return;
         }
 
         if (data) {
-            setVirtualGroups(prev => [...prev, {
-                id: data.id,
-                name: data.name,
-                classIds: data.class_ids
-            }]);
+            // Replace temp ID with real ID
+            setVirtualGroups(prev => prev.map(g => g.id === tempId ? { ...g, id: data.id } : g));
         }
     }, [currentUser, activeInstitutionId]);
 
     const renameVirtualGroup = useCallback(async (groupId: string, newName: string) => {
         if (!currentUser) return;
-        console.info(`[ClassContext] Renaming ${groupId} to ${newName} in cloud`);
 
+        // Save old name for rollback
+        const oldGroups = [...virtualGroups];
+
+        // Optimistic Update
+        setVirtualGroups(prev => prev.map(g => g.id === groupId ? { ...g, name: newName } : g));
+
+        console.info(`[ClassContext] Renaming ${groupId} to ${newName} in cloud`);
         const { error } = await supabase
             .from('virtual_groups')
             .update({ name: newName })
@@ -545,16 +558,21 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         if (error) {
             console.error("[ClassContext] Failed to rename group in cloud", error);
+            setVirtualGroups(oldGroups);
             return;
         }
-
-        setVirtualGroups(prev => prev.map(g => g.id === groupId ? { ...g, name: newName } : g));
-    }, [currentUser]);
+    }, [currentUser, virtualGroups]);
 
     const deleteVirtualGroup = useCallback(async (groupId: string) => {
         if (!currentUser) return;
-        console.info(`[ClassContext] Deleting group ${groupId} in cloud`);
 
+        // Save state for rollback
+        const oldGroups = [...virtualGroups];
+
+        // Optimistic Update
+        setVirtualGroups(prev => prev.filter(g => g.id !== groupId));
+
+        console.info(`[ClassContext] Deleting group ${groupId} in cloud`);
         const { error } = await supabase
             .from('virtual_groups')
             .delete()
@@ -562,11 +580,10 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         if (error) {
             console.error("[ClassContext] Failed to delete group in cloud", error);
+            setVirtualGroups(oldGroups);
             return;
         }
-
-        setVirtualGroups(prev => prev.filter(g => g.id !== groupId));
-    }, [currentUser]);
+    }, [currentUser, virtualGroups]);
 
     const addSeriesToGroup = useCallback(async (groupId: string, classId: string) => {
         if (!currentUser) return;
@@ -575,8 +592,12 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!group || group.classIds.includes(classId)) return;
 
         const nextClassIds = [...group.classIds, classId];
-        console.info(`[ClassContext] Adding series ${classId} to group ${groupId} in cloud`);
+        const oldGroups = [...virtualGroups];
 
+        // Optimistic Update
+        setVirtualGroups(prev => prev.map(g => g.id === groupId ? { ...g, classIds: nextClassIds } : g));
+
+        console.info(`[ClassContext] Adding series ${classId} to group ${groupId} in cloud`);
         const { error } = await supabase
             .from('virtual_groups')
             .update({ class_ids: nextClassIds })
@@ -584,15 +605,9 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         if (error) {
             console.error("[ClassContext] Failed to add series to group in cloud", error);
+            setVirtualGroups(oldGroups);
             return;
         }
-
-        setVirtualGroups(prev => prev.map(g => {
-            if (g.id === groupId) {
-                return { ...g, classIds: nextClassIds };
-            }
-            return g;
-        }));
     }, [currentUser, virtualGroups]);
 
     const removeSeriesFromGroup = useCallback(async (groupId: string, classId: string) => {
@@ -602,15 +617,17 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!group) return;
 
         const nextClassIds = group.classIds.filter(id => id !== classId);
+        const oldGroups = [...virtualGroups];
 
         if (nextClassIds.length === 0) {
-            // Delete group if empty
             await deleteVirtualGroup(groupId);
             return;
         }
 
-        console.info(`[ClassContext] Removing series ${classId} from group ${groupId} in cloud`);
+        // Optimistic Update
+        setVirtualGroups(prev => prev.map(g => g.id === groupId ? { ...g, classIds: nextClassIds } : g));
 
+        console.info(`[ClassContext] Removing series ${classId} from group ${groupId} in cloud`);
         const { error } = await supabase
             .from('virtual_groups')
             .update({ class_ids: nextClassIds })
@@ -618,15 +635,9 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         if (error) {
             console.error("[ClassContext] Failed to remove series from group in cloud", error);
+            setVirtualGroups(oldGroups);
             return;
         }
-
-        setVirtualGroups(prev => prev.map(g => {
-            if (g.id === groupId) {
-                return { ...g, classIds: nextClassIds };
-            }
-            return g;
-        }));
     }, [currentUser, virtualGroups, deleteVirtualGroup]);
 
     const contextValue = useMemo(() => ({
