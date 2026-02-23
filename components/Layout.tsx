@@ -30,6 +30,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const { isCoordinator, currentSchool } = useSchool();
   const location = useLocation();
 
+  // Electron Detection: offset all content below the custom titlebar (28px)
+  const isElectron = !!window.electronAPI?.isElectron;
+
   // Active Predictive Sync
   usePredictiveSync();
 
@@ -225,8 +228,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 
   return (
-    <div className="fixed inset-0 w-full h-[100dvh] flex bg-transparent overflow-hidden selection:bg-primary/10 selection:text-primary">
-      {window.electronAPI?.isElectron && <DesktopTitleBar />}
+    <div className={`fixed inset-0 w-full h-[100dvh] flex bg-transparent overflow-hidden selection:bg-primary/10 selection:text-primary ${isElectron ? 'pt-[28px]' : ''}`}>
+      {isElectron && <DesktopTitleBar />}
 
       {/* Background handled at App level for persistence */}
 
@@ -252,7 +255,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       />
 
       <aside
-        className={`fixed top-0 left-0 z-50 h-[100dvh] transition-[width,border-color] duration-200 ease-out flex flex-col
+        className={`fixed left-0 z-50 transition-[width,border-color] duration-200 ease-out flex flex-col
+          ${isElectron ? 'top-[28px] h-[calc(100dvh-28px)]' : 'top-0 h-[100dvh]'}
           ${isMobileMenuOpen ? 'translate-x-0 w-full bg-black/60 lg:bg-transparent' : '-translate-x-full lg:translate-x-0'}
           ${isSidebarCollapsed ? 'lg:w-0 lg:border-transparent' : 'lg:w-72 lg:border-border-default'}
           lg:bg-slate-50/90 dark:bg-slate-900/60 lg:backdrop-blur-md lg:border-r lg:border-primary/10 dark:lg:border-primary/20 lg:shadow-[5px_0_30px_-10px_rgba(var(--primary-rgb),0.1)]
@@ -261,7 +265,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         {/* NEW: External Floating Sidebar Toggle - Tied to Sidebar Width */}
         <button
           onClick={toggleSidebar}
-          className={`hidden lg:flex absolute top-4 left-[calc(100%+1rem)] z-[60] items-center justify-center size-11 rounded-full bg-surface-elevated border-2 border-primary/20 text-text-muted hover:text-primary shadow-2xl hover:shadow-primary/30 backdrop-blur-xl active:scale-90 transition-all duration-200 ease-out ${!isSidebarCollapsed ? 'rotate-180' : 'rotate-0'}`}
+          className={`hidden lg:flex absolute left-[calc(100%+1rem)] z-[60] items-center justify-center size-11 rounded-full bg-surface-elevated border-2 border-primary/20 text-text-muted hover:text-primary shadow-2xl hover:shadow-primary/30 backdrop-blur-xl active:scale-90 transition-all duration-200 ease-out ${!isSidebarCollapsed ? 'rotate-180' : 'rotate-0'} top-4`}
           title={isSidebarCollapsed ? "Expandir Menu" : "Recolher Menu"}
         >
           <span className="material-symbols-outlined text-2xl block font-black leading-none">chevron_right</span>

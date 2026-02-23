@@ -30,7 +30,7 @@ export const DesktopTitleBar: React.FC = () => {
             <div className="flex items-center gap-3">
                 <img src={logoSrc} alt="Logo" className="size-5 object-contain" />
                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/80 font-mono">
-                    Prof. Acerta+ <span className="text-primary-hover">Core 3.1</span>
+                    Prof. Acerta+ <span className="text-primary-hover">Core 3.2</span>
                 </span>
             </div>
 
