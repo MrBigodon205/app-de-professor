@@ -41,7 +41,8 @@
     "electronVersion": "33.0.0",
     "directories": {
       "output": "release_v2"
-    }
+    },
+    "publish": null
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.94.1",
