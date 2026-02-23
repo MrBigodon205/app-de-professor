@@ -4,6 +4,12 @@ import { useAuth } from './AuthContext';
 import { ClassConfig } from '../types';
 import { supabase } from '../lib/supabase';
 
+export interface VirtualGroup {
+    id: string;
+    name: string;
+    classIds: string[];
+}
+
 
 
 interface ClassContextType {
@@ -24,6 +30,14 @@ interface ClassContextType {
     removeSection: (classId: string, section: string) => Promise<void>;
     transferStudent: (studentId: string, targetSeriesId: string, targetSection: string) => Promise<boolean>;
     bulkTransferStudents: (studentIds: string[], targetSeriesId: string, targetSection: string) => Promise<boolean>;
+    reorderClasses: (orderedIds: string[]) => void;
+    // Virtual Groups
+    virtualGroups: VirtualGroup[];
+    createVirtualGroup: (name: string, classIds: string[]) => void;
+    renameVirtualGroup: (groupId: string, newName: string) => void;
+    deleteVirtualGroup: (groupId: string) => void;
+    addSeriesToGroup: (groupId: string, classId: string) => void;
+    removeSeriesFromGroup: (groupId: string, classId: string) => void;
     refreshData: () => Promise<void>;
 }
 
@@ -31,6 +45,7 @@ const ClassContext = createContext<ClassContextType | undefined>(undefined);
 
 export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [classes, setClasses] = useState<ClassConfig[]>([]);
+    const [virtualGroups, setVirtualGroups] = useState<VirtualGroup[]>([]);
     const [selectedSeriesId, setSelectedSeriesId] = useState<string>('');
     const [selectedSection, setSelectedSection] = useState<string>('');
     const [loading, setLoading] = useState(true);
@@ -43,9 +58,6 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const selectedSeriesIdRef = useRef(selectedSeriesId);
     useEffect(() => { selectedSeriesIdRef.current = selectedSeriesId; }, [selectedSeriesId]);
 
-
-
-
     const location = useLocation();
 
     // Helper to extract ID - Memoized to prevent re-fetching on sub-route changes if ID stays same
@@ -53,6 +65,15 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const match = location.pathname.match(/\/institution\/([a-f0-9-]+)/i);
         return match ? match[1] : null;
     }, [location.pathname]);
+
+    // Save Virtual Groups to LocalStorage automatically when they change
+    useEffect(() => {
+        if (currentUser) {
+            const contextKey = activeInstitutionId || 'personal';
+            const groupsKey = `classGroups_${currentUser.id}_${contextKey}`;
+            localStorage.setItem(groupsKey, JSON.stringify(virtualGroups));
+        }
+    }, [virtualGroups, currentUser, activeInstitutionId]);
 
     const fetchClasses = useCallback(async () => {
         if (!currentUser) return;
@@ -95,6 +116,46 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     uniqueClasses.push(c);
                 }
             });
+
+            // Restore user custom order from localStorage
+            const contextKey = activeInstitutionId || 'personal';
+            const orderKey = `classOrder_${currentUser.id}_${contextKey}`;
+            const savedOrderStr = localStorage.getItem(orderKey);
+
+            if (savedOrderStr) {
+                try {
+                    const savedOrder: string[] = JSON.parse(savedOrderStr);
+                    // Sort uniqueClasses according to savedOrder, new classes go to the end
+                    uniqueClasses.sort((a, b) => {
+                        const indexA = savedOrder.indexOf(a.id);
+                        const indexB = savedOrder.indexOf(b.id);
+
+                        if (indexA === -1 && indexB === -1) return 0; // Both new
+                        if (indexA === -1) return 1; // A is new, goes to bottom
+                        if (indexB === -1) return -1; // B is new, goes to bottom
+                        return indexA - indexB;
+                    });
+                } catch (e) {
+                    console.error("Failed to parse saved class order", e);
+                }
+            }
+
+            // Restore Virtual Groups from localStorage
+            const groupsKey = `classGroups_${currentUser.id}_${contextKey}`;
+            const savedGroupsStr = localStorage.getItem(groupsKey);
+            if (savedGroupsStr) {
+                try {
+                    const savedGroups: VirtualGroup[] = JSON.parse(savedGroupsStr);
+                    // Filter out classIds that no longer exist in uniqueClasses
+                    const validGroups = savedGroups.map(g => ({
+                        ...g,
+                        classIds: g.classIds.filter(id => uniqueClasses.some(c => c.id === id))
+                    })).filter(g => g.classIds.length > 0); // Remove empty groups
+                    setVirtualGroups(validGroups);
+                } catch (e) {
+                    console.error("Failed to parse saved virtual groups", e);
+                }
+            }
 
             setClasses(uniqueClasses);
 
@@ -370,12 +431,77 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     }, []);
 
+    const reorderClasses = useCallback((orderedIds: string[]) => {
+        if (!currentUser) return;
+
+        const contextKey = activeInstitutionId || 'personal';
+        const orderKey = `classOrder_${currentUser.id}_${contextKey}`;
+
+        // Save to local storage
+        localStorage.setItem(orderKey, JSON.stringify(orderedIds));
+
+        // Optimistically apply the new order visually
+        setClasses(prevClasses => {
+            const nextClasses = [...prevClasses];
+            nextClasses.sort((a, b) => {
+                const indexA = orderedIds.indexOf(a.id);
+                const indexB = orderedIds.indexOf(b.id);
+                if (indexA === -1 && indexB === -1) return 0;
+                if (indexA === -1) return 1;
+                if (indexB === -1) return -1;
+                return indexA - indexB;
+            });
+            return nextClasses;
+        });
+    }, [currentUser, activeInstitutionId]);
+
+    // Virtual Group Functions
+    const createVirtualGroup = useCallback((name: string, classIds: string[]) => {
+        const newGroup: VirtualGroup = {
+            id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            name,
+            classIds
+        };
+        setVirtualGroups(prev => [...prev, newGroup]);
+    }, []);
+
+    const renameVirtualGroup = useCallback((groupId: string, newName: string) => {
+        setVirtualGroups(prev => prev.map(g => g.id === groupId ? { ...g, name: newName } : g));
+    }, []);
+
+    const deleteVirtualGroup = useCallback((groupId: string) => {
+        setVirtualGroups(prev => prev.filter(g => g.id !== groupId));
+    }, []);
+
+    const addSeriesToGroup = useCallback((groupId: string, classId: string) => {
+        setVirtualGroups(prev => prev.map(g => {
+            if (g.id === groupId && !g.classIds.includes(classId)) {
+                return { ...g, classIds: [...g.classIds, classId] };
+            }
+            return g;
+        }));
+    }, []);
+
+    const removeSeriesFromGroup = useCallback((groupId: string, classId: string) => {
+        setVirtualGroups(prev => {
+            const next = prev.map(g => {
+                if (g.id === groupId) {
+                    return { ...g, classIds: g.classIds.filter(id => id !== classId) };
+                }
+                return g;
+            });
+            // Auto-delete empty groups
+            return next.filter(g => g.classIds.length > 0);
+        });
+    }, []);
+
     const contextValue = useMemo(() => ({
         classes,
         selectedSeriesId,
         selectedSection,
         activeSeries,
         loading,
+        virtualGroups,
         fetchClasses,
         selectSeries,
         selectSection,
@@ -386,6 +512,12 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         removeSection,
         transferStudent,
         bulkTransferStudents,
+        reorderClasses,
+        createVirtualGroup,
+        renameVirtualGroup,
+        deleteVirtualGroup,
+        addSeriesToGroup,
+        removeSeriesFromGroup,
         refreshData: fetchClasses
     }), [
         classes,
@@ -393,6 +525,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         selectedSection,
         activeSeries,
         loading,
+        virtualGroups,
         fetchClasses,
         selectSeries,
         selectSection,
@@ -402,7 +535,13 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addSection,
         removeSection,
         transferStudent,
-        bulkTransferStudents
+        bulkTransferStudents,
+        reorderClasses,
+        createVirtualGroup,
+        renameVirtualGroup,
+        deleteVirtualGroup,
+        addSeriesToGroup,
+        removeSeriesFromGroup
     ]);
 
     return (

@@ -18,7 +18,14 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
         renameClass,
         removeClass,
         addSection,
-        removeSection
+        removeSection,
+        reorderClasses,
+        virtualGroups,
+        createVirtualGroup,
+        renameVirtualGroup,
+        deleteVirtualGroup,
+        addSeriesToGroup,
+        removeSeriesFromGroup
     } = useClass();
 
     const theme = useTheme();
@@ -27,6 +34,10 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
     const [newSectionName, setNewSectionName] = useState('');
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editingName, setEditingName] = useState('');
+    const [draggedItem, setDraggedItem] = useState<string | null>(null);
+    const [dragOverItem, setDragOverItem] = useState<string | null>(null);
+    const [dragAction, setDragAction] = useState<'before' | 'after' | 'group' | null>(null);
+    const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
     // Reset state and handle scroll lock
     React.useEffect(() => {
@@ -95,6 +106,247 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                 alert('Erro ao excluir turma: ' + error.message);
             }
         }
+    };
+
+    const handleDragStart = (e: React.DragEvent, id: string) => {
+        setDraggedItem(id);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', id);
+    };
+
+    const handleDragOver = (e: React.DragEvent, id: string, isGroupTarget: boolean = false) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (id === draggedItem) return;
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+        const h = rect.height;
+
+        if (isGroupTarget) {
+            setDragAction('group');
+        } else {
+            if (y < h * 0.25) setDragAction('before');
+            else if (y > h * 0.75) setDragAction('after');
+            else setDragAction('group');
+        }
+        setDragOverItem(id);
+    };
+
+    const handleDragEnter = (e: React.DragEvent, id: string) => {
+        e.preventDefault();
+    };
+
+    const handleDragEnd = () => {
+        setDraggedItem(null);
+        setDragOverItem(null);
+        setDragAction(null);
+    };
+
+    const handleDrop = (e: React.DragEvent, targetId: string, isGroupTarget: boolean = false) => {
+        e.preventDefault();
+        if (!draggedItem || draggedItem === targetId) {
+            handleDragEnd();
+            return;
+        }
+
+        const currentOrder = classes.map(c => c.id);
+        const draggedIdx = currentOrder.indexOf(draggedItem);
+        const targetIdx = currentOrder.indexOf(targetId);
+
+        if (isGroupTarget) {
+            const group = virtualGroups.find(g => g.id === targetId);
+            if (group && !group.classIds.includes(draggedItem)) {
+                addSeriesToGroup(group.id, draggedItem);
+            }
+        } else if (dragAction === 'group' && targetIdx !== -1 && draggedIdx !== -1) {
+            const targetName = classes.find(c => c.id === targetId)?.name || 'Turma';
+            createVirtualGroup(`Grupo: ${targetName}`, [targetId, draggedItem]);
+        } else if (draggedIdx !== -1 && targetIdx !== -1) {
+            currentOrder.splice(draggedIdx, 1);
+            const insertIdx = dragAction === 'before' ? currentOrder.indexOf(targetId) : currentOrder.indexOf(targetId) + 1;
+            currentOrder.splice(insertIdx, 0, draggedItem);
+            reorderClasses(currentOrder);
+        }
+
+        handleDragEnd();
+    };
+
+    const renderList: Array<{ type: 'group' | 'class', id: string, data: any, classes?: any[] }> = [];
+    const renderedGroups = new Set<string>();
+
+    classes.forEach(cls => {
+        const group = virtualGroups.find(g => g.classIds.includes(cls.id));
+        if (group) {
+            if (!renderedGroups.has(group.id)) {
+                renderedGroups.add(group.id);
+                renderList.push({
+                    type: 'group',
+                    id: group.id,
+                    data: group,
+                    classes: classes.filter(c => group.classIds.includes(c.id))
+                });
+            }
+        } else {
+            renderList.push({ type: 'class', id: cls.id, data: cls });
+        }
+    });
+
+    const renderSeriesCard = (cls: any, isInsideGroup: boolean = false, groupId?: string) => {
+        return (
+            <div
+                key={cls.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, cls.id)}
+                onDragOver={(e) => handleDragOver(e, cls.id)}
+                onDragEnter={(e) => handleDragEnter(e, cls.id)}
+                onDragEnd={handleDragEnd}
+                onDrop={(e) => handleDrop(e, cls.id)}
+                className={`group relative rounded-2xl transition-all duration-300 overflow-hidden ${activeSeries?.id === cls.id
+                    ? `bg-white dark:bg-slate-800 shadow-xl shadow-black/10 ring-1 ring-slate-100 dark:ring-white/10`
+                    : 'bg-slate-50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-100 dark:hover:border-white/5'
+                    } ${draggedItem === cls.id ? 'opacity-50 scale-95' : 'opacity-100'} ${dragOverItem === cls.id ? (dragAction === 'before' ? 'border-t-4 border-t-[var(--theme-primary)]' : dragAction === 'after' ? 'border-b-4 border-b-[var(--theme-primary)]' : 'ring-2 ring-[var(--theme-primary)] bg-[var(--theme-primary)]/5') : ''}`}
+            >
+                <div className="p-4 flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                        {editingId === cls.id ? (
+                            <div className="flex-1 flex gap-2 items-center bg-white dark:bg-slate-900 px-3 py-2 rounded-xl ring-2 ring-[var(--theme-primary)] shadow-lg" onClick={e => e.stopPropagation()}>
+                                <input
+                                    autoFocus
+                                    value={editingName}
+                                    onChange={(e) => setEditingName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleRenameSeries(cls.id);
+                                        if (e.key === 'Escape') { setEditingId(null); setEditingName(''); }
+                                    }}
+                                    aria-label="Renomear série"
+                                    placeholder="Novo nome"
+                                    className="flex-1 text-sm font-bold text-slate-900 dark:text-white bg-transparent outline-none w-full"
+                                />
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleRenameSeries(cls.id); }}
+                                    className="size-8 min-w-[32px] rounded-lg bg-green-50 text-green-600 dark:bg-green-500/20 dark:text-green-400 flex items-center justify-center hover:bg-green-100 dark:hover:bg-green-500/30 transition-colors"
+                                    title="Confirmar"
+                                >
+                                    <span className="material-symbols-outlined text-[18px] font-black">check</span>
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setEditingId(null); setEditingName(''); }}
+                                    className="size-8 min-w-[32px] rounded-lg bg-red-50 text-red-500 dark:bg-red-500/20 dark:text-red-400 flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-500/30 transition-colors"
+                                    title="Cancelar"
+                                >
+                                    <span className="material-symbols-outlined text-[18px] font-black">close</span>
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="cursor-grab hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded-lg transition-colors active:cursor-grabbing flex items-center justify-center -ml-2" title="Segure para arrastar e reorganizar">
+                                    <span className="material-symbols-outlined">drag_indicator</span>
+                                </div>
+                                <button
+                                    onClick={() => selectSeries(cls.id)}
+                                    className="flex-1 flex items-center gap-3 text-left group/btn"
+                                >
+                                    <div className={`size-12 rounded-xl flex items-center justify-center transition-all duration-300 ${activeSeries?.id === cls.id ? `bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] text-white shadow-md shadow-[var(--theme-primary)]/20` : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500'}`}>
+                                        <span className="material-symbols-outlined text-2xl">
+                                            {activeSeries?.id === cls.id ? 'folder_managed' : 'folder'}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col leading-tight flex-1 min-w-0">
+                                        <span className={`text-lg font-black tracking-tight truncate ${activeSeries?.id === cls.id ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
+                                            {cls.name}
+                                        </span>
+                                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{cls.sections.length} turmas</span>
+                                    </div>
+                                </button>
+
+                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setEditingId(cls.id); setEditingName(cls.name); }}
+                                        className="size-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-all flex items-center justify-center"
+                                        title="Renomear"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">edit</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            if (isInsideGroup && groupId) removeSeriesFromGroup(groupId, cls.id);
+                                            else handleDeleteSeries(cls.id, cls.name);
+                                        }}
+                                        className="size-9 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20 transition-all flex items-center justify-center opacity-100"
+                                        title={isInsideGroup ? "Remover do Grupo" : "Excluir"}
+                                    >
+                                        <span className="material-symbols-outlined text-lg">{isInsideGroup ? 'logout' : 'delete'}</span>
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Sections Pills Area */}
+                    {activeSeries?.id === cls.id && (
+                        <div className="bg-slate-50 dark:bg-slate-950/50 rounded-2xl p-4 space-y-3 animate-in zoom-in-95 duration-500">
+                            <div className="flex flex-wrap gap-2.5">
+                                {cls.sections.map((sec: string) => (
+                                    <div key={sec} className="relative group/pill">
+                                        <button
+                                            onClick={() => selectSection(sec)}
+                                            className={`relative h-11 min-w-[3.5rem] px-6 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center active:scale-90 ${selectedSection === sec
+                                                ? `bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] text-white shadow-md shadow-[var(--theme-primary)]/30 ring-1 ring-[var(--theme-primary)]`
+                                                : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-white/5'
+                                                }`}
+                                        >
+                                            {sec}
+                                            {selectedSection === sec && (
+                                                <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-[var(--theme-primary)]`}></span>
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteSection(sec);
+                                            }}
+                                            className="absolute -top-1.5 -right-1.5 size-5 bg-white dark:bg-slate-700 text-red-500 rounded-full shadow-md border dark:border-white/5 flex items-center justify-center opacity-0 group-hover/pill:opacity-100 transition-all active:scale-95 z-10"
+                                        >
+                                            <span className="material-symbols-outlined text-[12px] font-black">close</span>
+                                        </button>
+                                    </div>
+                                ))}
+
+                                {/* Add Section Button */}
+                                <button
+                                    onClick={async () => {
+                                        if (activeSeries) {
+                                            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                                            const existingLetters = activeSeries.sections
+                                                .filter((sec: string) => sec.length === 1)
+                                                .map((sec: string) => sec.toUpperCase());
+
+                                            let nextLetter = 'A';
+                                            if (existingLetters.length > 0) {
+                                                const sorted = [...new Set(existingLetters)].sort();
+                                                const lastLetter = sorted[sorted.length - 1];
+                                                const lastIndex = alphabet.indexOf(lastLetter as string);
+                                                if (lastIndex !== -1 && lastIndex < alphabet.length - 1) {
+                                                    nextLetter = alphabet[lastIndex + 1];
+                                                }
+                                            }
+                                            await addSection(activeSeries.id, nextLetter);
+                                        }
+                                    }}
+                                    className={`h-11 px-6 rounded-xl border-2 border-dashed border-slate-200 dark:border-white/5 bg-transparent text-slate-400 hover:border-[var(--theme-primary)] hover:text-[var(--theme-primary)] flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 group/nova`}
+                                    title="Nova Turma"
+                                >
+                                    <span className="material-symbols-outlined text-base">add</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest">Nova</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
     };
 
     if (!isOpen) return null;
@@ -189,130 +441,93 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-3">
-                                    {classes.map(cls => (
-                                        <div
-                                            key={cls.id}
-                                            className={`group relative rounded-2xl transition-all duration-300 overflow-hidden ${activeSeries?.id === cls.id
-                                                ? `bg-white dark:bg-slate-800 shadow-xl shadow-black/10 ring-1 ring-slate-100 dark:ring-white/10`
-                                                : 'bg-slate-50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-100 dark:hover:border-white/5'
-                                                }`}
-                                        >
-                                            <div className="p-4 flex flex-col gap-4">
-                                                <div className="flex items-center gap-3">
-                                                    <button
-                                                        onClick={() => selectSeries(cls.id)}
-                                                        className="flex-1 flex items-center gap-3 text-left group/btn"
-                                                    >
-                                                        <div className={`size-12 rounded-xl flex items-center justify-center transition-all duration-300 ${activeSeries?.id === cls.id ? `bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] text-white shadow-md shadow-[var(--theme-primary)]/20` : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500'}`}>
-                                                            <span className="material-symbols-outlined text-2xl">
-                                                                {activeSeries?.id === cls.id ? 'folder_managed' : 'folder'}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex flex-col leading-tight flex-1 min-w-0">
-                                                            {editingId === cls.id ? (
-                                                                <input
-                                                                    autoFocus
-                                                                    value={editingName}
-                                                                    onChange={(e) => setEditingName(e.target.value)}
-                                                                    onKeyDown={(e) => {
-                                                                        if (e.key === 'Enter') handleRenameSeries(cls.id);
-                                                                        if (e.key === 'Escape') { setEditingId(null); setEditingName(''); }
-                                                                    }}
-                                                                    onBlur={() => handleRenameSeries(cls.id)}
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                    aria-label="Renomear série"
-                                                                    placeholder="Nome da série"
-                                                                    className="text-lg font-black tracking-tight text-slate-900 dark:text-white bg-transparent border-b-2 border-[var(--theme-primary)] outline-none w-full"
-                                                                />
-                                                            ) : (
-                                                                <span className={`text-lg font-black tracking-tight truncate ${activeSeries?.id === cls.id ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
-                                                                    {cls.name}
-                                                                </span>
-                                                            )}
-                                                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{cls.sections.length} turmas</span>
-                                                        </div>
-                                                    </button>
+                                    {renderList.map(item => {
+                                        if (item.type === 'group') {
+                                            const group = item.data;
+                                            const isExpanded = expandedGroups.has(group.id);
+                                            const groupClasses = item.classes || [];
 
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); setEditingId(cls.id); setEditingName(cls.name); }}
-                                                        className="size-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-all flex items-center justify-center"
-                                                        title="Renomear"
-                                                    >
-                                                        <span className="material-symbols-outlined text-lg">edit</span>
-                                                    </button>
-
-                                                    <button
-                                                        onClick={() => handleDeleteSeries(cls.id, cls.name)}
-                                                        className="size-9 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20 transition-all flex items-center justify-center opacity-100"
-                                                        title="Excluir"
-                                                    >
-                                                        <span className="material-symbols-outlined text-lg">delete</span>
-                                                    </button>
-                                                </div>
-
-                                                {/* Sections Pills Area */}
-                                                {activeSeries?.id === cls.id && (
-                                                    <div className="bg-slate-50 dark:bg-slate-950/50 rounded-2xl p-4 space-y-3 animate-in zoom-in-95 duration-500">
-                                                        <div className="flex flex-wrap gap-2.5">
-                                                            {cls.sections.map(sec => (
-                                                                <div key={sec} className="relative group/pill">
-                                                                    <button
-                                                                        onClick={() => selectSection(sec)}
-                                                                        className={`relative h-11 min-w-[3.5rem] px-6 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center active:scale-90 ${selectedSection === sec
-                                                                            ? `bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] text-white shadow-md shadow-[var(--theme-primary)]/30 ring-1 ring-[var(--theme-primary)]`
-                                                                            : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-white/5'
-                                                                            }`}
-                                                                    >
-                                                                        {sec}
-                                                                        {selectedSection === sec && (
-                                                                            <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-[var(--theme-primary)]`}></span>
-                                                                        )}
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleDeleteSection(sec);
-                                                                        }}
-                                                                        className="absolute -top-1.5 -right-1.5 size-5 bg-white dark:bg-slate-700 text-red-500 rounded-full shadow-md border dark:border-white/5 flex items-center justify-center opacity-0 group-hover/pill:opacity-100 transition-all active:scale-95 z-10"
-                                                                    >
-                                                                        <span className="material-symbols-outlined text-[12px] font-black">close</span>
-                                                                    </button>
-                                                                </div>
-                                                            ))}
-
-                                                            {/* Add Section Button - PREMIUM NOVA PILL (DASHED) */}
+                                            return (
+                                                <div
+                                                    key={group.id}
+                                                    onDragOver={(e) => handleDragOver(e, group.id, true)}
+                                                    onDragEnter={(e) => handleDragEnter(e, group.id)}
+                                                    onDrop={(e) => handleDrop(e, group.id, true)}
+                                                    className={`rounded-2xl border-2 transition-all duration-300 ${dragOverItem === group.id ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)]/5' : 'border-dashed border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]'}`}
+                                                >
+                                                    {/* Group Header */}
+                                                    <div className="p-3 flex items-center justify-between group">
+                                                        <div className="flex items-center gap-3 flex-1 min-w-0">
                                                             <button
-                                                                onClick={async () => {
-                                                                    if (activeSeries) {
-                                                                        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                                                                        const existingLetters = activeSeries.sections
-                                                                            .filter(sec => sec.length === 1)
-                                                                            .map(sec => sec.toUpperCase());
-
-                                                                        let nextLetter = 'A';
-                                                                        if (existingLetters.length > 0) {
-                                                                            const sorted = [...new Set(existingLetters)].sort();
-                                                                            const lastLetter = sorted[sorted.length - 1];
-                                                                            const lastIndex = alphabet.indexOf(lastLetter as string);
-                                                                            if (lastIndex !== -1 && lastIndex < alphabet.length - 1) {
-                                                                                nextLetter = alphabet[lastIndex + 1];
-                                                                            }
-                                                                        }
-                                                                        await addSection(activeSeries.id, nextLetter);
-                                                                    }
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    setExpandedGroups(prev => {
+                                                                        const next = new Set(prev);
+                                                                        if (next.has(group.id)) next.delete(group.id);
+                                                                        else next.add(group.id);
+                                                                        return next;
+                                                                    });
                                                                 }}
-                                                                className={`h-11 px-6 rounded-xl border-2 border-dashed border-slate-200 dark:border-white/5 bg-transparent text-slate-400 hover:border-[var(--theme-primary)] hover:text-[var(--theme-primary)] flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 group/nova`}
-                                                                title="Nova Turma"
+                                                                className="size-10 rounded-xl bg-slate-200/50 dark:bg-white/5 flex items-center justify-center text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
                                                             >
-                                                                <span className="material-symbols-outlined text-base">add</span>
-                                                                <span className="text-[10px] font-black uppercase tracking-widest">Nova</span>
+                                                                <span className="material-symbols-outlined transition-transform duration-300" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                                                                    keyboard_arrow_down
+                                                                </span>
+                                                            </button>
+
+                                                            {editingId === group.id ? (
+                                                                <div className="flex-1 flex gap-2 items-center bg-white dark:bg-slate-900 px-2 py-1.5 rounded-xl ring-1 ring-[var(--theme-primary)] shadow-sm">
+                                                                    <input
+                                                                        autoFocus
+                                                                        value={editingName}
+                                                                        onChange={(e) => setEditingName(e.target.value)}
+                                                                        onKeyDown={(e) => {
+                                                                            if (e.key === 'Enter') {
+                                                                                renameVirtualGroup(group.id, editingName);
+                                                                                setEditingId(null);
+                                                                            }
+                                                                            if (e.key === 'Escape') { setEditingId(null); setEditingName(''); }
+                                                                        }}
+                                                                        placeholder="Nome da Pasta..."
+                                                                        className="flex-1 text-sm font-bold text-slate-900 dark:text-white bg-transparent outline-none w-full"
+                                                                    />
+                                                                    <button onClick={() => { renameVirtualGroup(group.id, editingName); setEditingId(null); }} className="size-6 rounded bg-green-50 text-green-600 dark:bg-green-500/20 flex items-center justify-center"><span className="material-symbols-outlined text-[14px] font-black">check</span></button>
+                                                                    <button onClick={() => { setEditingId(null); setEditingName(''); }} className="size-6 rounded bg-red-50 text-red-500 dark:bg-red-500/20 flex items-center justify-center"><span className="material-symbols-outlined text-[14px] font-black">close</span></button>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer" onClick={() => { setEditingId(group.id); setEditingName(group.name); }}>
+                                                                    <span className="material-symbols-outlined text-[var(--theme-primary)] text-xl">folder_zip</span>
+                                                                    <span className="font-bold text-slate-700 dark:text-slate-300 truncate">{group.name}</span>
+                                                                    <span className="text-[10px] font-bold bg-slate-200 dark:bg-white/10 px-2 py-0.5 rounded-full text-slate-500">{groupClasses.length}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="flex gap-1 transition-opacity ml-2">
+                                                            <button onClick={() => { setEditingId(group.id); setEditingName(group.name); }} className="size-8 rounded-lg bg-blue-50/50 dark:bg-blue-500/10 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/20 flex items-center justify-center" title="Renomear Pasta">
+                                                                <span className="material-symbols-outlined text-sm">edit</span>
+                                                            </button>
+                                                            <button onClick={() => {
+                                                                if (window.confirm('Desagrupar turmas desta pasta?')) deleteVirtualGroup(group.id);
+                                                            }} className="size-8 rounded-lg bg-orange-50/50 dark:bg-orange-500/10 text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-500/20 flex items-center justify-center" title="Desfazer Grupo">
+                                                                <span className="material-symbols-outlined text-sm">folder_off</span>
                                                             </button>
                                                         </div>
                                                     </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
+
+                                                    {/* Group Content (Expands) */}
+                                                    {isExpanded && (
+                                                        <div className="p-3 pt-0 grid gap-2 border-t border-slate-200/50 dark:border-white/5 mt-2 pt-3">
+                                                            {groupClasses.map((cls: any) => renderSeriesCard(cls, true, group.id))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        }
+
+                                        // Standalone class
+                                        return renderSeriesCard(item.data);
+                                    })}
                                 </div>
                             )}
                         </div>
