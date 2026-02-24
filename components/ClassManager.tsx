@@ -470,7 +470,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                                                 }}
                                                                 className="size-10 rounded-xl bg-slate-200/50 dark:bg-white/5 flex items-center justify-center text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
                                                             >
-                                                                <span className="material-symbols-outlined transition-transform duration-300" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                                                                <span className={`material-symbols-outlined transition-transform duration-300 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}>
                                                                     keyboard_arrow_down
                                                                 </span>
                                                             </button>

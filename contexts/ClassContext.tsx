@@ -57,7 +57,9 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     // Ref to access selectedSeriesId inside fetchClasses without it being a dependency
     const selectedSeriesIdRef = useRef(selectedSeriesId);
-    const isSyncingRef = useRef(false); // Lock for fetchClasses
+    const pendingWritesRef = useRef(0); // Counter for active write operations
+    const fetchAbortControllerRef = useRef<AbortController | null>(null);
+
     useEffect(() => { selectedSeriesIdRef.current = selectedSeriesId; }, [selectedSeriesId]);
 
     const location = useLocation();
@@ -72,7 +74,20 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
 
     const fetchClasses = useCallback(async () => {
-        if (!currentUser || isSyncingRef.current) return;
+        if (!currentUser) return;
+
+        // If there are pending writes, we ignore this fetch to prevent flickering
+        if (pendingWritesRef.current > 0) {
+            console.log("[ClassContext] Fetch skipped: Pending writes in progress...");
+            return;
+        }
+
+        // Cancel previous fetch if still in progress
+        if (fetchAbortControllerRef.current) {
+            fetchAbortControllerRef.current.abort();
+        }
+        fetchAbortControllerRef.current = new AbortController();
+        const signal = fetchAbortControllerRef.current.signal;
 
         try {
             let query = supabase
@@ -81,17 +96,15 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             // Filter by context
             if (activeInstitutionId) {
-                // Institutional Dashboard: Filter by Institution ID
-                // RLS will handle the security (Coordinator sees all, Teacher sees own)
                 query = query.eq('institution_id', activeInstitutionId);
             } else {
-                // Personal Dashboard: Only show personal classes (no institution) AND owned by user
                 query = query.is('institution_id', null).eq('user_id', currentUser.id);
             }
 
             const { data, error } = await query.order('created_at', { ascending: true });
 
             if (error) throw error;
+            if (signal.aborted) return;
 
             const formattedClasses: ClassConfig[] = data.map(c => ({
                 id: c.id.toString(),
@@ -121,14 +134,12 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             if (savedOrderStr) {
                 try {
                     const savedOrder: string[] = JSON.parse(savedOrderStr);
-                    // Sort uniqueClasses according to savedOrder, new classes go to the end
                     uniqueClasses.sort((a, b) => {
                         const indexA = savedOrder.indexOf(a.id);
                         const indexB = savedOrder.indexOf(b.id);
-
-                        if (indexA === -1 && indexB === -1) return 0; // Both new
-                        if (indexA === -1) return 1; // A is new, goes to bottom
-                        if (indexB === -1) return -1; // B is new, goes to bottom
+                        if (indexA === -1 && indexB === -1) return 0;
+                        if (indexA === -1) return 1;
+                        if (indexB === -1) return -1;
                         return indexA - indexB;
                     });
                 } catch (e) {
@@ -146,70 +157,58 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             if (cloudError) {
                 console.error("[ClassContext] Failed to load virtual groups from cloud", cloudError);
             }
+            if (signal.aborted) return;
 
             let finalGroups: VirtualGroup[] = [];
 
             if (cloudGroups && cloudGroups.length > 0) {
-                console.info(`[ClassContext] Loaded ${cloudGroups.length} groups from Supabase`);
                 finalGroups = cloudGroups.map(g => ({
                     id: g.id,
                     name: g.name,
                     classIds: g.class_ids
                 }));
             } else {
-                // No groups in cloud, check localStorage for migration
+                // Migration logic...
                 const groupsKey = `classGroups_${currentUser.id}_${contextKey}`;
                 const savedGroupsStr = localStorage.getItem(groupsKey);
-
                 if (savedGroupsStr) {
                     try {
                         const localGroups: VirtualGroup[] = JSON.parse(savedGroupsStr);
                         if (localGroups.length > 0) {
-                            console.info(`[ClassContext] Migrating ${localGroups.length} local groups to cloud...`);
-
-                            // Upload to Supabase
                             const toUpload = localGroups.map(lg => ({
                                 user_id: currentUser.id,
                                 name: lg.name,
                                 context_key: contextKey,
                                 class_ids: lg.classIds
                             }));
-
                             const { data: uploaded, error: uploadErr } = await supabase
                                 .from('virtual_groups')
                                 .insert(toUpload)
                                 .select();
-
                             if (!uploadErr && uploaded) {
-                                finalGroups = uploaded.map(g => ({
-                                    id: g.id,
-                                    name: g.name,
-                                    classIds: g.class_ids
-                                }));
-                                console.info("[ClassContext] Migration successful");
-                                // Clear localStorage migration flag/data if desired? 
-                                // Better keep it for safety but we now have cloud as source of truth
+                                finalGroups = uploaded.map(g => ({ id: g.id, name: g.name, classIds: g.class_ids }));
                             }
                         }
-                    } catch (e) {
-                        console.error("[ClassContext] Failed to migrate local groups", e);
-                    }
+                    } catch (e) { }
                 }
             }
 
-            // Filter out classIds that no longer exist in uniqueClasses
             const cleanedGroups = finalGroups.map(g => ({
                 ...g,
                 classIds: g.classIds.filter(id => uniqueClasses.some(c => c.id === id))
             })).filter(g => g.classIds.length > 0);
 
+            // Final sanity check before committing to state
+            if (pendingWritesRef.current > 0 || signal.aborted) {
+                console.warn("[ClassContext] Fetch discarded: Concurrency detected.");
+                return;
+            }
+
             setVirtualGroups(cleanedGroups);
             setIsHydrated(true);
-
             setClasses(uniqueClasses);
 
-            // Re-apply selection logic (incase new classes appeared)
-            // Use ref to avoid circular dependency
+            // Re-apply selection logic...
             const currentSelectedId = selectedSeriesIdRef.current;
             const storedSeriesId = localStorage.getItem(`selectedSeriesId_${currentUser.id}_${activeInstitutionId || 'personal'}`);
             if (!currentSelectedId && uniqueClasses.length > 0) {
@@ -223,7 +222,6 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     setSelectedSection(uniqueClasses[0].sections[0] || 'A');
                 }
             } else if (currentSelectedId && !uniqueClasses.find(c => c.id === currentSelectedId)) {
-                // Selection is no longer valid in this context (e.g. switched from personal to school)
                 if (uniqueClasses.length > 0) {
                     setSelectedSeriesId(uniqueClasses[0].id);
                     setSelectedSection(uniqueClasses[0].sections[0] || 'A');
@@ -233,8 +231,8 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 }
             }
 
-        } catch (e) {
-            console.error("Network fetch classes failed", e);
+        } catch (err: any) {
+            if (err.name !== 'AbortError') console.error("Network fetch classes failed", err);
         } finally {
             setLoading(false);
         }
@@ -520,12 +518,12 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }]);
 
         try {
-            isSyncingRef.current = true;
+            pendingWritesRef.current++;
             console.info(`[ClassContext] Creating virtual group "${name}" in cloud with ID ${newGroupId}`);
             const { error } = await supabase
                 .from('virtual_groups')
                 .insert({
-                    id: newGroupId, // Pass our generated ID
+                    id: newGroupId,
                     user_id: currentUser.id,
                     name,
                     context_key: contextKey,
@@ -534,13 +532,11 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             if (error) {
                 console.error("[ClassContext] Failed to create virtual group in cloud", error);
-                // Rollback
                 setVirtualGroups(prev => prev.filter(g => g.id !== newGroupId));
                 alert("Erro ao salvar grupo na nuvem. Verifique sua conexão.");
             }
         } finally {
-            // Short delay to allow DB to propagate before next fetch if any
-            setTimeout(() => { isSyncingRef.current = false; }, 800);
+            pendingWritesRef.current--;
         }
     }, [currentUser, activeInstitutionId]);
 
@@ -551,7 +547,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setVirtualGroups(prev => prev.map(g => g.id === groupId ? { ...g, name: newName } : g));
 
         try {
-            isSyncingRef.current = true;
+            pendingWritesRef.current++;
             const { error } = await supabase
                 .from('virtual_groups')
                 .update({ name: newName })
@@ -562,7 +558,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 setVirtualGroups(oldGroups);
             }
         } finally {
-            setTimeout(() => { isSyncingRef.current = false; }, 800);
+            pendingWritesRef.current--;
         }
     }, [currentUser, virtualGroups]);
 
@@ -573,7 +569,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setVirtualGroups(prev => prev.filter(g => g.id !== groupId));
 
         try {
-            isSyncingRef.current = true;
+            pendingWritesRef.current++;
             const { error } = await supabase
                 .from('virtual_groups')
                 .delete()
@@ -584,7 +580,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 setVirtualGroups(oldGroups);
             }
         } finally {
-            setTimeout(() => { isSyncingRef.current = false; }, 800);
+            pendingWritesRef.current--;
         }
     }, [currentUser, virtualGroups]);
 
@@ -600,7 +596,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setVirtualGroups(prev => prev.map(g => g.id === groupId ? { ...g, classIds: nextClassIds } : g));
 
         try {
-            isSyncingRef.current = true;
+            pendingWritesRef.current++;
             const { error } = await supabase
                 .from('virtual_groups')
                 .update({ class_ids: nextClassIds })
@@ -611,7 +607,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 setVirtualGroups(oldGroups);
             }
         } finally {
-            setTimeout(() => { isSyncingRef.current = false; }, 800);
+            pendingWritesRef.current--;
         }
     }, [currentUser, virtualGroups]);
 
@@ -632,7 +628,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setVirtualGroups(prev => prev.map(g => g.id === groupId ? { ...g, classIds: nextClassIds } : g));
 
         try {
-            isSyncingRef.current = true;
+            pendingWritesRef.current++;
             const { error } = await supabase
                 .from('virtual_groups')
                 .update({ class_ids: nextClassIds })
@@ -643,7 +639,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 setVirtualGroups(oldGroups);
             }
         } finally {
-            setTimeout(() => { isSyncingRef.current = false; }, 800);
+            pendingWritesRef.current--;
         }
     }, [currentUser, virtualGroups, deleteVirtualGroup]);
 
