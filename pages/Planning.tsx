@@ -889,7 +889,9 @@ export const Planning: React.FC = () => {
             };
 
             try {
-                logoInfo = await loadImage('/logo_icon_clean.png');
+                // Watermark Dove
+                logoInfo = await loadImage('/logo_transparent.png');
+                // Header Exact Logo
                 fullLogoInfo = await loadImage('/logo_full_clean.png');
             } catch (e) {
                 console.warn("Logo load failed", e);
