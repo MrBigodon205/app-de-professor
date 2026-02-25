@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import logoIconSrc from '../assets/logo_icon_clean.png';
 
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -314,7 +315,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                             <span className="material-symbols-outlined text-primary text-2xl drop-shadow-lg animate-neon-pulse-logo">school</span>
                           )
                         ) : (
-                          <img src="/logo_icon_clean.png" alt="Acerta+" className="size-full object-contain filter drop-shadow-md animate-neon-pulse-logo" />
+                          <img src={logoIconSrc} alt="Acerta+" className="size-full object-contain filter drop-shadow-md animate-neon-pulse-logo" />
                         )}
                       </div>
                       <div className="flex flex-col items-start min-w-0 flex-1">
@@ -500,7 +501,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                       <span className="material-symbols-outlined text-primary text-xl animate-neon-pulse-logo font-black">school</span>
                     )
                   ) : (
-                    <img src="/logo_icon_clean.png" alt="Acerta+" className="size-full object-contain animate-neon-pulse-logo" />
+                    <img src={logoIconSrc} alt="Acerta+" className="size-full object-contain animate-neon-pulse-logo" />
                   )}
                 </div>
                 <div className="flex flex-col items-start leading-tight max-w-[100px] md:max-w-xs">
