@@ -155,12 +155,10 @@ html {
 /* These enable window dragging from the custom titlebar */
 .electron-drag {
     -webkit-app-region: drag;
-    app-region: drag;
 }
 
 .electron-no-drag {
     -webkit-app-region: no-drag;
-    app-region: no-drag;
 }
 
 .bg-noise {
@@ -1507,12 +1505,19 @@ body {
     }
 }
 
-.animate-neon-pulse-box {
-    animation: neon-pulse-box 3.5s infinite ease-in-out;
-    will-change: box-shadow, transform;
+.scroll-standard {}
+
+.scroll-standard::-webkit-scrollbar {
+    width: 8px !important;
+    height: 8px !important;
+    display: block !important;
 }
- . s c r o l l - s t a n d a r d   {   s c r o l l b a r - w i d t h :   a u t o   ! i m p o r t a n t ;   s c r o l l b a r - c o l o r :   a u t o   ! i m p o r t a n t ;   } 
- . s c r o l l - s t a n d a r d : : - w e b k i t - s c r o l l b a r   {   w i d t h :   8 p x   ! i m p o r t a n t ;   h e i g h t :   8 p x   ! i m p o r t a n t ;   d i s p l a y :   b l o c k   ! i m p o r t a n t ;   } 
- . s c r o l l - s t a n d a r d : : - w e b k i t - s c r o l l b a r - t r a c k   {   b a c k g r o u n d :   t r a n s p a r e n t   ! i m p o r t a n t ;   } 
- . s c r o l l - s t a n d a r d : : - w e b k i t - s c r o l l b a r - t h u m b   {   b a c k g r o u n d :   r g b a ( 1 0 0 ,   1 1 6 ,   1 3 9 ,   0 . 3 )   ! i m p o r t a n t ;   b o r d e r - r a d i u s :   2 0 p x   ! i m p o r t a n t ;   }  
- 
+
+.scroll-standard::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+.scroll-standard::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.3) !important;
+    border-radius: 20px !important;
+}

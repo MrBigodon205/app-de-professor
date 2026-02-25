@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import logoSrc from '../assets/logo.svg';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
@@ -276,7 +275,7 @@ export const Login: React.FC = () => {
               whileHover={{ scale: 1.05, rotate: 5 }}
               className="relative mb-10 shadow-2xl shadow-primary/30 rounded-[2.5rem]"
             >
-              <img src={logoSrc} alt="Acerta+" className="w-40 h-40 object-contain drop-shadow-md" />
+              <img src="/logo_full_clean.png" alt="Acerta+" className="w-auto h-32 object-contain drop-shadow-md" />
             </motion.div>
 
             <div className="text-center space-y-4">

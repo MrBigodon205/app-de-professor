@@ -532,13 +532,27 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             if (error) {
                 console.error("[ClassContext] Failed to create virtual group in cloud", error);
-                setVirtualGroups(prev => prev.filter(g => g.id !== newGroupId));
-                alert("Erro ao salvar grupo na nuvem. Verifique sua conexão.");
+
+                // If it's a 404 (table missing), we keep the optimistic update locally 
+                // but warn the user that sync is disabled.
+                if (error.code === 'PGRST116' || error.message?.includes('not found') || error.code === 'PGRST205') {
+                    console.warn("[ClassContext] Virtual Groups table missing. Keeping group locally only.");
+                    // Fallback: Save to localStorage so it survives a refresh even without DB
+                    const groupsKey = `classGroups_${currentUser.id}_${contextKey}`;
+                    const currentGroups = [...virtualGroups, { id: newGroupId, name, classIds }];
+                    console.log("[ClassContext] Saving to localStorage fallback:", currentGroups.length, "groups");
+                    localStorage.setItem(groupsKey, JSON.stringify(currentGroups));
+                } else {
+                    setVirtualGroups(prev => prev.filter(g => g.id !== newGroupId));
+                    console.error("Erro ao salvar grupo na nuvem.");
+                }
+            } else {
+                console.log("[ClassContext] Successfully created group in cloud.");
             }
         } finally {
             pendingWritesRef.current--;
         }
-    }, [currentUser, activeInstitutionId]);
+    }, [currentUser, activeInstitutionId, virtualGroups]);
 
     const renameVirtualGroup = useCallback(async (groupId: string, newName: string) => {
         if (!currentUser) return;
@@ -548,6 +562,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         try {
             pendingWritesRef.current++;
+            console.log(`[ClassContext] Renaming group ${groupId} to "${newName}"`);
             const { error } = await supabase
                 .from('virtual_groups')
                 .update({ name: newName })
@@ -555,12 +570,21 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             if (error) {
                 console.error("[ClassContext] Failed to rename group in cloud", error);
-                setVirtualGroups(oldGroups);
+                // If it's a 404 (table missing), we still keep the change locally 
+                if (error.code === 'PGRST116' || error.message?.includes('not found') || error.code === 'PGRST205') {
+                    console.warn("[ClassContext] Virtual Groups table missing. Update kept locally.");
+                    const contextKey = activeInstitutionId || 'personal';
+                    const groupsKey = `classGroups_${currentUser.id}_${contextKey}`;
+                    const updatedGroups = virtualGroups.map(g => g.id === groupId ? { ...g, name: newName } : g);
+                    localStorage.setItem(groupsKey, JSON.stringify(updatedGroups));
+                } else {
+                    setVirtualGroups(oldGroups);
+                }
             }
         } finally {
             pendingWritesRef.current--;
         }
-    }, [currentUser, virtualGroups]);
+    }, [currentUser, virtualGroups, activeInstitutionId]);
 
     const deleteVirtualGroup = useCallback(async (groupId: string) => {
         if (!currentUser) return;
@@ -570,6 +594,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         try {
             pendingWritesRef.current++;
+            console.log(`[ClassContext] Deleting group ${groupId}`);
             const { error } = await supabase
                 .from('virtual_groups')
                 .delete()
@@ -577,12 +602,21 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             if (error) {
                 console.error("[ClassContext] Failed to delete group in cloud", error);
-                setVirtualGroups(oldGroups);
+                // If it's a 404 (table missing), we still keep the change locally 
+                if (error.code === 'PGRST116' || error.message?.includes('not found') || error.code === 'PGRST205') {
+                    console.warn("[ClassContext] Virtual Groups table missing. Deletion kept locally.");
+                    const contextKey = activeInstitutionId || 'personal';
+                    const groupsKey = `classGroups_${currentUser.id}_${contextKey}`;
+                    const updatedGroups = virtualGroups.filter(g => g.id !== groupId);
+                    localStorage.setItem(groupsKey, JSON.stringify(updatedGroups));
+                } else {
+                    setVirtualGroups(oldGroups);
+                }
             }
         } finally {
             pendingWritesRef.current--;
         }
-    }, [currentUser, virtualGroups]);
+    }, [currentUser, virtualGroups, activeInstitutionId]);
 
     const addSeriesToGroup = useCallback(async (groupId: string, classId: string) => {
         if (!currentUser) return;
@@ -597,6 +631,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         try {
             pendingWritesRef.current++;
+            console.log(`[ClassContext] Adding series ${classId} to group ${groupId}`);
             const { error } = await supabase
                 .from('virtual_groups')
                 .update({ class_ids: nextClassIds })
@@ -604,12 +639,21 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             if (error) {
                 console.error("[ClassContext] Failed to add series to group in cloud", error);
-                setVirtualGroups(oldGroups);
+                // If it's a 404 (table missing), we still keep the change locally 
+                if (error.code === 'PGRST116' || error.message?.includes('not found') || error.code === 'PGRST205') {
+                    console.warn("[ClassContext] Virtual Groups table missing. Update kept locally.");
+                    const contextKey = activeInstitutionId || 'personal';
+                    const groupsKey = `classGroups_${currentUser.id}_${contextKey}`;
+                    const updatedGroups = virtualGroups.map(g => g.id === groupId ? { ...g, classIds: nextClassIds } : g);
+                    localStorage.setItem(groupsKey, JSON.stringify(updatedGroups));
+                } else {
+                    setVirtualGroups(oldGroups);
+                }
             }
         } finally {
             pendingWritesRef.current--;
         }
-    }, [currentUser, virtualGroups]);
+    }, [currentUser, virtualGroups, activeInstitutionId]);
 
     const removeSeriesFromGroup = useCallback(async (groupId: string, classId: string) => {
         if (!currentUser) return;
@@ -629,6 +673,7 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         try {
             pendingWritesRef.current++;
+            console.log(`[ClassContext] Removing series ${classId} from group ${groupId}`);
             const { error } = await supabase
                 .from('virtual_groups')
                 .update({ class_ids: nextClassIds })
@@ -636,12 +681,21 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             if (error) {
                 console.error("[ClassContext] Failed to remove series from group in cloud", error);
-                setVirtualGroups(oldGroups);
+                // If it's a 404 (table missing), we still keep the change locally 
+                if (error.code === 'PGRST116' || error.message?.includes('not found') || error.code === 'PGRST205') {
+                    console.warn("[ClassContext] Virtual Groups table missing. Update kept locally.");
+                    const contextKey = activeInstitutionId || 'personal';
+                    const groupsKey = `classGroups_${currentUser.id}_${contextKey}`;
+                    const updatedGroups = virtualGroups.map(g => g.id === groupId ? { ...g, classIds: nextClassIds } : g);
+                    localStorage.setItem(groupsKey, JSON.stringify(updatedGroups));
+                } else {
+                    setVirtualGroups(oldGroups);
+                }
             }
         } finally {
             pendingWritesRef.current--;
         }
-    }, [currentUser, virtualGroups, deleteVirtualGroup]);
+    }, [currentUser, virtualGroups, deleteVirtualGroup, activeInstitutionId]);
 
     const contextValue = useMemo(() => ({
         classes,

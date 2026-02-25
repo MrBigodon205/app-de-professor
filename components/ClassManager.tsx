@@ -35,6 +35,8 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editingName, setEditingName] = useState('');
     const [draggedItem, setDraggedItem] = useState<string | null>(null);
+    const draggedItemRef = React.useRef<string | null>(null);
+    const dragActionRef = React.useRef<'before' | 'after' | 'group' | null>(null);
     const [dragOverItem, setDragOverItem] = useState<string | null>(null);
     const [dragAction, setDragAction] = useState<'before' | 'after' | 'group' | null>(null);
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -109,7 +111,9 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
     };
 
     const handleDragStart = (e: React.DragEvent, id: string) => {
+        console.log("[ClassManager] Drag Start:", id);
         setDraggedItem(id);
+        draggedItemRef.current = id;
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', id);
     };
@@ -117,19 +121,23 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
     const handleDragOver = (e: React.DragEvent, id: string, isGroupTarget: boolean = false) => {
         e.preventDefault();
         e.stopPropagation();
-        if (id === draggedItem) return;
+        if (id === draggedItemRef.current) return;
 
         const rect = e.currentTarget.getBoundingClientRect();
         const y = e.clientY - rect.top;
         const h = rect.height;
 
+        let action: 'before' | 'after' | 'group' = 'group';
         if (isGroupTarget) {
-            setDragAction('group');
+            action = 'group';
         } else {
-            if (y < h * 0.25) setDragAction('before');
-            else if (y > h * 0.75) setDragAction('after');
-            else setDragAction('group');
+            if (y < h * 0.25) action = 'before';
+            else if (y > h * 0.75) action = 'after';
+            else action = 'group';
         }
+
+        setDragAction(action);
+        dragActionRef.current = action;
         setDragOverItem(id);
     };
 
@@ -138,38 +146,81 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
     };
 
     const handleDragEnd = () => {
+        console.log("[ClassManager] Drag End");
         setDraggedItem(null);
+        draggedItemRef.current = null;
         setDragOverItem(null);
         setDragAction(null);
+        dragActionRef.current = null;
     };
 
     const handleDrop = (e: React.DragEvent, targetId: string, isGroupTarget: boolean = false) => {
         e.preventDefault();
-        if (!draggedItem || draggedItem === targetId) {
+        const draggedId = draggedItemRef.current || e.dataTransfer.getData('text/plain');
+        const currentAction = dragActionRef.current;
+
+        console.log("[ClassManager] Drop Event:", { targetId, draggedId, currentAction, isGroupTarget });
+
+        if (!draggedId || draggedId === targetId) {
             handleDragEnd();
             return;
         }
 
         const currentOrder = classes.map(c => c.id);
-        const draggedIdx = currentOrder.indexOf(draggedItem);
+        const draggedGroup = virtualGroups.find(g => g.id === draggedId);
+
+        // If we are dragging a WHOLE GROUP
+        if (draggedGroup) {
+            console.log("[ClassManager] Dragging whole group:", draggedGroup.name);
+            const groupClassIds = draggedGroup.classIds;
+
+            // 1. Remove all classes of the dragged group from the current order
+            const filteredOrder = currentOrder.filter(id => !groupClassIds.includes(id));
+
+            // 2. Find insert point
+            let targetIdx = filteredOrder.indexOf(targetId);
+
+            // If target is a group, we might need a better logic, but for now let's find the first visible class of that group
+            if (targetIdx === -1) {
+                const targetGroup = virtualGroups.find(g => g.id === targetId);
+                if (targetGroup && targetGroup.classIds.length > 0) {
+                    targetIdx = filteredOrder.indexOf(targetGroup.classIds[0]);
+                }
+            }
+
+            if (targetIdx !== -1) {
+                const insertIdx = currentAction === 'before' ? targetIdx : targetIdx + 1;
+                filteredOrder.splice(insertIdx, 0, ...groupClassIds);
+                reorderClasses(filteredOrder);
+            }
+            handleDragEnd();
+            return;
+        }
+
+        // Standard Series Drag
+        const draggedIdx = currentOrder.indexOf(draggedId);
         const targetIdx = currentOrder.indexOf(targetId);
 
         if (isGroupTarget) {
             const group = virtualGroups.find(g => g.id === targetId);
-            if (group && !group.classIds.includes(draggedItem)) {
-                addSeriesToGroup(group.id, draggedItem);
+            if (group && !group.classIds.includes(draggedId)) {
+                console.log("[ClassManager] Adding series to group:", group.name);
+                addSeriesToGroup(group.id, draggedId);
             }
-        } else if (dragAction === 'group' && targetIdx !== -1 && draggedIdx !== -1) {
+        } else if (currentAction === 'group' && targetIdx !== -1 && draggedIdx !== -1) {
             const targetName = classes.find(c => c.id === targetId)?.name || 'Turma';
-            createVirtualGroup(`Grupo: ${targetName}`, [targetId, draggedItem]);
+            console.log("[ClassManager] Creating NEW group from:", targetName, "and", draggedId);
+            createVirtualGroup(`Grupo: ${targetName}`, [targetId, draggedId]);
         } else if (draggedIdx !== -1 && targetIdx !== -1) {
+            console.log("[ClassManager] Reordering Classes...");
             currentOrder.splice(draggedIdx, 1);
-            const insertIdx = dragAction === 'before' ? currentOrder.indexOf(targetId) : currentOrder.indexOf(targetId) + 1;
-            currentOrder.splice(insertIdx, 0, draggedItem);
+            const insertIdx = currentAction === 'before' ? currentOrder.indexOf(targetId) : currentOrder.indexOf(targetId) + 1;
+            currentOrder.splice(insertIdx, 0, draggedId);
             reorderClasses(currentOrder);
         }
 
         handleDragEnd();
+        e.stopPropagation();
     };
 
     const renderList: Array<{ type: 'group' | 'class', id: string, data: any, classes?: any[] }> = [];
@@ -450,10 +501,13 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                             return (
                                                 <div
                                                     key={group.id}
+                                                    draggable
+                                                    onDragStart={(e) => handleDragStart(e, group.id)}
                                                     onDragOver={(e) => handleDragOver(e, group.id, true)}
                                                     onDragEnter={(e) => handleDragEnter(e, group.id)}
+                                                    onDragEnd={handleDragEnd}
                                                     onDrop={(e) => handleDrop(e, group.id, true)}
-                                                    className={`rounded-2xl border-2 transition-all duration-300 ${dragOverItem === group.id ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)]/5' : 'border-dashed border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]'}`}
+                                                    className={`rounded-2xl border-2 transition-all duration-300 ${draggedItem === group.id ? 'opacity-50 scale-95 shadow-inner' : 'opacity-100'} ${dragOverItem === group.id ? (dragAction === 'group' ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)]/5' : dragAction === 'before' ? 'border-t-4 border-t-[var(--theme-primary)]' : 'border-b-4 border-b-[var(--theme-primary)]') : 'border-dashed border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]'}`}
                                                 >
                                                     {/* Group Header */}
                                                     <div className="p-3 flex items-center justify-between group">
@@ -496,6 +550,9 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                                                 </div>
                                                             ) : (
                                                                 <div className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer" onClick={() => { setEditingId(group.id); setEditingName(group.name); }}>
+                                                                    <div className="cursor-grab hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 p-1 rounded transition-colors active:cursor-grabbing">
+                                                                        <span className="material-symbols-outlined text-sm">drag_indicator</span>
+                                                                    </div>
                                                                     <span className="material-symbols-outlined text-[var(--theme-primary)] text-xl">folder_zip</span>
                                                                     <span className="font-bold text-slate-700 dark:text-slate-300 truncate">{group.name}</span>
                                                                     <span className="text-[10px] font-bold bg-slate-200 dark:bg-white/10 px-2 py-0.5 rounded-full text-slate-500">{groupClasses.length}</span>

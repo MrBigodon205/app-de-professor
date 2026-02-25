@@ -1032,68 +1032,58 @@ export const Planning: React.FC = () => {
             doc.setLineWidth(0.5);
             doc.line(margin, titleY + 5, pageWidth - margin, titleY + 5);
 
-            // Content Table - Push down
+            // Content Table - Push down with autoTable
             const tableTop = titleY + 10;
-            const colWidths = [0.17, 0.16, 0.16, 0.31, 0.10, 0.10].map(w => w * contentWidth);
-            const headers = ['HABILIDADES', 'OBJETO CONH.', 'RECURSOS', 'DESENVOLVIMENTO', 'DURAÇÃO', 'TIPO'];
+            const autoTable = (await import('jspdf-autotable')).default;
 
-            doc.setFillColor(217, 217, 217);
-            doc.rect(margin, tableTop, contentWidth, 10, 'F');
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'bold');
-
-            let currentX = margin;
-            headers.forEach((h, i) => {
-                doc.rect(currentX, tableTop, colWidths[i], 10);
-                doc.text(h, currentX + (colWidths[i] / 2), tableTop + 6, { align: 'center' });
-                currentX += colWidths[i];
-            });
-
-            // Content Data
-            const rowHeight = 80;
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
-            currentX = margin;
-
-            // Habilidades
-            doc.rect(currentX, tableTop + 10, colWidths[0], rowHeight);
             const habText = [
                 ...(currentPlan.bncc_codes?.split('\n').filter(Boolean) || []),
                 (currentPlan.objectives ? stripHtmlAndDecode(currentPlan.objectives) : '')
             ].join('\n');
-            doc.text(doc.splitTextToSize(habText, colWidths[0] - 4), currentX + 2, tableTop + 15);
-
-            currentX += colWidths[0];
-            doc.rect(currentX, tableTop + 10, colWidths[1], rowHeight);
-            doc.text(doc.splitTextToSize(currentPlan.title, colWidths[1] - 4), currentX + 2, tableTop + 15);
-
-            currentX += colWidths[1];
-            doc.rect(currentX, tableTop + 10, colWidths[2], rowHeight);
-            doc.text(doc.splitTextToSize(currentPlan.resources || '', colWidths[2] - 4), currentX + 2, tableTop + 15);
-
-            currentX += colWidths[2];
-            doc.rect(currentX, tableTop + 10, colWidths[3], rowHeight);
             const devText = [
                 currentPlan.methodology || '',
                 (currentPlan.description ? stripHtmlAndDecode(currentPlan.description) : '')
             ].join('\n\n');
-            doc.text(doc.splitTextToSize(devText, colWidths[3] - 4), currentX + 2, tableTop + 15);
 
-            currentX += colWidths[3];
-            doc.rect(currentX, tableTop + 10, colWidths[4], rowHeight);
-            doc.text(currentPlan.duration || '', currentX + (colWidths[4] / 2), tableTop + 15, { align: 'center' });
-
-            currentX += colWidths[4];
-            doc.rect(currentX, tableTop + 10, colWidths[5], rowHeight);
-            doc.text(currentPlan.activity_type || '', currentX + (colWidths[5] / 2), tableTop + 15, { align: 'center' });
+            autoTable(doc, {
+                startY: tableTop,
+                head: [['HABILIDADES', 'OBJETO CONH.', 'RECURSOS', 'DESENVOLVIMENTO', 'DURAÇÃO', 'TIPO']],
+                body: [[
+                    habText,
+                    currentPlan.title,
+                    currentPlan.resources || '',
+                    devText,
+                    currentPlan.duration || '',
+                    currentPlan.activity_type || ''
+                ]],
+                theme: 'grid',
+                headStyles: { fillColor: [217, 217, 217], textColor: [0, 0, 0], fontSize: 8, fontStyle: 'bold', halign: 'center', valign: 'middle' },
+                bodyStyles: { fontSize: 9, valign: 'top' },
+                columnStyles: {
+                    0: { cellWidth: contentWidth * 0.17 },
+                    1: { cellWidth: contentWidth * 0.16 },
+                    2: { cellWidth: contentWidth * 0.16 },
+                    3: { cellWidth: contentWidth * 0.31 },
+                    4: { cellWidth: contentWidth * 0.10, halign: 'center' },
+                    5: { cellWidth: contentWidth * 0.10, halign: 'center' }
+                },
+                styles: { overflow: 'linebreak', cellPadding: 2, lineColor: [0, 0, 0], lineWidth: 0.1 },
+                margin: { left: margin, right: margin }
+            });
 
             // Footer
-            const footerTop = tableTop + 10 + rowHeight + 5;
+            const finalY = (doc as any).lastAutoTable.finalY || tableTop + 80;
+            const footerTop = finalY + 10;
+
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
             doc.text('OBSERVAÇÕES:', margin, footerTop);
+            doc.setDrawColor(0, 0, 0);
+            doc.setFillColor(255, 255, 255);
             doc.rect(margin, footerTop + 2, contentWidth, 20);
-            doc.line(margin, footerTop + 9, pageWidth - margin, footerTop + 9);
-            doc.line(margin, footerTop + 16, pageWidth - margin, footerTop + 16);
+            doc.setLineWidth(0.1);
+            doc.line(margin, footerTop + 8, pageWidth - margin, footerTop + 8);
+            doc.line(margin, footerTop + 14, pageWidth - margin, footerTop + 14);
 
             doc.save(`Planejamento-${currentPlan.title}.pdf`);
         } catch (e: any) {
