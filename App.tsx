@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 import { AnimatePresence } from 'framer-motion';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Layout } from './components/Layout';
@@ -50,10 +51,9 @@ const InstitutionalAIReports = lazy(() => import('./institutional/ai-reports/Ins
 const InstitutionalDashboard = lazy(() => loaders.inst_dashboard().then(module => ({ default: module.InstitutionalDashboard })));
 const InstitutionSettings = lazy(() => loaders.inst_settings().then(module => ({ default: module.InstitutionSettings })));
 import { SchoolProvider } from './institutional/contexts/SchoolContext';
-
-
 import { useAuth } from './contexts/AuthContext';
 import { useTheme } from './hooks/useTheme';
+import { DesktopTitleBar } from './components/DesktopTitleBar';
 
 // Helper to wrap pages with Transition + Suspense
 // We pass 'type' to BOTH PageTransition (for animation variant) AND SkeletonLayout (for layout matching)
@@ -75,7 +75,15 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <ToastProvider>
-        {import.meta.env.PROD && !window.location.hostname.includes('localhost') && <SpeedInsights />}
+        {import.meta.env.PROD && !window.location.hostname.includes('localhost') && (
+          <>
+            <SpeedInsights />
+            <Analytics />
+          </>
+        )}
+        {/* Desktop Title Bar for App PC */}
+        <DesktopTitleBar />
+
         {/* Persistent Background Layer - Outside Routes/AnimatePresence */}
         <BackgroundPattern theme={theme} activeSubject={activeSubject} />
 

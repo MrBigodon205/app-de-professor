@@ -35,7 +35,7 @@ const PlanItem = React.memo(({ plan, isSelectionMode, isSelected, selectedPlanId
             {isSelectionMode && (
                 <div
                     onClick={(e) => { e.stopPropagation(); toggleSelection(plan.id); }}
-                    className={`absolute left-4 top-1/2 -translate-y-1/2 size-6 rounded-lg border-2 flex items-center justify-center transition-all z-10 backdrop-blur-md ${isSelected ? 'theme-bg-primary border-primary shadow-lg shadow-primary/20 scale-105' : 'border-slate-400 dark:border-slate-500 bg-white/60 dark:bg-slate-800/60 hover:border-primary hover:bg-white dark:hover:bg-slate-700'}`}
+                    className={`absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all z-10 backdrop-blur-md ${isSelected ? 'theme-bg-primary border-primary shadow-lg shadow-primary/20 scale-105' : 'border-slate-400 dark:border-slate-500 bg-white/60 dark:bg-slate-800/60 hover:border-primary hover:bg-white dark:hover:bg-slate-700'}`}
                     role="button"
                     aria-label={`Selecionar plano ${plan.name}, ${isSelected ? 'selecionado' : 'não selecionado'}`}
                     tabIndex={0}
@@ -101,7 +101,7 @@ const PlanItem = React.memo(({ plan, isSelectionMode, isSelected, selectedPlanId
 });
 
 export const Planning: React.FC = () => {
-    const { activeSeries, selectedSeriesId, selectedSection, classes } = useClass();
+    const { activeSeries, selectedSeriesId, selectedSection, classes, virtualGroups } = useClass();
     const { currentUser, activeSubject } = useAuth();
     const theme = useTheme();
     const { success, error, warning } = useToast();
@@ -133,6 +133,8 @@ export const Planning: React.FC = () => {
     const [formFiles, setFormFiles] = useState<AttachmentFile[]>([]);
     const [formSeriesId, setFormSeriesId] = useState('');
     const [formSection, setFormSection] = useState('');
+    const [formLinkedClassIds, setFormLinkedClassIds] = useState<string[]>([]);
+    const [formSharedClassesText, setFormSharedClassesText] = useState('');
 
     // New Fields
     const [formObjectives, setFormObjectives] = useState('');
@@ -344,7 +346,10 @@ export const Planning: React.FC = () => {
 
             let query = supabase.from('plans').select('*').eq('user_id', currentUser.id);
 
-            if (selectedSeriesId) query = query.eq('series_id', selectedSeriesId);
+            if (selectedSeriesId) {
+                // Fetch plans where series_id = current OR linked_class_ids contains current
+                query = query.or(`series_id.eq.${selectedSeriesId},linked_class_ids.cs.{${selectedSeriesId}}`);
+            }
             if (activeSubject) {
                 query = query.or(`subject.eq.${activeSubject},subject.is.null`);
             }
@@ -373,7 +378,9 @@ export const Planning: React.FC = () => {
                 theme_area: p.theme_area || '',
                 coordinator_name: p.coordinator_name || '',
                 activity_type: p.activity_type || '',
-                subject: p.subject || ''
+                subject: p.subject || '',
+                linked_class_ids: p.linked_class_ids || [],
+                shared_classes_text: p.shared_classes_text || ''
             }));
 
             formatted.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
@@ -489,6 +496,8 @@ export const Planning: React.FC = () => {
         setFormActivityType('');
         setCustomActivityType('');
         setFormSubject(activeSubject || '');
+        setFormLinkedClassIds([]);
+        setFormSharedClassesText('');
         clearDraft();
     };
 
@@ -543,6 +552,8 @@ export const Planning: React.FC = () => {
             setCustomActivityType('');
         }
         setFormSubject(plan.subject || currentUser?.subject || '');
+        setFormLinkedClassIds(plan.linked_class_ids || []);
+        setFormSharedClassesText(plan.shared_classes_text || '');
     };
 
     const handleClone = (plan: Plan) => {
@@ -579,6 +590,8 @@ export const Planning: React.FC = () => {
             setCustomActivityType('');
         }
         setFormSubject(plan.subject || currentUser?.subject || '');
+        setFormLinkedClassIds(plan.linked_class_ids || []);
+        setFormSharedClassesText(plan.shared_classes_text || '');
     };
 
     const handleView = (plan: Plan) => {
@@ -654,7 +667,9 @@ export const Planning: React.FC = () => {
                 theme_area: formThemeArea,
                 coordinator_name: formCoordinator,
                 activity_type: formActivityType === 'Outro' ? customActivityType : formActivityType,
-                subject: formSubject
+                subject: formSubject,
+                linked_class_ids: formLinkedClassIds.length > 0 ? formLinkedClassIds : null,
+                shared_classes_text: formSharedClassesText
             };
 
 
@@ -954,9 +969,11 @@ export const Planning: React.FC = () => {
             doc.setFont('helvetica', 'bold');
             doc.text('Turma:', margin, margin + 5);
             doc.setFont('helvetica', 'normal');
-            const sectionName = (currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
-                ? `${activeSeries?.name} - ${currentPlan.section}`
-                : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`;
+            const sectionName = currentPlan.shared_classes_text
+                ? currentPlan.shared_classes_text
+                : (currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
+                    ? `${activeSeries?.name} - ${currentPlan.section}`
+                    : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`;
             doc.text(sectionName, margin + 25, margin + 5);
             doc.line(margin + 25, margin + 6, margin + 120, margin + 6);
 
@@ -1751,6 +1768,58 @@ export const Planning: React.FC = () => {
                                             <label className="label">Coordenador Pedagógico</label>
                                             <input type="text" value={formCoordinator} onChange={e => setFormCoordinator(e.target.value)} placeholder="Nome do Coordenador" className={`w-full font-bold p-3 rounded-xl bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-black border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-${theme.primaryColor}/50 transition-all outline-none`} />
                                         </div>
+
+                                        {(() => {
+                                            const linkedGroup = virtualGroups.find(g => g.classIds.includes(selectedSeriesId));
+                                            if (!linkedGroup) return null;
+
+                                            const otherClasses = linkedGroup.classIds.filter(id => id !== selectedSeriesId).map(id => classes.find(c => c.id === id)).filter(Boolean);
+                                            if (otherClasses.length === 0) return null;
+
+                                            return (
+                                                <div className="p-4 rounded-xl border border-indigo-200 dark:border-indigo-900 bg-indigo-50/50 dark:bg-indigo-900/10">
+                                                    <h4 className="font-bold text-sm text-indigo-900 dark:text-indigo-300 mb-2 flex items-center gap-2">
+                                                        <span className="material-symbols-outlined text-base">link</span>
+                                                        Vincular a outras turmas do Grupo: {linkedGroup.name}
+                                                    </h4>
+                                                    <p className="text-xs text-indigo-600/70 dark:text-indigo-400 mb-3">
+                                                        Selecione as turmas que também receberão este planejamento. O mesmo arquivo e as próximas edições refletirão em todas.
+                                                    </p>
+                                                    <div className="flex flex-wrap gap-3">
+                                                        {otherClasses.map(c => c && (
+                                                            <label key={c.id} className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                                                                    checked={formLinkedClassIds.includes(c.id)}
+                                                                    onChange={(e) => {
+                                                                        if (e.target.checked) {
+                                                                            setFormLinkedClassIds(prev => [...prev, c.id]);
+                                                                        } else {
+                                                                            setFormLinkedClassIds(prev => prev.filter(id => id !== c.id));
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                {c.name}
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                    {(formLinkedClassIds.length > 0 || (isEditing && formSharedClassesText)) && (
+                                                        <div className="mt-4 pt-3 border-t border-indigo-200/50 dark:border-indigo-800/50">
+                                                            <label className="block text-xs font-bold uppercase text-indigo-900/70 dark:text-indigo-300/70 mb-1.5 ml-1">Título exibido no PDF (para o Agrupamento)</label>
+                                                            <input
+                                                                type="text"
+                                                                value={formSharedClassesText}
+                                                                onChange={e => setFormSharedClassesText(e.target.value)}
+                                                                placeholder="Ex: 4º e 5º Ano"
+                                                                className="w-full font-bold p-3 rounded-xl bg-white dark:bg-black border border-indigo-200 dark:border-indigo-700 focus:ring-2 focus:ring-indigo-500/50 transition-all outline-none text-sm"
+                                                            />
+                                                            <p className="text-[10px] text-indigo-600/60 dark:text-indigo-400/60 mt-1 ml-1">Se preenchido, este texto substituirá o nome da turma isolada na geração do PDF.</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
 
                                     {/* 2. CONTEÚDO */}
@@ -1869,7 +1938,10 @@ export const Planning: React.FC = () => {
                     <div className="flex-1 overflow-y-auto relative animate-in fade-in h-[100dvh] md:h-full custom-scrollbar bg-slate-50 dark:bg-black/20">
                         {currentPlan ? (
                             <div className="flex flex-col min-h-full relative isolate">
-                                {/* Screen Watermark Removed per User Request */}
+                                {/* Screen Watermark Re-added per User Request */}
+                                <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.03] dark:opacity-[0.05]">
+                                    <img src="/logo_icon_clean.png" className="w-1/2 max-w-[500px] animate-pulse" alt="" />
+                                </div>
                                 {/* Premium Header */}
                                 <div className={`h-48 bg-gradient-to-r ${theme.bgGradient} relative overflow-hidden shrink-0`}>
                                     <div className="absolute inset-0 opacity-10 flex flex-wrap gap-8 justify-end p-8 rotate-12 scale-150 pointer-events-none">

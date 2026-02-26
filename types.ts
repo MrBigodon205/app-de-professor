@@ -81,6 +81,8 @@ export interface Plan {
   subject?: string;
   class_name?: string; // Snapshot of class name
   template_id?: string;
+  linked_class_ids?: string[]; // IDs of classes that share this plan
+  shared_classes_text?: string; // Precompiled text for PDF like "Capoeira 5º e 4º"
 }
 
 export interface AttendanceRecord {
