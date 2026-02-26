@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import logoIconSrc from '../assets/logo.svg';
+import logoIconSrc from '../assets/logo_icon_clean.png';
 
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -306,7 +306,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                       title="Menu Principal"
                     >
                       <div
-                        className={`size-12 rounded-xl flex items-center justify-center shrink-0 relative animate-neon-pulse-box ${isInstitutionalRoute ? 'bg-white' : 'bg-transparent'}`}
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 relative animate-neon-pulse-box ${isInstitutionalRoute ? 'bg-white' : 'bg-transparent'}`}
                       >
                         {isInstitutionalRoute ? (
                           currentSchool?.logo_url ? (
@@ -315,7 +315,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                             <span className="material-symbols-outlined text-primary text-2xl drop-shadow-lg animate-neon-pulse-logo">school</span>
                           )
                         ) : (
-                          <img src={logoIconSrc} alt="Acerta+" className="size-full object-contain filter drop-shadow-md animate-neon-pulse-logo" />
+                          <img src={logoIconSrc} alt="Acerta+" className="w-full h-full object-contain filter drop-shadow-md animate-neon-pulse-logo" />
                         )}
                       </div>
                       <div className="flex flex-col items-start min-w-0 flex-1">
@@ -341,9 +341,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
               <div className="lg:hidden landscape:hidden flex flex-col gap-2 mb-2 p-3 bg-surface-section rounded-2xl border border-border-default shrink-0 backdrop-blur-md shadow-sm">
                 <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setIsProfileModalOpen(true); setIsMobileMenuOpen(false); }}>
-                  <div className="size-10 rounded-full bg-surface-subtle overflow-hidden shrink-0 border-2 border-primary/50 shadow-neon">
+                  <div className="w-10 h-10 rounded-full bg-surface-subtle overflow-hidden shrink-0 border-2 border-primary/50 shadow-neon">
                     {currentUser?.photoUrl ? (
-                      <img src={currentUser.photoUrl} alt="Profile" className="size-full object-cover" />
+                      <img src={currentUser.photoUrl} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-white text-sm font-bold`}>
                         {(currentUser?.name || '??').substring(0, 2).toUpperCase()}
@@ -387,7 +387,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 <div className="bg-surface-section rounded-xl border border-border-default overflow-hidden backdrop-blur-md shadow-sm">
                   <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="w-full flex items-center justify-between p-3 hover:bg-surface-subtle transition-colors">
                     <div className="flex items-center gap-2">
-                      <span className="size-2 rounded-full bg-primary shadow-neon"></span>
+                      <span className="w-2 h-2 rounded-full bg-primary shadow-neon"></span>
                       <span className="font-bold text-sm text-text-primary">{activeSubject}</span>
                     </div>
                     <span className={`material-symbols-outlined text-text-muted transition-transform duration-200 ${isSubjectDropdownOpen ? 'rotate-180' : ''}`}>expand_more</span>
@@ -407,7 +407,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                             }}
                             className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-2 ${activeSubject === subj ? `bg-primary/10 text-primary` : 'text-text-secondary hover:bg-surface-subtle'}`}
                           >
-                            <span className={`size-1.5 rounded-full ${activeSubject === subj ? 'bg-primary' : 'bg-transparent border border-text-muted'}`}></span>
+                            <span className={`w-1.5 h-1.5 rounded-full ${activeSubject === subj ? 'bg-primary' : 'bg-transparent border border-text-muted'}`}></span>
                             {subj}
                           </button>
                         ))
@@ -496,12 +496,12 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 <div className={`size-8 md:size-9 rounded-lg flex items-center justify-center shadow-sm shrink-0 overflow-visible transition-transform group-hover:scale-105 animate-neon-pulse-box ${isInstitutionalRoute ? 'bg-white border border-border-default' : 'bg-transparent'}`}>
                   {isInstitutionalRoute ? (
                     currentSchool?.logo_url ? (
-                      <img src={currentSchool.logo_url} alt={currentSchool.name} className="size-full object-cover animate-neon-pulse-logo" />
+                      <img src={currentSchool.logo_url} alt={currentSchool.name} className="w-full h-full object-cover animate-neon-pulse-logo" />
                     ) : (
                       <span className="material-symbols-outlined text-primary text-xl animate-neon-pulse-logo font-black">school</span>
                     )
                   ) : (
-                    <img src={logoIconSrc} alt="Acerta+" className="size-full object-contain animate-neon-pulse-logo" />
+                    <img src={logoIconSrc} alt="Acerta+" className="w-full h-full object-contain animate-neon-pulse-logo" />
                   )}
                 </div>
                 <div className="flex flex-col items-start leading-tight max-w-[100px] md:max-w-xs">
@@ -524,7 +524,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   className="flex items-center gap-2 pl-1.5 pr-2 lg:pr-3 py-1.5 rounded-xl bg-surface-card/50 hover:bg-surface-card/80 transition-all duration-300 border border-border-default hover:border-primary/30 shadow-sm active:scale-95 backdrop-blur-sm shrink-0"
                   title="Gerenciar Turmas"
                 >
-                  <div className={`size-8 rounded-lg bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-md shadow-primary/20`}>
+                  <div className={`w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center shadow-md shadow-primary/20`}>
                     <span className="material-symbols-outlined text-base font-black">{theme.icon}</span>
                   </div>
                   <div className="flex flex-col items-start gap-0.5">
@@ -545,7 +545,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     </button>
                   ))}
                   {activeSeries && (
-                    <button onClick={handleAddSectionOneClick} className={`size-8 rounded-lg flex items-center justify-center border border-dashed border-text-muted/50 text-text-muted hover:border-primary hover:text-white hover:bg-primary transition-colors shrink-0`} title="Nova Turma">
+                    <button onClick={handleAddSectionOneClick} className={`w-8 h-8 rounded-lg flex items-center justify-center border border-dashed border-text-muted/50 text-text-muted hover:border-primary hover:text-white hover:bg-primary transition-colors shrink-0`} title="Nova Turma">
                       <span className="material-symbols-outlined text-sm font-black">add</span>
                     </button>
                   )}
@@ -583,7 +583,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                       {availableSubjects.length > 0 && (
                         <>
                           <button onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)} className="flex items-center gap-2 md:gap-3 px-3 md:px-4 h-9 md:h-10 rounded-xl text-sm font-bold text-text-secondary hover:bg-surface-subtle hover:text-primary transition-all border border-border-default bg-surface-card shadow-sm overflow-hidden group">
-                            <span className={`size-2 md:size-2.5 rounded-full bg-primary shadow-neon shrink-0 animate-pulse`}></span>
+                            <span className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-primary shadow-neon shrink-0 animate-pulse`}></span>
                             <span className="inline-block max-w-[80px] md:max-w-[150px] lg:max-w-[200px] truncate">{activeSubject || 'Selecione...'}</span>
                             <span className="material-symbols-outlined text-base text-text-muted group-hover:text-primary transition-transform duration-300 group-hover:rotate-180">expand_more</span>
                           </button>
@@ -609,7 +609,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               )}
 
               <div className="flex items-center gap-3">
-                <Link to="/instructions" title="Precisa de ajuda?" className="hidden md:flex items-center justify-center size-10 rounded-xl text-text-muted hover:text-primary hover:bg-white dark:hover:bg-slate-800 transition-all group border border-transparent hover:border-border-default hover:shadow-sm">
+                <Link to="/instructions" title="Precisa de ajuda?" className="hidden md:flex items-center justify-center w-10 h-10 rounded-xl text-text-muted hover:text-primary hover:bg-white dark:hover:bg-slate-800 transition-all group border border-transparent hover:border-border-default hover:shadow-sm">
                   <span className="material-symbols-outlined text-2xl transition-transform group-hover:rotate-[360deg] duration-500">help</span>
                 </Link>
                 <div className="flex items-center justify-center transition-all hover:scale-110 active:scale-95">
@@ -618,11 +618,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               </div>
 
               <button onClick={() => setIsProfileModalOpen(true)} className="hidden lg:flex items-center gap-3 h-10 bg-white dark:bg-slate-800/80 px-1.5 lg:pl-1 lg:pr-3 rounded-xl border border-border-default hover:border-primary/40 transition-all active:scale-95 group shrink-0 shadow-sm hover:shadow-md">
-                <div className="size-8 rounded-lg bg-surface-subtle overflow-hidden border border-border-default shadow-inner group-hover:ring-2 group-hover:ring-primary/20 transition-all">
+                <div className="w-8 h-8 rounded-lg bg-surface-subtle overflow-hidden border border-border-default shadow-inner group-hover:ring-2 group-hover:ring-primary/20 transition-all">
                   {currentUser?.photoUrl ? (
-                    <img src={currentUser.photoUrl} alt="Profile" className="size-full object-cover" />
+                    <img src={currentUser.photoUrl} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
-                    <div className={`size-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-white font-bold text-xs uppercase`}>
+                    <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-white font-bold text-xs uppercase`}>
                       {(currentUser?.name || '??').substring(0, 2)}
                     </div>
                   )}
@@ -630,7 +630,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 <div className="hidden lg:flex flex-col items-start leading-tight">
                   <span className="text-[11px] font-black text-text-primary truncate max-w-[100px] text-left">{currentUser?.name?.split(' ')[0]}</span>
                   <span className="text-[9px] font-bold text-text-muted uppercase tracking-widest font-mono truncate max-w-[100px] text-left flex items-center gap-1">
-                    <span className="size-1 rounded-full bg-primary animate-pulse"></span>
+                    <span className="w-1 h-1 rounded-full bg-primary animate-pulse"></span>
                     Perfil
                   </span>
                 </div>
