@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 import { AnimatePresence } from 'framer-motion';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Layout } from './components/Layout';
@@ -76,6 +77,7 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <ToastProvider>
         {import.meta.env.PROD && !window.location.hostname.includes('localhost') && <SpeedInsights />}
+        {import.meta.env.PROD && !window.location.hostname.includes('localhost') && <Analytics />}
         {/* Persistent Background Layer - Outside Routes/AnimatePresence */}
         <BackgroundPattern theme={theme} activeSubject={activeSubject} />
 
