@@ -1,4 +1,4 @@
-import logoSrc from '../public/logo.png';
+import logoSrc from '../public/logo_icon_clean.png';
 
 declare global {
     interface Window {

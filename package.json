@@ -1,7 +1,7 @@
 {
   "name": "prof-acerta-3-1",
   "private": true,
-  "version": "3.2.5",
+  "version": "3.2.6",
   "author": "Prof Acerta",
   "description": "Plataforma oficial Prof. Acerta+ para Gestao Escolar",
   "type": "module",
@@ -22,7 +22,7 @@
     "productName": "Prof. Acerta+",
     "win": {
       "target": "nsis",
-      "icon": "public/logo.png"
+      "icon": "public/logo_icon_clean.png"
     },
     "nsis": {
       "oneClick": false,
