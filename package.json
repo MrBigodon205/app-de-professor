@@ -22,7 +22,7 @@
     "productName": "Prof. Acerta+",
     "win": {
       "target": "nsis",
-      "icon": "public/logo_icon_clean.png"
+      "icon": "public/logo.png"
     },
     "nsis": {
       "oneClick": false,

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import logoSrc from '../public/logo_full_clean.png';
-import logoIconSrc from '../public/logo_icon_clean.png';
+import logoSrc from '../public/logo.png';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
