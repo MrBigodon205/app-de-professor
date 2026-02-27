@@ -1,4 +1,4 @@
-import logoSrc from '../assets/logo.svg';
+import logoSrc from '../public/logo.png';
 
 declare global {
     interface Window {
@@ -28,7 +28,7 @@ export const DesktopTitleBar: React.FC = () => {
             onDoubleClick={handleDoubleClick}
         >
             <div className="flex items-center gap-3">
-                <img src={logoSrc} alt="Logo" className="size-5 object-contain" />
+                <img src={logoSrc} alt="Logo" className="w-5 h-5 object-contain" />
                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/80 font-mono">
                     Prof. Acerta+ <span className="text-primary-hover">Core 3.2</span>
                 </span>
