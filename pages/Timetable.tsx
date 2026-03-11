@@ -82,8 +82,8 @@ const useTimetableConfig = () => {
     const [timetableItems, setTimetableItems] = useState<TimetableItem[]>([]);
     const [loadingSchedules, setLoadingSchedules] = useState(true);
 
-    // Get real classes from context
-    const { classes: realClasses, loading: loadingClasses } = useClass();
+    // Get real classes and virtual groups from context
+    const { classes: realClasses, virtualGroups, loading: loadingClasses } = useClass();
 
     // 1. Initial Load: Try Remote -> Fallback Local -> Fallback Default
     useEffect(() => {
@@ -402,6 +402,7 @@ const useTimetableConfig = () => {
         visibleDays,
         setVisibleDays,
         classes: realClasses, // Export real classes
+        virtualGroups,        // Export virtual groups
         loading: loadingClasses || loadingSchedules,
         getSlotItem,
         assignClassToSlot,
@@ -418,12 +419,13 @@ const useTimetableConfig = () => {
 export const Timetable: React.FC = () => {
     const theme = useThemeContext();
     const { currentUser, activeSubject } = useAuth();
-    const { config, visibleDays, classes, loading, getSlotItem, assignClassToSlot, removeItemFromSlot, toggleDay, updateSlot, addSlot, removeSlot } = useTimetableConfig();
+    const { config, visibleDays, classes, virtualGroups, loading, getSlotItem, assignClassToSlot, removeItemFromSlot, toggleDay, updateSlot, addSlot, removeSlot } = useTimetableConfig();
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
     // Slot Selection State
     const [selectedSlot, setSelectedSlot] = useState<{ day: string, slotId: string, label: string } | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [tempSelectedSections, setTempSelectedSections] = useState<{ classId: string; section: string }[]>([]);
 
     // Derived state for the active subject
     // We use the activeSubject from context, which is what the user has selected globally
@@ -433,7 +435,35 @@ export const Timetable: React.FC = () => {
 
     const handleSlotClick = (dayId: string, slotId: string, timeLabel: string) => {
         setSelectedSlot({ day: dayId, slotId, label: timeLabel });
+        setTempSelectedSections([]); // Reset selection
         setIsModalOpen(true);
+    };
+
+    const toggleTempSection = (classId: string, section: string) => {
+        setTempSelectedSections(prev => {
+            const exists = prev.find(s => s.classId === classId && s.section === section);
+            if (exists) {
+                return prev.filter(s => !(s.classId === classId && s.section === section));
+            } else {
+                // If selecting from a different classId, we might want to clear previous or allow mix.
+                // But the requested feature "appear next to each other" usually implies same class.
+                // However, let's just allow it and join them.
+                return [...prev, { classId, section }];
+            }
+        });
+    };
+
+    const handleConfirmSelection = () => {
+        if (tempSelectedSections.length === 0) return;
+        
+        // Group by classId to determine which class's name to use
+        // If they are different classes, we just pick the first classId but join names?
+        // Actually, let's keep it simple: Use the classId of the first selected item, 
+        // and join all sections.
+        const first = tempSelectedSections[0];
+        const allSections = tempSelectedSections.map(s => s.section).join(', ');
+        
+        handleAssignClass(first.classId, allSections);
     };
 
     const handleAssignClass = (classId: string, section: string) => {
@@ -530,7 +560,7 @@ export const Timetable: React.FC = () => {
                             <div className="px-3 py-3 space-y-2">
                                 {config.slots.map((slot) => {
                                     const item = getSlotItem(day.id, slot.id);
-                                    const assignedClass = classes.find(c => c.id === item?.classId);
+                                    const assignedClass = classes.find(c => c.id === item?.classId) || virtualGroups.find(g => g.id === item?.classId);
                                     const styles = item ? getSubjectTheme(item.subject) : null;
                                     const timeLabel = `${slot.start} - ${slot.end}`;
 
@@ -563,7 +593,7 @@ export const Timetable: React.FC = () => {
                                                             </h4>
                                                         </div>
                                                         <div className={`
-                                                            px-2 py-1 rounded text-[10px] font-black uppercase tracking-wide
+                                                            px-1.5 py-0.5 min-w-[20px] rounded-md text-[10px] font-black uppercase tracking-wide flex items-center justify-center
                                                             bg-white/50 dark:bg-black/20 backdrop-blur-md ${styles?.text} shrink-0
                                                         `}>
                                                             {item.section}
@@ -618,7 +648,7 @@ export const Timetable: React.FC = () => {
 
                                     {visibleDays.map(day => {
                                         const item = getSlotItem(day.id, slot.id);
-                                        const assignedClass = classes.find(c => c.id === item?.classId);
+                                        const assignedClass = classes.find(c => c.id === item?.classId) || virtualGroups.find(g => g.id === item?.classId);
                                         const styles = item ? getSubjectTheme(item.subject) : null;
                                         const timeLabel = `${slot.start} - ${slot.end}`;
 
@@ -646,8 +676,8 @@ export const Timetable: React.FC = () => {
                                                                 <span className={`text-[9px] font-bold uppercase tracking-wide opacity-80 truncate flex-1 min-w-0 ${styles?.text}`}>
                                                                     {item.subject}
                                                                 </span>
-                                                                <span className={`size-5 rounded flex items-center justify-center text-[9px] font-black uppercase bg-white/40 dark:bg-black/20 ${styles?.text} shrink-0 ml-1`}>
-                                                                    {item.section.slice(0, 1)}
+                                                                <span className={`w-fit min-w-[20px] px-1.5 py-0.5 rounded-md flex items-center justify-center text-[9px] font-black uppercase bg-white/40 dark:bg-black/20 ${styles?.text} shrink-0 ml-1`}>
+                                                                    {item.section}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -734,25 +764,77 @@ export const Timetable: React.FC = () => {
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-wrap gap-1.5">
-                                                    {cls.sections.map(section => (
-                                                        <button
-                                                            key={`${cls.id}-${section}`}
-                                                            onClick={() => handleAssignClass(cls.id, section)} // cls.id is string
-                                                            className={`
-                                                                px-2.5 py-1 rounded-md text-[10px] font-black border transition-all flex items-center gap-1
-                                                                bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600
-                                                                hover:border-${theme.primaryColor} hover:text-${theme.primaryColor} hover:shadow-md hover:-translate-y-0.5 active:translate-y-0
-                                                            `}
-                                                        >
-                                                            <span>Turma {section}</span>
-                                                            <span className="material-symbols-outlined text-[12px]">add</span>
-                                                        </button>
-                                                    ))}
-                                                </div>
+                                                     {cls.sections.map(section => {
+                                                         const isSelected = tempSelectedSections.some(s => s.classId === cls.id && s.section === section);
+                                                         return (
+                                                             <button
+                                                                 key={`${cls.id}-${section}`}
+                                                                 onClick={() => toggleTempSection(cls.id, section)}
+                                                                 className={`
+                                                                     px-2.5 py-1 rounded-md text-[10px] font-black border transition-all flex items-center gap-1
+                                                                     ${isSelected 
+                                                                         ? `bg-${theme.primaryColor}/10 border-${theme.primaryColor} text-${theme.primaryColor} shadow-sm translate-y-[-1px]` 
+                                                                         : 'bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600'}
+                                                                     hover:border-${theme.primaryColor} hover:text-${theme.primaryColor} hover:shadow-md hover:-translate-y-0.5 active:translate-y-0
+                                                                 `}
+                                                             >
+                                                                 <span>Turma {section}</span>
+                                                                 <span className="material-symbols-outlined text-[12px]">
+                                                                     {isSelected ? 'check_circle' : 'add'}
+                                                                 </span>
+                                                             </button>
+                                                         );
+                                                     })}
+                                                 </div>
                                             </div>
                                         ))
                                     )}
+
+                                    {/* Virtual Groups Section */}
+                                    {virtualGroups.length > 0 && (
+                                        <div className="mt-4 space-y-2 pb-20">
+                                            <div className="flex items-center gap-2 mb-2 px-1">
+                                                <span className="material-symbols-outlined text-sm text-indigo-500">groups</span>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Grupos de Turmas</span>
+                                            </div>
+                                            {virtualGroups.map(group => (
+                                                <button
+                                                    key={group.id}
+                                                    onClick={() => handleAssignClass(group.id, 'Agrupada')}
+                                                    className="w-full flex items-center justify-between p-3 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 hover:border-indigo-500 transition-all group/vg"
+                                                >
+                                                    <div className="flex flex-col items-start">
+                                                        <span className="font-black text-indigo-700 dark:text-indigo-300 text-sm leading-tight">{group.name}</span>
+                                                        <span className="text-[9px] text-indigo-400 font-bold uppercase tracking-wider mt-0.5">Grupo Virtual</span>
+                                                    </div>
+                                                    <div className="size-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center group-hover/vg:scale-110 transition-transform">
+                                                        <span className="material-symbols-outlined text-lg">add</span>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
+
+                                {/* Selection Footer */}
+                                <AnimatePresence>
+                                    {tempSelectedSections.length > 0 && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 20 }}
+                                            className="absolute bottom-4 left-4 right-4 z-10"
+                                        >
+                                            <button
+                                                onClick={handleConfirmSelection}
+                                                className={`w-full py-4 rounded-2xl bg-${theme.primaryColor} text-white font-black shadow-xl shadow-${theme.primaryColor}/30 hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3`}
+                                            >
+                                                <span className="material-symbols-outlined">done_all</span>
+                                                <span>Confirmar Alocação ({tempSelectedSections.length})</span>
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         </motion.div>
                     </div>

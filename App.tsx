@@ -9,9 +9,7 @@ import { Login } from './pages/Login';
 import { loaders } from './utils/routeLoaders';
 
 // Lazy imports using centralized loaders for prefetching capability
-// EAGER LOAD DASHBOARD to test if Suspense is the cause of blinking
-import { Dashboard } from './pages/Dashboard';
-// const Dashboard = lazy(() => loaders.dashboard().then(module => ({ default: module.Dashboard })));
+const Dashboard = lazy(() => loaders.dashboard().then(module => ({ default: module.Dashboard })));
 const Attendance = lazy(() => loaders.attendance().then(module => ({ default: module.Attendance })));
 const Grades = lazy(() => loaders.grades().then(module => ({ default: module.Grades })));
 const Activities = lazy(() => loaders.activities().then(module => ({ default: module.Activities })));
@@ -54,6 +52,7 @@ import { SchoolProvider } from './institutional/contexts/SchoolContext';
 import { useAuth } from './contexts/AuthContext';
 import { useTheme } from './hooks/useTheme';
 import { DesktopTitleBar } from './components/DesktopTitleBar';
+import { ScheduleAutoSelector } from './components/ScheduleAutoSelector';
 
 // Helper to wrap pages with Transition + Suspense
 // We pass 'type' to BOTH PageTransition (for animation variant) AND SkeletonLayout (for layout matching)
@@ -94,8 +93,9 @@ const App: React.FC = () => {
             <SchoolProvider>
               <Layout>
                 <ProtectedRoute>
-                  {/* Mode="popLayout" ensures smooth cross-fades without white flashes */}
-                  <AnimatePresence mode="popLayout" onExitComplete={() => window.scrollTo(0, 0)}>
+                  <ScheduleAutoSelector />
+                  {/* Mode="wait" prevents unmounting and mounting routes from co-existing on the DOM, saving mobile memory */}
+                  <AnimatePresence mode="wait" onExitComplete={() => window.scrollTo(0, 0)}>
                     <Routes location={location}>
                       {/* Public Routes */}
                       <Route path="/" element={<SuspendedPage type="dashboard"><Dashboard /></SuspendedPage>} />
