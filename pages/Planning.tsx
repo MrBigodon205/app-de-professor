@@ -18,14 +18,12 @@ import { FileImporterModal } from '../components/FileImporterModal';
 import { PlanningTemplateRenderer } from '../components/PlanningTemplateRenderer';
 import { PlanningTemplate, PlanningTemplateElement } from '../types';
 import { useToast } from '../components/Toast';
+import { Virtuoso } from 'react-virtuoso';
 
 // --- MEMOIZED COMPONENT ---
 const PlanItem = React.memo(({ plan, isSelectionMode, isSelected, selectedPlanId, toggleSelection, handleSelectPlan, theme }: any) => {
-    const isChecked: "true" | "false" = isSelected ? "true" : "false";
     return (
-        <motion.button
-            layoutId={`plan-card-${plan.id}`}
-            variants={VARIANTS.fadeUp}
+        <button
             onClick={() => isSelectionMode ? toggleSelection(plan.id) : handleSelectPlan(plan)}
             className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm ${isSelectionMode
                 ? (isSelected ? `bg-${theme.primaryColor}/5 border-${theme.primaryColor} dark:bg-${theme.primaryColor}/20` : 'bg-white/40 dark:bg-slate-900/60 backdrop-blur-xl border-white/20 dark:border-white/5')
@@ -41,34 +39,47 @@ const PlanItem = React.memo(({ plan, isSelectionMode, isSelected, selectedPlanId
                     tabIndex={0}
                 >
                     {isSelected && (
-                        <motion.span
-                            initial={{ scale: 0.5, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="material-symbols-outlined text-white text-lg font-black"
-                        >
+                        <span className="material-symbols-outlined text-white text-lg font-black">
                             check
-                        </motion.span>
+                        </span>
                     )}
                 </div>
             )}
 
-            {/* Indicador lateral sutil quando selecionado individualmente (não em modo de seleção múltipla) */}
             {!isSelectionMode && (
                 <div className={`absolute left-0 top-0 bottom-0 w-1.5 landscape:hidden ${selectedPlanId === plan.id ? 'theme-bg-primary' : 'bg-transparent group-hover:bg-slate-200'} transition-all z-20`}></div>
             )}
 
             <div className={`transition-all duration-300 ${isSelectionMode ? 'pl-10 landscape:pl-10' : 'pl-0'}`}>
-
                 <div className="flex justify-between items-start mb-2 landscape:mb-0 landscape:flex-row landscape:items-center">
                     <h4 className={`font-bold text-base md:text-lg truncate pr-2 flex-1 ${selectedPlanId === plan.id ? `text-${theme.primaryColor}` : 'text-slate-800 dark:text-slate-200'}`}>{plan.title}</h4>
                     <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">chevron_right</span>
                 </div>
                 <div className="flex flex-wrap gap-2 landscape:hidden">
-                    {plan.section && (
-                        <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
-                            Turma {plan.section}
-                        </span>
-                    )}
+                    {(() => {
+                        if (plan.shared_classes_text) {
+                            return (
+                                <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
+                                    {plan.shared_classes_text}
+                                </span>
+                            );
+                        }
+
+                        // Se houver classes vinculadas mas não houver texto compartilhado, mostramos um indicador
+                        if (plan.linked_class_ids && plan.linked_class_ids.length > 0) {
+                             return (
+                                <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
+                                    Turmas Agrupadas
+                                </span>
+                            );
+                        }
+
+                        return plan.section ? (
+                            <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300'}`}>
+                                Turma {plan.section}
+                            </span>
+                        ) : null;
+                    })()}
                     {plan.activity_type && (
                         <span className={`px-2.5 py-1 rounded-md text-[0.7rem] font-bold flex items-center gap-1 ${selectedPlanId === plan.id ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                             <span className="material-symbols-outlined text-[0.7rem]">
@@ -90,13 +101,11 @@ const PlanItem = React.memo(({ plan, isSelectionMode, isSelected, selectedPlanId
                         {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                     </span>
                 </div>
-                {/* Mobile Landscape Only Date */}
                 <div className="hidden landscape:block text-xs text-slate-400 mt-1">
                     {new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                 </div>
             </div>
-        </motion.button>
-
+        </button>
     );
 });
 
@@ -605,6 +614,43 @@ export const Planning: React.FC = () => {
         handleView(plan);
     };
 
+    // --- AUTO-GENERATE SHARED CLASSES TEXT ---
+    useEffect(() => {
+        if (!formLinkedClassIds || formLinkedClassIds.length === 0) {
+            return;
+        }
+
+        const getClassName = (id: string) => {
+            const cls = classes.find(c => c.id === id);
+            return cls ? cls.name : null;
+        };
+
+        const currentClassName = getClassName(formSeriesId);
+        if (!currentClassName) return;
+
+        const linkedNames = formLinkedClassIds
+            .map(id => getClassName(id))
+            .filter((name): name is string => name !== null && name !== currentClassName);
+
+        if (linkedNames.length > 0) {
+            // Formatar nomes únicos e ordenados
+            const uniqueNames = Array.from(new Set([currentClassName, ...linkedNames]));
+            
+            // Tentar extrair o número do ano para ordenar (ex: "5º Ano" -> 5)
+            const sortedNames = uniqueNames.sort((a, b) => {
+                const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+                const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+                return numA - numB;
+            });
+
+            const generatedText = sortedNames.length > 2 
+                ? sortedNames.slice(0, -1).join(', ') + ' e ' + sortedNames.slice(-1)
+                : sortedNames.join(' e ');
+            
+            setFormSharedClassesText(generatedText);
+        }
+    }, [formLinkedClassIds, formSeriesId, classes]);
+
     const handleSave = async () => {
         // OFFLINE CHECK: File uploads require internet (for now)
         const hasNewFiles = formFiles.some(f => f.url.startsWith('data:'));
@@ -874,14 +920,13 @@ export const Planning: React.FC = () => {
                 format: 'a4'
             });
 
-            // Load logo images with dimensions
-            let logoInfo: { data: string, width: number, height: number } | null = null;
-            let fullLogoInfo: { data: string, width: number, height: number } | null = null;
-
-            const loadImage = (src: string): Promise<{ data: string, width: number, height: number }> => {
+            // ============================================
+            // STEP 1: Load and Draw Background Image
+            // ============================================
+            const loadImage = (src: string): Promise<string> => {
                 return new Promise((resolve, reject) => {
                     const img = new Image();
-                    img.crossOrigin = "Anonymous";
+                    img.crossOrigin = 'anonymous';
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         canvas.width = img.width;
@@ -889,11 +934,7 @@ export const Planning: React.FC = () => {
                         const ctx = canvas.getContext('2d');
                         if (ctx) {
                             ctx.drawImage(img, 0, 0);
-                            resolve({
-                                data: canvas.toDataURL('image/png'),
-                                width: img.width,
-                                height: img.height
-                            });
+                            resolve(canvas.toDataURL('image/png'));
                         } else {
                             reject(new Error("Could not create canvas context"));
                         }
@@ -903,13 +944,12 @@ export const Planning: React.FC = () => {
                 });
             };
 
+            let bgData = '';
             try {
-                // Watermark Dove
-                logoInfo = await loadImage('/logo_transparent.png');
-                // Header Exact Logo
-                fullLogoInfo = await loadImage('/logo_full_clean.png');
+                bgData = await loadImage('./watermark_template.png');
+                doc.addImage(bgData, 'PNG', 0, 0, 297, 210);
             } catch (e) {
-                console.warn("Logo load failed", e);
+                console.warn("Background image loading failed", e);
             }
 
             const margin = 10;
@@ -917,63 +957,39 @@ export const Planning: React.FC = () => {
             const pageHeight = doc.internal.pageSize.getHeight();
             const contentWidth = pageWidth - (margin * 2);
 
-            // Watermark (Background Dove)
-            if (logoInfo) {
-                try {
-                    doc.saveGraphicsState();
-                    doc.setGState(new (doc as any).GState({ opacity: 0.10 }));
-
-                    const wmSize = 120; // 120mm Width
-                    // Calculate Height based on ratio
-                    const ratio = logoInfo.width / logoInfo.height;
-                    const wmH = wmSize / ratio;
-
-                    const wmX = (pageWidth - wmSize) / 2;
-                    const wmY = (pageHeight - wmH) / 2;
-
-                    doc.addImage(logoInfo.data, 'PNG', wmX, wmY, wmSize, wmH);
-                    doc.restoreGraphicsState();
-                } catch (e) {
-                    console.warn("Watermark failed", e);
-                }
-            }
-
-            // ... (Middle Header Code omitted in this replace, check context) ...
-            // Wait, I cannot omit middle code in replace_file_content if I span multiple blocks.
-            // I should use "TargetContent" wisely.
-            // The TargetContent below spans from `let logoData...` to `doc.addImage`.
-            // This is a large block. 
-            // I need to be careful about the "Header Section" lines (666-702) which I do NOT want to change but they are "in between" Watermark and Header Logo in the original file.
-            // Actually, in the code, Watermark (646) comes BEFORE Header text (666).
-            // Header Logo (704) comes AFTER logic.
-            // I must break this into 2 chunks or Replace the specific parts.
-            // BUT "loadImage" definition is at the top.
-            // So Chunk 1: Define loadImage + Load vars.
-            // Chunk 2: Watermark logic.
-            // Chunk 3: Logo logic.
-            // BUT `view_file` showed them sequential.
-            // I will target the `loadImage` block definition first.
-
-            // Wait, `replace_file_content` with massive block is risky if I don't include the middle.
-            // I will cancel and use MULTI REPLACE.
-
-            // Just kidding, I am rewriting the helper function `loadImage` and the `logoData` variables.
-            // They are lines 609-638.
-            // Then I need to update Watermark usage (Line 646).
-            // Then Header Logo usage (Line 704).
-            // I will use `multi_replace_file_content`.
-
-
-            // Header Section
+            // ============================================
+            // STEP 2: Draw Header Content (Overlay)
+            // ============================================
             doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
             doc.text('Turma:', margin, margin + 5);
             doc.setFont('helvetica', 'normal');
-            const sectionName = currentPlan.shared_classes_text
-                ? currentPlan.shared_classes_text
-                : (currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
+            const sectionName = (() => {
+                if (currentPlan.shared_classes_text) return currentPlan.shared_classes_text;
+
+                // Fallback dinâmico para turmas vinculadas
+                const getClassName = (id: string) => classes.find(c => c.id === id)?.name;
+                const mainName = activeSeries?.name;
+                const linkedNames = (currentPlan.linked_class_ids || [])
+                    .map(id => getClassName(id))
+                    .filter((name): name is string => !!name && name !== mainName);
+
+                if (linkedNames.length > 0) {
+                    const allNames = Array.from(new Set([mainName, ...linkedNames])).filter(Boolean);
+                    const sorted = allNames.sort((a, b) => {
+                        const numA = parseInt(a!.match(/\d+/)?.[0] || '0');
+                        const numB = parseInt(b!.match(/\d+/)?.[0] || '0');
+                        return numA - numB;
+                    });
+                    return sorted.length > 2
+                        ? sorted.slice(0, -1).join(', ') + ' e ' + sorted.slice(-1)
+                        : sorted.join(' e ');
+                }
+
+                return (currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
                     ? `${activeSeries?.name} - ${currentPlan.section}`
                     : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`;
+            })();
             doc.text(sectionName, margin + 25, margin + 5);
             doc.line(margin + 25, margin + 6, margin + 120, margin + 6);
 
@@ -1004,54 +1020,20 @@ export const Planning: React.FC = () => {
             doc.text(currentPlan.coordinator_name || 'MOISÉS FERREIRA', margin + 25, margin + 33);
             doc.line(margin + 25, margin + 34, margin + 120, margin + 34);
 
-            // HEADER (Top Right)
-            // HEADER (Top Right)
-            if (fullLogoInfo) {
-                // Use the Full Logo Image provided by user
-                const logoW = 50; // Fixed Width 50mm
-                const ratio = fullLogoInfo.width / fullLogoInfo.height;
-                const logoH = logoW / ratio; // Dynamic Height
-
-                const logoX = pageWidth - margin - logoW;
-                const logoY = margin - 2;
-
-                doc.addImage(fullLogoInfo.data, 'PNG', logoX, logoY, logoW, logoH);
-            } else if (logoInfo) {
-                // Fallback to Icon + Text if Full Logo fails
-                const logoW = 15;
-                const ratio = logoInfo.width / logoInfo.height;
-                const logoH = logoW / ratio;
-                const logoX = pageWidth - margin - 50;
-                const logoY = margin - 2;
-
-                doc.addImage(logoInfo.data, 'PNG', logoX, logoY, logoW, logoH);
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(30);
-                doc.setTextColor(14, 165, 233);
-                doc.text('CENSC', logoX + 16, logoY + 9);
-                doc.setFontSize(8);
-                doc.setTextColor(6, 182, 212);
-                doc.text('Centro Educacional Nossa Srª do Cenáculo', logoX + 16, logoY + 14);
-            }
-
-            // Text: PLANO DE AULA 2026 - CENTERED BELOW HEADER
-            // Header finishes at margin + 34
-            // Title at margin + 42
+            // Title: PLANO DE AULA – YEAR (Centered)
             const titleY = margin + 45;
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(22);
-            doc.setTextColor(14, 165, 233); // Sky Blue
+            doc.setTextColor(0, 0, 0);
 
             const centerX = pageWidth / 2;
             doc.text(`PLANO DE AULA – ${new Date(currentPlan.startDate + 'T12:00:00').getFullYear()}`, centerX, titleY, { align: 'center' });
 
             doc.setTextColor(0, 0, 0);
 
-            // Separator Line
-            doc.setLineWidth(0.5);
-            doc.line(margin, titleY + 5, pageWidth - margin, titleY + 5);
-
-            // Content Table - Push down with autoTable
+            // ============================================
+            // STEP 3: Content Table
+            // ============================================
             const tableTop = titleY + 10;
             const autoTable = (await import('jspdf-autotable')).default;
 
@@ -1066,7 +1048,7 @@ export const Planning: React.FC = () => {
 
             autoTable(doc, {
                 startY: tableTop,
-                head: [['HABILIDADES', 'OBJETO CONH.', 'RECURSOS', 'DESENVOLVIMENTO', 'DURAÇÃO', 'TIPO']],
+                head: [['HABILIDADE(S)\nCONTEMPLADA(S)', 'OBJETO DE\nCONHECIMENTO', 'RECURSOS\nUTILIZADOS', 'DESENVOLVIMENTO', 'DURAÇÃO', 'TIPO DE\nATIVIDADE']],
                 body: [[
                     habText,
                     currentPlan.title,
@@ -1076,33 +1058,57 @@ export const Planning: React.FC = () => {
                     currentPlan.activity_type || ''
                 ]],
                 theme: 'grid',
-                headStyles: { fillColor: [217, 217, 217], textColor: [0, 0, 0], fontSize: 8, fontStyle: 'bold', halign: 'center', valign: 'middle' },
-                bodyStyles: { fontSize: 9, valign: 'top' },
+                headStyles: {
+                    fillColor: [217, 217, 217],
+                    textColor: [0, 0, 0],
+                    fontSize: 8,
+                    fontStyle: 'bold',
+                    halign: 'center',
+                    valign: 'middle',
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.1
+                },
+                bodyStyles: {
+                    fontSize: 9,
+                    valign: 'top',
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.2,
+                    minCellHeight: pageHeight - tableTop - 45 // Fill page dynamically
+                },
                 columnStyles: {
-                    0: { cellWidth: contentWidth * 0.17 },
+                    0: { cellWidth: contentWidth * 0.18 },
                     1: { cellWidth: contentWidth * 0.16 },
-                    2: { cellWidth: contentWidth * 0.16 },
+                    2: { cellWidth: contentWidth * 0.15 },
                     3: { cellWidth: contentWidth * 0.31 },
                     4: { cellWidth: contentWidth * 0.10, halign: 'center' },
                     5: { cellWidth: contentWidth * 0.10, halign: 'center' }
                 },
-                styles: { overflow: 'linebreak', cellPadding: 2, lineColor: [0, 0, 0], lineWidth: 0.1 },
+                styles: { overflow: 'linebreak', cellPadding: 3, lineColor: [0, 0, 0], lineWidth: 0.1 },
                 margin: { left: margin, right: margin }
             });
 
-            // Footer
-            const finalY = (doc as any).lastAutoTable.finalY || tableTop + 80;
-            const footerTop = finalY + 10;
+            // ============================================
+            // STEP 4: Footer: OBSERVAÇÕES
+            // ============================================
+            const finalY = (doc as any).lastAutoTable.finalY || tableTop + 100;
+            const footerTop = finalY + 3;
 
-            doc.setFontSize(10);
+            doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
-            doc.text('OBSERVAÇÕES:', margin, footerTop);
+            doc.text('OBSERVAÇÕES:', margin, footerTop + 3);
+
+            const obsBoxY = footerTop + 5;
+            const obsBoxHeight = pageHeight - obsBoxY - margin;
+
             doc.setDrawColor(0, 0, 0);
-            doc.setFillColor(255, 255, 255);
-            doc.rect(margin, footerTop + 2, contentWidth, 20);
+            doc.setLineWidth(0.2);
+            doc.rect(margin, obsBoxY, contentWidth, obsBoxHeight);
+
             doc.setLineWidth(0.1);
-            doc.line(margin, footerTop + 8, pageWidth - margin, footerTop + 8);
-            doc.line(margin, footerTop + 14, pageWidth - margin, footerTop + 14);
+            const lineSpacing = obsBoxHeight / 4;
+            doc.line(margin, obsBoxY + lineSpacing, pageWidth - margin, obsBoxY + lineSpacing);
+            doc.line(margin, obsBoxY + lineSpacing * 2, pageWidth - margin, obsBoxY + lineSpacing * 2);
+            doc.line(margin, obsBoxY + lineSpacing * 3, pageWidth - margin, obsBoxY + lineSpacing * 3);
 
             doc.save(`Planejamento-${currentPlan.title}.pdf`);
         } catch (e: any) {
@@ -1133,7 +1139,7 @@ export const Planning: React.FC = () => {
         // Load Full Logo for Word Header
         let fullLogoBase64 = '';
         try {
-            const response = await fetch('/logo_full_clean.png');
+            const response = await fetch('/logo_censc_full.png');
             const blob = await response.blob();
             fullLogoBase64 = await new Promise((resolve) => {
                 const reader = new FileReader();
@@ -1203,9 +1209,32 @@ export const Planning: React.FC = () => {
                                         <tr>
                                             <td style="width: 100px; padding: 2px 0;"><span style="font-size: 10pt; font-weight: bold;">Turma:</span></td>
                                             <td style="border-bottom: 1px solid black; padding: 2px 5px;"><span style="font-size: 11pt; font-weight: bold;">
-                                                ${(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
-                ? (activeSeries?.name + ' - ' + currentPlan.section)
-                : (activeSeries?.name + ' - ' + (activeSeries?.sections?.join(', ') || 'Todas as Turmas'))}
+                                                ${(() => {
+                if (currentPlan.shared_classes_text) return currentPlan.shared_classes_text;
+                
+                // Fallback dinâmico para turmas vinculadas
+                const getClassName = (id: string) => classes.find(c => c.id === id)?.name;
+                const mainName = activeSeries?.name;
+                const linkedNames = (currentPlan.linked_class_ids || [])
+                    .map(id => getClassName(id))
+                    .filter((name): name is string => !!name && name !== mainName);
+                
+                if (linkedNames.length > 0) {
+                    const allNames = Array.from(new Set([mainName, ...linkedNames])).filter(Boolean);
+                    const sorted = allNames.sort((a, b) => {
+                         const numA = parseInt(a!.match(/\d+/)?.[0] || '0');
+                         const numB = parseInt(b!.match(/\d+/)?.[0] || '0');
+                         return numA - numB;
+                    });
+                    return sorted.length > 2 
+                        ? sorted.slice(0, -1).join(', ') + ' e ' + sorted.slice(-1)
+                        : sorted.join(' e ');
+                }
+
+                return (currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
+                    ? (activeSeries?.name + ' - ' + currentPlan.section)
+                    : (activeSeries?.name + ' - ' + (activeSeries?.sections?.join(', ') || 'Todas as Turmas'));
+            })()}
                                             </span></td>
                                         </tr>
                                         <tr>
@@ -1252,12 +1281,12 @@ export const Planning: React.FC = () => {
                             <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
                                 <tbody>
                                     <tr style="background-color: #d9d9d9;">
-                                        <td style="width: 17%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">HABILIDADES</td>
-                                        <td style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">OBJETO CONH.</td>
-                                        <td style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">RECURSOS</td>
-                                        <td style="width: 31%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">DESENVOLVIMENTO</td>
-                                        <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">DURAÇÃO</td>
-                                        <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 9pt; font-weight: bold; text-align: center; vertical-align: middle;">TIPO</td>
+                                        <td style="width: 17%; border: 1px solid #000; padding: 8px; font-size: 8pt; font-weight: bold; text-align: center; vertical-align: middle;">HABILIDADE(S)<br/>CONTEMPLADA(S)</td>
+                                        <td style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 8pt; font-weight: bold; text-align: center; vertical-align: middle;">OBJETO DE<br/>CONHECIMENTO</td>
+                                        <td style="width: 16%; border: 1px solid #000; padding: 8px; font-size: 8pt; font-weight: bold; text-align: center; vertical-align: middle;">RECURSOS<br/>UTILIZADOS</td>
+                                        <td style="width: 31%; border: 1px solid #000; padding: 8px; font-size: 8pt; font-weight: bold; text-align: center; vertical-align: middle;">DESENVOLVIMENTO</td>
+                                        <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 8pt; font-weight: bold; text-align: center; vertical-align: middle;">DURAÇÃO</td>
+                                        <td style="width: 10%; border: 1px solid #000; padding: 8px; font-size: 8pt; font-weight: bold; text-align: center; vertical-align: middle;">TIPO DE<br/>ATIVIDADE</td>
                                     </tr>
                                     <tr>
                                         <td style="width: 17%; border: 1px solid #000; padding: 6px; font-size: 11pt; vertical-align: top; height: 50px;">
@@ -1463,34 +1492,42 @@ export const Planning: React.FC = () => {
                     variants={VARIANTS.staggerContainer}
                     initial="initial"
                     animate="animate"
-                    className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0 min-h-0"
+                    className="flex-1 flex flex-col min-h-0"
                 >
 
                     {loading ? (
-                        Array.from({ length: 5 }).map((_, i) => (
-                            <div key={i} className="w-full h-24 rounded-2xl bg-white/20 dark:bg-slate-900/40 border border-white/10 p-4 animate-pulse">
-                                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-3"></div>
-                                <div className="flex gap-2">
-                                    <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                                    <div className="h-6 w-16 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 pb-24 lg:pb-0">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                                <div key={i} className="w-full h-24 rounded-2xl bg-white/20 dark:bg-slate-900/40 border border-white/10 p-4 animate-pulse">
+                                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-3"></div>
+                                    <div className="flex gap-2">
+                                        <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                        <div className="h-6 w-16 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                    </div>
                                 </div>
-                            </div>
-                        ))
+                            ))}
+                        </div>
                     ) : displayedPlans.length === 0 ? (
                         <div className="p-8 text-center text-slate-400 text-sm bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 min-h-[200px] flex items-center justify-center">Nenhuma aula encontrada.</div>
                     ) : (
-                        displayedPlans.map((plan, idx) => (
-                            <PlanItem
-                                key={plan.id}
-                                plan={plan}
-                                isSelectionMode={isSelectionMode}
-                                isSelected={selectedIds.includes(plan.id)}
-                                selectedPlanId={selectedPlanId}
-                                toggleSelection={toggleSelection}
-                                handleSelectPlan={handleSelectPlan}
-                                theme={theme}
-                            />
-                        ))
+                        <Virtuoso
+                            style={{ height: '70vh' }}
+                            className="flex-1 w-full custom-scrollbar pr-2 pb-24 lg:pb-0"
+                            data={displayedPlans}
+                            itemContent={(index, plan) => (
+                                <div className="pb-3">
+                                    <PlanItem
+                                        plan={plan}
+                                        isSelectionMode={isSelectionMode}
+                                        isSelected={selectedIds.includes(plan.id)}
+                                        selectedPlanId={selectedPlanId}
+                                        toggleSelection={toggleSelection}
+                                        handleSelectPlan={handleSelectPlan}
+                                        theme={theme}
+                                    />
+                                </div>
+                            )}
+                        />
                     )}
                 </motion.div>
             </div>
@@ -1950,7 +1987,7 @@ export const Planning: React.FC = () => {
                                     <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 bg-gradient-to-t from-black/50 to-transparent">
                                         <div className="flex gap-2 mb-2">
                                             <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-none text-white text-[10px] md:text-xs font-bold border border-white/20 hover:bg-white/30 transition-all">
-                                                {activeSeries?.name}
+                                                {currentPlan.shared_classes_text || (classes.find(c => c.id === currentPlan.seriesId)?.name || 'N/A')}
                                             </span>
                                             {currentPlan.section && (
                                                 <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-none text-white text-[10px] md:text-xs font-bold border border-white/20 hover:bg-white/30 transition-all">
@@ -2250,8 +2287,9 @@ export const Planning: React.FC = () => {
 
                                     {/* PRINTABLE CONTENT (Matches CENSC Layout) */}
                                     <div className="printable-content bg-white p-[10mm] hidden print:block relative h-full">
-                                        <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none print:fixed print:visible opacity-[0.15]">
-                                            <img src="/logo_icon_clean.png" className="min-w-[500px] w-1/2" alt="" />
+                                        {/* Premium Watermark - CENSC Style */}
+                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 opacity-[0.08] pointer-events-none print:visible">
+                                            <img src="/logo_icon_clean.png" className="w-[500px] h-auto" alt="" />
                                         </div>
                                         <div className="relative z-10 w-full">
                                             <div className="flex justify-between items-start mb-4 border-b-2 border-black pb-4">
@@ -2263,9 +2301,31 @@ export const Planning: React.FC = () => {
                                                                 <td className="w-24 py-1.5"><span className="text-sm font-bold">Turma:</span></td>
                                                                 <td className="border-b border-black py-1 px-2">
                                                                     <span className="text-sm font-bold">
-                                                                        {(currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
-                                                                            ? `${activeSeries?.name} - ${currentPlan.section}`
-                                                                            : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`}
+                                                                        {(() => {
+                                                                            if (currentPlan.shared_classes_text) return currentPlan.shared_classes_text;
+
+                                                                            const getClassName = (id: string) => classes.find(c => c.id === id)?.name;
+                                                                            const mainName = activeSeries?.name;
+                                                                            const linkedNames = (currentPlan.linked_class_ids || [])
+                                                                                .map(id => getClassName(id))
+                                                                                .filter((name): name is string => !!name && name !== mainName);
+
+                                                                            if (linkedNames.length > 0) {
+                                                                                const allNames = Array.from(new Set([mainName, ...linkedNames])).filter(Boolean);
+                                                                                const sorted = allNames.sort((a, b) => {
+                                                                                    const numA = parseInt(a!.match(/\d+/)?.[0] || '0');
+                                                                                    const numB = parseInt(b!.match(/\d+/)?.[0] || '0');
+                                                                                    return numA - numB;
+                                                                                });
+                                                                                return sorted.length > 2
+                                                                                    ? sorted.slice(0, -1).join(', ') + ' e ' + sorted.slice(-1)
+                                                                                    : sorted.join(' e ');
+                                                                            }
+
+                                                                            return (currentPlan.section && currentPlan.section !== 'Todas' && currentPlan.section !== 'Todas as Turmas' && currentPlan.section !== 'Única')
+                                                                                ? `${activeSeries?.name} - ${currentPlan.section}`
+                                                                                : `${activeSeries?.name} - ${activeSeries?.sections?.join(', ') || 'Todas as Turmas'}`;
+                                                                        })()}
                                                                     </span>
                                                                 </td>
                                                             </tr>

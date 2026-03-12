@@ -228,7 +228,8 @@ const useTimetableConfig = () => {
                     id: dbItem.id,
                     dayId: mapDbDayToId(dbItem.day_of_week),
                     slotId: slotId,
-                    classId: dbItem.class_id,
+                    // Use virtual_group_id if it's there, otherwise class_id
+                    classId: dbItem.virtual_group_id || String(dbItem.class_id),
                     subject: dbItem.subject,
                     section: dbItem.section || '',
                     startTime: dbItem.start_time,
@@ -339,6 +340,7 @@ const useTimetableConfig = () => {
             }
 
             // 2. INSERT NEW
+            const isVirtual = typeof classId === 'string' && classId.includes('-');
             const { data, error } = await supabase
                 .from('schedules')
                 .insert({
@@ -346,7 +348,8 @@ const useTimetableConfig = () => {
                     day_of_week: dbDay,
                     start_time: slot.start,
                     end_time: slot.end,
-                    class_id: classId,
+                    class_id: isVirtual ? null : classId,
+                    virtual_group_id: isVirtual ? classId : null,
                     section: section,
                     subject: fullSubject,
                 })
@@ -419,7 +422,22 @@ const useTimetableConfig = () => {
 export const Timetable: React.FC = () => {
     const theme = useThemeContext();
     const { currentUser, activeSubject } = useAuth();
-    const { config, visibleDays, classes, virtualGroups, loading, getSlotItem, assignClassToSlot, removeItemFromSlot, toggleDay, updateSlot, addSlot, removeSlot } = useTimetableConfig();
+    const { classes, virtualGroups, loading: classesLoading } = useClass();
+    const { 
+        config, 
+        visibleDays, 
+        loading: timetableLoading, 
+        getSlotItem, 
+        assignClassToSlot, 
+        removeItemFromSlot, 
+        toggleDay, 
+        updateSlot, 
+        addSlot, 
+        removeSlot 
+    } = useTimetableConfig();
+
+    // Sincroniza os estados de carregamento
+    const loading = timetableLoading || classesLoading;
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
     // Slot Selection State
@@ -483,34 +501,23 @@ export const Timetable: React.FC = () => {
     }
 
     // Theme Styles Helper (Refactored to use THEME_MAP)
-    const getSubjectTheme = (subject: string) => {
-        const themeConfig = THEME_MAP[subject];
-
-        if (themeConfig) {
-            // Mapping ThemeConfig properties to Tailwind classes format expected by UI
-            // Using "softBg" for background base, and manual construction for text/border based on baseColor
-            // Or ideally, update THEME_MAP to have 'lightBg', 'border' etc. but current structure is:
-            // baseColor: 'emerald', softBg: 'bg-emerald-50 dark:...'
-
-            const color = themeConfig.baseColor; // e.g., 'emerald'
-            return {
-                bg: `bg-${color}-100 dark:bg-${color}-900/40`,
-                text: `text-${color}-700 dark:text-${color}-200`,
-                border: `border-${color}-200 dark:border-${color}-800`
-            };
-        }
-
-        // Fallback for unknown subjects
-        const hash = subject.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const colors = [
-            { bg: 'bg-blue-100 dark:bg-blue-900/40', text: 'text-blue-700 dark:text-blue-200', border: 'border-blue-200 dark:border-blue-800' },
-            { bg: 'bg-emerald-100 dark:bg-emerald-900/40', text: 'text-emerald-700 dark:text-emerald-200', border: 'border-emerald-200 dark:border-emerald-800' },
-            { bg: 'bg-violet-100 dark:bg-violet-900/40', text: 'text-violet-700 dark:text-violet-200', border: 'border-violet-200 dark:border-violet-800' },
-            { bg: 'bg-amber-100 dark:bg-amber-900/40', text: 'text-amber-700 dark:text-amber-200', border: 'border-amber-200 dark:border-amber-800' },
-            { bg: 'bg-rose-100 dark:bg-rose-900/40', text: 'text-rose-700 dark:text-rose-200', border: 'border-rose-200 dark:border-rose-800' },
-            { bg: 'bg-cyan-100 dark:bg-cyan-900/40', text: 'text-cyan-700 dark:text-cyan-200', border: 'border-cyan-200 dark:border-cyan-800' },
-        ];
-        return colors[hash % colors.length];
+    const getItemTheme = (subject: string, classId: string) => {
+        // Palette of premium colors for classes
+        const CLASS_COLORS = ['emerald', 'amber', 'sky', 'indigo', 'rose', 'orange', 'teal', 'fuchsia', 'lime', 'cyan', 'pink', 'violet'];
+        
+        // Always derive color from classId to ensure "distinct series = distinct color"
+        // even if the subject is the same.
+        const hash = classId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const color = CLASS_COLORS[hash % CLASS_COLORS.length];
+        
+        return {
+            bg: `bg-${color}-50/60 dark:bg-${color}-900/10`,
+            border: `border-${color}-200 dark:border-${color}-800/50`,
+            text: `text-${color}-700 dark:text-${color}-300`,
+            lightText: `text-${color}-500/80 dark:text-${color}-400/80`,
+            icon: THEME_MAP[subject]?.icon || 'school',
+            baseColor: color
+        };
     };
 
 
@@ -560,8 +567,11 @@ export const Timetable: React.FC = () => {
                             <div className="px-3 py-3 space-y-2">
                                 {config.slots.map((slot) => {
                                     const item = getSlotItem(day.id, slot.id);
-                                    const assignedClass = classes.find(c => c.id === item?.classId) || virtualGroups.find(g => g.id === item?.classId);
-                                    const styles = item ? getSubjectTheme(item.subject) : null;
+                                    const assignedClass = item ? (
+                                        classes.find(c => String(c.id) === String(item.classId)) || 
+                                        virtualGroups.find(g => String(g.id) === String(item.classId))
+                                    ) : null;
+                                    const styles = item ? getItemTheme(item.subject, String(item.classId)) : null;
                                     const timeLabel = `${slot.start} - ${slot.end}`;
 
                                     return (
@@ -588,7 +598,7 @@ export const Timetable: React.FC = () => {
                                                                     {item.subject}
                                                                 </span>
                                                             </div>
-                                                            <h4 className={`text-sm font-black leading-tight truncate ${styles?.text}`}>
+                                                            <h4 className={`text-base font-black leading-tight truncate ${styles?.text}`}>
                                                                 {assignedClass?.name || 'Aula'}
                                                             </h4>
                                                         </div>
@@ -648,8 +658,13 @@ export const Timetable: React.FC = () => {
 
                                     {visibleDays.map(day => {
                                         const item = getSlotItem(day.id, slot.id);
-                                        const assignedClass = classes.find(c => c.id === item?.classId) || virtualGroups.find(g => g.id === item?.classId);
-                                        const styles = item ? getSubjectTheme(item.subject) : null;
+                                        // Normalize IDs to string for safe comparison
+                                        const assignedClass = item ? (
+                                            classes.find(c => String(c.id) === String(item.classId)) || 
+                                            virtualGroups.find(g => String(g.id) === String(item.classId))
+                                        ) : null;
+                                        
+                                        const styles = item ? getItemTheme(item.subject, String(item.classId)) : null;
                                         const timeLabel = `${slot.start} - ${slot.end}`;
 
                                         return (
@@ -665,18 +680,26 @@ export const Timetable: React.FC = () => {
                                                     `}
                                                 >
                                                     {item ? (
-                                                        <div className="h-full p-2 flex flex-col justify-between">
-                                                            <div className="flex justify-between items-start gap-1">
-                                                                <span className={`${styles?.text} font-black text-xs leading-tight line-clamp-2`}>
+                                                        <div className="h-full p-2.5 flex flex-col justify-between">
+                                                            <div className="flex flex-col gap-0.5">
+                                                                <div className="flex items-center gap-1.5 opacity-70">
+                                                                    <span className={`material-symbols-outlined text-[14px] ${styles?.text}`}>
+                                                                        {styles?.icon}
+                                                                    </span>
+                                                                    <span className={`text-[9px] font-black uppercase tracking-widest truncate ${styles?.text}`}>
+                                                                        {item.subject}
+                                                                    </span>
+                                                                </div>
+                                                                <span className={`${styles?.text} font-black text-[13px] leading-tight line-clamp-2 mt-1 px-0.5`}>
                                                                     {assignedClass?.name || 'Aula'}
                                                                 </span>
                                                             </div>
 
-                                                            <div className="flex items-end justify-between w-full mt-auto pt-1">
-                                                                <span className={`text-[9px] font-bold uppercase tracking-wide opacity-80 truncate flex-1 min-w-0 ${styles?.text}`}>
-                                                                    {item.subject}
+                                                            <div className="flex items-center justify-between w-full mt-auto pt-1.5 border-t border-black/5 dark:border-white/5">
+                                                                <span className={`text-[9px] font-bold opacity-60 tabular-nums ${styles?.text}`}>
+                                                                    {slot.start}
                                                                 </span>
-                                                                <span className={`w-fit min-w-[20px] px-1.5 py-0.5 rounded-md flex items-center justify-center text-[9px] font-black uppercase bg-white/40 dark:bg-black/20 ${styles?.text} shrink-0 ml-1`}>
+                                                                <span className={`w-fit min-w-[22px] px-1.5 py-0.5 rounded-md flex items-center justify-center text-[10px] font-black uppercase bg-white/60 dark:bg-black/40 shadow-sm ${styles?.text} shrink-0`}>
                                                                     {item.section}
                                                                 </span>
                                                             </div>

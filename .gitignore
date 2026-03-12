@@ -30,3 +30,14 @@ release_v2
 # Backups
 *.zip
 electron_error.txt
+
+# Temp & Builds
+release_v4/
+release_temp/
+temp_backup/
+App_last_commit.tsx
+my_changes.diff
+skill_audit.txt
+attendance_pc_check.png
+test_edge_alignment.js
+.agent/rules/

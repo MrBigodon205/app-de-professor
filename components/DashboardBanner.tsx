@@ -43,11 +43,11 @@ export const DashboardBanner: React.FC<DashboardBannerProps> = ({ theme, current
                     <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 md:p-6 rounded-[2rem] border border-white/20 shadow-2xl relative overflow-hidden group/profile will-change-transform">
                         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover/profile:opacity-100 transition-opacity"></div>
 
-                        <div className="relative size-16 md:size-20 rounded-2xl border-2 border-white/50 shadow-lg overflow-hidden shrink-0">
+                        <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-2xl border-2 border-white/50 shadow-lg overflow-hidden shrink-0">
                             {currentUser?.photoUrl ? (
-                                <img src={currentUser.photoUrl} alt={currentUser.name} className="size-full object-cover" />
+                                <img src={currentUser.photoUrl} alt={currentUser.name} className="w-full h-full object-cover" />
                             ) : (
-                                <div className="size-full flex items-center justify-center bg-white theme-text-primary font-bold text-xl">
+                                <div className="w-full h-full flex items-center justify-center bg-white theme-text-primary font-bold text-xl">
                                     {currentUser?.name?.substring(0, 2).toUpperCase()}
                                 </div>
                             )}
@@ -57,7 +57,7 @@ export const DashboardBanner: React.FC<DashboardBannerProps> = ({ theme, current
                             <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Professor(a)</p>
                             <p className="font-black text-lg md:text-xl text-white">{currentUser?.name?.split(' ')[0]}</p>
                             <div className="flex items-center gap-1.5 mt-1">
-                                <span className="size-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]"></span>
+                                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]"></span>
                                 <span className="text-[10px] font-bold text-emerald-100 uppercase tracking-widest">Online</span>
                             </div>
                         </div>

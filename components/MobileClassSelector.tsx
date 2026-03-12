@@ -69,7 +69,7 @@ export const MobileClassSelector: React.FC<MobileClassSelectorProps> = ({ isOpen
                         <span className={`material-symbols-outlined text-lg text-${theme.primaryColor}`}>school</span>
                         Turmas
                     </h2>
-                    <button onClick={onClose} className="size-7 rounded-lg bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-500 hover:text-red-500 transition-colors">
+                    <button onClick={onClose} className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-500 hover:text-red-500 transition-colors">
                         <span className="material-symbols-outlined text-base">close</span>
                     </button>
                 </div>
@@ -89,7 +89,7 @@ export const MobileClassSelector: React.FC<MobileClassSelectorProps> = ({ isOpen
                             <button
                                 onClick={handleAdd}
                                 disabled={!newSeriesName.trim()}
-                                className={`size-9 rounded-lg bg-${theme.primaryColor} text-white flex items-center justify-center shadow-md shadow-${theme.primaryColor}/20 disabled:opacity-30 transition-all active:scale-95`}
+                                className={`w-9 h-9 rounded-lg bg-${theme.primaryColor} text-white flex items-center justify-center shadow-md shadow-${theme.primaryColor}/20 disabled:opacity-30 transition-all active:scale-95`}
                             >
                                 <span className="material-symbols-outlined text-lg">add</span>
                             </button>
@@ -109,14 +109,14 @@ export const MobileClassSelector: React.FC<MobileClassSelectorProps> = ({ isOpen
                                             }`}
                                     >
                                         <div className="flex items-center gap-2 overflow-hidden">
-                                            <div className={`size-2 rounded-full shrink-0 ${activeSeries?.id === cls.id ? `bg-${theme.primaryColor}` : 'bg-slate-200 dark:bg-slate-700'}`}></div>
+                                            <div className={`w-2 h-2 rounded-full shrink-0 ${activeSeries?.id === cls.id ? `bg-${theme.primaryColor}` : 'bg-slate-200 dark:bg-slate-700'}`}></div>
                                             <span className={`font-black text-xs truncate ${activeSeries?.id === cls.id ? `text-${theme.primaryColor}` : 'text-slate-700 dark:text-slate-300'}`}>
                                                 {cls.name}
                                             </span>
                                         </div>
                                         <button
                                             onClick={(e) => handleDelete(e, cls.id)}
-                                            className="size-6 rounded-md flex items-center justify-center text-slate-300 hover:text-red-500 transition-colors"
+                                            className="w-6 h-6 rounded-md flex items-center justify-center text-slate-300 hover:text-red-500 transition-colors"
                                         >
                                             <span className="material-symbols-outlined text-sm">delete</span>
                                         </button>

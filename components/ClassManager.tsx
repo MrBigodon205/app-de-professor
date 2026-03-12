@@ -247,11 +247,8 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
         return (
             <div
                 key={cls.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, cls.id)}
                 onDragOver={(e) => handleDragOver(e, cls.id)}
                 onDragEnter={(e) => handleDragEnter(e, cls.id)}
-                onDragEnd={handleDragEnd}
                 onDrop={(e) => handleDrop(e, cls.id)}
                 className={`group relative rounded-2xl transition-all duration-300 overflow-hidden ${activeSeries?.id === cls.id
                     ? `bg-white dark:bg-slate-800 shadow-xl shadow-black/10 ring-1 ring-slate-100 dark:ring-white/10`
@@ -276,14 +273,14 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                 />
                                 <button
                                     onClick={(e) => { e.stopPropagation(); handleRenameSeries(cls.id); }}
-                                    className="size-8 min-w-[32px] rounded-lg bg-green-50 text-green-600 dark:bg-green-500/20 dark:text-green-400 flex items-center justify-center hover:bg-green-100 dark:hover:bg-green-500/30 transition-colors"
+                                    className="w-8 h-8 min-w-[32px] rounded-lg bg-green-50 text-green-600 dark:bg-green-500/20 dark:text-green-400 flex items-center justify-center hover:bg-green-100 dark:hover:bg-green-500/30 transition-colors"
                                     title="Confirmar"
                                 >
                                     <span className="material-symbols-outlined text-[18px] font-black">check</span>
                                 </button>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setEditingId(null); setEditingName(''); }}
-                                    className="size-8 min-w-[32px] rounded-lg bg-red-50 text-red-500 dark:bg-red-500/20 dark:text-red-400 flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-500/30 transition-colors"
+                                    className="w-8 h-8 min-w-[32px] rounded-lg bg-red-50 text-red-500 dark:bg-red-500/20 dark:text-red-400 flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-500/30 transition-colors"
                                     title="Cancelar"
                                 >
                                     <span className="material-symbols-outlined text-[18px] font-black">close</span>
@@ -291,14 +288,20 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                             </div>
                         ) : (
                             <>
-                                <div className="cursor-grab hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded-lg transition-colors active:cursor-grabbing flex items-center justify-center -ml-2" title="Segure para arrastar e reorganizar">
+                                <div
+                                    className="cursor-grab hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded-lg transition-colors active:cursor-grabbing flex items-center justify-center -ml-2"
+                                    title="Segure para arrastar e reorganizar"
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, cls.id)}
+                                    onDragEnd={handleDragEnd}
+                                >
                                     <span className="material-symbols-outlined">drag_indicator</span>
                                 </div>
                                 <button
                                     onClick={() => selectSeries(cls.id)}
                                     className="flex-1 flex items-center gap-3 text-left group/btn"
                                 >
-                                    <div className={`size-12 rounded-xl flex items-center justify-center transition-all duration-300 ${activeSeries?.id === cls.id ? `bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] text-white shadow-md shadow-[var(--theme-primary)]/20` : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500'}`}>
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${activeSeries?.id === cls.id ? `bg-gradient-to-br from-[var(--theme-primary)] to-[var(--theme-secondary)] text-white shadow-md shadow-[var(--theme-primary)]/20` : 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500'}`}>
                                         <span className="material-symbols-outlined text-2xl">
                                             {activeSeries?.id === cls.id ? 'folder_managed' : 'folder'}
                                         </span>
@@ -314,7 +317,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setEditingId(cls.id); setEditingName(cls.name); }}
-                                        className="size-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-all flex items-center justify-center"
+                                        className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-all flex items-center justify-center"
                                         title="Renomear"
                                     >
                                         <span className="material-symbols-outlined text-lg">edit</span>
@@ -325,7 +328,7 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                             if (isInsideGroup && groupId) removeSeriesFromGroup(groupId, cls.id);
                                             else handleDeleteSeries(cls.id, cls.name);
                                         }}
-                                        className="size-9 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20 transition-all flex items-center justify-center opacity-100"
+                                        className="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20 transition-all flex items-center justify-center opacity-100"
                                         title={isInsideGroup ? "Remover do Grupo" : "Excluir"}
                                     >
                                         <span className="material-symbols-outlined text-lg">{isInsideGroup ? 'logout' : 'delete'}</span>
@@ -501,11 +504,8 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                             return (
                                                 <div
                                                     key={group.id}
-                                                    draggable
-                                                    onDragStart={(e) => handleDragStart(e, group.id)}
                                                     onDragOver={(e) => handleDragOver(e, group.id, true)}
                                                     onDragEnter={(e) => handleDragEnter(e, group.id)}
-                                                    onDragEnd={handleDragEnd}
                                                     onDrop={(e) => handleDrop(e, group.id, true)}
                                                     className={`rounded-2xl border-2 transition-all duration-300 ${draggedItem === group.id ? 'opacity-50 scale-95 shadow-inner' : 'opacity-100'} ${dragOverItem === group.id ? (dragAction === 'group' ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)]/5' : dragAction === 'before' ? 'border-t-4 border-t-[var(--theme-primary)]' : 'border-b-4 border-b-[var(--theme-primary)]') : 'border-dashed border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]'}`}
                                                 >
@@ -549,12 +549,18 @@ export const ClassManager: React.FC<ClassManagerProps> = ({ isOpen, onClose }) =
                                                                     <button onClick={() => { setEditingId(null); setEditingName(''); }} className="size-6 rounded bg-red-50 text-red-500 dark:bg-red-500/20 flex items-center justify-center"><span className="material-symbols-outlined text-[14px] font-black">close</span></button>
                                                                 </div>
                                                             ) : (
-                                                                <div className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer" onClick={() => { setEditingId(group.id); setEditingName(group.name); }}>
-                                                                    <div className="cursor-grab hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 p-1 rounded transition-colors active:cursor-grabbing">
+                                                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                                    <div
+                                                                        className="cursor-grab hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 p-1 rounded transition-colors active:cursor-grabbing"
+                                                                        draggable
+                                                                        onDragStart={(e) => handleDragStart(e, group.id)}
+                                                                        onDragEnd={handleDragEnd}
+                                                                        title="Segure para arrastar e reorganizar a pasta"
+                                                                    >
                                                                         <span className="material-symbols-outlined text-sm">drag_indicator</span>
                                                                     </div>
                                                                     <span className="material-symbols-outlined text-[var(--theme-primary)] text-xl">folder_zip</span>
-                                                                    <span className="font-bold text-slate-700 dark:text-slate-300 truncate">{group.name}</span>
+                                                                    <span className="font-bold text-slate-700 dark:text-slate-300 truncate select-text">{group.name}</span>
                                                                     <span className="text-[10px] font-bold bg-slate-200 dark:bg-white/10 px-2 py-0.5 rounded-full text-slate-500">{groupClasses.length}</span>
                                                                 </div>
                                                             )}

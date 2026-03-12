@@ -276,7 +276,7 @@ export const Login: React.FC = () => {
               whileHover={{ scale: 1.05, rotate: 5 }}
               className="relative mb-10 shadow-2xl shadow-primary/30 rounded-[2.5rem]"
             >
-              <img src={logoSrc} alt="Acerta+" className="w-auto h-32 object-contain drop-shadow-md" />
+              <img src={logoSrc} alt="Acerta+" className="w-auto h-24 lg:h-32 object-contain drop-shadow-md" />
             </motion.div>
 
             <div className="text-center space-y-4">
@@ -286,7 +286,7 @@ export const Login: React.FC = () => {
               <div className="flex items-center justify-center gap-3">
                 <span className="h-px w-8 bg-slate-300 dark:bg-slate-600"></span>
                 <p className="text-[12px] tracking-[0.4em] text-slate-500 dark:text-slate-400 font-bold uppercase whitespace-nowrap">
-                  v3.1 Intelligence
+                  v3.3.0 Intelligence
                 </p>
 
                 <span className="h-px w-8 bg-slate-300 dark:bg-slate-600"></span>
@@ -441,6 +441,7 @@ export const Login: React.FC = () => {
                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
                       className="w-full bg-surface-card border border-border-default rounded-2xl py-4 px-5 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
                       type="email"
+                      autoComplete="username"
                       placeholder="professor@escola.com"
                       value={email}
                       onChange={e => setEmail(e.target.value)}
@@ -466,6 +467,7 @@ export const Login: React.FC = () => {
                         transition={{ type: "spring", stiffness: 300, damping: 20 }}
                         className="w-full bg-surface-card border border-border-default rounded-2xl py-4 pl-5 pr-12 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
                         type={showPassword ? "text" : "password"}
+                        autoComplete="current-password"
                         placeholder="••••••••"
                         value={password}
                         onChange={e => setPassword(e.target.value)}

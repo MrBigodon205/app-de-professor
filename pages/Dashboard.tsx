@@ -2,54 +2,40 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { VARIANTS } from '../constants/motion';
-import { AnimatedList, AnimatedItem } from '../components/ui/AnimatedList';
 import { AnimatedCard } from '../components/ui/AnimatedCard';
 import { useClass } from '../contexts/ClassContext';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../contexts/AuthContext';
-import { Student, AttendanceRecord, Occurrence, Activity } from '../types';
+import { Occurrence, Activity, Plan, User } from '../types';
 import { supabase } from '../lib/supabase';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import { stripHtml } from '../utils/text';
 import { DashboardHeader } from '../components/DashboardHeader';
 import { DashboardBanner } from '../components/DashboardBanner';
 import { ActivityHeatmap } from '../components/ActivityHeatmap';
+import { DashboardPlan } from '../components/dashboard/DashboardPlan';
+import { DashboardOccurrences } from '../components/dashboard/DashboardOccurrences';
+import { DashboardActivities } from '../components/dashboard/DashboardActivities';
+import { DashboardHelpBanner } from '../components/dashboard/DashboardHelpBanner';
 import { calculateUnitTotal } from '../utils/gradeCalculations';
 
-const getOccurrenceIcon = (type: string) => {
-  switch (type) {
-    case 'Elogio': return 'star';
-    case 'Indisciplina': return 'gavel';
-    case 'Atraso': return 'schedule';
-    case 'Não Fez Tarefa': return 'assignment_late';
-    case 'Falta de Material': return 'inventory_2';
-    case 'Uso de Celular': return 'smartphone';
-    case 'Alerta': return 'priority_high';
-    default: return 'warning';
-  }
-};
-
-// Create MotionLink for animated router links
-const MotionLink = motion.create(Link);
 
 export const Dashboard: React.FC = () => {
   const { selectedSeriesId, selectedSection, classes } = useClass();
   const theme = useTheme();
   const { currentUser, activeSubject } = useAuth();
 
-  // Mounted Ref
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
-  // Granular loading states
+
   const [loadingCounts, setLoadingCounts] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingOccurrences, setLoadingOccurrences] = useState(true);
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [loadingActivities, setLoadingActivities] = useState(true);
 
-  // --- REDIRECT GUARD FOR COORDINATORS ---
   const navigate = useNavigate();
   const [isRedirecting, setIsRedirecting] = useState(false);
 
@@ -57,7 +43,6 @@ export const Dashboard: React.FC = () => {
     if (!currentUser || isRedirecting) return;
 
     const checkRedirect = async () => {
-      // If user is purely institutional (no personal classes), they shouldn't see Personal Dashboard
       const isInstitutionalOnly = currentUser.account_type === 'institutional' && classes.length === 0;
 
       if (isInstitutionalOnly) {
@@ -79,12 +64,10 @@ export const Dashboard: React.FC = () => {
       }
     };
 
-    // Slight delay to ensure Contexts are ready
     const timer = setTimeout(checkRedirect, 500);
     return () => clearTimeout(timer);
   }, [currentUser, classes.length, isRedirecting, navigate]);
 
-  // Separate states for clarity
   const [globalCount, setGlobalCount] = useState(0);
   const [classCount, setClassCount] = useState(0);
   const [stats, setStats] = useState({
@@ -93,35 +76,11 @@ export const Dashboard: React.FC = () => {
     newObservations: 0
   });
   const [recentOccurrences, setRecentOccurrences] = useState<Occurrence[]>([]);
-  const [todaysPlans, setTodaysPlans] = useState<any[]>([]);
-  const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
+  const [todaysPlans, setTodaysPlans] = useState<Plan[]>([]);
   const [upcomingActivities, setUpcomingActivities] = useState<Activity[]>([]);
-  const [classPlans, setClassPlans] = useState<any[]>([]);
+  const [classPlans, setClassPlans] = useState<Plan[]>([]);
 
-  // Helper for Carousel
-  const nextPlan = () => {
-    if (currentPlanIndex < todaysPlans.length - 1) setCurrentPlanIndex(curr => curr + 1);
-    else setCurrentPlanIndex(0); // Loop back
-  };
 
-  // Helper to strip HTML and decode entities for preview
-  const stripHtml = (html: string) => {
-    if (!html) return '';
-    const tmp = document.createElement("DIV");
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || "";
-  };
-
-  const prevPlan = () => {
-    if (currentPlanIndex > 0) setCurrentPlanIndex(curr => curr - 1);
-    else setCurrentPlanIndex(todaysPlans.length - 1); // Loop back
-  };
-
-  const currentPlan = todaysPlans[currentPlanIndex] || null;
-
-  const totalSelected = 0; // Placeholder to avoid breaking other parts if any
-
-  // [CACHE STRATEGY] Load cached data immediately
   useEffect(() => {
     if (!currentUser?.id) return;
     const cacheKey = `dashboard_cache_${currentUser.id}`;
@@ -132,7 +91,6 @@ export const Dashboard: React.FC = () => {
         setGlobalCount(data.globalCount || 0);
         setClassCount(data.classCount || 0);
         setStats(data.stats || { presentToday: 0, gradeAverage: 0, newObservations: 0 });
-        // OPTIMIZATION: If cache exists, HIDE spinners immediately
         setLoadingCounts(false);
         setLoadingStats(false);
         setLoadingOccurrences(false);
@@ -144,7 +102,6 @@ export const Dashboard: React.FC = () => {
     }
   }, [currentUser?.id]);
 
-  // [CACHE STRATEGY] Save data when it updates
   useEffect(() => {
     if (!currentUser?.id) return;
     const cacheKey = `dashboard_cache_${currentUser.id}`;
@@ -157,20 +114,11 @@ export const Dashboard: React.FC = () => {
     localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
   }, [globalCount, classCount, stats, currentUser?.id]);
 
-  useEffect(() => {
-    if (currentUser?.id) {
-      // Trigger fetches independently to avoid blocking UI
-      // Use currentUser.id to avoid re-triggering when name/photo updates
-      refreshAll(false);
-    }
-  }, [currentUser?.id, selectedSeriesId, selectedSection, activeSubject]);
-
-  const fetchCounts = React.useCallback(async (silent = false) => {
+  const fetchCounts = useCallback(async (silent = false) => {
     if (!currentUser) return;
     if (!silent && globalCount === 0 && mountedRef.current) setLoadingCounts(true);
 
     try {
-      // Parallelize Count Queries
       const pGlobal = supabase
         .from('students')
         .select('*', { count: 'exact', head: true })
@@ -214,9 +162,9 @@ export const Dashboard: React.FC = () => {
     } finally {
       if (!silent && mountedRef.current) setLoadingCounts(false);
     }
-  }, [currentUser, selectedSeriesId, selectedSection, activeSubject]);
+  }, [currentUser, selectedSeriesId, selectedSection, activeSubject, globalCount]);
 
-  const fetchStats = React.useCallback(async (silent = false, prefetchedStudentIds?: string[]) => {
+  const fetchStats = useCallback(async (silent = false, prefetchedStudentIds?: string[]) => {
     if (!currentUser) return;
     if (!silent && stats.gradeAverage === 0 && stats.presentToday === 0) setLoadingStats(true);
     try {
@@ -225,7 +173,6 @@ export const Dashboard: React.FC = () => {
       if (prefetchedStudentIds) {
         relevantIds = prefetchedStudentIds;
       } else {
-        // Fallback fetch if no IDs provided
         let studentsQuery = supabase.from('students').select('id').eq('user_id', currentUser.id);
         if (selectedSeriesId) studentsQuery = studentsQuery.eq('series_id', selectedSeriesId);
         if (selectedSection) studentsQuery = studentsQuery.eq('section', selectedSection);
@@ -234,8 +181,6 @@ export const Dashboard: React.FC = () => {
       }
 
       if (relevantIds.length > 0) {
-        // Group students by ID for faster lookup later
-        // OPTIMIZATION: Select only needed fields
         const { data: gradesData } = await supabase
           .from('grades')
           .select('student_id, unit, data')
@@ -243,7 +188,6 @@ export const Dashboard: React.FC = () => {
           .eq('subject', activeSubject)
           .eq('user_id', currentUser.id);
 
-        // Pre-group grades by student_id to avoid repeated filtering
         const gradesMap = new Map();
         (gradesData || []).forEach((g: any) => {
           if (!gradesMap.has(g.student_id)) gradesMap.set(g.student_id, []);
@@ -288,7 +232,7 @@ export const Dashboard: React.FC = () => {
           .eq('user_id', currentUser.id)
           .eq('subject', activeSubject)
           .eq('date', today)
-          .eq('status', 'P'); // Only count Presents
+          .eq('status', 'P');
 
         const presentToday = (attData || []).filter(a => relevantIds.includes(a.student_id)).length;
 
@@ -309,15 +253,14 @@ export const Dashboard: React.FC = () => {
     } finally {
       if (!silent && mountedRef.current) setLoadingStats(false);
     }
-  }, [currentUser, selectedSeriesId, selectedSection, activeSubject]);
+  }, [currentUser, selectedSeriesId, selectedSection, activeSubject, stats]);
 
-  const fetchOccurrences = React.useCallback(async (silent = false, prefetchedStudentIds?: string[]) => {
+  const fetchOccurrences = useCallback(async (silent = false, prefetchedStudentIds?: string[]) => {
     if (!currentUser) return;
     if (!silent && recentOccurrences.length === 0) setLoadingOccurrences(true);
     try {
       const today = new Date().toLocaleDateString('sv-SE');
 
-      // OPTIMIZATION: Use pre-fetched IDs to skip a query or use them in query
       let query = supabase.from('occurrences')
         .select(`
           id, student_id, type, date, description, unit, user_id, created_at,
@@ -328,10 +271,8 @@ export const Dashboard: React.FC = () => {
         .eq('date', today)
         .order('created_at', { ascending: false });
 
-      // If we have IDs, we just filter by them. If not, we do the old logic logic.
       if (prefetchedStudentIds) {
         if (prefetchedStudentIds.length === 0) {
-          // No students => No occurrences
           if (mountedRef.current) {
             setRecentOccurrences([]);
             setStats(prev => ({ ...prev, newObservations: 0 }));
@@ -341,7 +282,6 @@ export const Dashboard: React.FC = () => {
         }
         query = query.in('student_id', prefetchedStudentIds);
       } else {
-        // ... Fallback logic (Old Code) ...
         if (selectedSeriesId) {
           const { data: sData } = await supabase.from('students').select('id').eq('series_id', selectedSeriesId).eq('user_id', currentUser.id);
           const sIds = (sData || []).map(s => s.id);
@@ -356,7 +296,6 @@ export const Dashboard: React.FC = () => {
             return;
           }
         } else {
-          // Global (Subject filtered)
           const { data: subjectClasses } = await supabase
             .from('classes')
             .select('id')
@@ -395,18 +334,17 @@ export const Dashboard: React.FC = () => {
     } finally {
       if (!silent && mountedRef.current) setLoadingOccurrences(false);
     }
-  }, [currentUser, selectedSeriesId, activeSubject, selectedSection]);
+  }, [currentUser, selectedSeriesId, activeSubject, selectedSection, recentOccurrences]);
 
-  const fetchPlans = React.useCallback(async (silent = false) => {
+  const fetchPlans = useCallback(async (silent = false) => {
     if (!currentUser) return;
     if (!silent && todaysPlans.length === 0) setLoadingPlans(true);
     try {
       const today = new Date().toLocaleDateString('sv-SE');
       let query = supabase.from('plans')
-        .select('id, title, description, start_date, end_date, series_id, section, files, user_id, subject') // Specific columns
+        .select('id, title, description, start_date, end_date, series_id, section, files, user_id, subject')
         .eq('user_id', currentUser.id);
 
-      // Add subject filter to ensure plans from other subjects don't appear
       if (activeSubject) {
         query = query.eq('subject', activeSubject);
       }
@@ -414,18 +352,10 @@ export const Dashboard: React.FC = () => {
       if (selectedSeriesId) {
         query = query.eq('series_id', selectedSeriesId);
         if (selectedSection) {
-          // If a section is selected, show plans for that section, NULL sections, 
-          // or special identifiers like "Todas as Turmas"
           query = query.or(`section.eq.${selectedSection},section.is.null,section.eq.Todas as Turmas,section.eq.Todas,section.eq.Única`);
         }
-      } else {
-        // If NO series is selected (Global view), we can either show everything or nothing.
-        // User said "as séries respectivas", so we follow the selection.
       }
 
-      // Fetch all plans that haven't ended yet to find the active one
-      // We don't limit(5) here because the active one might be further down the list 
-      // of upcoming plans if there are many future ones.
       query = query.gte('end_date', today).order('start_date', { ascending: true });
 
       const { data } = await query;
@@ -443,15 +373,8 @@ export const Dashboard: React.FC = () => {
         subject: p.subject
       }));
 
-      // CHANGED: Filter ALL active plans instead of finding just one
       const activePlans = formatted.filter(p => today >= p.startDate && today <= p.endDate);
       setTodaysPlans(activePlans);
-      setCurrentPlanIndex(0); // Reset carousel
-
-      // Show up to 10 most recent plans
-      setClassPlans(formatted.slice(0, 10));
-
-      // Show up to 10 most recent plans
       setClassPlans(formatted.slice(0, 10));
 
     } catch (e) {
@@ -461,7 +384,7 @@ export const Dashboard: React.FC = () => {
     }
   }, [currentUser, selectedSeriesId, selectedSection, activeSubject]);
 
-  const fetchActivities = React.useCallback(async (silent = false) => {
+  const fetchActivities = useCallback(async (silent = false) => {
     if (!currentUser) return;
     if (!silent && upcomingActivities.length === 0) setLoadingActivities(true);
     try {
@@ -470,9 +393,8 @@ export const Dashboard: React.FC = () => {
         .select('id, title, type, series_id, section, date, start_date, end_date, description, files, user_id, subject')
         .eq('user_id', currentUser.id)
         .eq('subject', activeSubject)
-        // Show today's, ongoing, and future activities
         .or(`date.gte.${today},and(start_date.lte.${today},end_date.gte.${today})`)
-        .order('date', { ascending: true }) // Show soonest first
+        .order('date', { ascending: true })
         .order('created_at', { ascending: false });
 
       if (selectedSeriesId) {
@@ -491,7 +413,6 @@ export const Dashboard: React.FC = () => {
         else query = query.in('series_id', [-1]);
       }
 
-      // Show up to 50 items (effectively "all" for the dashboard widget)
       const { data } = await query.limit(50);
 
       const formattedActivities = (data || []).map(a => ({
@@ -511,31 +432,24 @@ export const Dashboard: React.FC = () => {
 
       setUpcomingActivities(formattedActivities);
 
-      setUpcomingActivities(formattedActivities);
-
     } catch (e) {
       console.error("Error fetching activities (online):", e);
     } finally {
       if (!silent) setLoadingActivities(false);
     }
-  }, [currentUser, selectedSeriesId, selectedSection, activeSubject]);
+  }, [currentUser, selectedSeriesId, selectedSection, activeSubject, upcomingActivities]);
 
-
-
-  // --- HEATMAP AGGREGATION ---
   const [heatmapPoints, setHeatmapPoints] = useState<{ date: string; count: number; types: string[] }[]>([]);
 
-  const fetchHeatmapData = React.useCallback(async (silent = false) => {
+  const fetchHeatmapData = useCallback(async (silent = false) => {
     if (!currentUser) return;
     try {
       const today = new Date();
-      // Fetch range: First day of current month to today (or end of month)
       const year = today.getFullYear();
-      const month = today.getMonth(); // 0-indexed
+      const month = today.getMonth();
       const startDate = new Date(year, month, 1).toLocaleDateString('sv-SE');
       const endDate = new Date(year, month + 1, 0).toLocaleDateString('sv-SE');
 
-      // 1. Attendance (High Volume: 1pt per present student)
       const pAttendance = supabase
         .from('attendance')
         .select('date')
@@ -543,7 +457,6 @@ export const Dashboard: React.FC = () => {
         .gte('date', startDate)
         .lte('date', endDate);
 
-      // 2. Plans (5pts per plan)
       const pPlans = supabase
         .from('plans')
         .select('start_date')
@@ -551,7 +464,6 @@ export const Dashboard: React.FC = () => {
         .gte('start_date', startDate)
         .lte('start_date', endDate);
 
-      // 3. Activities (5pts per activity)
       const pActivities = supabase
         .from('activities')
         .select('date')
@@ -559,7 +471,6 @@ export const Dashboard: React.FC = () => {
         .gte('date', startDate)
         .lte('date', endDate);
 
-      // 4. Occurrences (3pts per occurrence)
       const pOccurrences = supabase
         .from('occurrences')
         .select('date')
@@ -571,31 +482,30 @@ export const Dashboard: React.FC = () => {
 
       const pointsMap = new Map<string, number>();
 
-      // Weighting Logic
       (resAtt.data || []).forEach((row: any) => {
         const d = row.date;
-        pointsMap.set(d, (pointsMap.get(d) || 0) + 1); // 1 pt
+        pointsMap.set(d, (pointsMap.get(d) || 0) + 1);
       });
 
       (resPlans.data || []).forEach((row: any) => {
         const d = row.start_date;
-        pointsMap.set(d, (pointsMap.get(d) || 0) + 5); // 5 pts
+        pointsMap.set(d, (pointsMap.get(d) || 0) + 5);
       });
 
       (resAct.data || []).forEach((row: any) => {
         const d = row.date;
-        pointsMap.set(d, (pointsMap.get(d) || 0) + 5); // 5 pts
+        pointsMap.set(d, (pointsMap.get(d) || 0) + 5);
       });
 
       (resOcc.data || []).forEach((row: any) => {
         const d = row.date;
-        pointsMap.set(d, (pointsMap.get(d) || 0) + 3); // 3 pts
+        pointsMap.set(d, (pointsMap.get(d) || 0) + 3);
       });
 
       const pointsArray = Array.from(pointsMap.entries()).map(([date, count]) => ({
         date,
         count,
-        types: [] // Types are less relevant for the aggregate view now
+        types: []
       }));
 
       if (mountedRef.current) setHeatmapPoints(pointsArray);
@@ -605,18 +515,15 @@ export const Dashboard: React.FC = () => {
     }
   }, [currentUser]);
 
-  const refreshAll = React.useCallback(async (silent = true) => {
-    // Shared Student ID Fetch Logic
+  const refreshAll = useCallback(async (silent = true) => {
     let studentIds: string[] = [];
     try {
       if (selectedSeriesId) {
-        // Fetch ids for this series
         let query = supabase.from('students').select('id').eq('series_id', selectedSeriesId).eq('user_id', currentUser?.id);
         if (selectedSection) query = query.eq('section', selectedSection);
         const { data } = await query;
         studentIds = (data || []).map(s => s.id);
       } else {
-        // Global
         const { data: subjectClasses } = await supabase
           .from('classes')
           .select('id')
@@ -632,7 +539,6 @@ export const Dashboard: React.FC = () => {
       console.error("Failed fetching context student IDs", e);
     }
 
-    // Parallel Execution with shared IDs
     await Promise.all([
       fetchCounts(silent),
       fetchStats(silent, studentIds),
@@ -643,13 +549,9 @@ export const Dashboard: React.FC = () => {
     ]);
   }, [fetchCounts, fetchStats, fetchOccurrences, fetchPlans, fetchActivities, fetchHeatmapData, selectedSeriesId, selectedSection, activeSubject, currentUser]);
 
-  // --- OPTIMIZATION: Debounced Realtime Callback ---
-  const refreshRef = React.useRef(refreshAll);
-
-  // Debounce timeout ref
+  const refreshRef = useRef(refreshAll);
   const debounceTimeout = useRef<any>(null);
 
-  // Update ref on every render
   useEffect(() => {
     refreshRef.current = refreshAll;
   });
@@ -657,19 +559,16 @@ export const Dashboard: React.FC = () => {
   const debouncedRefresh = useCallback(() => {
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     debounceTimeout.current = setTimeout(() => {
-      console.log("♻️ Triggering Debounced Dashboard Refresh");
       refreshRef.current(true);
-    }, 2000); // 2 seconds debounce to absorb bursts of events
+    }, 2000);
   }, []);
 
-  // --- REALTIME SUBSCRIPTION ---
   useEffect(() => {
     if (!currentUser) return;
 
-    // Polling Fallback (Longer interval for performance)
     const interval = setInterval(() => {
       refreshRef.current(true);
-    }, 300000); // 5 minutes
+    }, 300000);
 
     const channel = supabase.channel(`dashboard_sync_${currentUser.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, debouncedRefresh)
@@ -687,35 +586,16 @@ export const Dashboard: React.FC = () => {
     };
   }, [currentUser?.id, debouncedRefresh]);
 
-
-
-
   const isContextSelected = !!selectedSeriesId;
   const displayCount = isContextSelected ? classCount : globalCount;
   const contextName = (classes.find(c => c.id === selectedSeriesId)?.name || `Série ${selectedSeriesId}`) + (selectedSection ? ` - Turma ${selectedSection}` : '');
 
-  // EXTRAORDINARY ANIMATIONS - COREOGRAPHY
-
-
-  const heroVariants: any = {
-    hidden: { opacity: 0 }, // No Y offset
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.35,
-        ease: [0.25, 0.1, 0.25, 1], // Smooth cubic-bezier
-        delay: 0.05
-      }
-    }
-  };
-
   return (
-    <AnimatedList
+    <div
       className="w-full fluid-p-m fluid-gap-m flex flex-col pb-6 lg:pb-12 landscape:fluid-p-s landscape:fluid-gap-s landscape:pb-10 theme-transition relative"
     >
-      {/* LINTER REFRESH: Zero Inline Styles Verified */}
-
-      <AnimatedItem className="relative z-10" data-tour="dashboard-kpi">
+      {/* HEADER SECTION */}
+      <div className="relative z-10" data-tour="dashboard-kpi">
         <DashboardHeader
           currentUser={currentUser}
           theme={theme}
@@ -723,164 +603,21 @@ export const Dashboard: React.FC = () => {
           isContextSelected={isContextSelected}
           contextName={contextName}
         />
-      </AnimatedItem>
+      </div>
 
-      <AnimatedItem className="relative z-10">
+      <div className="relative z-10">
         <DashboardBanner theme={theme} currentUser={currentUser} />
-      </AnimatedItem>
+      </div>
 
-      {/* PLAN OF THE DAY - Holographic Glass Design */}
-      <AnimatedItem className="h-auto relative z-10">
-        {
-          loadingPlans ? (
-            <div className="min-h-[220px] rounded-[2rem] bg-white/5 animate-pulse border border-white/5"></div>
-          ) : currentPlan ? (
-            <div
-              className={`relative h-auto min-h-[220px] rounded-[2.5rem] p-8 landscape:p-6 overflow-hidden flex flex-col group transition-all duration-500 hover:shadow-lg theme-glow-primary`}
-            >
-              {/* Dynamic Background */}
-              <div
-                className="absolute inset-0 z-0 transition-all duration-1000 theme-glass-gradient"
-              ></div>
+      <DashboardPlan
+        loading={loadingPlans}
+        plans={todaysPlans}
+      />
 
-              {/* Pulse Orbs */}
-              <div
-                className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] rounded-full opacity-30 pointer-events-none animate-pulse-slow theme-radial-primary"
-              ></div>
-              <div
-                className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] rounded-full opacity-30 pointer-events-none theme-radial-secondary"
-              ></div>
+      <DashboardHelpBanner isDarkMode={theme.isDarkMode} />
 
-              {/* Decorative Theme Watermark */}
-              <div className="absolute top-6 right-6 z-10 opacity-10">
-                <span className="material-symbols-outlined text-8xl font-thin text-white">{theme.icon}</span>
-              </div>
-
-              <div className="relative z-10 w-full flex flex-col gap-6">
-                {/* Header Badge */}
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/40 border border-white/10 shadow-inner">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-white"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                      </span>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-white/90">Aula de Hoje</span>
-                    </div>
-                    <span className="text-xs font-bold text-white/60 font-mono">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-                  </div>
-
-                  {/* CAROUSEL CONTROLS */}
-                  {todaysPlans.length > 1 && (
-                    <div className="flex items-center gap-2">
-                      <button onClick={prevPlan} className="size-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-all active:scale-95">
-                        <span className="material-symbols-outlined text-sm">arrow_back</span>
-                      </button>
-                      <span className="text-[10px] font-bold text-white/80 font-mono">{currentPlanIndex + 1}/{todaysPlans.length}</span>
-                      <button onClick={nextPlan} className="size-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-all active:scale-95">
-                        <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  {currentPlan && (
-                    <span className="text-xs font-bold text-white/80 uppercase tracking-wider flex items-center gap-2">
-                      <span className="material-symbols-outlined text-sm">school</span>
-                      {classes.find(c => c.id === currentPlan.seriesId)?.name || 'Série Geral'} {currentPlan.section ? `• Turma ${currentPlan.section}` : ''}
-                    </span>
-                  )}
-                  <div className="flex items-center gap-2">
-                    {/* ANIMATED KEY for transitions */}
-                    <h2 className="text-3xl md:text-4xl font-display font-black text-white tracking-tight leading-none drop-shadow-lg animate-in fade-in slide-in-from-right-4 duration-300" key={currentPlan.id}>
-                      {currentPlan.title}
-                    </h2>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white/70 ml-1">Roteiro do Planejamento</span>
-                  <div className="max-w-3xl bg-black/40 border border-white/20 p-4 rounded-xl">
-                    <p className="text-white text-sm md:text-base font-medium leading-relaxed font-body line-clamp-2 mix-blend-plus-lighter">
-                      "{stripHtml(currentPlan.description)}"
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 mt-auto">
-                  <Link
-                    to="/planning"
-                    className="group relative px-6 py-3 bg-white text-slate-900 rounded-xl font-bold uppercase tracking-wider text-xs flex items-center gap-2 shadow-lg hover:-translate-y-1 transition-all active:scale-95 overflow-hidden"
-                  >
-                    <span className="relative z-10">Acessar Planejamento</span>
-                    <span className="material-symbols-outlined text-lg relative z-10 group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                  </Link>
-
-                  <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-6 px-6 py-3 rounded-xl bg-black/20 border border-white/10 text-xs text-white/80 font-mono w-full md:w-auto">
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-lg">schedule</span>
-                      <span>Início: <span className="text-white font-bold">{new Date(currentPlan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span></span>
-                    </div>
-                    <div className="w-px h-4 bg-white/20 hidden md:block"></div>
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-lg">event</span>
-                      <span>Fim: <span className="text-white font-bold">{new Date(currentPlan.endDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span></span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div
-              className="min-h-[220px] flex flex-col items-center justify-center glass-card-soft rounded-[2.5rem] border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 group transition-all duration-500 relative overflow-hidden"
-            >
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br from-primary-10/10 to-transparent"
-              ></div>
-              <span className="material-symbols-outlined text-5xl opacity-40 mb-3 group-hover:scale-110 transition-all theme-text-primary">event_busy</span>
-              <h3 className="text-sm font-black uppercase tracking-widest opacity-90">Sem planejamento hoje</h3>
-              <p className="text-xs opacity-70 mt-1 font-bold">Aproveite para organizar suas próximas aulas</p>
-            </div>
-          )
-        }
-      </AnimatedItem>
-
-      {/* Help Banner - Visible for new users or quick access */}
-      <motion.div variants={VARIANTS.fadeUp} className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-500 to-purple-600 p-[1px] shadow-lg shadow-indigo-500/20 group">
-        <div className={`relative bg-gradient-to-br transition-all duration-700 p-4 md:p-8 lg:p-12 flex flex-col items-center md:items-start text-center md:text-left gap-6 md:gap-10 ${theme.isDarkMode ? 'from-slate-800/80 to-slate-900/90' : 'from-indigo-600 to-indigo-800'}`}>
-          {/* Background decoration - OPTIMIZED */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2 bg-[radial-gradient(circle,rgba(99,102,241,0.2)_0%,transparent_70%)]"></div>
-
-          <div className="flex items-center gap-6 relative z-10">
-            <div className="size-16 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm shrink-0">
-              <span className="material-symbols-outlined text-3xl">rocket_launch</span>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-text-primary mb-1">
-                Domine o Prof. Acerta+
-              </h3>
-              <p className="text-text-secondary text-sm max-w-lg leading-relaxed">
-                Descubra como lançar notas, controlar frequência e gerar relatórios em segundos.
-                <span className="hidden sm:inline"> Confira nosso guia passo-a-passo.</span>
-              </p>
-            </div>
-          </div>
-
-          <div className="flex w-full sm:w-auto gap-3 relative z-10">
-            <Link
-              to="/instructions"
-              className="flex-1 sm:flex-none px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-indigo-600/20 active:scale-95 flex items-center justify-center gap-2"
-            >
-              <span className="material-symbols-outlined text-lg">menu_book</span>
-              Ver Manual
-            </Link>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* QUICK ACTIONS GRID - Fluid version */}
-      <AnimatedItem className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] md:grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 lg:gap-6">
+      {/* QUICK ACTIONS GRID */}
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] md:grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 lg:gap-6">
         {[
           { icon: 'design_services', label: 'Planejar', path: '/planning', color: 'text-blue-500', bg: 'bg-blue-500/10' },
           { icon: 'playlist_add_check', label: 'Chamada', path: '/attendance', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
@@ -893,7 +630,6 @@ export const Dashboard: React.FC = () => {
               hoverEffect={true}
             >
               <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-transparent to-primary/5`} />
-
               <div className={`p-3 rounded-xl ${action.bg} group-hover:scale-110 transition-transform duration-300`}>
                 <span className={`material-symbols-outlined text-xl md:text-2xl font-black ${action.color}`}>{action.icon}</span>
               </div>
@@ -901,30 +637,16 @@ export const Dashboard: React.FC = () => {
             </AnimatedCard>
           </Link>
         ))}
-      </AnimatedItem>
+      </div>
 
-
-      {/* Main KPI Grid - Cyber-Glass Bento - Responsive & Fluid */}
-      <AnimatedItem className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(340px,1fr))] gap-6 relative z-10">
-
-        {/* Total Students (Large Card) */}
-        <AnimatedCard
-          className="col-span-1 md:col-span-full xl:col-span-2 glass-card-premium p-8 relative overflow-hidden group transition-all duration-500 flex flex-col justify-between h-auto min-h-[300px]"
-          hoverEffect={false} // Custom hover effect inside
-        >
-          {/* Ambient Glows */}
-          <div
-            className="absolute -top-20 -right-20 w-[400px] h-[400px] opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none theme-radial-primary"
-          ></div>
-          <div
-            className="absolute -bottom-20 -left-20 w-[400px] h-[400px] opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none theme-radial-secondary"
-          ></div>
-
+      {/* Main KPI Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(340px,1fr))] gap-6 relative z-10">
+        <AnimatedCard className="col-span-1 md:col-span-full xl:col-span-2 glass-card-premium p-8 relative overflow-hidden group transition-all duration-500 flex flex-col justify-between h-auto min-h-[300px]" hoverEffect={false}>
+          <div className="absolute -top-20 -right-20 w-[400px] h-[400px] opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none theme-radial-primary"></div>
+          <div className="absolute -bottom-20 -left-20 w-[400px] h-[400px] opacity-10 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none theme-radial-secondary"></div>
           <div className="relative flex flex-col md:flex-row items-start justify-between h-full gap-6 md:gap-0">
             <div className="flex flex-col justify-between h-full">
-              <div
-                className="size-16 rounded-2xl bg-surface-subtle border border-border-subtle flex items-center justify-center transition-all duration-500 group-hover:scale-110 theme-text-primary theme-glow-primary"
-              >
+              <div className="w-16 h-16 rounded-2xl bg-surface-subtle border border-border-subtle flex items-center justify-center transition-all duration-500 group-hover:scale-110 theme-text-primary theme-glow-primary">
                 <span className="material-symbols-outlined text-3xl">groups</span>
               </div>
               <div>
@@ -936,16 +658,11 @@ export const Dashboard: React.FC = () => {
                 <h2 className="text-sm font-bold text-text-muted uppercase tracking-widest mt-2">{isContextSelected ? 'Alunos na Turma' : 'Total de Alunos'}</h2>
               </div>
             </div>
-
             <div className="flex-1 w-full md:w-auto flex flex-col items-end h-full justify-between">
-              <span
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border mb-6 theme-text-primary theme-bg-surface-subtle theme-border-subtle"
-              >
-                <span className="size-1.5 rounded-full animate-pulse shadow-[0_0_10px_currentColor] theme-bg-primary"></span>
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border mb-6 theme-text-primary theme-bg-surface-subtle theme-border-subtle">
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse shadow-[0_0_10px_currentColor] theme-bg-primary"></span>
                 Fluxo de Atividade
               </span>
-
-              {/* GITHUB HEATMAP INTEGRATION */}
               <div className="w-full lg:w-max max-w-full glass-card-soft p-3 rounded-2xl bg-surface-subtle/50 border theme-border-opaco">
                 <ActivityHeatmap data={heatmapPoints} loading={loadingOccurrences} />
               </div>
@@ -953,14 +670,10 @@ export const Dashboard: React.FC = () => {
           </div>
         </AnimatedCard>
 
-        {/* Grades (Small Card) */}
-        {/* Grades (Small Card) */}
         <Link to="/grades">
           <AnimatedCard className="h-full glass-card-soft p-6 hover:bg-white/10 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px] hover:shadow-lg border-transparent hover:border-primary/50">
             <div className="flex justify-between items-start relative z-10">
-              <div
-                className="size-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform theme-icon-secondary-transparent"
-              >
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform theme-icon-secondary-transparent">
                 <span className="material-symbols-outlined text-2xl">grade</span>
               </div>
               <span className="material-symbols-outlined theme-text-primary opacity-40 group-hover:opacity-100 transition-all">arrow_outward</span>
@@ -971,28 +684,19 @@ export const Dashboard: React.FC = () => {
                 <div className="h-10 w-24 bg-surface-subtle rounded-lg animate-pulse"></div>
               ) : (
                 <div className="flex items-baseline gap-2">
-                  <span
-                    className="text-3xl md:text-3xl lg:text-4xl font-display font-black tracking-tight theme-text-primary"
-                  >
-                    {stats.gradeAverage.toFixed(1)}
-                  </span>
+                  <span className="text-3xl md:text-3xl lg:text-4xl font-display font-black tracking-tight theme-text-primary">{stats.gradeAverage.toFixed(1)}</span>
                   <span className="text-xs font-bold text-text-muted">/ 10</span>
                 </div>
               )}
             </div>
-            {/* Bg decoration */}
-            {/* Bg decoration - OPTIMIZED */}
-            <div className="absolute -bottom-10 -right-10 size-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none theme-radial-secondary"></div>
+            <div className="absolute -bottom-10 -right-10 w-32 h-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none theme-radial-secondary"></div>
           </AnimatedCard>
         </Link>
 
-        {/* Attendance (Small Card) */}
         <Link to="/attendance">
           <AnimatedCard className="h-full glass-card-soft p-6 hover:bg-white/10 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between min-h-[180px] hover:shadow-lg">
             <div className="flex justify-between items-start relative z-10">
-              <div
-                className="size-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform theme-icon-primary-transparent"
-              >
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform theme-icon-primary-transparent">
                 <span className="material-symbols-outlined text-2xl">event_available</span>
               </div>
               <span className="material-symbols-outlined theme-text-primary opacity-40 group-hover:opacity-100 transition-all">arrow_outward</span>
@@ -1008,159 +712,22 @@ export const Dashboard: React.FC = () => {
                 </div>
               )}
             </div>
-            {/* Bg decoration */}
-            {/* Bg decoration - OPTIMIZED */}
-            <div className="absolute -bottom-10 -right-10 size-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none theme-radial-primary"></div>
+            <div className="absolute -bottom-10 -right-10 w-32 h-32 opacity-10 group-hover:opacity-20 transition-colors pointer-events-none theme-radial-primary"></div>
           </AnimatedCard>
         </Link>
 
-        {/* Activities and Plans (Wide Card) */}
-        <AnimatedCard className="col-span-1 xl:col-span-2 glass-card-soft p-8 flex flex-col h-full" data-tour="dashboard-activities">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="font-display font-bold text-xl text-text-primary flex items-center gap-3">
-              <span className="material-symbols-outlined theme-text-primary">assignment_turned_in</span>
-              Atividades & Agenda
-            </h3>
-            <div className="flex gap-2">
-            </div>
-          </div>
+      <DashboardActivities
+        loading={loadingActivities}
+        upcomingActivities={upcomingActivities}
+        recentPlans={classPlans}
+      />
 
-          <div className="space-y-8">
-            {/* Upcoming Activities */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent"></div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest theme-text-primary">Atividades do Dia</h4>
-              </div>
-              <div className="space-y-3">
-                {loadingActivities ? (
-                  [1, 2].map(i => <div key={i} className="h-14 bg-surface-subtle rounded-xl animate-pulse"></div>)
-                ) : upcomingActivities.length === 0 ? (
-                  <p className="text-sm text-text-muted italic text-center py-4 bg-surface-subtle/50 rounded-xl border border-dashed border-border-subtle">Nenhuma atividade agendada.</p>
-                ) : (
-                  upcomingActivities.map(act => (
-                    <Link
-                      key={act.id}
-                      to="/activities"
-                      className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-black/5 dark:bg-black/20 hover:bg-white/5 rounded-2xl border border-white/5 transition-all duration-300 group cursor-pointer backdrop-blur-sm gap-3 md:gap-0"
-                    >
-                      <div className="flex items-center gap-4 overflow-hidden w-full md:w-auto">
-                        <div
-                          className="size-10 rounded-xl flex items-center justify-center border transition-all shrink-0 theme-icon-primary-transparent"
-                        >
-                          <span className="material-symbols-outlined">task_alt</span>
-                        </div>
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white truncate transition-colors">{act.title}</span>
-                          <span className="text-[10px] font-mono text-slate-500 uppercase truncate">{act.seriesId === '-1' ? 'Todas as Turmas' : 'Série Específica'}</span>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-start md:items-end gap-1 shrink-0 ml-0 md:ml-4 w-full md:w-auto">
-                        <span className="text-xs font-bold text-slate-400 bg-white/5 px-2 py-1.5 rounded-lg border border-white/5 w-full md:w-28 text-center block">
-                          {act.type === 'Conteúdo' && act.startDate && act.endDate
-                            ? `${new Date(act.startDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} - ${new Date(act.endDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`
-                            : new Date(act.date + 'T12:00:00').toLocaleDateString('pt-BR')}
-                        </span>
-                      </div>
-                    </Link>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Recent Plans */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="h-px flex-1 bg-gradient-to-r from-secondary/50 to-transparent"></div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest theme-text-secondary">Planejamentos</h4>
-              </div>
-              <div className="space-y-3">
-                {loadingPlans ? (
-                  [1, 2].map(i => <div key={i} className="h-14 bg-slate-800/10 rounded-xl animate-pulse"></div>)
-                ) : classPlans.length === 0 ? (
-                  <p className="text-sm text-slate-500 italic text-center py-4 bg-white/5 rounded-xl border border-dashed border-white/5">Nenhum planejamento recente.</p>
-                ) : (
-                  classPlans.map(plan => (
-                    <Link
-                      key={plan.id}
-                      to="/planning"
-                      className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-black/5 dark:bg-black/20 hover:bg-white/5 rounded-2xl border border-white/5 transition-all duration-300 group cursor-pointer backdrop-blur-sm gap-3 md:gap-0"
-                    >
-                      <div className="flex items-center gap-4 overflow-hidden w-full md:w-auto">
-                        <div
-                          className="size-10 rounded-xl flex items-center justify-center border transition-all shrink-0 theme-icon-secondary-transparent"
-                        >
-                          <span className="material-symbols-outlined">calendar_today</span>
-                        </div>
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white truncate transition-colors">{plan.title}</span>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-start md:items-end gap-1 shrink-0 ml-0 md:ml-4 w-full md:w-auto">
-                        <span className="text-xs font-bold text-slate-400 bg-white/5 px-2 py-1.5 rounded-lg border border-white/5 w-full md:w-28 text-center block">{new Date(plan.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
-                      </div>
-                    </Link>
-                  ))
-                )}
-
-              </div>
-            </div>
-          </div>
-        </AnimatedCard>
-
-        {/* Recent Ocurrences (Wide Card) */}
-        <AnimatedCard className="col-span-1 xl:col-span-2 glass-card-soft p-8 flex flex-col h-full border border-white/10" data-tour="dashboard-occurrences">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4 md:gap-0">
-            <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
-              <span className="material-symbols-outlined text-amber-500">history</span>
-              Ocorrências
-              {stats.newObservations > 0 && (
-                <span className="bg-amber-500/20 text-amber-500 text-[9px] px-2 py-0.5 rounded-full border border-amber-500/30 font-black uppercase tracking-wide ml-2 whitespace-nowrap">
-                  +{stats.newObservations} Novas
-                </span>
-              )}
-            </h3>
-            <Link
-              to="/observations"
-              className={`text-xs font-bold uppercase tracking-wider hover:underline flex items-center gap-1 self-end md:self-auto theme-text-primary`}
-            >
-              Ver Todas
-              <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </Link>
-          </div>
-
-          <div className="space-y-3">
-            {loadingOccurrences ? (
-              [1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-800/10 rounded-2xl animate-pulse"></div>)
-            ) : recentOccurrences.length === 0 ? (
-              <div className="p-8 text-center bg-black/5 dark:bg-black/20 rounded-2xl border border-dashed border-white/10">
-                <span className="material-symbols-outlined text-3xl theme-text-primary opacity-20 mb-2">check_circle</span>
-                <p className="text-slate-500 font-medium text-sm">Nenhuma ocorrência registrada.</p>
-              </div>
-            ) : (
-              recentOccurrences.map(occ => (
-                <div key={occ.id} className="flex items-center gap-4 p-4 bg-black/5 dark:bg-black/20 hover:bg-white/5 rounded-2xl transition-all border border-transparent border-white/5 hover:border-white/10 hover:shadow-lg group">
-                  <div className={`size-10 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0 ${occ.type === 'Elogio' ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-500/20' : 'bg-gradient-to-br from-rose-500 to-rose-700 shadow-rose-500/20'}`}>
-                    <span className="material-symbols-outlined text-lg">{getOccurrenceIcon(occ.type)}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-1 md:mb-0.5 gap-1">
-                      <p className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors truncate">
-                        {(occ as any).student_name} • {occ.type}
-                      </p>
-                      <span className="text-[10px] font-mono font-bold text-slate-500 bg-black/10 dark:bg-black/30 px-2 py-0.5 rounded border border-white/5 w-fit whitespace-nowrap">{new Date(occ.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
-                    </div>
-                    <p className="text-xs text-slate-400 line-clamp-1 group-hover:text-slate-500 transition-colors font-medium">"{occ.description}"</p>
-                  </div>
-                </div>
-              ))
-            )}
-
-          </div>
-        </AnimatedCard>
-      </AnimatedItem>
-
-
-    </AnimatedList >
+      <DashboardOccurrences
+        loading={loadingOccurrences}
+        occurrences={recentOccurrences}
+        newCount={stats.newObservations}
+      />
+      </div>
+    </div>
   );
 };

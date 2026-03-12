@@ -236,7 +236,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
                         {/* Header */}
                         <div className="px-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className={`size-10 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0`}>
+                                <div className={`w-10 h-10 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center shrink-0`}>
                                     <span className="material-symbols-outlined text-xl">notifications_active</span>
                                 </div>
                                 <div>
@@ -244,7 +244,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Central de Alertas</p>
                                 </div>
                             </div>
-                            <button onClick={handleClose} className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 active:scale-90 transition-transform">
+                            <button onClick={handleClose} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 active:scale-90 transition-transform">
                                 <span className="material-symbols-outlined text-sm">close</span>
                             </button>
                         </div>
@@ -263,7 +263,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ isMobile
                 <div className="absolute top-full right-0 mt-3 w-80 md:w-96 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[100] animate-in slide-in-from-top-4 duration-300 origin-top-right">
                     <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
                         <div className="flex items-center gap-3">
-                            <div className={`size-10 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
+                            <div className={`w-10 h-10 rounded-2xl bg-${theme.primaryColor}/10 text-${theme.primaryColor} flex items-center justify-center`}>
                                 <span className="material-symbols-outlined text-xl">notifications_active</span>
                             </div>
                             <h3 className="font-black text-slate-900 dark:text-white">Central de Alertas</h3>
@@ -298,7 +298,7 @@ const renderNotificationList = (notifications: NotificationItem[], theme: any, o
     if (notifications.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-12 px-6 text-center group">
-                <div className={`size-20 rounded-full bg-${theme.primaryColor}/5 dark:bg-slate-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500`}>
+                <div className={`w-20 h-20 rounded-full bg-${theme.primaryColor}/5 dark:bg-slate-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500`}>
                     <span className={`material-symbols-outlined text-4xl text-${theme.primaryColor}/30 dark:text-slate-600`}>
                         {new Date().getDay() === 0 || new Date().getDay() === 6 ? 'weekend' : 'eco'}
                     </span>
@@ -321,7 +321,7 @@ const renderNotificationList = (notifications: NotificationItem[], theme: any, o
                     onClick={onClose}
                     className="flex gap-4 p-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all group border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
                 >
-                    <div className={`size-12 rounded-2xl bg-${n.color === 'rose' ? 'rose-500' : theme.primaryColor}/10 text-${n.color === 'rose' ? 'rose-500' : theme.primaryColor} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
+                    <div className={`w-12 h-12 rounded-2xl bg-${n.color === 'rose' ? 'rose-500' : theme.primaryColor}/10 text-${n.color === 'rose' ? 'rose-500' : theme.primaryColor} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
                         <span className="material-symbols-outlined">
                             {n.type === 'activity' ? 'assignment' : n.type === 'plan' ? 'menu_book' : 'warning'}
                         </span>

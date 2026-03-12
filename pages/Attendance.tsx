@@ -2,14 +2,28 @@ import React, { useState, useEffect, useRef } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Virtuoso, TableVirtuoso } from 'react-virtuoso';
 import { VARIANTS } from '../constants/motion';
-import { AnimatedRow } from '../components/ui/AnimatedRow';
-import { AnimatedCard } from '../components/ui/AnimatedCard';
 import { useClass } from '../contexts/ClassContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
-import { Student, AttendanceRecord } from '../types';
+import { Student } from '../types';
 import { supabase } from '../lib/supabase';
+
+// Updated Table components for Virtuoso
+const TableComponents = {
+    Scroller: React.forwardRef<HTMLDivElement, any>((props, ref) => (
+        <div {...props} ref={ref} className="overflow-x-auto custom-scrollbar h-full w-full" />
+    )),
+    Table: (props: any) => <table {...props} className="w-full text-left border-collapse" style={{ tableLayout: 'fixed' }} />,
+    TableHead: React.forwardRef<HTMLTableSectionElement, any>((props, ref) => (
+        <thead {...props} ref={ref} className="bg-surface-subtle/90 backdrop-blur-md border-b border-border-default sticky top-0 z-30 shadow-sm" />
+    )),
+    TableBody: React.forwardRef<HTMLTableSectionElement, any>((props, ref) => (
+        <tbody {...props} ref={ref} className="divide-y divide-border-subtle" />
+    )),
+    TableRow: (props: any) => <tr {...props} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all border-b border-border-subtle last:border-0" />
+};
 
 // Utility to convert tailwind color names or hex to RGB for jsPDF
 const getThemeRGB = (colorClass: string): [number, number, number] => {
@@ -174,6 +188,7 @@ export const Attendance: React.FC = () => {
     const [activeDates, setActiveDates] = useState<Set<string>>(new Set());
     const [isSaving, setIsSaving] = useState(false);
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const realtimeTimeoutRef = useRef<any>(null);
 
     // CACHE: Store attendance for all periods locally [Period -> [StudentId -> Status]]
     const attendanceCache = useRef<Record<number, Record<string, string>>>({});
@@ -219,7 +234,7 @@ export const Attendance: React.FC = () => {
     // --- DYNAMIC PERIODS LOGIC ---
     useEffect(() => {
         const checkSchedule = async () => {
-            if (!currentUser || !selectedSeriesId || !selectedSection) return;
+            if (!currentUser || !selectedSeriesId || !selectedSection || !activeSubject) return;
 
             try {
                 const dateObj = new Date(selectedDate + 'T12:00:00');
@@ -230,17 +245,14 @@ export const Attendance: React.FC = () => {
                     .select('*', { count: 'exact', head: true })
                     .eq('user_id', currentUser.id)
                     .eq('class_id', selectedSeriesId)
-                    .eq('section', selectedSection) // FIX: Filter by section too!
+                    .eq('section', selectedSection)
+                    .eq('subject', activeSubject) // CORREÇÃO B4: Filtra pela matéria ativa para não puxar "a grade antiga" do banco
                     .eq('day_of_week', dayOfWeek);
 
                 if (!error) {
-                    // If count is 0 (no classes scheduled), technically implies "extra class" or just 1 default slot. 
-                    // Let's stick to minimum 1.
-                    // If count is > 1 (e.g. 2 lessons), permit 2 periods.
                     const newMax = (count && count > 1) ? count : 1;
                     setMaxPeriods(newMax);
 
-                    // Reset if current selection is out of bounds
                     if (selectedPeriod > newMax) setSelectedPeriod(1);
                 }
             } catch (e) {
@@ -249,7 +261,7 @@ export const Attendance: React.FC = () => {
         };
 
         checkSchedule();
-    }, [selectedDate, selectedSeriesId, selectedSection, currentUser]);
+    }, [selectedDate, selectedSeriesId, selectedSection, currentUser, activeSubject, selectedPeriod]);
 
     const fetchData = async (silent = false) => {
         if (!currentUser || !selectedSeriesId || !selectedSection) return;
@@ -297,6 +309,8 @@ export const Attendance: React.FC = () => {
                     .eq('date', selectedDate)
                     .eq('subject', activeSubject)
                     .eq('unit', selectedUnit)
+                    .eq('series_id', selectedSeriesId)
+                    .eq('section', selectedSection)
                     .eq('user_id', currentUser.id)
                     .in('student_id', formattedStudents.map(s => s.id));
 
@@ -309,8 +323,12 @@ export const Attendance: React.FC = () => {
                 // Initialize cache buckets (optional, but good for safety)
                 for (let i = 1; i <= 5; i++) newCache[i] = {};
 
+                if (todaysRecords && todaysRecords.length > 0) {
+                    console.log(`Fetched ${todaysRecords.length} records for ${selectedDate}. Sample:`, todaysRecords[0]);
+                }
+
                 (todaysRecords || []).forEach(record => {
-                    const p = record.period ? parseInt(record.period) : 1; // Default to 1 if null
+                    const p = record.period !== undefined && record.period !== null ? parseInt(record.period) : 1;
                     const sid = record.student_id.toString();
                     if (!newCache[p]) newCache[p] = {};
                     newCache[p][sid] = record.status;
@@ -318,13 +336,13 @@ export const Attendance: React.FC = () => {
 
                 if (mountedRef.current) {
                     attendanceCache.current = newCache;
-                    // Set map for CURRENT period
-                    setAttendanceMap(newCache[selectedPeriod] || {});
+                    const currentMap = newCache[selectedPeriod] || {};
+                    console.log(`Setting map for Period ${selectedPeriod}. Count:`, Object.keys(currentMap).length);
+                    setAttendanceMap(currentMap);
                     fetchActiveDates(formattedStudents.map(s => s.id));
                 }
             } catch (attError) {
-                console.warn("Attendance fetch failed (possibly missing column?)", attError);
-                // Students remain visible, map just stays empty
+                console.error("Attendance fetch failed CRITICAL", attError);
             }
 
         } catch (e) {
@@ -355,21 +373,21 @@ export const Attendance: React.FC = () => {
                 },
                 (payload) => {
                     // Realtime Change Received!
-                    // Filter by user_id to ensure we only get our own updates (or shared if intended)
-                    // The 'filter' in subscription handles date.
-                    // We should verify userID if multiple teachers share db but row level security usually handles this.
-                    // Re-fetch data to sync
-                    fetchData(true);
+                    // Debounce fetch to avoid storm of requests during bulk updates
+                    if (realtimeTimeoutRef.current) clearTimeout(realtimeTimeoutRef.current);
+                    realtimeTimeoutRef.current = setTimeout(() => {
+                        fetchData(true);
+                    }, 1000); // 1s buffer to let bulk operations complete
                 }
             )
             .subscribe();
 
         return () => {
             // Realtime cleanup
+            if (realtimeTimeoutRef.current) clearTimeout(realtimeTimeoutRef.current);
             supabase.removeChannel(channel);
-            // clearInterval(interval);
         };
-    }, [selectedDate, selectedSeriesId, selectedSection, currentUser, activeSubject, selectedUnit, selectedPeriod]);
+    }, [selectedDate, selectedSeriesId, selectedSection, currentUser, activeSubject, selectedUnit]);
     // -----------------------------
 
     const fetchActiveDates = async (studentIds: string[]) => {
@@ -420,7 +438,7 @@ export const Attendance: React.FC = () => {
 
             if (status === '') {
                 // Delete specific period record
-                await supabase
+                const { error: delError } = await supabase
                     .from('attendance')
                     .delete()
                     .match({
@@ -430,10 +448,12 @@ export const Attendance: React.FC = () => {
                         unit: selectedUnit,
                         period: selectedPeriod
                     });
+                if (delError) console.error("Supabase DELETION error:", delError);
             } else {
-                await supabase
+                const { error: upsertError } = await supabase
                     .from('attendance')
-                    .upsert(cleanPayload); // upsert needs constraint on (student_id, date, subject, unit, period)
+                    .upsert(cleanPayload, { onConflict: 'student_id,date,user_id,subject,unit,period' });
+                if (upsertError) console.error("Supabase UPSERT error:", upsertError);
             }
 
             // UI Update (Dates)
@@ -487,7 +507,7 @@ export const Attendance: React.FC = () => {
                         period: selectedPeriod
                     });
             } else {
-                await supabase.from('attendance').upsert(records);
+                await supabase.from('attendance').upsert(records, { onConflict: 'student_id,date,user_id,subject,unit,period' });
             }
         } catch (e) {
             console.error("Bulk update failed", e);
@@ -567,14 +587,6 @@ export const Attendance: React.FC = () => {
                 .eq('user_id', currentUser.id)
                 .eq('subject', activeSubject)
                 .eq('unit', selectedUnit)
-                // PDF: Include ALL periods? Or filter by current period?
-                // Logic: "Two lessons same day" -> If I export, do I want Lesson 1 and Lesson 2 separated or merged?
-                // Standard practice: Show "Day P1" and "Day P2" columns? Or just merge presence?
-                // For simplicity first: Filter by selectedPeriod to generate report FOR THAT PERIOD context.
-                // Or, if user wants daily aggregate...
-                // Based on "mark two presences separately", user likely treats them as distinct events.
-                // Let's filter PDF by selectedPeriod too, so you generate "Frequency of Lesson 1".
-                .eq('period', selectedPeriod)
                 .in('student_id', students.map(s => s.id));
 
             if (error) throw error;
@@ -616,18 +628,35 @@ export const Attendance: React.FC = () => {
                 const row: any[] = [s.number, s.name];
 
                 sortedDateStrings.forEach(ds => {
-                    const record = yearRecords.find((r: any) => r.student_id.toString() === s.id && r.date === ds);
-                    const status = record ? record.status : '-';
-                    // Store bare status char for parsing later
-                    row.push(status);
+                    // Find all records for this student on this date (could be Period 1 and Period 2)
+                    const dayRecords = yearRecords.filter((r: any) => r.student_id.toString() === s.id && r.date === ds);
 
-                    if (status === 'P') { presenceCount++; validDays++; }
-                    else if (status === 'F' || status === 'J') { validDays++; }
+                    if (dayRecords.length === 0) {
+                        row.push('-');
+                    } else if (dayRecords.length === 1) {
+                        const status = dayRecords[0].status;
+                        row.push(status);
+                        if (status === 'P') { presenceCount++; validDays++; }
+                        else if (status === 'F' || status === 'J') { validDays++; }
+                    } else {
+                        // Multiple periods - consolidate or show Both? 
+                        // User said: "Show all days I marked". If 2 lessons, we can show "P/P" or just "P" if both present.
+                        // Let's use a simple consolidation: if any is 'F', it's 'F'? No, that's unfair.
+                        // Let's show the first letter of each period joined: "P/P", "P/F"
+                        const statuses = dayRecords.sort((a, b) => a.period - b.period).map(r => r.status || '-');
+                        const consolidated = statuses.join('/');
+                        row.push(consolidated);
+
+                        // For frequency calculation
+                        statuses.forEach(status => {
+                            if (status === 'P') { presenceCount++; validDays++; }
+                            else if (status === 'F' || status === 'J') { validDays++; }
+                        });
+                    }
                 });
 
-                // Calculate % but return formatted string
                 const percentage = validDays > 0 ? (presenceCount / validDays) * 100 : 100;
-                row.push(percentage); // Keep as number for bar drawing
+                row.push(percentage);
                 return row;
             });
 
@@ -886,57 +915,56 @@ export const Attendance: React.FC = () => {
 
             {/* Students Table */}
             {/* Students Table (Desktop/Tablet) */}
-            <div className={`hidden md:block bg-surface-card border border-border-default rounded-3xl shadow-card overflow-hidden transition-all duration-300 ${loading ? 'opacity-70 pointer-events-none' : ''}`}>
-                <div className="overflow-x-auto custom-scrollbar">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-surface-subtle/50 border-b border-border-subtle">
-                                <th className="px-3 sm:px-8 py-4 sm:py-5 text-[10px] font-black uppercase text-text-muted tracking-widest w-12 sm:w-24 text-center sm:text-left">Nº</th>
-                                <th className="px-3 sm:px-8 py-4 sm:py-5 text-[10px] font-black uppercase text-text-muted tracking-widest text-left">Aluno</th>
-                                <th className="px-3 sm:px-8 py-4 sm:py-5 text-[10px] font-black uppercase text-text-muted tracking-widest text-center">Registro</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border-subtle">
-                            {students.length > 0 ? (
-                                students.map((s, i) => (
-                                    <AttendanceRow
-                                        key={s.id}
-                                        student={s}
-                                        status={attendanceMap[s.id]}
-                                        onStatusChange={handleStatusChange}
-                                        theme={theme}
-                                    />
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={3} className="px-8 py-20 text-center">
-                                        <div className="flex flex-col items-center">
-                                            <div className="size-20 rounded-full bg-surface-subtle flex items-center justify-center mb-4">
-                                                <span className="material-symbols-outlined text-text-disabled text-4xl">group_off</span>
-                                            </div>
-                                            <h4 className="font-bold text-text-muted">Nenhum aluno encontrado</h4>
-                                            <p className="text-sm text-text-disabled">Certifique-se de que há alunos cadastrados nesta turma.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+            <div className={`hidden md:flex flex-col bg-surface-card border border-border-default rounded-3xl shadow-card overflow-hidden transition-all duration-300 h-[650px] ${loading ? 'opacity-70 pointer-events-none' : ''}`}>
+                {/* Fixed Header */}
+                <div className="flex items-center bg-surface-subtle/80 backdrop-blur-md border-b border-border-default z-20">
+                    <div className="w-[80px] shrink-0 px-6 py-4 text-[10px] font-black uppercase text-text-muted tracking-widest text-center">Nº</div>
+                    <div className="flex-1 min-w-0 px-6 py-4 text-[10px] font-black uppercase text-text-muted tracking-widest text-left">Aluno</div>
+                    <div className="w-[320px] shrink-0 px-6 py-4 text-[10px] font-black uppercase text-text-muted tracking-widest text-center">Registro</div>
                 </div>
+
+                {students.length > 0 ? (
+                    <Virtuoso
+                        data={students}
+                        className="flex-1 custom-scrollbar"
+                        itemContent={(_index: number, s: Student) => (
+                            <AttendanceRow
+                                key={s.id}
+                                student={s}
+                                status={attendanceMap[s.id]}
+                                onStatusChange={handleStatusChange}
+                                theme={theme}
+                            />
+                        )}
+                    />
+                ) : (
+                    <div className="flex flex-col items-center justify-center flex-1">
+                        <div className="size-20 rounded-full bg-surface-subtle flex items-center justify-center mb-4">
+                            <span className="material-symbols-outlined text-text-disabled text-4xl">group_off</span>
+                        </div>
+                        <h4 className="font-bold text-text-muted">Nenhum aluno encontrado</h4>
+                        <p className="text-sm text-text-disabled">Certifique-se de que há alunos cadastrados nesta turma.</p>
+                    </div>
+                )}
             </div>
 
             {/* Students List (Mobile Cards) */}
-            <div className={`md:hidden space-y-3 pb-20 ${loading ? 'opacity-70 pointer-events-none' : ''}`}>
+            <div className={`md:hidden space-y-3 pb-20 h-[600px] ${loading ? 'opacity-70 pointer-events-none' : ''}`}>
                 {students.length > 0 ? (
-                    students.map((s) => (
-                        <MobileAttendanceCard
-                            key={s.id}
-                            student={s}
-                            status={attendanceMap[s.id]}
-                            onStatusChange={handleStatusChange}
-                            theme={theme}
-                        />
-                    ))
+                    <Virtuoso
+                        data={students}
+                        itemContent={(_index: number, s: Student) => (
+                            <div className="pb-3">
+                                <MobileAttendanceCard
+                                    key={s.id}
+                                    student={s}
+                                    status={attendanceMap[s.id]}
+                                    onStatusChange={handleStatusChange}
+                                    theme={theme}
+                                />
+                            </div>
+                        )}
+                    />
                 ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                         <div className="size-16 rounded-full bg-surface-subtle flex items-center justify-center mb-4">
@@ -998,7 +1026,7 @@ interface AttendanceRowProps {
 // Mobile Card Component
 const MobileAttendanceCard = React.memo(({ student: s, status, onStatusChange, theme }: AttendanceRowProps) => {
     return (
-        <AnimatedCard
+        <div
             className="bg-surface-card border border-border-default rounded-xl p-3 shadow-sm"
         >
             <div className="flex items-center gap-3 mb-3">
@@ -1041,34 +1069,39 @@ const MobileAttendanceCard = React.memo(({ student: s, status, onStatusChange, t
                     color="slate"
                 />
             </div>
-        </AnimatedCard>
+        </div>
     );
 });
 
 const AttendanceRow = React.memo(({ student: s, status, onStatusChange, theme }: AttendanceRowProps) => {
+    // Elegant number display
+    const isRealNumber = s.number && s.number.length <= 3 && !isNaN(Number(s.number));
+    const displayNum = isRealNumber ? s.number.padStart(2, '0') : '#';
+
     return (
-        <AnimatedRow
-            className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all border-b border-border-subtle last:border-0"
-        >
-            <td className="px-3 sm:px-8 py-3 sm:py-4 landscape:py-1.5 landscape:px-2 text-center sm:text-left">
-                <span className="font-mono text-xs sm:text-sm font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 sm:px-2 py-1 rounded-lg inline-block min-w-[2.2rem] text-center">
-                    {s.number.padStart(2, '0')}
+        <div className="flex items-center group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all border-b border-border-subtle last:border-0 overflow-hidden">
+            <div className="w-[80px] shrink-0 p-4 px-6 text-center">
+                <span className="font-mono text-xs font-black text-slate-400 bg-slate-100 dark:bg-slate-900/50 px-2 py-1 rounded-lg inline-block min-w-[2rem]">
+                    {displayNum}
                 </span>
-            </td>
-            <td className="px-3 sm:px-8 py-3 sm:py-4 landscape:py-1.5 landscape:px-2">
-                <div className="flex items-center gap-2 sm:gap-4">
-                    <div className="h-6 sm:h-8 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block mx-2 landscape:hidden"></div>
-                    <div className={`student-avatar student-avatar-sm bg-gradient-to-br ${s.color || `from-indigo-600 to-indigo-800`}`}>
+            </div>
+            <div className="flex-1 min-w-0 p-4 px-6 overflow-hidden">
+                <div className="flex items-center gap-4">
+                    <div className={`student-avatar student-avatar-sm ring-2 ring-white dark:ring-slate-800 shrink-0 bg-gradient-to-br ${s.color || `from-indigo-600 to-indigo-800`}`}>
                         {s.initials || s.name.substring(0, 2)}
                     </div>
-                    <div className="flex flex-col min-w-0">
-                        <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white group-hover:text-primary transition-colors truncate max-w-[120px] sm:max-w-xs">{s.name}</span>
-                        <span className="text-[9px] sm:text-[10px] font-medium text-slate-400 uppercase tracking-tighter">ID: {s.id.substring(0, 6)}</span>
+                    <div className="flex flex-col min-w-0 flex-1">
+                        <span className="font-bold text-sm text-slate-800 dark:text-white group-hover:text-primary transition-colors truncate">
+                            {s.name}
+                        </span>
+                        <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
+                            ID: {s.id.substring(0, 8)}
+                        </span>
                     </div>
                 </div>
-            </td>
-            <td className="px-3 sm:px-8 py-3 sm:py-4 landscape:py-1.5 landscape:px-2">
-                <div className="flex justify-center gap-3 landscape:gap-1.5">
+            </div>
+            <div className="w-[320px] shrink-0 p-4 px-6">
+                <div className="flex justify-center gap-3">
                     <AttendanceButton
                         active={status === 'P'}
                         onClick={() => onStatusChange(s.id, 'P')}
@@ -1098,7 +1131,7 @@ const AttendanceRow = React.memo(({ student: s, status, onStatusChange, theme }:
                         color="slate"
                     />
                 </div>
-            </td>
-        </AnimatedRow>
+            </div>
+        </div>
     );
-});
+});

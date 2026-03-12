@@ -13,6 +13,7 @@ import { BulkTransferModal } from '../components/BulkTransferModal';
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import type Tesseract from 'tesseract.js';
+import { Virtuoso } from 'react-virtuoso';
 
 interface StudentsListProps {
     mode?: 'manage' | 'report';
@@ -25,9 +26,7 @@ import { useStudentsData } from '../hooks/useStudentsData';
 const StudentMobileCard = React.memo(({ student, isSelected, toggleSelect, isEditing, editName, setEditName, saveEdit, handleEdit, setTransferringStudent, handleDelete }: any) => {
     const isChecked: "true" | "false" = isSelected ? "true" : "false";
     return (
-        <motion.div
-            variants={VARIANTS.fadeUp}
-            layoutId={`student-row-mobile-${student.id}`}
+        <div
             className={`group relative overflow-hidden transition-all duration-200 border-b border-border-subtle last:border-0 ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card'}`}
             onClick={() => toggleSelect(student.id)}
         >
@@ -115,14 +114,13 @@ const StudentMobileCard = React.memo(({ student, isSelected, toggleSelect, isEdi
                     </button>
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 });
 
 const StudentDesktopRow = React.memo(({ student, isSelected, toggleSelect, isEditing, editName, setEditName, saveEdit, handleEdit, setTransferringStudent, handleDelete }: any) => {
     return (
-        <motion.tr
-            variants={VARIANTS.fadeUp}
+        <tr
             className={`group transition-all duration-150 border-b border-border-subtle ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'bg-surface-card hover:bg-surface-subtle'}`}
         >
             <td className="px-4 py-4">
@@ -204,7 +202,7 @@ const StudentDesktopRow = React.memo(({ student, isSelected, toggleSelect, isEdi
                     </button>
                 </div>
             </td>
-        </motion.tr>
+        </tr>
     );
 });
 
@@ -1039,21 +1037,27 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
                                     <p className="text-xs text-text-disabled mt-1">Adicione alunos no botão acima.</p>
                                 </div>
                             ) : (
-                                students.map((student) => (
-                                    <StudentMobileCard
-                                        key={student.id}
-                                        student={student}
-                                        isSelected={selectedIds.includes(student.id)}
-                                        toggleSelect={toggleSelect}
-                                        isEditing={editingId === student.id}
-                                        editName={editingId === student.id ? editName : ''}
-                                        setEditName={setEditName}
-                                        saveEdit={saveEdit}
-                                        handleEdit={handleEdit}
-                                        setTransferringStudent={setTransferringStudent}
-                                        handleDelete={handleDelete}
-                                    />
-                                ))
+                                <Virtuoso
+                                    style={{ height: '70vh' }}
+                                    className="custom-scrollbar"
+                                    data={students}
+                                    itemContent={(index, student) => (
+                                        <div className="pb-2">
+                                            <StudentMobileCard
+                                                student={student}
+                                                isSelected={selectedIds.includes(student.id)}
+                                                toggleSelect={toggleSelect}
+                                                isEditing={editingId === student.id}
+                                                editName={editingId === student.id ? editName : ''}
+                                                setEditName={setEditName}
+                                                saveEdit={saveEdit}
+                                                handleEdit={handleEdit}
+                                                setTransferringStudent={setTransferringStudent}
+                                                handleDelete={handleDelete}
+                                            />
+                                        </div>
+                                    )}
+                                />
                             )}
                         </div>
 

@@ -21,7 +21,7 @@ function createWindow() {
             preload: path.join(__dirname, 'preload.cjs'),
             backgroundThrottling: false
         },
-        icon: path.join(__dirname, 'public/logo.png'),
+        icon: path.join(__dirname, 'public/logo.svg'),
         title: "Prof. Acerta+"
     });
 

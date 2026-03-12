@@ -23,7 +23,7 @@ export const SkeletonLayout: React.FC<SkeletonLayoutProps> = ({ type = 'default'
                     {[1, 2, 3, 4, 5, 6].map(i => (
                         <div key={i} className="flex flex-col gap-4 p-6 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
                             <div className="flex items-center gap-4">
-                                <div className="size-12 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
+                                <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
                                 <div className="flex flex-col gap-2 flex-1">
                                     <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
                                     <div className="h-3 w-1/2 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
@@ -49,7 +49,7 @@ export const SkeletonLayout: React.FC<SkeletonLayoutProps> = ({ type = 'default'
                     <div className="flex flex-col gap-4">
                         {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
                             <div key={i} className="flex items-center gap-4 py-2 border-b border-dashed border-slate-100 dark:border-slate-800 last:border-0">
-                                <div className="size-8 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
+                                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
                                 <div className="h-4 w-1/3 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
                                 <div className="h-4 w-1/4 bg-slate-200 dark:bg-slate-800 rounded animate-pulse ml-auto"></div>
                             </div>

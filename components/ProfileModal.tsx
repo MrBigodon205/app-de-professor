@@ -221,7 +221,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, def
                                         : 'text-text-secondary hover:bg-surface-elevated/50 hover:text-text-primary'
                                         }`}
                                 >
-                                    <div className={`size-6 md:size-8 rounded-lg flex items-center justify-center transition-all ${activeTab === 'profile' ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-subtle text-text-muted group-hover:bg-white group-hover:shadow-md'}`}>
+                                    <div className={`w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center transition-all ${activeTab === 'profile' ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-subtle text-text-muted group-hover:bg-white group-hover:shadow-md'}`}>
                                         <span className="material-symbols-outlined text-base md:text-lg">person</span>
                                     </div>
                                     <span className="text-xs md:text-base hidden sm:inline">Dados</span>
@@ -235,7 +235,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, def
                                         : 'text-text-secondary hover:bg-surface-elevated/50 hover:text-text-primary'
                                         }`}
                                 >
-                                    <div className={`size-6 md:size-8 rounded-lg flex items-center justify-center transition-all ${activeTab === 'schools' ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-subtle text-text-muted group-hover:bg-white group-hover:shadow-md'}`}>
+                                    <div className={`w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center transition-all ${activeTab === 'schools' ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-subtle text-text-muted group-hover:bg-white group-hover:shadow-md'}`}>
                                         <span className="material-symbols-outlined text-base md:text-lg">school</span>
                                     </div>
                                     <span className="text-xs md:text-base hidden sm:inline">Escolas</span>
@@ -249,7 +249,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, def
                                         : 'text-text-secondary hover:bg-surface-elevated/50 hover:text-text-primary'
                                         }`}
                                 >
-                                    <div className={`size-6 md:size-8 rounded-lg flex items-center justify-center transition-all ${activeTab === 'security' ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-subtle text-text-muted group-hover:bg-white group-hover:shadow-md'}`}>
+                                    <div className={`w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center transition-all ${activeTab === 'security' ? `bg-${theme.primaryColor}/10 text-${theme.primaryColor}` : 'bg-surface-subtle text-text-muted group-hover:bg-white group-hover:shadow-md'}`}>
                                         <span className="material-symbols-outlined text-base md:text-lg">lock</span>
                                     </div>
                                     <span className="text-xs md:text-base hidden sm:inline">Segurança</span>
@@ -260,7 +260,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, def
 
                         {/* Main Content */}
                         <div className="flex-1 overflow-y-auto custom-scrollbar bg-surface-card/30 p-0 relative min-h-0">
-                            <button onClick={onClose} className="flex absolute top-4 right-4 md:top-6 md:right-6 size-10 items-center justify-center rounded-full bg-surface-subtle hover:bg-red-50 text-text-muted hover:text-red-500 transition-all z-20 shadow-sm border border-border-subtle group">
+                            <button onClick={onClose} className="flex absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 items-center justify-center rounded-full bg-surface-subtle hover:bg-red-50 text-text-muted hover:text-red-500 transition-all z-20 shadow-sm border border-border-subtle group">
                                 <span className="material-symbols-outlined text-xl group-hover:rotate-90 transition-transform duration-300">close</span>
                             </button>
 
@@ -278,7 +278,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, def
                                     <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1">
                                         <div className="flex flex-col items-center mb-6 md:mb-8">
                                             <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                                                <div className={`size-24 md:size-32 rounded-full overflow-hidden border-4 border-surface-card shadow-2xl relative z-10 transition-transform duration-300 group-hover:scale-105`}>
+                                                <div className={`w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-surface-card shadow-2xl relative z-10 transition-transform duration-300 group-hover:scale-105`}>
                                                     {uploading ? (
                                                         <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-20">
                                                             <span className="material-symbols-outlined animate-spin text-white/50 text-3xl">refresh</span>
@@ -294,7 +294,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, def
                                                         <span className="material-symbols-outlined text-white text-3xl drop-shadow-lg scale-90 group-hover:scale-100 transition-transform">photo_camera</span>
                                                     </div>
                                                 </div>
-                                                <div className={`absolute -bottom-2 -right-2 size-8 md:size-10 bg-${theme.primaryColor} rounded-full flex items-center justify-center text-white shadow-lg border-2 border-surface-base z-20 group-hover:scale-110 transition-transform`}>
+                                                <div className={`absolute -bottom-2 -right-2 w-8 h-8 md:w-10 md:h-10 bg-${theme.primaryColor} rounded-full flex items-center justify-center text-white shadow-lg border-2 border-surface-base z-20 group-hover:scale-110 transition-transform`}>
                                                     <span className="material-symbols-outlined text-sm md:text-base">edit</span>
                                                 </div>
                                             </div>
@@ -346,7 +346,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, def
                                             {currentUser?.account_type === 'institutional' ? (
                                                 <div className="group animate-in fade-in zoom-in-95 duration-300">
                                                     <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex flex-col items-center text-center gap-2">
-                                                        <div className="size-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-500 mb-1">
+                                                        <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-500 mb-1">
                                                             <span className="material-symbols-outlined text-2xl">local_police</span>
                                                         </div>
                                                         <div>
@@ -414,7 +414,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, def
                                                     : 'border-border-default bg-surface-card hover:border-primary/30 hover:bg-surface-elevated'
                                                     }`}
                                             >
-                                                <div className={`size-12 rounded-xl flex items-center justify-center shrink-0 transition-all ${!location.pathname.startsWith('/institution/')
+                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all ${!location.pathname.startsWith('/institution/')
                                                     ? 'bg-gradient-to-br from-primary to-secondary text-white shadow-md shadow-primary/30 scale-105'
                                                     : 'bg-surface-subtle text-text-muted group-hover:bg-primary/10 group-hover:text-primary'
                                                     }`}>
@@ -426,7 +426,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, def
                                                 </div>
                                                 {!location.pathname.startsWith('/institution/') && (
                                                     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary shrink-0">
-                                                        <span className="size-2 rounded-full bg-primary animate-pulse"></span>
+                                                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
                                                         <span className="text-[10px] font-black uppercase tracking-wider">Ativo</span>
                                                     </div>
                                                 )}
@@ -459,7 +459,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, def
                                                                 : 'border-border-default bg-surface-card hover:border-primary/30 hover:bg-surface-elevated'
                                                                 }`}
                                                         >
-                                                            <div className={`size-12 rounded-xl flex items-center justify-center shrink-0 transition-all ${isActive
+                                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all ${isActive
                                                                 ? 'bg-white dark:bg-slate-800 text-primary shadow-md border border-primary/20 scale-105'
                                                                 : 'bg-surface-subtle text-text-muted group-hover:bg-primary/10 group-hover:text-primary'
                                                                 }`}>
@@ -473,7 +473,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, def
                                                             </div>
                                                             {isActive ? (
                                                                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary shrink-0">
-                                                                    <span className="size-2 rounded-full bg-primary animate-pulse"></span>
+                                                                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
                                                                     <span className="text-[10px] font-black uppercase tracking-wider">Ativo</span>
                                                                 </div>
                                                             ) : (

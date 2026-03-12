@@ -145,7 +145,7 @@ export const Modal: React.FC<ModalProps> = ({
                 {showCloseButton && (
                   <button
                     onClick={onClose}
-                    className="ml-auto size-10 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                    className="ml-auto w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
                     aria-label="Fechar modal"
                   >
                     <span className="material-symbols-outlined text-slate-600 dark:text-slate-400">
@@ -205,7 +205,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onCancel} size="sm" closeOnBackdropClick={false}>
       <div className="flex flex-col items-center text-center gap-4">
-        <div className={`size-16 rounded-full flex items-center justify-center ${variant === 'danger' ? 'bg-red-100 dark:bg-red-900/20' :
+        <div className={`w-16 h-16 rounded-full flex items-center justify-center ${variant === 'danger' ? 'bg-red-100 dark:bg-red-900/20' :
           variant === 'warning' ? 'bg-amber-100 dark:bg-amber-900/20' :
             'bg-indigo-100 dark:bg-indigo-900/20'
           }`}>

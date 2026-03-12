@@ -54,13 +54,13 @@ export const TransferStudentModal: React.FC<TransferStudentModalProps> = ({ isOp
 
                     <button
                         onClick={onClose}
-                        className="absolute top-6 right-6 size-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                        className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
                     >
                         <span className="material-symbols-outlined text-xl">close</span>
                     </button>
 
                     <div className="flex items-center gap-4 mb-2">
-                        <div className="size-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
                             <span className="material-symbols-outlined text-2xl">move_up</span>
                         </div>
                         <h2 className="text-2xl font-black tracking-tight">Transferir Aluno</h2>
@@ -99,7 +99,7 @@ export const TransferStudentModal: React.FC<TransferStudentModalProps> = ({ isOp
                                         <button
                                             key={section}
                                             onClick={() => setTargetSection(section)}
-                                            className={`size-12 rounded-xl flex items-center justify-center font-black transition-all ${targetSection === section
+                                            className={`w-12 h-12 rounded-xl flex items-center justify-center font-black transition-all ${targetSection === section
                                                 ? `text-white theme-bg-primary theme-shadow-primary`
                                                 : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
                                                 }`}
@@ -140,7 +140,7 @@ export const TransferStudentModal: React.FC<TransferStudentModalProps> = ({ isOp
                         className="flex-[2] h-14 rounded-2xl text-white font-black transition-all disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 uppercase tracking-widest text-xs hover:brightness-110 active:scale-[0.98] theme-bg-primary theme-shadow-primary"
                     >
                         {loading ? (
-                            <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                             <>
                                 <span className="material-symbols-outlined text-xl">check_circle</span>

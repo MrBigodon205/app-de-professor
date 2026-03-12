@@ -54,13 +54,13 @@ export const BulkTransferModal: React.FC<BulkTransferModalProps> = ({ isOpen, on
 
                     <button
                         onClick={onClose}
-                        className="absolute top-6 right-6 size-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                        className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
                     >
                         <span className="material-symbols-outlined text-xl">close</span>
                     </button>
 
                     <div className="flex items-center gap-4 mb-2">
-                        <div className="size-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
                             <span className="material-symbols-outlined text-2xl">move_up</span>
                         </div>
                         <h2 className="text-2xl font-black tracking-tight">Transferência em Massa</h2>
@@ -99,7 +99,7 @@ export const BulkTransferModal: React.FC<BulkTransferModalProps> = ({ isOpen, on
                                         <button
                                             key={section}
                                             onClick={() => setTargetSection(section)}
-                                            className={`size-12 rounded-xl flex items-center justify-center font-black transition-all ${targetSection === section
+                                            className={`w-12 h-12 rounded-xl flex items-center justify-center font-black transition-all ${targetSection === section
                                                 ? `bg-${theme.primaryColor} text-white shadow-lg shadow-${theme.primaryColor}/30`
                                                 : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
                                                 }`}
@@ -140,7 +140,7 @@ export const BulkTransferModal: React.FC<BulkTransferModalProps> = ({ isOpen, on
                         className={`flex-[2] h-14 rounded-2xl bg-${theme.primaryColor} text-white font-black hover:opacity-90 transition-all shadow-xl shadow-${theme.primaryColor}/20 disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 uppercase tracking-widest text-xs`}
                     >
                         {loading ? (
-                            <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                             <>
                                 <span className="material-symbols-outlined text-xl">check_circle</span>

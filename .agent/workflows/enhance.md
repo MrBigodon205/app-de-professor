@@ -1,54 +1,63 @@
 ---
-description: Smart Feature Implementation. Detects complexity and ensures safety before major changes.
+description: Add or update features in existing application. Used for iterative development.
 ---
 
-# /enhance - Safe Smart Builder
+# /enhance - Update Application
 
 $ARGUMENTS
 
 ---
 
-## 🛡️ SAFETY FIRST PROTOCOL
+## Task
 
-**User Request:** "$ARGUMENTS"
+This command adds features or makes updates to existing application.
 
-### PHASE 1: SIZE UP & RISK CHECK
-**Decision Matrix:**
-*   **Trivial/Safe?** (New UI component, CSS, Text, Helper function) -> **EXECUTE.**
-*   **Complex/Risky?** (Modifying `App.tsx`, Global Context, Routing, DB) -> **PLAN & CONFIRM.**
+### Steps:
 
-### PHASE 2: SAFE EXECUTION LOOP
+1. **Understand Current State**
+   - Load project state with `python .agent/scripts/session_manager.py info`
+   - Understand existing features, tech stack
 
-1.  **Read Context & Dependencies:**
-    *   Check `package.json`, `types.ts`, and *existing patterns*.
-    *   *Safety Check:* Am I about to overwrite a file that didn't need to be changed? -> **STOP.**
+2. **Plan Changes**
+   - Determine what will be added/changed
+   - Detect affected files
+   - Check dependencies
 
-2.  **Implementation Strategy:**
-    *   **Isolation:** Create new features in new files/folders whenever possible to avoid breaking existing code.
-    *   **Fallback:** If modifying a core file, keep a commented backup or ensure `git` can revert.
+3. **Present Plan to User** (for major changes)
+   ```
+   "To add admin panel:
+   - I'll create 15 new files
+   - Update 8 files
+   - Takes ~10 minutes
+   
+   Should I start?"
+   ```
 
-3.  **The "Do No Harm" Verification:**
-    *   Does it compile?
-    *   Did I break the build?
-    *   **Auto-Cleanup:** Undo changes if the build fails dramatically.
+4. **Apply**
+   - Call relevant agents
+   - Make changes
+   - Test
+
+5. **Update Preview**
+   - Hot reload or restart
 
 ---
 
-## OUTPUT
+## Usage Examples
 
-```markdown
-## ✅ Feature Update
-
-**Status:** Implementado (Modo Seguro)
-
-**O que foi feito:**
-1. Criei `src/components/NewFeature.tsx` (Novo arquivo - Seguro).
-2. Adicionei a rota em `App.tsx`.
-
-**Teste de Segurança:**
-Build: ✅ Sucesso
-Alterações Críticas: Nenhuma detectada.
-
-**Próximo Passo:**
-Verifique se a tela aparece como esperado.
 ```
+/enhance add dark mode
+/enhance build admin panel
+/enhance integrate payment system
+/enhance add search feature
+/enhance edit profile page
+/enhance make responsive
+```
+
+---
+
+## Caution
+
+- Get approval for major changes
+- Warn on conflicting requests (e.g., "use Firebase" when project uses PostgreSQL)
+- Commit each change with git

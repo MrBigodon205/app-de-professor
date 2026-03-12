@@ -1582,7 +1582,6 @@ const ActivityListItem = React.memo(({ act, isSelected, isSelectionMode, selecte
 }) => {
     return (
         <motion.button
-            layout="position"
             variants={VARIANTS.fadeUp}
             onClick={() => isSelectionMode ? onToggle(act.id) : onSelect(act)}
             className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group relative overflow-hidden shadow-sm ${isSelectionMode

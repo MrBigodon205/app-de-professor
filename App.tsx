@@ -53,6 +53,8 @@ import { useAuth } from './contexts/AuthContext';
 import { useTheme } from './hooks/useTheme';
 import { DesktopTitleBar } from './components/DesktopTitleBar';
 import { ScheduleAutoSelector } from './components/ScheduleAutoSelector';
+import { LoadingScreen } from './components/LoadingScreen';
+import { useClass } from './contexts/ClassContext';
 
 // Helper to wrap pages with Transition + Suspense
 // We pass 'type' to BOTH PageTransition (for animation variant) AND SkeletonLayout (for layout matching)
@@ -66,14 +68,21 @@ const SuspendedPage = ({ children, type = 'default' }: { children: React.ReactNo
 
 const App: React.FC = () => {
   const location = useLocation();
-  const { activeSubject } = useAuth();
+  const { activeSubject, loading: authLoading } = useAuth();
+  const { loading: classesLoading } = useClass();
   const theme = useTheme();
+
+  // Combined app loading state
+  const isGlobalLoading = authLoading || (classesLoading && location.pathname !== '/login');
 
   const isInstitutionalRoute = location.pathname.startsWith('/institution/') && !location.pathname.startsWith('/institution/create') && !location.pathname.startsWith('/institution/join');
 
   return (
     <ErrorBoundary>
       <ToastProvider>
+        {/* Unified App Loader with Logo Expansion effect */}
+        <LoadingScreen loading={isGlobalLoading} />
+
         {import.meta.env.PROD && !window.location.hostname.includes('localhost') && (
           <>
             <SpeedInsights />

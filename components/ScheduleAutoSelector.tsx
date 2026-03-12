@@ -10,7 +10,7 @@ import { supabase } from '../lib/supabase';
  */
 export const ScheduleAutoSelector: React.FC = () => {
     const { currentUser, updateActiveSubject } = useAuth();
-    const { selectSeries, selectSection, classes } = useClass();
+    const { selectSeries, selectSection, classes, virtualGroups } = useClass();
     const hasRun = useRef(false);
 
     useEffect(() => {
@@ -37,21 +37,24 @@ export const ScheduleAutoSelector: React.FC = () => {
                 if (error) throw error;
 
                 if (schedule && schedule.length > 0) {
-                    // Pick the most relevant match (usually first if ordered by created_at)
                     const currentMatch = schedule[0];
-                    
                     console.log("[AutoSelector] Found current schedule match:", currentMatch);
 
                     if (currentMatch.subject) {
                         updateActiveSubject(currentMatch.subject);
                     }
 
-                    if (currentMatch.class_id) {
-                        const classIdStr = currentMatch.class_id.toString();
-                        // Verify if class still exists
-                        if (classes.some(c => c.id === classIdStr)) {
+                    // Handle both regular classes and virtual groups
+                    const classIdToUse = currentMatch.virtual_group_id || currentMatch.class_id;
+
+                    if (classIdToUse) {
+                        const classIdStr = classIdToUse.toString();
+                        // Verify if class or group still exists
+                        const exists = classes.some(c => c.id === classIdStr) || 
+                                     virtualGroups.some(g => g.id === classIdStr);
+
+                        if (exists) {
                             selectSeries(classIdStr);
-                            
                             if (currentMatch.section) {
                                 selectSection(currentMatch.section);
                             }

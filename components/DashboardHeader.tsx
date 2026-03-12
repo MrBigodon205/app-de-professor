@@ -26,16 +26,16 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         className="absolute -inset-1 rounded-full blur-sm opacity-25 group-hover:opacity-50 transition-opacity duration-300 animate-pulse theme-gradient-to-r"
                     ></div>
 
-                    <div className="relative size-16 md:size-20 landscape:size-12 rounded-full border-4 border-surface-card shadow-2xl overflow-hidden bg-surface-card group-hover:scale-105 transition-transform duration-500">
+                    <div className="relative w-16 h-16 md:w-20 md:h-20 landscape:w-12 landscape:h-12 rounded-full border-4 border-surface-card shadow-2xl overflow-hidden bg-surface-card group-hover:scale-105 transition-transform duration-500">
                         {currentUser?.photoUrl ? (
                             <img
                                 src={currentUser.photoUrl}
                                 alt={currentUser.name}
-                                className="size-full object-cover"
+                                className="w-full h-full object-cover"
                             />
                         ) : (
                             <div
-                                className="size-full flex items-center justify-center text-white font-bold text-2xl theme-gradient-to-br"
+                                className="w-full h-full flex items-center justify-center text-white font-bold text-2xl theme-gradient-to-br"
                             >
                                 {currentUser?.name?.substring(0, 2).toUpperCase()}
                             </div>
