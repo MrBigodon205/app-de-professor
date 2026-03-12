@@ -9,15 +9,15 @@ interface DashboardHelpBannerProps {
 export const DashboardHelpBanner: React.FC<DashboardHelpBannerProps> = ({ isDarkMode }) => {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-500 to-purple-600 p-[1px] shadow-lg shadow-indigo-500/20 group">
-      <div className={`relative bg-gradient-to-br transition-all duration-700 p-4 md:p-8 lg:p-12 flex flex-col items-center md:items-start text-center md:text-left gap-6 md:gap-10 ${isDarkMode ? 'from-slate-800/80 to-slate-900/90' : 'from-indigo-600 to-indigo-800'}`}>
+      <div className={`relative bg-gradient-to-br transition-all duration-700 p-4 md:p-6 lg:p-8 flex flex-col md:flex-row items-center md:items-center text-center md:text-left gap-6 md:gap-8 justify-between ${isDarkMode ? 'from-slate-800/80 to-slate-900/90' : 'from-indigo-600 to-indigo-800'}`}>
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2 bg-[radial-gradient(circle,rgba(99,102,241,0.2)_0%,transparent_70%)]"></div>
-        <div className="flex items-center gap-6 relative z-10">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm shrink-0">
+        <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 relative z-10">
+          <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/10 flex items-center justify-center text-white shadow-sm shrink-0 backdrop-blur-sm">
             <span className="material-symbols-outlined text-3xl">rocket_launch</span>
           </div>
           <div>
-            <h3 className="text-lg font-bold text-text-primary mb-1">Domine o Prof. Acerta+</h3>
-            <p className="text-text-secondary text-sm max-w-lg leading-relaxed">
+            <h3 className="text-lg md:text-xl font-black text-white mb-1 tracking-tight">Domine o Prof. Acerta+</h3>
+            <p className="text-white/80 text-sm max-w-lg leading-relaxed font-medium">
               Descubra como lançar notas, controlar frequência e gerar relatórios em segundos.
               <span className="hidden sm:inline"> Confira nosso guia passo-a-passo.</span>
             </p>
