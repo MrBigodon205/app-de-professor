@@ -26,15 +26,14 @@
       "icon": "public/logo.png"
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Prof. Acerta+",
-      "artifactName": "Prof.Acerta.Setup.${version}.exe",
-      "installerSidebar": "public/installerSidebar.bmp",
-      "installerHeader": "public/installerHeader.bmp",
-      "uninstallerSidebar": "public/installerSidebar.bmp"
+      "artifactName": "Prof.Acerta.Setup.${version}.exe"
     },
     "files": [
       "dist/**/*",

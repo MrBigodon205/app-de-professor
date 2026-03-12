@@ -86,8 +86,8 @@ const StudentMobileCard = React.memo(({ student, isSelected, toggleSelect, isEdi
                             </button>
                         </motion.div>
                     ) : (
-                        <h3 className="font-bold text-text-primary text-sm leading-tight line-clamp-2 capitalize break-words">
-                            {student.name.toLowerCase()}
+                        <h3 className="font-bold text-text-primary text-sm leading-tight line-clamp-2 break-words uppercase">
+                            {student.name}
                         </h3>
                     )}
                 </div>
@@ -172,7 +172,7 @@ const StudentDesktopRow = React.memo(({ student, isSelected, toggleSelect, isEdi
                         </button>
                     </motion.div>
                 ) : (
-                    <span className="font-bold text-text-primary text-base group-hover:text-indigo-600 transition-colors">
+                    <span className="font-bold text-text-primary text-base group-hover:text-indigo-600 transition-colors uppercase">
                         {student.name}
                     </span>
                 )}
@@ -266,13 +266,13 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
 
     const handleEdit = useCallback((student: Student) => {
         setEditingId(student.id);
-        setEditName(student.name);
+        setEditName(student.name.toUpperCase());
     }, []);
 
     const saveEdit = async () => {
         if (!editingId) return;
         try {
-            await updateStudent(editingId, { name: editName });
+            await updateStudent(editingId, { name: editName.trim().toUpperCase() });
             setEditingId(null);
         } catch (error) {
             console.error('Error updating student:', error);
@@ -452,13 +452,21 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             return;
         }
 
-        const initials = newStudentName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const nameFormated = newStudentName.trim().toUpperCase();
+        const initials = nameFormated.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         const newNumber = generateMatricula();
+
+        // Check if student already exists
+        const exists = students.some(s => s.name.toUpperCase() === nameFormated);
+        if (exists) {
+            alert("Este aluno já está cadastrado nesta turma.");
+            return;
+        }
 
         // Prepare data - hook handles specific field requirements
         const newStudentData = {
             id: generateUUID(), // Always generate ID for consistency with fallback
-            name: newStudentName,
+            name: nameFormated,
             number: newNumber,
             series_id: selectedSeriesId,
             seriesId: selectedSeriesId.toString(), // Provide both for compatibility
@@ -490,7 +498,7 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
         setIsProcessing(true);
 
         const newNames = importText.split('\n')
-            .map(n => n.trim())
+            .map(n => n.trim().toUpperCase())
             .filter(n => n.length > 0);
 
         try {
@@ -498,11 +506,11 @@ export const StudentsList: React.FC<StudentsListProps> = ({ mode = 'manage' }) =
             const currentStudents = [...students];
 
             const combinedMap = new Map();
-            currentStudents.forEach(s => combinedMap.set(s.name.toLowerCase(), { name: s.name, id: s.id, existing: true, original: s }));
+            currentStudents.forEach(s => combinedMap.set(s.name.toUpperCase(), { name: s.name.toUpperCase(), id: s.id, existing: true, original: s }));
 
             newNames.forEach(name => {
-                if (!combinedMap.has(name.toLowerCase())) {
-                    combinedMap.set(name.toLowerCase(), { name: name, existing: false });
+                if (!combinedMap.has(name)) {
+                    combinedMap.set(name, { name: name, existing: false });
                 }
             });
 

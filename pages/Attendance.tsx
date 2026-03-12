@@ -915,19 +915,17 @@ export const Attendance: React.FC = () => {
 
             {/* Students Table */}
             {/* Students Table (Desktop/Tablet) */}
-            <div className={`hidden md:flex flex-col bg-surface-card border border-border-default rounded-3xl shadow-card overflow-hidden transition-all duration-300 h-[650px] ${loading ? 'opacity-70 pointer-events-none' : ''}`}>
+            <div className={`hidden md:flex flex-col bg-surface-card border border-border-default rounded-3xl shadow-card transition-all duration-300 ${loading ? 'opacity-70 pointer-events-none' : ''}`}>
                 {/* Fixed Header */}
-                <div className="flex items-center bg-surface-subtle/80 backdrop-blur-md border-b border-border-default z-20">
+                <div className="flex items-center bg-surface-subtle/80 backdrop-blur-md border-b border-border-default z-20 sticky top-0 rounded-t-3xl">
                     <div className="w-[80px] shrink-0 px-6 py-4 text-[10px] font-black uppercase text-text-muted tracking-widest text-center">Nº</div>
                     <div className="flex-1 min-w-0 px-6 py-4 text-[10px] font-black uppercase text-text-muted tracking-widest text-left">Aluno</div>
                     <div className="w-[320px] shrink-0 px-6 py-4 text-[10px] font-black uppercase text-text-muted tracking-widest text-center">Registro</div>
                 </div>
 
                 {students.length > 0 ? (
-                    <Virtuoso
-                        data={students}
-                        className="flex-1 custom-scrollbar"
-                        itemContent={(_index: number, s: Student) => (
+                    <div className="flex flex-col">
+                        {students.map(s => (
                             <AttendanceRow
                                 key={s.id}
                                 student={s}
@@ -935,8 +933,8 @@ export const Attendance: React.FC = () => {
                                 onStatusChange={handleStatusChange}
                                 theme={theme}
                             />
-                        )}
-                    />
+                        ))}
+                    </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center flex-1">
                         <div className="size-20 rounded-full bg-surface-subtle flex items-center justify-center mb-4">
@@ -949,22 +947,19 @@ export const Attendance: React.FC = () => {
             </div>
 
             {/* Students List (Mobile Cards) */}
-            <div className={`md:hidden space-y-3 pb-20 h-[600px] ${loading ? 'opacity-70 pointer-events-none' : ''}`}>
+            <div className={`md:hidden space-y-3 pb-20 ${loading ? 'opacity-70 pointer-events-none' : ''}`}>
                 {students.length > 0 ? (
-                    <Virtuoso
-                        data={students}
-                        itemContent={(_index: number, s: Student) => (
-                            <div className="pb-3">
-                                <MobileAttendanceCard
-                                    key={s.id}
-                                    student={s}
-                                    status={attendanceMap[s.id]}
-                                    onStatusChange={handleStatusChange}
-                                    theme={theme}
-                                />
-                            </div>
-                        )}
-                    />
+                    <div className="flex flex-col gap-3">
+                        {students.map(s => (
+                            <MobileAttendanceCard
+                                key={s.id}
+                                student={s}
+                                status={attendanceMap[s.id]}
+                                onStatusChange={handleStatusChange}
+                                theme={theme}
+                            />
+                        ))}
+                    </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                         <div className="size-16 rounded-full bg-surface-subtle flex items-center justify-center mb-4">
@@ -1031,10 +1026,10 @@ const MobileAttendanceCard = React.memo(({ student: s, status, onStatusChange, t
         >
             <div className="flex items-center gap-3 mb-3">
                 <div className={`student-avatar size-8 text-xs bg-gradient-to-br ${s.color || `from-indigo-600 to-indigo-800`}`}>
-                    {s.initials || s.name.substring(0, 2)}
+                    {s.initials || s.name.substring(0, 2).toUpperCase()}
                 </div>
                 <div className="flex flex-col min-w-0">
-                    <span className="font-bold text-xs text-text-primary truncate">{s.name}</span>
+                    <span className="font-bold text-xs text-text-primary truncate uppercase">{s.name}</span>
                     <span className="text-[9px] uppercase font-bold text-text-muted">Nº {s.number} • ID: {s.id.substring(0, 6)}</span>
                 </div>
             </div>
@@ -1088,10 +1083,10 @@ const AttendanceRow = React.memo(({ student: s, status, onStatusChange, theme }:
             <div className="flex-1 min-w-0 p-4 px-6 overflow-hidden">
                 <div className="flex items-center gap-4">
                     <div className={`student-avatar student-avatar-sm ring-2 ring-white dark:ring-slate-800 shrink-0 bg-gradient-to-br ${s.color || `from-indigo-600 to-indigo-800`}`}>
-                        {s.initials || s.name.substring(0, 2)}
+                        {s.initials || s.name.substring(0, 2).toUpperCase()}
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
-                        <span className="font-bold text-sm text-slate-800 dark:text-white group-hover:text-primary transition-colors truncate">
+                        <span className="font-bold text-sm text-slate-800 dark:text-white group-hover:text-primary transition-colors truncate uppercase">
                             {s.name}
                         </span>
                         <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">

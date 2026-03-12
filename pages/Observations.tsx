@@ -40,7 +40,7 @@ const ObservationStudentItem = React.memo(({ student, isSelected, onClick, theme
                 {student.initials || student.name.substring(0, 2)}
             </div>
             <div className="flex flex-col min-w-0 pr-4">
-                <span className={`text-sm font-bold truncate transition-colors ${isSelected ? 'theme-text-primary' : 'text-text-secondary'}`}>{student.name}</span>
+                <span className={`text-sm font-bold truncate transition-colors uppercase ${isSelected ? 'theme-text-primary' : 'text-text-secondary'}`}>{student.name}</span>
                 <span className="text-[10px] text-text-muted font-medium">Nº {student.number.padStart(2, '0')}</span>
             </div>
         </motion.button>
@@ -66,7 +66,7 @@ const ObservationOccurrenceCard = React.memo(({ occ, isSelected, onToggle, onEdi
                         <span className="material-symbols-outlined text-lg">{isSelected ? 'check_circle' : getOccurrenceIcon(occ.type)}</span>
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-black text-text-primary truncate">{occ.student_name}</span>
+                        <span className="text-sm font-black text-text-primary truncate uppercase">{occ.student_name}</span>
                         <span className={`text-[10px] font-black uppercase tracking-widest ${occ.type === 'Elogio' ? 'text-emerald-500' : 'text-rose-500'}`}>{occ.type}</span>
                     </div>
                 </div>
@@ -520,7 +520,7 @@ export const Observations: React.FC = () => {
                                             {selectedStudent.initials}
                                         </div>
                                         <div className="flex-1 min-w-0 max-w-[min(70vw,400px)] sm:max-w-none lg:max-w-[200px] xl:max-w-none">
-                                            <h1 className="text-xl sm:text-3xl landscape:text-base font-black text-text-primary tracking-tight leading-none mb-1 sm:mb-2 landscape:mb-0 truncate pr-2">{selectedStudent.name}</h1>
+                                            <h1 className="text-xl sm:text-3xl landscape:text-base font-black text-text-primary tracking-tight leading-none mb-1 sm:mb-2 landscape:mb-0 truncate pr-2 uppercase">{selectedStudent.name}</h1>
                                             <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-sm font-bold text-text-muted landscape:hidden truncate">
                                                 <span className="bg-surface-subtle px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl font-mono text-text-secondary shrink-0">#{selectedStudent.number.padStart(2, '0')}</span>
                                                 <span className="shrink-0">•</span>
